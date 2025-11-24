@@ -48,11 +48,19 @@ class DocsCLI(BaseCLI):
         # All commands directly registered without groups
         all_commands = [
             # Core MkDocs commands
-            Command("serve", self.serve, "Serve documentation locally with live reload"),
+            Command(
+                "serve",
+                self.serve,
+                "Serve documentation locally with live reload",
+            ),
             Command("build", self.build, "Build documentation site for production"),
             # Documentation management
             Command("clean", self.clean, "Clean documentation build artifacts"),
-            Command("validate", self.validate, "Validate documentation structure and links"),
+            Command(
+                "validate",
+                self.validate,
+                "Validate documentation structure and links",
+            ),
             Command("check", self.check, "Check documentation for issues"),
             # Development tools
             Command("watch", self.watch, "Watch for changes and rebuild automatically"),
@@ -61,12 +69,36 @@ class DocsCLI(BaseCLI):
             Command("info", self.info, "Show documentation configuration and status"),
             Command("list", self.list_pages, "List all documentation pages"),
             # Cloudflare Workers deployment commands
-            Command("wrangler-dev", self.wrangler_dev, "Start local Wrangler development server"),
-            Command("wrangler-deploy", self.wrangler_deploy, "Deploy documentation to Cloudflare Workers"),
-            Command("wrangler-deployments", self.wrangler_deployments, "List deployment history"),
-            Command("wrangler-versions", self.wrangler_versions, "List and manage versions"),
-            Command("wrangler-tail", self.wrangler_tail, "View real-time logs from deployed docs"),
-            Command("wrangler-rollback", self.wrangler_rollback, "Rollback to a previous deployment"),
+            Command(
+                "wrangler-dev",
+                self.wrangler_dev,
+                "Start local Wrangler development server",
+            ),
+            Command(
+                "wrangler-deploy",
+                self.wrangler_deploy,
+                "Deploy documentation to Cloudflare Workers",
+            ),
+            Command(
+                "wrangler-deployments",
+                self.wrangler_deployments,
+                "List deployment history",
+            ),
+            Command(
+                "wrangler-versions",
+                self.wrangler_versions,
+                "List and manage versions",
+            ),
+            Command(
+                "wrangler-tail",
+                self.wrangler_tail,
+                "View real-time logs from deployed docs",
+            ),
+            Command(
+                "wrangler-rollback",
+                self.wrangler_rollback,
+                "Rollback to a previous deployment",
+            ),
         ]
 
         for cmd in all_commands:
@@ -100,7 +132,9 @@ class DocsCLI(BaseCLI):
         if (current_dir / "docs" / "mkdocs.yml").exists():
             return "docs/mkdocs.yml"
 
-        self.rich.print_error("Can't find mkdocs.yml file. Please run from the project root or docs directory.")
+        self.rich.print_error(
+            "Can't find mkdocs.yml file. Please run from the project root or docs directory.",
+        )
         return None
 
     def _run_command(self, command: list[str]) -> None:
@@ -137,14 +171,32 @@ class DocsCLI(BaseCLI):
 
     def serve(
         self,
-        host: Annotated[str, Option("--host", "-h", help="Host to serve on")] = "127.0.0.1",
+        host: Annotated[
+            str,
+            Option("--host", "-h", help="Host to serve on"),
+        ] = "127.0.0.1",
         port: Annotated[int, Option("--port", "-p", help="Port to serve on")] = 8000,
-        dirty: Annotated[bool, Option("--dirty", help="Only re-build files that have changed")] = False,
-        no_livereload: Annotated[bool, Option("--no-livereload", help="Disable live reloading")] = False,
-        clean: Annotated[bool, Option("--clean", help="Build without effects of mkdocs serve")] = False,
+        dirty: Annotated[
+            bool,
+            Option("--dirty", help="Only re-build files that have changed"),
+        ] = False,
+        no_livereload: Annotated[
+            bool,
+            Option("--no-livereload", help="Disable live reloading"),
+        ] = False,
+        clean: Annotated[
+            bool,
+            Option("--clean", help="Build without effects of mkdocs serve"),
+        ] = False,
         strict: Annotated[bool, Option("--strict", help="Enable strict mode")] = False,
-        watch_theme: Annotated[bool, Option("--watch-theme", help="Watch theme files for changes")] = False,
-        open_browser: Annotated[bool, Option("--open", help="Automatically open browser")] = False,
+        watch_theme: Annotated[
+            bool,
+            Option("--watch-theme", help="Watch theme files for changes"),
+        ] = False,
+        open_browser: Annotated[
+            bool,
+            Option("--open", help="Automatically open browser"),
+        ] = False,
     ) -> None:
         """Serve documentation locally with live reload.
 
@@ -157,7 +209,15 @@ class DocsCLI(BaseCLI):
             return
 
         # Pin click to 8.2.1 to fix file watching (click>=8.3.0 breaks MkDocs file watching)
-        cmd = ["uv", "run", "--with", "click==8.2.1", "mkdocs", "serve", f"--dev-addr={host}:{port}"]
+        cmd = [
+            "uv",
+            "run",
+            "--with",
+            "click==8.2.1",
+            "mkdocs",
+            "serve",
+            f"--dev-addr={host}:{port}",
+        ]
 
         if dirty:
             cmd.append("--dirty")
@@ -179,7 +239,9 @@ class DocsCLI(BaseCLI):
 
             # Run server command without capturing output (for real-time streaming)
             # This allows mkdocs serve to run interactively and stream output
-            self.rich.print_info(f"Starting documentation server at http://{host}:{port}")
+            self.rich.print_info(
+                f"Starting documentation server at http://{host}:{port}",
+            )
             subprocess.run(cmd, check=True, env=os.environ.copy())
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to start documentation server")
@@ -188,16 +250,30 @@ class DocsCLI(BaseCLI):
 
     def build(
         self,
-        clean: Annotated[bool, Option("--clean", help="Remove old files from site_dir before building")] = True,
+        clean: Annotated[
+            bool,
+            Option("--clean", help="Remove old files from site_dir before building"),
+        ] = True,
         strict: Annotated[bool, Option("--strict", help="Enable strict mode")] = False,
-        theme: Annotated[str, Option("--theme", "-t", help="Theme to use (mkdocs or readthedocs)")] = "",
+        theme: Annotated[
+            str,
+            Option("--theme", "-t", help="Theme to use (mkdocs or readthedocs)"),
+        ] = "",
         site_dir: Annotated[
             str,
-            Option("--site-dir", "--output", "-d", help="Directory to output the build result"),
+            Option(
+                "--site-dir",
+                "--output",
+                "-d",
+                help="Directory to output the build result",
+            ),
         ] = "",
         use_directory_urls: Annotated[
             bool,
-            Option("--use-directory-urls", help="Use directory URLs when building pages"),
+            Option(
+                "--use-directory-urls",
+                help="Use directory URLs when building pages",
+            ),
         ] = True,
     ) -> None:
         """Build documentation site for production."""
@@ -266,7 +342,9 @@ class DocsCLI(BaseCLI):
 
         # Use MkDocs build with --strict to validate configuration and content
         try:
-            self._run_command(["uv", "run", "mkdocs", "build", "--strict", "-f", mkdocs_path])
+            self._run_command(
+                ["uv", "run", "mkdocs", "build", "--strict", "-f", mkdocs_path],
+            )
             self.rich.print_success("✅ Documentation validation passed")
         except subprocess.CalledProcessError:
             self.rich.print_error("❌ Documentation validation failed")
@@ -358,21 +436,32 @@ class DocsCLI(BaseCLI):
             rel_path = md_file.relative_to(docs_dir)
             try:
                 first_line = md_file.read_text().split("\n")[0].strip()
-                title = first_line.lstrip("# ") if first_line.startswith("#") else "No title"
+                title = (
+                    first_line.lstrip("# ")
+                    if first_line.startswith("#")
+                    else "No title"
+                )
             except Exception:
                 title = "Error reading file"
 
             table_data.append((str(rel_path), title))
 
         if table_data:
-            self.rich.print_rich_table("Documentation Pages", [("Path", "cyan"), ("Title", "green")], table_data)
+            self.rich.print_rich_table(
+                "Documentation Pages",
+                [("Path", "cyan"), ("Title", "green")],
+                table_data,
+            )
         else:
             self.rich.print_info("No pages found")
 
     def wrangler_dev(
         self,
         port: Annotated[int, Option("--port", "-p", help="Port to serve on")] = 8787,
-        remote: Annotated[bool, Option("--remote", help="Run on remote cloudflare infrastructure")] = False,
+        remote: Annotated[
+            bool,
+            Option("--remote", help="Run on remote cloudflare infrastructure"),
+        ] = False,
     ) -> None:  # sourcery skip: class-extract-method
         """Start local Wrangler development server.
 
@@ -405,7 +494,9 @@ class DocsCLI(BaseCLI):
                 os.chdir(docs_path)
 
             self._run_command(cmd)
-            self.rich.print_success(f"Wrangler dev server started at http://localhost:{port}")
+            self.rich.print_success(
+                f"Wrangler dev server started at http://localhost:{port}",
+            )
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to start Wrangler dev server")
         except Exception as e:
@@ -415,8 +506,14 @@ class DocsCLI(BaseCLI):
 
     def wrangler_deploy(
         self,
-        env: Annotated[str, Option("--env", "-e", help="Environment to deploy to")] = "production",
-        dry_run: Annotated[bool, Option("--dry-run", help="Show what would be deployed")] = False,
+        env: Annotated[
+            str,
+            Option("--env", "-e", help="Environment to deploy to"),
+        ] = "production",
+        dry_run: Annotated[
+            bool,
+            Option("--dry-run", help="Show what would be deployed"),
+        ] = False,
     ) -> None:
         """Deploy documentation to Cloudflare Workers.
 
@@ -455,7 +552,10 @@ class DocsCLI(BaseCLI):
 
     def wrangler_deployments(
         self,
-        limit: Annotated[int, Option("--limit", "-l", help="Number of deployments to show")] = 10,
+        limit: Annotated[
+            int,
+            Option("--limit", "-l", help="Number of deployments to show"),
+        ] = 10,
     ) -> None:
         """List deployment history for the documentation site.
 
@@ -488,8 +588,14 @@ class DocsCLI(BaseCLI):
             str,
             Option("--action", "-a", help="Action: list, view, or upload"),
         ] = "list",
-        version_id: Annotated[str, Option("--version-id", help="Version ID for view action")] = "",
-        alias: Annotated[str, Option("--alias", help="Preview alias name for upload")] = "",
+        version_id: Annotated[
+            str,
+            Option("--version-id", help="Version ID for view action"),
+        ] = "",
+        alias: Annotated[
+            str,
+            Option("--alias", help="Preview alias name for upload"),
+        ] = "",
     ) -> None:
         """List and manage versions of the documentation.
 
@@ -524,8 +630,14 @@ class DocsCLI(BaseCLI):
 
     def wrangler_tail(
         self,
-        format_output: Annotated[str, Option("--format", help="Output format: json or pretty")] = "pretty",
-        status: Annotated[str, Option("--status", help="Filter by status: ok, error, or canceled")] = "",
+        format_output: Annotated[
+            str,
+            Option("--format", help="Output format: json or pretty"),
+        ] = "pretty",
+        status: Annotated[
+            str,
+            Option("--status", help="Filter by status: ok, error, or canceled"),
+        ] = "",
     ) -> None:
         """View real-time logs from deployed documentation.
 
@@ -559,8 +671,14 @@ class DocsCLI(BaseCLI):
 
     def wrangler_rollback(
         self,
-        version_id: Annotated[str, Option("--version-id", help="Version ID to rollback to")] = "",
-        message: Annotated[str, Option("--message", "-m", help="Rollback message")] = "",
+        version_id: Annotated[
+            str,
+            Option("--version-id", help="Version ID to rollback to"),
+        ] = "",
+        message: Annotated[
+            str,
+            Option("--message", "-m", help="Rollback message"),
+        ] = "",
     ) -> None:
         """Rollback to a previous deployment.
 
@@ -569,7 +687,9 @@ class DocsCLI(BaseCLI):
         self.rich.print_section("🔙 Rolling Back Deployment", "blue")
 
         if not version_id:
-            self.rich.print_error("Version ID is required. Use wrangler-deployments to find version IDs.")
+            self.rich.print_error(
+                "Version ID is required. Use wrangler-deployments to find version IDs.",
+            )
             return
 
         cmd = ["wrangler", "rollback", version_id]

@@ -154,11 +154,18 @@ class PermissionSystem:
         # Get existing ranks for this guild
         logger.debug(f"Checking existing ranks for guild {guild_id}")
         try:
-            existing_ranks = await self.db.permission_ranks.get_permission_ranks_by_guild(guild_id)
+            existing_ranks = (
+                await self.db.permission_ranks.get_permission_ranks_by_guild(guild_id)
+            )
             existing_rank_numbers = {r.rank for r in existing_ranks}
-            logger.debug(f"Found {len(existing_ranks)} existing ranks for guild {guild_id}")
+            logger.debug(
+                f"Found {len(existing_ranks)} existing ranks for guild {guild_id}",
+            )
         except Exception as e:
-            logger.error(f"Error checking existing ranks for guild {guild_id}: {e}", exc_info=True)
+            logger.error(
+                f"Error checking existing ranks for guild {guild_id}: {e}",
+                exc_info=True,
+            )
             raise
 
         # Only create ranks that don't exist at all
@@ -170,11 +177,15 @@ class PermissionSystem:
                 logger.debug(f"Will create missing rank {rank}: {default_data['name']}")
 
         if not ranks_to_create:
-            logger.info(f"All default ranks already exist for guild {guild_id} (customizations preserved)")
+            logger.info(
+                f"All default ranks already exist for guild {guild_id} (customizations preserved)",
+            )
             return
 
         # Create missing ranks only
-        logger.info(f"Creating {len(ranks_to_create)} missing default ranks for guild {guild_id}")
+        logger.info(
+            f"Creating {len(ranks_to_create)} missing default ranks for guild {guild_id}",
+        )
         for rank, default_data in ranks_to_create:
             try:
                 logger.debug(f"Creating rank {rank}: {default_data}")
@@ -186,11 +197,16 @@ class PermissionSystem:
                 )
                 logger.debug(f"Successfully created rank {rank} for guild {guild_id}")
             except Exception as e:
-                logger.error(f"Error creating rank {rank} for guild {guild_id}: {e}", exc_info=True)
+                logger.error(
+                    f"Error creating rank {rank} for guild {guild_id}: {e}",
+                    exc_info=True,
+                )
                 logger.error(f"Rank data: {default_data}")
                 raise
 
-        logger.info(f"Successfully initialized missing default ranks for guild {guild_id}")
+        logger.info(
+            f"Successfully initialized missing default ranks for guild {guild_id}",
+        )
 
         logger.info(f"Initialized default permission ranks for guild {guild_id}")
 
@@ -302,10 +318,15 @@ class PermissionSystem:
         bool
             True if an assignment was removed, False if no assignment existed.
         """
-        removed = await self.db.permission_assignments.remove_role_assignment(guild_id, role_id)
+        removed = await self.db.permission_assignments.remove_role_assignment(
+            guild_id,
+            role_id,
+        )
 
         if removed:
-            logger.info(f"Removed permission assignment for role {role_id} in guild {guild_id}")
+            logger.info(
+                f"Removed permission assignment for role {role_id} in guild {guild_id}",
+            )
 
         return removed
 
@@ -358,7 +379,9 @@ class PermissionSystem:
             description=description,
         )
 
-        logger.info(f"Created custom permission rank {rank} ({name}) for guild {guild_id}")
+        logger.info(
+            f"Created custom permission rank {rank} ({name}) for guild {guild_id}",
+        )
         return permission_rank
 
     # ---------- Command Permission Management ----------
@@ -400,7 +423,9 @@ class PermissionSystem:
                 f"Cannot assign permission rank to '{command_name}'. "
                 f"This command is restricted to bot owners and sysadmins only."
             )
-            logger.warning(f"Attempted to assign rank to restricted command '{command_name}' in guild {guild_id}")
+            logger.warning(
+                f"Attempted to assign rank to restricted command '{command_name}' in guild {guild_id}",
+            )
             raise ValueError(error_msg)
 
         # Validate rank range
@@ -415,12 +440,18 @@ class PermissionSystem:
             required_rank=required_rank,
         )
 
-        logger.info(f"Set command {command_name} to require rank {required_rank} in guild {guild_id}")
+        logger.info(
+            f"Set command {command_name} to require rank {required_rank} in guild {guild_id}",
+        )
         return command_perm
 
     # ---------- Query Methods ----------
 
-    async def get_command_permission(self, guild_id: int, command_name: str) -> PermissionCommand | None:
+    async def get_command_permission(
+        self,
+        guild_id: int,
+        command_name: str,
+    ) -> PermissionCommand | None:
         """
         Get command-specific permission requirements for a guild.
 
@@ -436,7 +467,10 @@ class PermissionSystem:
         PermissionCommand | None
             The command permission record, or None if no override exists.
         """
-        return await self.db.command_permissions.get_command_permission(guild_id, command_name)
+        return await self.db.command_permissions.get_command_permission(
+            guild_id,
+            command_name,
+        )
 
     async def get_guild_permission_ranks(self, guild_id: int) -> list[PermissionRank]:
         """
@@ -470,7 +504,10 @@ class PermissionSystem:
         """
         return await self.db.permission_assignments.get_assignments_by_guild(guild_id)
 
-    async def get_guild_command_permissions(self, guild_id: int) -> list[PermissionCommand]:
+    async def get_guild_command_permissions(
+        self,
+        guild_id: int,
+    ) -> list[PermissionCommand]:
         """
         Get all command permission overrides for a guild.
 
@@ -509,7 +546,9 @@ class PermissionSystem:
         Examples
         --------
         >>> config = {
-        ...     "permission_ranks": [{"rank": 10, "name": "Elite Mod", "description": "Elite moderators"}],
+        ...     "permission_ranks": [
+        ...         {"rank": 10, "name": "Elite Mod", "description": "Elite moderators"}
+        ...     ],
         ...     "role_assignments": [{"rank": 10, "role_id": 123456789}],
         ...     "command_permissions": [{"command": "ban", "rank": 3}],
         ... }
@@ -529,7 +568,9 @@ class PermissionSystem:
         # Load role-to-rank assignments (batch load ranks to avoid N+1 queries)
         if "role_assignments" in config:
             # Batch load all ranks once to avoid N+1 queries
-            all_ranks = {r.rank: r for r in await self.get_guild_permission_ranks(guild_id)}
+            all_ranks = {
+                r.rank: r for r in await self.get_guild_permission_ranks(guild_id)
+            }
 
             for assignment in config["role_assignments"]:
                 if all_ranks.get(assignment["rank"]):
@@ -561,7 +602,9 @@ class PermissionSystem:
                     required_rank=cmd_perm["rank"],
                 )
 
-        logger.info(f"Loaded permission configuration for guild {guild_id} from config file")
+        logger.info(
+            f"Loaded permission configuration for guild {guild_id} from config file",
+        )
 
 
 # ---------- Global Instance Management ----------
@@ -588,7 +631,9 @@ def get_permission_system() -> PermissionSystem:
     Call `init_permission_system()` during bot startup before using this.
     """
     if _permission_system is None:
-        error_msg = "Permission system not initialized. Call init_permission_system() first."
+        error_msg = (
+            "Permission system not initialized. Call init_permission_system() first."
+        )
         raise RuntimeError(error_msg)
     return _permission_system
 

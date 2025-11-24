@@ -25,7 +25,14 @@ from discord.ext import commands
 from loguru import logger
 
 from .config import flush, flush_async, is_initialized, report_signal, setup
-from .context import set_command_context, set_context, set_tag, set_user_context, track_command_end, track_command_start
+from .context import (
+    set_command_context,
+    set_context,
+    set_tag,
+    set_user_context,
+    track_command_end,
+    track_command_start,
+)
 from .tracing import (
     DummySpan,
     DummyTransaction,
@@ -349,7 +356,12 @@ class SentryManager:
         """
         track_command_start(command_name)
 
-    def track_command_end(self, command_name: str, success: bool, error: Exception | None = None) -> None:
+    def track_command_end(
+        self,
+        command_name: str,
+        success: bool,
+        error: Exception | None = None,
+    ) -> None:
         """
         Track command execution end and performance metrics.
 

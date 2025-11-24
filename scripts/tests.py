@@ -37,7 +37,10 @@ class TestCLI(BaseCLI):
         Sets up the CLI with test-specific commands and configures
         the command registry for pytest operations.
         """
-        super().__init__(name="test", description="Test CLI - A unified interface for all testing operations")
+        super().__init__(
+            name="test",
+            description="Test CLI - A unified interface for all testing operations",
+        )
         self._setup_command_registry()
         self._setup_commands()
 
@@ -46,13 +49,21 @@ class TestCLI(BaseCLI):
         # All commands directly registered without groups
         all_commands = [
             # Basic test commands
-            Command("all", self.all_tests, "Run all tests with coverage and enhanced output"),
+            Command(
+                "all",
+                self.all_tests,
+                "Run all tests with coverage and enhanced output",
+            ),
             Command("quick", self.quick_tests, "Run tests without coverage (faster)"),
             Command("plain", self.plain_tests, "Run tests with plain output"),
             Command("parallel", self.parallel_tests, "Run tests in parallel"),
             # Report commands
             Command("html", self.html_report, "Run tests and generate HTML report"),
-            Command("coverage", self.coverage_report, "Generate comprehensive coverage reports"),
+            Command(
+                "coverage",
+                self.coverage_report,
+                "Generate comprehensive coverage reports",
+            ),
             # Specialized commands
             Command("benchmark", self.benchmark_tests, "Run benchmark tests"),
         ]
@@ -157,16 +168,25 @@ class TestCLI(BaseCLI):
     def plain_tests(self) -> None:
         """Run tests with plain output."""
         self.rich.print_section("📝 Plain Tests", "blue")
-        self._run_test_command(["uv", "run", "pytest", "-p", "no:sugar"], "Plain test run")
+        self._run_test_command(
+            ["uv", "run", "pytest", "-p", "no:sugar"],
+            "Plain test run",
+        )
 
     def parallel_tests(self) -> None:
         """Run tests in parallel."""
         self.rich.print_section("🔄 Parallel Tests", "blue")
-        self._run_test_command(["uv", "run", "pytest", "-n", "auto"], "Parallel test run")
+        self._run_test_command(
+            ["uv", "run", "pytest", "-n", "auto"],
+            "Parallel test run",
+        )
 
     def html_report(
         self,
-        open_browser: Annotated[bool, Option("--open", help="Automatically open browser with HTML report")] = False,
+        open_browser: Annotated[
+            bool,
+            Option("--open", help="Automatically open browser with HTML report"),
+        ] = False,
     ) -> None:
         """Run tests and generate HTML report."""
         self.rich.print_section("🌐 HTML Report", "blue")
@@ -183,13 +203,28 @@ class TestCLI(BaseCLI):
 
     def coverage_report(
         self,
-        specific: Annotated[str | None, Option(help="Specific path to include in coverage")] = None,
-        format_type: Annotated[str | None, Option(help="Coverage report format: html, xml, or json")] = None,
-        quick: Annotated[bool, Option(help="Quick run without generating coverage report")] = False,
-        fail_under: Annotated[str | None, Option(help="Fail if coverage percentage is below this value")] = None,
+        specific: Annotated[
+            str | None,
+            Option(help="Specific path to include in coverage"),
+        ] = None,
+        format_type: Annotated[
+            str | None,
+            Option(help="Coverage report format: html, xml, or json"),
+        ] = None,
+        quick: Annotated[
+            bool,
+            Option(help="Quick run without generating coverage report"),
+        ] = False,
+        fail_under: Annotated[
+            str | None,
+            Option(help="Fail if coverage percentage is below this value"),
+        ] = None,
         open_browser: Annotated[
             bool,
-            Option("--open", help="Automatically open browser for HTML coverage reports"),
+            Option(
+                "--open",
+                help="Automatically open browser for HTML coverage reports",
+            ),
         ] = False,
     ) -> None:
         """Generate comprehensive coverage reports."""

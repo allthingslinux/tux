@@ -101,12 +101,17 @@ class ExecutionService:
 
         for attempt in range(self._max_retries):
             try:
-                logger.debug(f"Executing action for {operation_type} (attempt {attempt + 1}/{self._max_retries})")
+                logger.debug(
+                    f"Executing action for {operation_type} (attempt {attempt + 1}/{self._max_retries})",
+                )
                 result = await action(*args, **kwargs)
             except discord.RateLimited as e:
                 last_exception = e
                 if attempt < self._max_retries - 1:
-                    delay = self._calculate_delay(attempt, e.retry_after or self._base_delay)
+                    delay = self._calculate_delay(
+                        attempt,
+                        e.retry_after or self._base_delay,
+                    )
                     await asyncio.sleep(delay)
                 else:
                     self._record_failure(operation_type)
@@ -195,7 +200,9 @@ class ExecutionService:
         operation_type : str
             The operation type.
         """
-        self._failure_count[operation_type] = self._failure_count.get(operation_type, 0) + 1
+        self._failure_count[operation_type] = (
+            self._failure_count.get(operation_type, 0) + 1
+        )
 
         if self._failure_count[operation_type] >= self._failure_threshold:
             self._circuit_open[operation_type] = True

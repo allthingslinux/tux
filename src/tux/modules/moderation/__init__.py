@@ -39,7 +39,11 @@ class ModerationCogBase(BaseCog):
     """
 
     # Actions that remove users from the server, requiring DM to be sent first
-    REMOVAL_ACTIONS: ClassVar[set[DBCaseType]] = {DBCaseType.BAN, DBCaseType.KICK, DBCaseType.TEMPBAN}
+    REMOVAL_ACTIONS: ClassVar[set[DBCaseType]] = {
+        DBCaseType.BAN,
+        DBCaseType.KICK,
+        DBCaseType.TEMPBAN,
+    }
 
     def __init__(self, bot: Tux) -> None:
         """Initialize the moderation cog base with services.
@@ -53,7 +57,9 @@ class ModerationCogBase(BaseCog):
 
         # Initialize moderation services using factory pattern
         # This avoids async initialization and duplicate service creation
-        self.moderation: ModerationCoordinator = ModerationServiceFactory.create_coordinator(bot, self.db.case)
+        self.moderation: ModerationCoordinator = (
+            ModerationServiceFactory.create_coordinator(bot, self.db.case)
+        )
 
     async def moderate_user(
         self,

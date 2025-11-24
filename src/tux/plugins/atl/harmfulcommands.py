@@ -97,7 +97,10 @@ class HarmfulCommands(BaseCog):
         message : discord.Message
             The message to check.
         """
-        if message.author.bot and message.webhook_id not in CONFIG.IRC_CONFIG.BRIDGE_WEBHOOK_IDS:
+        if (
+            message.author.bot
+            and message.webhook_id not in CONFIG.IRC_CONFIG.BRIDGE_WEBHOOK_IDS
+        ):
             return
 
         stripped_content = strip_formatting(message.content)
@@ -124,7 +127,11 @@ class HarmfulCommands(BaseCog):
             )
 
     @commands.Cog.listener()
-    async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
+    async def on_message_edit(
+        self,
+        before: discord.Message,
+        after: discord.Message,
+    ) -> None:
         """Handle message edits to check for newly harmful content."""
         if not self.is_harmful(before.content) and self.is_harmful(after.content):
             await self.handle_harmful_message(after)

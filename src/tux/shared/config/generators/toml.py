@@ -10,8 +10,13 @@ from typing import Any
 
 import tomli_w
 from pydantic import BaseModel, Field
-from pydantic_settings_export.generators import AbstractGenerator  # type: ignore[import-untyped]
-from pydantic_settings_export.models import FieldInfoModel, SettingsInfoModel  # type: ignore[import-untyped]
+from pydantic_settings_export.generators import (
+    AbstractGenerator,  # type: ignore[import-untyped]
+)
+from pydantic_settings_export.models import (  # type: ignore[import-untyped]
+    FieldInfoModel,
+    SettingsInfoModel,
+)
 
 from .base import camel_to_snake
 
@@ -20,7 +25,10 @@ class TomlGeneratorSettings(BaseModel):
     """Configuration for TOML generator."""
 
     paths: list[Path] = Field(default_factory=list, description="Output file paths")
-    include_comments: bool = Field(True, description="Include field descriptions as comments")
+    include_comments: bool = Field(
+        True,
+        description="Include field descriptions as comments",
+    )
 
 
 class TomlGenerator(AbstractGenerator):  # type: ignore[type-arg]
@@ -181,7 +189,8 @@ class TomlGenerator(AbstractGenerator):  # type: ignore[type-arg]
             while value and iterations < max_iterations:
                 stripped = False
                 if len(value) >= 2 and (
-                    (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'"))
+                    (value.startswith('"') and value.endswith('"'))
+                    or (value.startswith("'") and value.endswith("'"))
                 ):
                     value = value[1:-1]
                     stripped = True

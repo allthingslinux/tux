@@ -24,7 +24,9 @@ if TYPE_CHECKING:
 ModelT = TypeVar("ModelT")
 
 
-def _resolve_bot(source: commands.Context[Tux] | discord.Interaction | Tux) -> Tux | None:
+def _resolve_bot(
+    source: commands.Context[Tux] | discord.Interaction | Tux,
+) -> Tux | None:
     """Resolve the bot instance from various source types.
 
     Parameters
@@ -49,7 +51,9 @@ def _resolve_bot(source: commands.Context[Tux] | discord.Interaction | Tux) -> T
     return source
 
 
-def get_db_service_from(source: commands.Context[Tux] | discord.Interaction | Tux) -> DatabaseService | None:
+def get_db_service_from(
+    source: commands.Context[Tux] | discord.Interaction | Tux,
+) -> DatabaseService | None:
     """Get the database service from various source types.
 
     Parameters

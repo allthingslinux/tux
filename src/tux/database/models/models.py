@@ -272,23 +272,52 @@ class GuildConfig(BaseModel, table=True):
     )
     onboarding_stage: OnboardingStage | None = Field(
         default=None,
-        sa_column=Column(PgEnum(OnboardingStage, name="onboarding_stage_enum"), nullable=True),
+        sa_column=Column(
+            PgEnum(OnboardingStage, name="onboarding_stage_enum"),
+            nullable=True,
+        ),
         description="Current stage of the onboarding wizard",
     )
 
-    guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="guild_config"))
+    guild: Mapped[Guild] = Relationship(
+        sa_relationship=relationship(back_populates="guild_config"),
+    )
 
     __table_args__ = (
         CheckConstraint("id > 0", name="check_guild_config_guild_id_valid"),
         CheckConstraint("length(prefix) > 0", name="check_prefix_not_empty"),
-        CheckConstraint("mod_log_id IS NULL OR mod_log_id > 0", name="check_mod_log_id_valid"),
-        CheckConstraint("audit_log_id IS NULL OR audit_log_id > 0", name="check_audit_log_id_valid"),
-        CheckConstraint("join_log_id IS NULL OR join_log_id > 0", name="check_join_log_id_valid"),
-        CheckConstraint("private_log_id IS NULL OR private_log_id > 0", name="check_private_log_id_valid"),
-        CheckConstraint("report_log_id IS NULL OR report_log_id > 0", name="check_report_log_id_valid"),
-        CheckConstraint("dev_log_id IS NULL OR dev_log_id > 0", name="check_dev_log_id_valid"),
-        CheckConstraint("jail_channel_id IS NULL OR jail_channel_id > 0", name="check_jail_channel_id_valid"),
-        CheckConstraint("jail_role_id IS NULL OR jail_role_id > 0", name="check_jail_role_id_valid"),
+        CheckConstraint(
+            "mod_log_id IS NULL OR mod_log_id > 0",
+            name="check_mod_log_id_valid",
+        ),
+        CheckConstraint(
+            "audit_log_id IS NULL OR audit_log_id > 0",
+            name="check_audit_log_id_valid",
+        ),
+        CheckConstraint(
+            "join_log_id IS NULL OR join_log_id > 0",
+            name="check_join_log_id_valid",
+        ),
+        CheckConstraint(
+            "private_log_id IS NULL OR private_log_id > 0",
+            name="check_private_log_id_valid",
+        ),
+        CheckConstraint(
+            "report_log_id IS NULL OR report_log_id > 0",
+            name="check_report_log_id_valid",
+        ),
+        CheckConstraint(
+            "dev_log_id IS NULL OR dev_log_id > 0",
+            name="check_dev_log_id_valid",
+        ),
+        CheckConstraint(
+            "jail_channel_id IS NULL OR jail_channel_id > 0",
+            name="check_jail_channel_id_valid",
+        ),
+        CheckConstraint(
+            "jail_role_id IS NULL OR jail_role_id > 0",
+            name="check_jail_role_id_valid",
+        ),
     )
 
     def __repr__(self) -> str:
@@ -515,9 +544,15 @@ class PermissionCommand(BaseModel, table=True):
     )
 
     __table_args__ = (
-        CheckConstraint("required_rank >= 0 AND required_rank <= 10", name="check_required_rank_range"),
+        CheckConstraint(
+            "required_rank >= 0 AND required_rank <= 10",
+            name="check_required_rank_range",
+        ),
         CheckConstraint("guild_id > 0", name="check_permission_command_guild_id_valid"),
-        CheckConstraint("length(command_name) > 0", name="check_command_name_not_empty"),
+        CheckConstraint(
+            "length(command_name) > 0",
+            name="check_command_name_not_empty",
+        ),
         UniqueConstraint("guild_id", "command_name", name="unique_permission_command"),
         Index("idx_permission_commands_guild", "guild_id"),
         Index("idx_permission_commands_rank", "required_rank"),
@@ -639,14 +674,22 @@ class Case(BaseModel, table=True):
         description="Discord guild ID where this case occurred",
     )
 
-    guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="cases"))
+    guild: Mapped[Guild] = Relationship(
+        sa_relationship=relationship(back_populates="cases"),
+    )
 
     __table_args__ = (
         CheckConstraint("guild_id > 0", name="check_case_guild_id_valid"),
         CheckConstraint("case_user_id > 0", name="check_case_user_id_valid"),
         CheckConstraint("case_moderator_id > 0", name="check_case_moderator_id_valid"),
-        CheckConstraint("case_number IS NULL OR case_number >= 1", name="check_case_number_positive"),
-        CheckConstraint("mod_log_message_id IS NULL OR mod_log_message_id > 0", name="check_mod_msg_id_valid"),
+        CheckConstraint(
+            "case_number IS NULL OR case_number >= 1",
+            name="check_case_number_positive",
+        ),
+        CheckConstraint(
+            "mod_log_message_id IS NULL OR mod_log_message_id > 0",
+            name="check_mod_msg_id_valid",
+        ),
         Index("idx_case_guild", "guild_id"),
         Index("idx_case_guild_user", "guild_id", "case_user_id"),
         Index("idx_case_guild_moderator", "guild_id", "case_moderator_id"),
@@ -662,7 +705,11 @@ class Case(BaseModel, table=True):
             postgresql_where="case_processed = FALSE AND case_expires_at IS NOT NULL",
         ),
         # Partial index for active (valid) cases
-        Index("idx_case_active_guild", "guild_id", postgresql_where="case_status = TRUE"),
+        Index(
+            "idx_case_active_guild",
+            "guild_id",
+            postgresql_where="case_status = TRUE",
+        ),
         UniqueConstraint("guild_id", "case_number", name="uq_case_guild_case_number"),
     )
 
@@ -746,13 +793,18 @@ class Snippet(SQLModel, table=True):
         description="Optional alternative name for triggering the snippet",
     )
 
-    guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="snippets"))
+    guild: Mapped[Guild] = Relationship(
+        sa_relationship=relationship(back_populates="snippets"),
+    )
 
     __table_args__ = (
         CheckConstraint("guild_id > 0", name="check_snippet_guild_id_valid"),
         CheckConstraint("snippet_user_id > 0", name="check_snippet_user_id_valid"),
         CheckConstraint("uses >= 0", name="check_snippet_uses_positive"),
-        CheckConstraint("length(snippet_name) > 0", name="check_snippet_name_not_empty"),
+        CheckConstraint(
+            "length(snippet_name) > 0",
+            name="check_snippet_name_not_empty",
+        ),
         Index("idx_snippet_guild", "guild_id"),
         Index("idx_snippet_name_guild", "snippet_name", "guild_id", unique=True),
         Index("idx_snippet_user", "snippet_user_id"),
@@ -762,7 +814,9 @@ class Snippet(SQLModel, table=True):
 
     def __repr__(self) -> str:
         """Return string representation showing ID and name."""
-        return f"<Snippet id={self.id} name={self.snippet_name!r} guild={self.guild_id}>"
+        return (
+            f"<Snippet id={self.id} name={self.snippet_name!r} guild={self.guild_id}>"
+        )
 
 
 # =============================================================================
@@ -827,12 +881,17 @@ class Reminder(SQLModel, table=True):
         description="Discord guild ID where this reminder was created",
     )
 
-    guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="reminders"))
+    guild: Mapped[Guild] = Relationship(
+        sa_relationship=relationship(back_populates="reminders"),
+    )
 
     __table_args__ = (
         CheckConstraint("guild_id > 0", name="check_reminder_guild_id_valid"),
         CheckConstraint("reminder_user_id > 0", name="check_reminder_user_id_valid"),
-        CheckConstraint("reminder_channel_id > 0", name="check_reminder_channel_id_valid"),
+        CheckConstraint(
+            "reminder_channel_id > 0",
+            name="check_reminder_channel_id_valid",
+        ),
         Index("idx_reminder_guild", "guild_id"),
         Index("idx_reminder_expires_at", "reminder_expires_at"),
         Index("idx_reminder_user", "reminder_user_id"),
@@ -840,7 +899,11 @@ class Reminder(SQLModel, table=True):
         Index("idx_reminder_guild_expires", "guild_id", "reminder_expires_at"),
         Index("idx_reminder_guild_sent", "guild_id", "reminder_sent"),
         # Partial index for pending reminders that need to be sent
-        Index("idx_reminder_pending", "reminder_expires_at", postgresql_where="reminder_sent = FALSE"),
+        Index(
+            "idx_reminder_pending",
+            "reminder_expires_at",
+            postgresql_where="reminder_sent = FALSE",
+        ),
     )
 
     def __repr__(self) -> str:
@@ -915,19 +978,28 @@ class AFK(SQLModel, table=True):
         description="Whether this is a permanent AFK status",
     )
 
-    guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="afks"))
+    guild: Mapped[Guild] = Relationship(
+        sa_relationship=relationship(back_populates="afks"),
+    )
 
     __table_args__ = (
         CheckConstraint("member_id > 0", name="check_afk_member_id_valid"),
         CheckConstraint("guild_id > 0", name="check_afk_guild_id_valid"),
-        CheckConstraint("until IS NULL OR until > since", name="check_afk_until_after_since"),
+        CheckConstraint(
+            "until IS NULL OR until > since",
+            name="check_afk_until_after_since",
+        ),
         Index("idx_afk_guild", "guild_id"),
         Index("idx_afk_member", "member_id"),
         Index("idx_afk_enforced", "enforced"),
         Index("idx_afk_perm", "perm_afk"),
         Index("idx_afk_until", "until"),
         # Partial index for temporary (expiring) AFK statuses
-        Index("idx_afk_expiring", "until", postgresql_where="until IS NOT NULL AND perm_afk = FALSE"),
+        Index(
+            "idx_afk_expiring",
+            "until",
+            postgresql_where="until IS NOT NULL AND perm_afk = FALSE",
+        ),
     )
 
     def __repr__(self) -> str:
@@ -995,7 +1067,9 @@ class Levels(SQLModel, table=True):
         description="Timestamp of last message for XP gain cooldown",
     )
 
-    guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="levels_entries"))
+    guild: Mapped[Guild] = Relationship(
+        sa_relationship=relationship(back_populates="levels_entries"),
+    )
 
     __table_args__ = (
         CheckConstraint("member_id > 0", name="check_levels_member_id_valid"),
@@ -1008,7 +1082,12 @@ class Levels(SQLModel, table=True):
         Index("idx_levels_blacklisted", "blacklisted"),
         Index("idx_levels_last_message", "last_message"),
         # Partial index for non-blacklisted active users (common leaderboard queries)
-        Index("idx_levels_active_leaderboard", "guild_id", "xp", postgresql_where="blacklisted = FALSE"),
+        Index(
+            "idx_levels_active_leaderboard",
+            "guild_id",
+            "xp",
+            postgresql_where="blacklisted = FALSE",
+        ),
     )
 
     def __repr__(self) -> str:
@@ -1061,12 +1140,20 @@ class Starboard(SQLModel, table=True):
         description="Number of reactions required for message to appear on starboard",
     )
 
-    guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="starboard"))
+    guild: Mapped[Guild] = Relationship(
+        sa_relationship=relationship(back_populates="starboard"),
+    )
 
     __table_args__ = (
         CheckConstraint("id > 0", name="check_starboard_guild_id_valid"),
-        CheckConstraint("starboard_channel_id > 0", name="check_starboard_channel_id_valid"),
-        CheckConstraint("starboard_threshold >= 1", name="check_starboard_threshold_positive"),
+        CheckConstraint(
+            "starboard_channel_id > 0",
+            name="check_starboard_channel_id_valid",
+        ),
+        CheckConstraint(
+            "starboard_threshold >= 1",
+            name="check_starboard_threshold_positive",
+        ),
         Index("idx_starboard_channel", "starboard_channel_id"),
         Index("idx_starboard_threshold", "starboard_threshold"),
     )
@@ -1142,14 +1229,28 @@ class StarboardMessage(SQLModel, table=True):
         description="Discord message ID of the starboard post in the starboard channel",
     )
 
-    guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="starboard_messages"))
+    guild: Mapped[Guild] = Relationship(
+        sa_relationship=relationship(back_populates="starboard_messages"),
+    )
 
     __table_args__ = (
         CheckConstraint("id > 0", name="check_starboard_msg_id_valid"),
-        CheckConstraint("message_guild_id > 0", name="check_starboard_msg_guild_id_valid"),
-        CheckConstraint("message_channel_id > 0", name="check_starboard_msg_channel_id_valid"),
-        CheckConstraint("message_user_id > 0", name="check_starboard_msg_user_id_valid"),
-        CheckConstraint("starboard_message_id > 0", name="check_starboard_post_id_valid"),
+        CheckConstraint(
+            "message_guild_id > 0",
+            name="check_starboard_msg_guild_id_valid",
+        ),
+        CheckConstraint(
+            "message_channel_id > 0",
+            name="check_starboard_msg_channel_id_valid",
+        ),
+        CheckConstraint(
+            "message_user_id > 0",
+            name="check_starboard_msg_user_id_valid",
+        ),
+        CheckConstraint(
+            "starboard_message_id > 0",
+            name="check_starboard_post_id_valid",
+        ),
         CheckConstraint("star_count >= 0", name="check_star_count_positive"),
         Index("ux_starboard_message", "id", "message_guild_id", unique=True),
         Index("idx_starboard_msg_expires", "message_expires_at"),

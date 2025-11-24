@@ -44,7 +44,9 @@ class HotReload(commands.Cog):
         # Initialize components
         self.file_watcher: FileWatcher | None = None
         self.hash_tracker = FileHashTracker()
-        self.dependency_graph = DependencyGraph(max_depth=self.config.max_dependency_depth)
+        self.dependency_graph = DependencyGraph(
+            max_depth=self.config.max_dependency_depth,
+        )
         self.class_tracker = ClassDefinitionTracker()
 
         # Performance monitoring
@@ -232,16 +234,31 @@ class HotReload(commands.Cog):
     async def status(self, ctx: commands.Context[Any]) -> None:
         """Show hot reload system status."""
         status = "🟢 Enabled" if self._is_enabled else "🔴 Disabled"
-        watching = "🟢 Active" if self.file_watcher and self.file_watcher.is_running() else "🔴 Inactive"
+        watching = (
+            "🟢 Active"
+            if self.file_watcher and self.file_watcher.is_running()
+            else "🔴 Inactive"
+        )
 
         stats = self._reload_stats
-        embed = discord.Embed(title="Hot Reload Status", color=0x00FF00 if self._is_enabled else 0xFF0000)
+        embed = discord.Embed(
+            title="Hot Reload Status",
+            color=0x00FF00 if self._is_enabled else 0xFF0000,
+        )
         embed.add_field(name="Status", value=status, inline=True)
         embed.add_field(name="File Watching", value=watching, inline=True)
         embed.add_field(name="Total Reloads", value=stats["total_reloads"], inline=True)
-        embed.add_field(name="Successful", value=stats["successful_reloads"], inline=True)
+        embed.add_field(
+            name="Successful",
+            value=stats["successful_reloads"],
+            inline=True,
+        )
         embed.add_field(name="Failed", value=stats["failed_reloads"], inline=True)
-        embed.add_field(name="Avg Time", value=f"{stats['average_reload_time']:.2f}s", inline=True)
+        embed.add_field(
+            name="Avg Time",
+            value=f"{stats['average_reload_time']:.2f}s",
+            inline=True,
+        )
 
         await ctx.send(embed=embed)
 

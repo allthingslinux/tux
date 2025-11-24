@@ -217,7 +217,7 @@ exclude = [
     "venv",
 ]
 indent-width = 4
-line-length = 120
+line-length = 88
 target-version = "py313"
 
 [tool.ruff.lint]

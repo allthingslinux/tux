@@ -54,8 +54,16 @@ class DevCLI(BaseCLI):
             Command("lint-fix", self.lint_fix, "Run linting with Ruff and apply fixes"),
             Command("format", self.format_code, "Format code with Ruff"),
             Command("type-check", self.type_check, "Check types with basedpyright"),
-            Command("lint-docstring", self.lint_docstring, "Lint docstrings with pydoclint"),
-            Command("docstring-coverage", self.docstring_coverage, "Check docstring coverage with docstr-coverage"),
+            Command(
+                "lint-docstring",
+                self.lint_docstring,
+                "Lint docstrings with pydoclint",
+            ),
+            Command(
+                "docstring-coverage",
+                self.docstring_coverage,
+                "Check docstring coverage with docstr-coverage",
+            ),
             # Workflow commands
             Command("pre-commit", self.pre_commit, "Run pre-commit checks"),
             Command("all", self.run_all_checks, "Run all development checks"),
@@ -133,7 +141,10 @@ class DevCLI(BaseCLI):
         """Run linting checks with Ruff to ensure code quality."""
         self.rich.print_section("🔍 Running Linting", "blue")
         self.rich.print_info("Checking code quality with Ruff...")
-        success = self._run_tool_command(["uv", "run", "ruff", "check", "."], "Linting completed successfully")
+        success = self._run_tool_command(
+            ["uv", "run", "ruff", "check", "."],
+            "Linting completed successfully",
+        )
         if not success:
             self.rich.print_error("Linting did not pass - see issues above")
             sys.exit(1)
@@ -146,13 +157,18 @@ class DevCLI(BaseCLI):
             "Linting with fixes completed successfully",
         )
         if not success:
-            self.rich.print_error("Linting with fixes did not complete - see issues above")
+            self.rich.print_error(
+                "Linting with fixes did not complete - see issues above",
+            )
             sys.exit(1)
 
     def format_code(self) -> None:
         """Format code using Ruff's formatter for consistent styling."""
         self.rich.print_section("✨ Formatting Code", "blue")
-        success = self._run_tool_command(["uv", "run", "ruff", "format", "."], "Code formatting completed successfully")
+        success = self._run_tool_command(
+            ["uv", "run", "ruff", "format", "."],
+            "Code formatting completed successfully",
+        )
         if not success:
             self.rich.print_error("Code formatting did not pass - see issues above")
             sys.exit(1)
@@ -160,7 +176,10 @@ class DevCLI(BaseCLI):
     def type_check(self) -> None:
         """Perform static type checking using basedpyright."""
         self.rich.print_section("🔍 Type Checking", "blue")
-        success = self._run_tool_command(["uv", "run", "basedpyright"], "Type checking completed successfully")
+        success = self._run_tool_command(
+            ["uv", "run", "basedpyright"],
+            "Type checking completed successfully",
+        )
         if not success:
             self.rich.print_error("Type checking did not pass - see issues above")
             sys.exit(1)
@@ -199,7 +218,10 @@ class DevCLI(BaseCLI):
 
     def run_all_checks(
         self,
-        fix: Annotated[bool, Option("--fix", help="Automatically fix issues where possible")] = False,
+        fix: Annotated[
+            bool,
+            Option("--fix", help="Automatically fix issues where possible"),
+        ] = False,
     ) -> None:
         """Run all development checks including linting, type checking, and documentation."""
         self.rich.print_section("🚀 Running All Development Checks", "blue")
@@ -214,7 +236,10 @@ class DevCLI(BaseCLI):
         results: list[tuple[str, bool]] = []
 
         # Run checks with progress bar
-        with self.rich.create_progress_bar("Running Development Checks", len(checks)) as progress:
+        with self.rich.create_progress_bar(
+            "Running Development Checks",
+            len(checks),
+        ) as progress:
             task = progress.add_task("Running Development Checks", total=len(checks))
 
             for check_name, check_func in checks:
@@ -242,7 +267,11 @@ class DevCLI(BaseCLI):
 
         # Create Rich table for results
         table_data: list[tuple[str, str, str]] = [
-            (check_name, "✅ PASSED" if success else "❌ FAILED", "Completed" if success else "Failed")
+            (
+                check_name,
+                "✅ PASSED" if success else "❌ FAILED",
+                "Completed" if success else "Failed",
+            )
             for check_name, success in results
         ]
 

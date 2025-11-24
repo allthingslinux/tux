@@ -17,7 +17,11 @@ from tux.core.checks import requires_command_permission
 
 # Type for channels that support slowmode
 SlowmodeChannel = (
-    discord.TextChannel | discord.Thread | discord.VoiceChannel | discord.ForumChannel | discord.StageChannel
+    discord.TextChannel
+    | discord.Thread
+    | discord.VoiceChannel
+    | discord.ForumChannel
+    | discord.StageChannel
 )
 
 
@@ -80,7 +84,10 @@ class Slowmode(BaseCog):
         if channel_or_delay:
             with suppress(commands.CommandError):
                 # Try GuildChannel converter which handles all types
-                target_channel = await commands.GuildChannelConverter().convert(ctx, channel_or_delay)
+                target_channel = await commands.GuildChannelConverter().convert(
+                    ctx,
+                    channel_or_delay,
+                )
 
         # If first argument was a channel, use second argument as delay
         if target_channel:
@@ -96,7 +103,11 @@ class Slowmode(BaseCog):
         # Ensure target_channel is a type that supports slowmode
         if not isinstance(
             target_channel,
-            discord.TextChannel | discord.Thread | discord.VoiceChannel | discord.ForumChannel | discord.StageChannel,
+            discord.TextChannel
+            | discord.Thread
+            | discord.VoiceChannel
+            | discord.ForumChannel
+            | discord.StageChannel,
         ):
             await ctx.send(
                 f"Slowmode cannot be set for this type of channel ({type(target_channel).__name__}).",
@@ -128,7 +139,9 @@ class Slowmode(BaseCog):
         bool
             True if the channel supports slowmode, False otherwise
         """
-        return hasattr(channel, "slowmode_delay") and callable(getattr(channel, "edit", None))
+        return hasattr(channel, "slowmode_delay") and callable(
+            getattr(channel, "edit", None),
+        )
 
     @staticmethod
     def _format_slowmode_message(delay: int, channel_mention: str) -> str:
@@ -155,9 +168,7 @@ class Slowmode(BaseCog):
         minute_suffix = "s" if minutes > 1 else ""
         second_suffix = "s" if seconds > 1 else ""
 
-        return (
-            f"The slowmode in {channel_mention} is {minutes} minute{minute_suffix} and {seconds} second{second_suffix}."
-        )
+        return f"The slowmode in {channel_mention} is {minutes} minute{minute_suffix} and {seconds} second{second_suffix}."
 
     @staticmethod
     async def _get_slowmode(
@@ -177,7 +188,10 @@ class Slowmode(BaseCog):
         try:
             # Check if this channel has a slowmode_delay attribute
             if not hasattr(channel, "slowmode_delay"):
-                await ctx.send("This channel type doesn't support slowmode.", ephemeral=True)
+                await ctx.send(
+                    "This channel type doesn't support slowmode.",
+                    ephemeral=True,
+                )
                 return
 
             delay = channel.slowmode_delay
@@ -207,13 +221,19 @@ class Slowmode(BaseCog):
         """
         # Verify this channel supports slowmode
         if not self._channel_supports_slowmode(channel):
-            await ctx.send("This channel type doesn't support slowmode.", ephemeral=True)
+            await ctx.send(
+                "This channel type doesn't support slowmode.",
+                ephemeral=True,
+            )
             return
 
         delay_seconds = self._parse_delay(delay)
 
         if delay_seconds is None:
-            await ctx.send("Invalid delay format. Examples: `5`, `5s`, `2m`", ephemeral=True)
+            await ctx.send(
+                "Invalid delay format. Examples: `5`, `5s`, `2m`",
+                ephemeral=True,
+            )
             return
 
         max_slowmode = 21600  # 6 hours, Discord's maximum
@@ -230,14 +250,15 @@ class Slowmode(BaseCog):
                 message = f"Slowmode has been disabled in {channel.mention}."
             else:
                 prefix = "Slowmode set to"
-                message = (
-                    f"{prefix} {self._format_slowmode_message(delay_seconds, channel.mention).split('is')[1].strip()}"
-                )
+                message = f"{prefix} {self._format_slowmode_message(delay_seconds, channel.mention).split('is')[1].strip()}"
             await ctx.send(message, ephemeral=True)
             logger.info(f"{ctx.author} set slowmode to {delay_seconds}s in {channel}")
 
         except discord.Forbidden:
-            await ctx.send(f"I don't have permission to change slowmode in {channel.mention}.", ephemeral=True)
+            await ctx.send(
+                f"I don't have permission to change slowmode in {channel.mention}.",
+                ephemeral=True,
+            )
 
         except discord.HTTPException as error:
             await ctx.send(f"Failed to set slowmode: {error}", ephemeral=True)

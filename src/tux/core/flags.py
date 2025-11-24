@@ -77,7 +77,12 @@ class TuxFlagConverter(commands.FlagConverter):
     """
 
     @classmethod
-    def parse_flags(cls, argument: str, *, ignore_extra: bool = True) -> dict[str, list[str]]:  # noqa: PLR0912, PLR0915
+    def parse_flags(
+        cls,
+        argument: str,
+        *,
+        ignore_extra: bool = True,
+    ) -> dict[str, list[str]]:
         """Parse command arguments into flags with enhanced boolean handling.
 
         This method extends Discord.py's flag parsing to handle trailing boolean
@@ -125,7 +130,11 @@ class TuxFlagConverter(commands.FlagConverter):
                 last_position = len(working_argument)
 
             if value:
-                name = positional_flag.name.casefold() if case_insensitive else positional_flag.name
+                name = (
+                    positional_flag.name.casefold()
+                    if case_insensitive
+                    else positional_flag.name
+                )
                 result[name] = [value]
 
         for match in cls.__commands_flag_regex__.finditer(working_argument):
@@ -145,7 +154,9 @@ class TuxFlagConverter(commands.FlagConverter):
                     if last_flag and last_flag.annotation is bool:
                         value = "True"
                     else:
-                        logger.debug(f"Missing argument for flag: {last_flag.name if last_flag else 'unknown'}")
+                        logger.debug(
+                            f"Missing argument for flag: {last_flag.name if last_flag else 'unknown'}",
+                        )
                         raise commands.MissingFlagArgument(last_flag)
 
                 name = last_flag.name.casefold() if case_insensitive else last_flag.name
@@ -170,7 +181,9 @@ class TuxFlagConverter(commands.FlagConverter):
                 if last_flag and last_flag.annotation is bool:
                     value = "True"
                 else:
-                    logger.debug(f"Missing argument for trailing flag: {last_flag.name if last_flag else 'unknown'}")
+                    logger.debug(
+                        f"Missing argument for trailing flag: {last_flag.name if last_flag else 'unknown'}",
+                    )
                     raise commands.MissingFlagArgument(last_flag)
 
             name = last_flag.name.casefold() if case_insensitive else last_flag.name
@@ -183,7 +196,9 @@ class TuxFlagConverter(commands.FlagConverter):
                 values.append(value)
         elif value and not ignore_extra:
             # If we're here then we passed extra arguments that aren't flags
-            logger.warning(f"Too many arguments passed to {cls.__name__}: {value[:50]}...")
+            logger.warning(
+                f"Too many arguments passed to {cls.__name__}: {value[:50]}...",
+            )
             msg = f"Too many arguments passed to {cls.__name__}"
             raise commands.TooManyArguments(msg)
 
@@ -351,7 +366,12 @@ class TimeoutFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefi
     )
 
 
-class UntimeoutFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class UntimeoutFlags(
+    TuxFlagConverter,
+    case_insensitive=True,
+    delimiter=" ",
+    prefix="-",
+):
     """Flags for untimeout commands.
 
     Attributes
@@ -426,7 +446,12 @@ class UnjailFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix
     )
 
 
-class CasesViewFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class CasesViewFlags(
+    TuxFlagConverter,
+    case_insensitive=True,
+    delimiter=" ",
+    prefix="-",
+):
     """Flags for viewing cases.
 
     Attributes
@@ -470,7 +495,12 @@ class CasesViewFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", pre
             self.moderator = None
 
 
-class CaseModifyFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class CaseModifyFlags(
+    TuxFlagConverter,
+    case_insensitive=True,
+    delimiter=" ",
+    prefix="-",
+):
     """Flags for modifying cases.
 
     Attributes
@@ -507,7 +537,12 @@ class CaseModifyFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", pr
             raise commands.FlagError(msg)
 
 
-class SnippetBanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class SnippetBanFlags(
+    TuxFlagConverter,
+    case_insensitive=True,
+    delimiter=" ",
+    prefix="-",
+):
     """Flags for snippet ban commands.
 
     Attributes
@@ -532,7 +567,12 @@ class SnippetBanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", pr
     )
 
 
-class SnippetUnbanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class SnippetUnbanFlags(
+    TuxFlagConverter,
+    case_insensitive=True,
+    delimiter=" ",
+    prefix="-",
+):
     """Flags for snippet unban commands.
 
     Attributes
@@ -583,7 +623,12 @@ class PollBanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefi
     )
 
 
-class PollUnbanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class PollUnbanFlags(
+    TuxFlagConverter,
+    case_insensitive=True,
+    delimiter=" ",
+    prefix="-",
+):
     """Flags for poll unban commands.
 
     Attributes

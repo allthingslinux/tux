@@ -137,7 +137,11 @@ class Cases(ModerationCogBase):
     )
     @commands.guild_only()
     @requires_command_permission()
-    async def cases(self, ctx: commands.Context[Tux], case_number: int | None = None) -> None:
+    async def cases(
+        self,
+        ctx: commands.Context[Tux],
+        case_number: int | None = None,
+    ) -> None:
         """
         View all moderation cases in the server.
 
@@ -375,7 +379,13 @@ class Cases(ModerationCogBase):
         await self._update_mod_log_embed(ctx, updated_case)
 
         user = await self._resolve_user(case.case_user_id)
-        await self._send_case_embed(ctx, updated_case, "updated", updated_case.case_reason, user)
+        await self._send_case_embed(
+            ctx,
+            updated_case,
+            "updated",
+            updated_case.case_reason,
+            user,
+        )
 
     async def _update_mod_log_embed(
         self,
@@ -396,7 +406,9 @@ class Cases(ModerationCogBase):
 
         # Check if this case has a mod log message ID
         if not case.mod_log_message_id:
-            logger.debug(f"Case #{case.case_number} has no mod log message ID, skipping update")
+            logger.debug(
+                f"Case #{case.case_number} has no mod log message ID, skipping update",
+            )
             return
 
         mod_message: discord.Message | None = None
@@ -411,17 +423,23 @@ class Cases(ModerationCogBase):
             # Get the mod log channel
             mod_channel = ctx.guild.get_channel(mod_log_id)
             if not mod_channel or not isinstance(mod_channel, discord.TextChannel):
-                logger.warning(f"Mod log channel {mod_log_id} not found or not a text channel")
+                logger.warning(
+                    f"Mod log channel {mod_log_id} not found or not a text channel",
+                )
                 return
 
             # Try to fetch the mod log message
             try:
                 mod_message = await mod_channel.fetch_message(case.mod_log_message_id)
             except discord.NotFound:
-                logger.warning(f"Mod log message {case.mod_log_message_id} not found in channel {mod_channel.id}")
+                logger.warning(
+                    f"Mod log message {case.mod_log_message_id} not found in channel {mod_channel.id}",
+                )
                 return
             except discord.Forbidden:
-                logger.warning(f"Missing permissions to fetch message {case.mod_log_message_id} in mod log channel")
+                logger.warning(
+                    f"Missing permissions to fetch message {case.mod_log_message_id} in mod log channel",
+                )
                 return
 
             # Create updated embed for mod log
@@ -442,7 +460,9 @@ class Cases(ModerationCogBase):
             ]
 
             if case.case_expires_at:
-                fields.append(("Expires", f"<t:{int(case.case_expires_at.timestamp())}:R>", True))
+                fields.append(
+                    ("Expires", f"<t:{int(case.case_expires_at.timestamp())}:R>", True),
+                )
 
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
@@ -458,10 +478,14 @@ class Cases(ModerationCogBase):
 
             # Edit the mod log message with updated embed
             await mod_message.edit(embed=embed)
-            logger.info(f"Updated mod log message {case.mod_log_message_id} for case #{case.case_number}")
+            logger.info(
+                f"Updated mod log message {case.mod_log_message_id} for case #{case.case_number}",
+            )
 
         except Exception as e:
-            logger.error(f"Failed to update mod log embed for case #{case.case_number}: {e}")
+            logger.error(
+                f"Failed to update mod log embed for case #{case.case_number}: {e}",
+            )
             # Don't raise - mod log update failure shouldn't break case modification
 
     async def _resolve_user(self, user_id: int) -> discord.User | MockUser:
@@ -591,7 +615,10 @@ class Cases(ModerationCogBase):
             return
 
         # Sort cases (highest case id first)
-        cases.sort(key=lambda x: x.case_number if x.case_number is not None else 0, reverse=True)
+        cases.sort(
+            key=lambda x: x.case_number if x.case_number is not None else 0,
+            reverse=True,
+        )
 
         menu = ViewMenu(
             ctx,
@@ -728,7 +755,9 @@ class Cases(ModerationCogBase):
             action_emoji = self.bot.emoji_manager.get(str(action_emoji_key))
 
             # Format the case number
-            case_number = f"{case.case_number:04}" if case.case_number is not None else "0000"
+            case_number = (
+                f"{case.case_number:04}" if case.case_number is not None else "0000"
+            )
 
             # Format type and action
             case_type_and_action = f"{action_emoji}{type_emoji}"

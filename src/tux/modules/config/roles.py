@@ -32,7 +32,12 @@ class RoleManager(BaseConfigManager):
         """
         await self.configure_dashboard(ctx, "roles")
 
-    async def assign_role(self, ctx: commands.Context[Tux], rank: int, role: discord.Role) -> None:
+    async def assign_role(
+        self,
+        ctx: commands.Context[Tux],
+        rank: int,
+        role: discord.Role,
+    ) -> None:
         """Assign permission rank to Discord role."""
         assert ctx.guild
 
@@ -40,7 +45,10 @@ class RoleManager(BaseConfigManager):
 
         try:
             # Check if rank exists
-            rank_obj = await self.bot.db.permission_ranks.get_permission_rank(ctx.guild.id, rank)
+            rank_obj = await self.bot.db.permission_ranks.get_permission_rank(
+                ctx.guild.id,
+                rank,
+            )
             if not rank_obj:
                 embed = self.create_error_embed(
                     "❌ Rank Not Found",
@@ -51,7 +59,8 @@ class RoleManager(BaseConfigManager):
 
             # Check if role is already assigned to this rank
             existing = await self.bot.db.permission_assignments.find_one(
-                filters=(PermissionAssignment.guild_id == ctx.guild.id) & (PermissionAssignment.role_id == role.id),
+                filters=(PermissionAssignment.guild_id == ctx.guild.id)
+                & (PermissionAssignment.role_id == role.id),
             )
             if existing and existing.permission_rank_id == rank:
                 embed = self.create_warning_embed(
@@ -63,7 +72,10 @@ class RoleManager(BaseConfigManager):
 
             # Remove existing assignment if any
             if existing:
-                await self.bot.db.permission_assignments.remove_role_assignment(ctx.guild.id, role.id)
+                await self.bot.db.permission_assignments.remove_role_assignment(
+                    ctx.guild.id,
+                    role.id,
+                )
 
             # Create new assignment
             await self.bot.db.permission_assignments.assign_permission_rank(
@@ -81,7 +93,11 @@ class RoleManager(BaseConfigManager):
         except Exception as e:
             await self.handle_error(ctx, e, "assign role")
 
-    async def unassign_role(self, ctx: commands.Context[Tux], role: discord.Role) -> None:
+    async def unassign_role(
+        self,
+        ctx: commands.Context[Tux],
+        role: discord.Role,
+    ) -> None:
         """Remove permission rank from role."""
         assert ctx.guild
 
@@ -90,7 +106,8 @@ class RoleManager(BaseConfigManager):
         try:
             # Check if role has an assignment
             assignment = await self.bot.db.permission_assignments.find_one(
-                filters=(PermissionAssignment.guild_id == ctx.guild.id) & (PermissionAssignment.role_id == role.id),
+                filters=(PermissionAssignment.guild_id == ctx.guild.id)
+                & (PermissionAssignment.role_id == role.id),
             )
             if not assignment:
                 embed = self.create_error_embed(
@@ -105,10 +122,15 @@ class RoleManager(BaseConfigManager):
                 ctx.guild.id,
                 assignment.permission_rank_id,
             )
-            rank_name = rank_obj.name if rank_obj else f"Rank {assignment.permission_rank_id}"
+            rank_name = (
+                rank_obj.name if rank_obj else f"Rank {assignment.permission_rank_id}"
+            )
 
             # Remove assignment
-            await self.bot.db.permission_assignments.remove_role_assignment(ctx.guild.id, role.id)
+            await self.bot.db.permission_assignments.remove_role_assignment(
+                ctx.guild.id,
+                role.id,
+            )
 
             embed = self.create_success_embed(
                 "✅ Role Unassigned",

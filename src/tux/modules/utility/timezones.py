@@ -165,7 +165,9 @@ class Timezones(BaseCog):
 
             default_embeds.extend(embeds)
 
-            options[discord.SelectOption(label=continent, emoji=continent_emojis[continent])] = Page.from_embeds(embeds)
+            options[
+                discord.SelectOption(label=continent, emoji=continent_emojis[continent])
+            ] = Page.from_embeds(embeds)
 
         for embed in default_embeds:
             menu.add_page(embed)

@@ -36,7 +36,12 @@ class HelpState(Enum):
 class HelpNavigation:
     """Manages help system navigation and UI interactions."""
 
-    def __init__(self, ctx: commands.Context[Any], data: HelpData, renderer: HelpRenderer) -> None:
+    def __init__(
+        self,
+        ctx: commands.Context[Any],
+        data: HelpData,
+        renderer: HelpRenderer,
+    ) -> None:
         """Initialize the help navigation manager.
 
         Parameters
@@ -66,15 +71,27 @@ class HelpNavigation:
         """Context property required by HelpCommandProtocol."""
         return self.ctx
 
-    async def on_category_select(self, interaction: discord.Interaction, category: str) -> None:
+    async def on_category_select(
+        self,
+        interaction: discord.Interaction,
+        category: str,
+    ) -> None:
         """Handle category selection - protocol method."""
         await self.handle_category_select(interaction, category)
 
-    async def on_command_select(self, interaction: discord.Interaction, command_name: str) -> None:
+    async def on_command_select(
+        self,
+        interaction: discord.Interaction,
+        command_name: str,
+    ) -> None:
         """Handle command selection - protocol method."""
         await self.handle_command_select(interaction, command_name)
 
-    async def on_subcommand_select(self, interaction: discord.Interaction, subcommand_name: str) -> None:
+    async def on_subcommand_select(
+        self,
+        interaction: discord.Interaction,
+        subcommand_name: str,
+    ) -> None:
         """Handle subcommand selection - protocol method."""
         await self.handle_subcommand_select(interaction, subcommand_name)
 
@@ -102,7 +119,10 @@ class HelpNavigation:
         # Restore or reset page counter
         if preserve_page:
             # Make sure the page index is valid for the new pagination
-            self.current_subcommand_page = min(current_page, len(self.subcommand_pages) - 1)
+            self.current_subcommand_page = min(
+                current_page,
+                len(self.subcommand_pages) - 1,
+            )
         else:
             # Reset to first page when paginating
             self.current_subcommand_page = 0
@@ -118,14 +138,21 @@ class HelpNavigation:
         """
         if not self.current_command_obj:
             # Create a basic embed if no command object
-            return self.renderer.create_base_embed("Help", "No command information available.")
+            return self.renderer.create_base_embed(
+                "Help",
+                "No command information available.",
+            )
 
         if not isinstance(self.current_command_obj, commands.Group):
             # Fallback to regular embed if not a group
             return await self.renderer.create_command_embed(self.current_command_obj)
 
-        valid_page = self.subcommand_pages and 0 <= self.current_subcommand_page < len(self.subcommand_pages)
-        current_page_cmds = self.subcommand_pages[self.current_subcommand_page] if valid_page else []
+        valid_page = self.subcommand_pages and 0 <= self.current_subcommand_page < len(
+            self.subcommand_pages,
+        )
+        current_page_cmds = (
+            self.subcommand_pages[self.current_subcommand_page] if valid_page else []
+        )
 
         # Create embed similar to command embed but with paginated subcommands
         help_text = format_multiline_description(self.current_command_obj.help)
@@ -138,7 +165,11 @@ class HelpNavigation:
 
         # Add flag details if present
         if flag_details := self.renderer.format_flag_details(self.current_command_obj):
-            embed.add_field(name="Flags", value=f"```\n{flag_details}\n```", inline=False)
+            embed.add_field(
+                name="Flags",
+                value=f"```\n{flag_details}\n```",
+                inline=False,
+            )
 
         # Show current page subcommands
         if current_page_cmds:
@@ -157,7 +188,10 @@ class HelpNavigation:
 
         return embed
 
-    async def _find_parent_command(self, subcommand_name: str) -> tuple[str, commands.Command[Any, Any, Any]] | None:
+    async def _find_parent_command(
+        self,
+        subcommand_name: str,
+    ) -> tuple[str, commands.Command[Any, Any, Any]] | None:
         """
         Find the parent command for a given subcommand.
 
@@ -171,7 +205,10 @@ class HelpNavigation:
 
         for category_commands in self.data.command_mapping.values():
             for parent_name, cmd in category_commands.items():
-                if isinstance(cmd, commands.Group) and discord.utils.get(cmd.commands, name=subcommand_name):
+                if isinstance(cmd, commands.Group) and discord.utils.get(
+                    cmd.commands,
+                    name=subcommand_name,
+                ):
                     return parent_name, cmd
         return None
 
@@ -203,11 +240,17 @@ class HelpNavigation:
         """
         categories = await self.data.get_command_categories()
         commands_dict = categories.get(category, {})
-        command_mapping = self.data.command_mapping.get(category, {}) if self.data.command_mapping else {}
+        command_mapping = (
+            self.data.command_mapping.get(category, {})
+            if self.data.command_mapping
+            else {}
+        )
         options = self.renderer.create_command_options(commands_dict, command_mapping)
 
         view = HelpView(self)
-        view.add_item(CommandSelectMenu(self, options, f"Select a command from {category}"))
+        view.add_item(
+            CommandSelectMenu(self, options, f"Select a command from {category}"),
+        )
         view.add_item(BackButton(self))
         view.add_item(CloseButton())
         return view
@@ -233,11 +276,18 @@ class HelpNavigation:
             and len(self.current_command_obj.commands) > 0
         ):
             # Filter subcommands based on user permissions
-            filtered_cmds = [cmd for cmd in self.current_command_obj.commands if await self.data.can_run_command(cmd)]
+            filtered_cmds = [
+                cmd
+                for cmd in self.current_command_obj.commands
+                if await self.data.can_run_command(cmd)
+            ]
             sorted_cmds = sorted(filtered_cmds, key=lambda x: x.name)
 
             # For large command groups like JSK, use pagination buttons and add a select menu for the current page
-            if self.current_command_obj.name in {"jsk", "jishaku"} or len(sorted_cmds) > 15:
+            if (
+                self.current_command_obj.name in {"jsk", "jishaku"}
+                or len(sorted_cmds) > 15
+            ):
                 if not self.subcommand_pages:
                     self._paginate_subcommands(sorted_cmds, preserve_page=True)
 
@@ -245,8 +295,15 @@ class HelpNavigation:
                     view.add_item(PrevButton(self))
                     view.add_item(NextButton(self))
 
-                valid_page = self.subcommand_pages and 0 <= self.current_subcommand_page < len(self.subcommand_pages)
-                current_page_cmds = self.subcommand_pages[self.current_subcommand_page] if valid_page else []
+                valid_page = (
+                    self.subcommand_pages
+                    and 0 <= self.current_subcommand_page < len(self.subcommand_pages)
+                )
+                current_page_cmds = (
+                    self.subcommand_pages[self.current_subcommand_page]
+                    if valid_page
+                    else []
+                )
                 if not valid_page:
                     logger.warning(
                         f"Invalid page index: {self.current_subcommand_page}, pages: {len(self.subcommand_pages)}",
@@ -260,15 +317,25 @@ class HelpNavigation:
                     )
                     for cmd in current_page_cmds
                 ]:
-                    jsk_select = SubcommandSelectMenu(self, jsk_select_options, "Select a subcommand")
+                    jsk_select = SubcommandSelectMenu(
+                        self,
+                        jsk_select_options,
+                        "Select a subcommand",
+                    )
                     view.add_item(jsk_select)
             else:
                 logger.info(
                     f"Creating dropdown for command group: {self.current_command_obj.name} with {len(sorted_cmds)} subcommands",
                 )
 
-                if subcommand_options := self.renderer.create_subcommand_options(sorted_cmds):
-                    subcommand_select = SubcommandSelectMenu(self, subcommand_options, "Select a subcommand")
+                if subcommand_options := self.renderer.create_subcommand_options(
+                    sorted_cmds,
+                ):
+                    subcommand_select = SubcommandSelectMenu(
+                        self,
+                        subcommand_options,
+                        "Select a subcommand",
+                    )
                     view.add_item(subcommand_select)
 
         # Add close button last
@@ -297,7 +364,11 @@ class HelpNavigation:
         view.add_item(CloseButton())
         return view
 
-    async def handle_category_select(self, interaction: discord.Interaction, category: str) -> None:
+    async def handle_category_select(
+        self,
+        interaction: discord.Interaction,
+        category: str,
+    ) -> None:
         """Handle category selection."""
         self.current_state = HelpState.CATEGORY
         self.current_category = category
@@ -311,7 +382,11 @@ class HelpNavigation:
         if interaction.message:
             await interaction.message.edit(embed=embed, view=view)
 
-    async def handle_command_select(self, interaction: discord.Interaction, command_name: str) -> None:
+    async def handle_command_select(
+        self,
+        interaction: discord.Interaction,
+        command_name: str,
+    ) -> None:
         """Handle command selection."""
         command = self.data.find_command(command_name)
         if not command:
@@ -323,7 +398,9 @@ class HelpNavigation:
         self.current_command_obj = command
 
         # For large command groups, initialize pagination and use paginated embed
-        if isinstance(command, commands.Group) and (command.name in {"jsk", "jishaku"} or len(command.commands) > 15):
+        if isinstance(command, commands.Group) and (
+            command.name in {"jsk", "jishaku"} or len(command.commands) > 15
+        ):
             # Initialize pagination for large groups
             if not self.subcommand_pages:
                 sorted_cmds = sorted(command.commands, key=lambda x: x.name)
@@ -351,7 +428,11 @@ class HelpNavigation:
         else:
             logger.warning("Command selection: No message to update")
 
-    async def handle_subcommand_select(self, interaction: discord.Interaction, subcommand_name: str) -> None:
+    async def handle_subcommand_select(
+        self,
+        interaction: discord.Interaction,
+        subcommand_name: str,
+    ) -> None:
         """Handle subcommand selection."""
         # Special handling for the "see all" option in jsk
         if subcommand_name == "_see_all":
@@ -365,13 +446,23 @@ class HelpNavigation:
             return
 
         # Find the selected subcommand object
-        if not self.current_command_obj or not isinstance(self.current_command_obj, commands.Group):
-            logger.error(f"Cannot find parent command object for subcommand {subcommand_name}")
+        if not self.current_command_obj or not isinstance(
+            self.current_command_obj,
+            commands.Group,
+        ):
+            logger.error(
+                f"Cannot find parent command object for subcommand {subcommand_name}",
+            )
             return
 
-        selected_command = discord.utils.get(self.current_command_obj.commands, name=subcommand_name)
+        selected_command = discord.utils.get(
+            self.current_command_obj.commands,
+            name=subcommand_name,
+        )
         if not selected_command:
-            logger.error(f"Subcommand {subcommand_name} not found in {self.current_command_obj.name}")
+            logger.error(
+                f"Subcommand {subcommand_name} not found in {self.current_command_obj.name}",
+            )
             return
 
         # Check if this subcommand is itself a group with subcommands
@@ -397,7 +488,10 @@ class HelpNavigation:
 
         # Normal subcommand handling for non-group subcommands
         self.current_state = HelpState.SUBCOMMAND
-        embed = await self.renderer.create_subcommand_embed(self.current_command_obj.name, selected_command)
+        embed = await self.renderer.create_subcommand_embed(
+            self.current_command_obj.name,
+            selected_command,
+        )
         view = await self.create_subcommand_view()
 
         if interaction.message:
@@ -415,7 +509,11 @@ class HelpNavigation:
             and self.current_command
             and self.current_category
             and self.data.command_mapping
-            and (command := self.data.command_mapping[self.current_category].get(self.current_command))
+            and (
+                command := self.data.command_mapping[self.current_category].get(
+                    self.current_command,
+                )
+            )
         ):
             self.current_state = HelpState.COMMAND
             self.current_command_obj = command
@@ -430,7 +528,9 @@ class HelpNavigation:
             and (parent := await self._find_parent_command(self.current_command))
         ):
             parent_name, parent_obj = parent
-            logger.info(f"Found parent command {parent_name} for {self.current_command}")
+            logger.info(
+                f"Found parent command {parent_name} for {self.current_command}",
+            )
             self.current_command = parent_name
             self.current_command_obj = parent_obj
             embed = await self.renderer.create_command_embed(parent_obj)
@@ -448,7 +548,10 @@ class HelpNavigation:
             self.current_state = HelpState.CATEGORY
             categories = await self.data.get_command_categories()
             commands_dict = categories.get(self.current_category, {})
-            embed = await self.renderer.create_category_embed(self.current_category, commands_dict)
+            embed = await self.renderer.create_category_embed(
+                self.current_category,
+                commands_dict,
+            )
             view = await self.create_category_view(self.current_category)
         else:
             self.current_state = HelpState.MAIN

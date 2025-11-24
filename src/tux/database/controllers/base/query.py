@@ -14,7 +14,9 @@ from .filters import build_filters_for_model
 ModelT = TypeVar("ModelT", bound=SQLModel)
 
 # Type alias for order_by parameter - accepts column expressions from .asc()/.desc()
-OrderByType = UnaryExpression[Any] | tuple[UnaryExpression[Any], ...] | list[UnaryExpression[Any]]
+OrderByType = (
+    UnaryExpression[Any] | tuple[UnaryExpression[Any], ...] | list[UnaryExpression[Any]]
+)
 
 
 class QueryController[ModelT]:
@@ -64,7 +66,11 @@ class QueryController[ModelT]:
                 stmt = stmt.where(filter_expr)
             if order_by is not None:
                 # Unpack tuple/list for multiple order_by columns
-                stmt = stmt.order_by(*order_by) if isinstance(order_by, (tuple, list)) else stmt.order_by(order_by)
+                stmt = (
+                    stmt.order_by(*order_by)
+                    if isinstance(order_by, (tuple, list))
+                    else stmt.order_by(order_by)
+                )
             result = await session.execute(stmt)
             instance = result.scalars().first()
             if instance:
@@ -94,7 +100,11 @@ class QueryController[ModelT]:
                 stmt = stmt.where(filter_expr)
             if order_by is not None:
                 # Unpack tuple/list for multiple order_by columns
-                stmt = stmt.order_by(*order_by) if isinstance(order_by, (tuple, list)) else stmt.order_by(order_by)
+                stmt = (
+                    stmt.order_by(*order_by)
+                    if isinstance(order_by, (tuple, list))
+                    else stmt.order_by(order_by)
+                )
             if limit is not None:
                 stmt = stmt.limit(limit)
             if offset is not None:
@@ -133,7 +143,11 @@ class QueryController[ModelT]:
                 stmt = stmt.where(filter_expr)
             if order_by is not None:
                 # Unpack tuple/list for multiple order_by columns
-                stmt = stmt.order_by(*order_by) if isinstance(order_by, (tuple, list)) else stmt.order_by(order_by)
+                stmt = (
+                    stmt.order_by(*order_by)
+                    if isinstance(order_by, (tuple, list))
+                    else stmt.order_by(order_by)
+                )
             if limit is not None:
                 stmt = stmt.limit(limit)
             if offset is not None:
@@ -164,10 +178,16 @@ class QueryController[ModelT]:
                 stmt = stmt.where(filter_expr)
             result = await session.execute(stmt)
             count = result.scalar() or 0
-            logger.debug(f"Count query on {self.model.__name__}: {count} records (has_filters={filters is not None})")
+            logger.debug(
+                f"Count query on {self.model.__name__}: {count} records (has_filters={filters is not None})",
+            )
             return count
 
-    async def get_all(self, filters: Any | None = None, order_by: Any | None = None) -> list[ModelT]:
+    async def get_all(
+        self,
+        filters: Any | None = None,
+        order_by: Any | None = None,
+    ) -> list[ModelT]:
         """
         Get all records (alias for find_all without pagination).
 
@@ -207,7 +227,9 @@ class QueryController[ModelT]:
         """
         async with self.db.session() as session:
             json_col = getattr(self.model, json_column)
-            stmt = select(self.model).where(json_col[json_path].as_string() == str(value))
+            stmt = select(self.model).where(
+                json_col[json_path].as_string() == str(value),
+            )
 
             filter_expr = self.build_filters(filters)
             if filter_expr is not None:

@@ -22,7 +22,12 @@ import sqlalchemy.exc
 from loguru import logger
 from sqlalchemy import inspect, text
 from sqlalchemy.engine.interfaces import ReflectedColumn
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlmodel import SQLModel
 
 from tux.shared.config import CONFIG
@@ -92,7 +97,9 @@ class DatabaseService:
 
         except Exception as e:
             logger.error(f"Failed to connect to database: {type(e).__name__}")
-            logger.info("Check your database connection settings and ensure PostgreSQL is running")
+            logger.info(
+                "Check your database connection settings and ensure PostgreSQL is running",
+            )
             raise
 
     async def disconnect(self) -> None:
@@ -207,7 +214,11 @@ class DatabaseService:
                 await sess.rollback()
                 raise
 
-    async def execute_query(self, operation: Callable[[AsyncSession], Awaitable[T]], span_desc: str) -> T:
+    async def execute_query(
+        self,
+        operation: Callable[[AsyncSession], Awaitable[T]],
+        span_desc: str,
+    ) -> T:
         """
         Execute database operation with automatic retry logic.
 
@@ -269,7 +280,10 @@ class DatabaseService:
         for attempt in range(max_retries):
             try:
                 if sentry_sdk.is_initialized():
-                    with sentry_sdk.start_span(op="db.query", description=span_desc) as span:
+                    with sentry_sdk.start_span(
+                        op="db.query",
+                        description=span_desc,
+                    ) as span:
                         span.set_tag("db.service", "DatabaseService")
                         span.set_tag("attempt", attempt + 1)
 
@@ -282,14 +296,24 @@ class DatabaseService:
                     async with self.session() as sess:
                         return await operation(sess)
 
-            except (sqlalchemy.exc.DisconnectionError, TimeoutError, sqlalchemy.exc.OperationalError) as e:
+            except (
+                sqlalchemy.exc.DisconnectionError,
+                TimeoutError,
+                sqlalchemy.exc.OperationalError,
+            ) as e:
                 if attempt == max_retries - 1:
-                    logger.error(f"Database operation failed after {max_retries} attempts: {type(e).__name__}")
-                    logger.info("Check your database connection and consider restarting PostgreSQL")
+                    logger.error(
+                        f"Database operation failed after {max_retries} attempts: {type(e).__name__}",
+                    )
+                    logger.info(
+                        "Check your database connection and consider restarting PostgreSQL",
+                    )
                     raise
 
                 wait_time = backoff_factor * (2**attempt)
-                logger.warning(f"Database operation failed (attempt {attempt + 1}), retrying in {wait_time}s")
+                logger.warning(
+                    f"Database operation failed (attempt {attempt + 1}), retrying in {wait_time}s",
+                )
                 await asyncio.sleep(wait_time)
             except Exception as e:
                 logger.error(f"{span_desc}: {type(e).__name__}")
@@ -325,7 +349,10 @@ class DatabaseService:
 
                 if value == 1:
                     return {"status": "healthy", "mode": "async"}
-                return {"status": "unhealthy", "error": "Unexpected health check result"}
+                return {
+                    "status": "unhealthy",
+                    "error": "Unexpected health check result",
+                }
 
         except Exception as e:
             return {"status": "unhealthy", "error": str(e)}
@@ -356,12 +383,16 @@ class DatabaseService:
         try:
             # Get database inspector to reflect current schema
             # Type checker doesn't know engine is not None after is_connected() check
-            assert self._engine is not None, "Engine should not be None after connection check"
+            assert self._engine is not None, (
+                "Engine should not be None after connection check"
+            )
             async with self._engine.begin() as conn:
                 inspector = await conn.run_sync(lambda sync_conn: inspect(sync_conn))
 
                 # Check if required tables exist
-                existing_tables = await conn.run_sync(lambda sync_conn: inspector.get_table_names())
+                existing_tables = await conn.run_sync(
+                    lambda sync_conn: inspector.get_table_names(),
+                )
                 # Get table names from SQLModel metadata (models with table=True)
                 required_tables = set(SQLModel.metadata.tables.keys())
 
@@ -372,7 +403,10 @@ class DatabaseService:
                     }
 
                 # Helper function to get columns for a table
-                def get_table_columns(sync_conn: Any, table_name: str) -> list[ReflectedColumn]:
+                def get_table_columns(
+                    sync_conn: Any,
+                    table_name: str,
+                ) -> list[ReflectedColumn]:
                     return inspector.get_columns(table_name)
 
                 # Check that all model columns exist in database (1-to-1 validation)
@@ -385,12 +419,16 @@ class DatabaseService:
                     # Get columns from model metadata
                     if table_name in SQLModel.metadata.tables:
                         table_metadata = SQLModel.metadata.tables[table_name]
-                        model_column_names = {col.name for col in table_metadata.columns}
+                        model_column_names = {
+                            col.name for col in table_metadata.columns
+                        }
 
                         # Find missing columns
                         missing_for_table = model_column_names - db_column_names
                         if missing_for_table:
-                            missing_columns.extend([f"{table_name}.{col}" for col in missing_for_table])
+                            missing_columns.extend(
+                                [f"{table_name}.{col}" for col in missing_for_table],
+                            )
 
                 if missing_columns:
                     return {
@@ -403,6 +441,8 @@ class DatabaseService:
         except Exception as e:
             error_msg = f"{type(e).__name__}: {e}"
             logger.error(f"Database schema validation failed: {error_msg}")
-            logger.error("This usually means the database schema doesn't match the model definitions")
+            logger.error(
+                "This usually means the database schema doesn't match the model definitions",
+            )
             logger.error("Try running: uv run db reset")
             return {"status": "invalid", "error": error_msg}

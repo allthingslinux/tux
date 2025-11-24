@@ -16,7 +16,11 @@ from .utils import create_cog_category_mapping
 class HelpData:
     """Manages help command data retrieval and caching."""
 
-    def __init__(self, bot: commands.Bot | commands.AutoShardedBot, ctx: commands.Context[Any] | None = None) -> None:
+    def __init__(
+        self,
+        bot: commands.Bot | commands.AutoShardedBot,
+        ctx: commands.Context[Any] | None = None,
+    ) -> None:
         """Initialize the help data manager.
 
         Parameters
@@ -30,7 +34,9 @@ class HelpData:
         self.ctx = ctx
         self._prefix_cache: dict[int | None, str] = {}
         self._category_cache: dict[str, dict[str, str]] = {}
-        self.command_mapping: dict[str, dict[str, commands.Command[Any, Any, Any]]] | None = None
+        self.command_mapping: (
+            dict[str, dict[str, commands.Command[Any, Any, Any]]] | None
+        ) = None
 
     async def get_prefix(self, ctx: commands.Context[Any]) -> str:
         """
@@ -66,17 +72,25 @@ class HelpData:
         mapping: dict[commands.Cog | None, list[commands.Command[Any, Any, Any]]] = {}
 
         for cog in self.bot.cogs.values():
-            cog_commands = [cmd for cmd in cog.get_commands() if await self.can_run_command(cmd)]
+            cog_commands = [
+                cmd for cmd in cog.get_commands() if await self.can_run_command(cmd)
+            ]
             if cog_commands:
                 mapping[cog] = cog_commands
 
         # Add commands without cogs
-        no_cog_commands = [cmd for cmd in self.bot.commands if cmd.cog is None and await self.can_run_command(cmd)]
+        no_cog_commands = [
+            cmd
+            for cmd in self.bot.commands
+            if cmd.cog is None and await self.can_run_command(cmd)
+        ]
         if no_cog_commands:
             mapping[None] = no_cog_commands
 
         # Store both category cache and command mapping
-        self._category_cache, self.command_mapping = create_cog_category_mapping(mapping)
+        self._category_cache, self.command_mapping = create_cog_category_mapping(
+            mapping,
+        )
         return self._category_cache
 
     async def can_run_command(self, command: commands.Command[Any, Any, Any]) -> bool:
@@ -132,7 +146,10 @@ class HelpData:
             return True
 
         # Also check CONFIG directly for owner and sysadmins
-        return user_id == CONFIG.USER_IDS.BOT_OWNER_ID or user_id in CONFIG.USER_IDS.SYSADMINS
+        return (
+            user_id == CONFIG.USER_IDS.BOT_OWNER_ID
+            or user_id in CONFIG.USER_IDS.SYSADMINS
+        )
 
     def _uses_permission_system(self, command: commands.Command[Any, Any, Any]) -> bool:
         """Check if a command uses the permission system decorator.
@@ -155,7 +172,10 @@ class HelpData:
         wrapped = getattr(command.callback, "__wrapped__", None)
         return wrapped is not None and hasattr(wrapped, "__uses_dynamic_permissions__")
 
-    async def _check_permission_rank(self, command: commands.Command[Any, Any, Any]) -> bool:
+    async def _check_permission_rank(
+        self,
+        command: commands.Command[Any, Any, Any],
+    ) -> bool:
         """Check if user has required permission rank for a command.
 
         Parameters
@@ -225,7 +245,10 @@ class HelpData:
 
         return None
 
-    def find_parent_command(self, subcommand_name: str) -> tuple[str, commands.Command[Any, Any, Any]] | None:
+    def find_parent_command(
+        self,
+        subcommand_name: str,
+    ) -> tuple[str, commands.Command[Any, Any, Any]] | None:
         """
         Find parent command for a subcommand.
 
@@ -237,7 +260,10 @@ class HelpData:
         for command in self.bot.walk_commands():
             if isinstance(command, commands.Group):
                 for subcommand in command.commands:
-                    if subcommand.name == subcommand_name or subcommand_name in subcommand.aliases:
+                    if (
+                        subcommand.name == subcommand_name
+                        or subcommand_name in subcommand.aliases
+                    ):
                         return command.qualified_name, subcommand
         return None
 
@@ -255,4 +281,7 @@ class HelpData:
             List of pages, each containing up to page_size subcommands.
         """
         subcommands = list(command.commands)
-        return [subcommands[i : i + page_size] for i in range(0, len(subcommands), page_size)]
+        return [
+            subcommands[i : i + page_size]
+            for i in range(0, len(subcommands), page_size)
+        ]

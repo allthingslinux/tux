@@ -107,7 +107,10 @@ class CaseTypeConverter(commands.Converter[CaseType]):
             raise commands.BadArgument(msg) from e
 
 
-async def get_channel_safe(bot: Tux, channel_id: int) -> discord.TextChannel | discord.Thread | None:
+async def get_channel_safe(
+    bot: Tux,
+    channel_id: int,
+) -> discord.TextChannel | discord.Thread | None:
     """
     Get a TextChannel or Thread by ID, returning None if not found.
 

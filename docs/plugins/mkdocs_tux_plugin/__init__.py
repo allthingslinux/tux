@@ -98,7 +98,13 @@ class TuxPlugin(BasePlugin[TuxPluginConfig]):
             sys.path.insert(0, str(src_path))
         return config
 
-    def on_page_markdown(self, markdown: str, page: Page, config: MkDocsConfig, files: Files) -> str:
+    def on_page_markdown(
+        self,
+        markdown: str,
+        page: Page,
+        config: MkDocsConfig,
+        files: Files,
+    ) -> str:
         """Process markdown content to replace command blocks with documentation.
 
         Parameters
@@ -161,7 +167,11 @@ class TuxPlugin(BasePlugin[TuxPluginConfig]):
 
         return re.sub(pattern, replace_block, markdown, flags=re.MULTILINE)
 
-    def _generate_command_docs(self, params: dict[str, str], config: MkDocsConfig) -> str:
+    def _generate_command_docs(
+        self,
+        params: dict[str, str],
+        config: MkDocsConfig,
+    ) -> str:
         """Generate markdown documentation for commands in a category.
 
         Parameters
@@ -187,7 +197,9 @@ class TuxPlugin(BasePlugin[TuxPluginConfig]):
         if not commands:
             return f"<!-- No commands found for category: {category} -->\n"
 
-        md = [self._format_command(cmd) for cmd in sorted(commands, key=lambda x: x.name)]
+        md = [
+            self._format_command(cmd) for cmd in sorted(commands, key=lambda x: x.name)
+        ]
 
         return "\n\n".join(md)
 
@@ -217,7 +229,11 @@ class TuxPlugin(BasePlugin[TuxPluginConfig]):
 
         return commands
 
-    def _extract_commands_from_file(self, file_path: Path, category: str) -> list[CommandInfo]:
+    def _extract_commands_from_file(
+        self,
+        file_path: Path,
+        category: str,
+    ) -> list[CommandInfo]:
         """Extract command information from a Python file using AST parsing.
 
         Parameters
@@ -272,7 +288,10 @@ class TuxPlugin(BasePlugin[TuxPluginConfig]):
         aliases = []
 
         for decorator in func_node.decorator_list:
-            if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute):
+            if isinstance(decorator, ast.Call) and isinstance(
+                decorator.func,
+                ast.Attribute,
+            ):
                 attr_name = decorator.func.attr
                 if (
                     isinstance(decorator.func.value, ast.Name)
@@ -282,10 +301,20 @@ class TuxPlugin(BasePlugin[TuxPluginConfig]):
                     command_type = attr_name
 
                     for keyword in decorator.keywords:
-                        if keyword.arg == "name" and isinstance(keyword.value, ast.Constant):
+                        if keyword.arg == "name" and isinstance(
+                            keyword.value,
+                            ast.Constant,
+                        ):
                             name = str(keyword.value.value)
-                        elif keyword.arg == "aliases" and isinstance(keyword.value, ast.List):
-                            aliases = [str(elt.value) for elt in keyword.value.elts if isinstance(elt, ast.Constant)]
+                        elif keyword.arg == "aliases" and isinstance(
+                            keyword.value,
+                            ast.List,
+                        ):
+                            aliases = [
+                                str(elt.value)
+                                for elt in keyword.value.elts
+                                if isinstance(elt, ast.Constant)
+                            ]
 
         if not command_type:
             return None
@@ -329,7 +358,10 @@ class TuxPlugin(BasePlugin[TuxPluginConfig]):
             usage=usage,
         )
 
-    def _extract_permission_level(self, func_node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
+    def _extract_permission_level(
+        self,
+        func_node: ast.FunctionDef | ast.AsyncFunctionDef,
+    ) -> str:
         """Extract permission level requirement from function decorators.
 
         Parameters
@@ -418,7 +450,11 @@ class TuxPlugin(BasePlugin[TuxPluginConfig]):
         if cmd.parameters:
             md.extend(('!!! abstract "Parameters"', ""))
             for param in cmd.parameters:
-                required = ":material-check: Required" if param["required"] else ":material-minus: Optional"
+                required = (
+                    ":material-check: Required"
+                    if param["required"]
+                    else ":material-minus: Optional"
+                )
                 md.append(f"    - **`{param['name']}`** ({param['type']}) - {required}")
             md.append("")
 

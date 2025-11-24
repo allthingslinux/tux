@@ -50,8 +50,16 @@ def create_unified_cli() -> Typer:
     # Add each CLI as a subcommand group
     cli.add_typer(db_cli.app, name="db", help="Database operations and management")
     cli.add_typer(dev_cli.app, name="dev", help="Development tools and workflows")
-    cli.add_typer(docker_cli.app, name="docker", help="Docker operations and management")
-    cli.add_typer(docs_cli.app, name="docs", help="Documentation operations and management")
+    cli.add_typer(
+        docker_cli.app,
+        name="docker",
+        help="Docker operations and management",
+    )
+    cli.add_typer(
+        docs_cli.app,
+        name="docs",
+        help="Documentation operations and management",
+    )
     cli.add_typer(test_cli.app, name="test", help="Testing operations and management")
     cli.add_typer(tux_cli.app, name="tux", help="Tux bot operations and management")
 

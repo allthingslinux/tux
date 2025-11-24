@@ -23,7 +23,11 @@ from tux.database.controllers import DatabaseCoordinator
 from tux.database.service import DatabaseService
 from tux.services.emoji_manager import EmojiManager
 from tux.services.http_client import http_client
-from tux.services.sentry import SentryManager, capture_database_error, capture_exception_safe
+from tux.services.sentry import (
+    SentryManager,
+    capture_database_error,
+    capture_exception_safe,
+)
 from tux.services.sentry.tracing import (
     instrument_bot_commands,
     start_span,
@@ -158,7 +162,9 @@ class Tux(commands.Bot):
         try:
             with start_span("bot.setup", "Bot setup process") as span:
                 # Lazy import to avoid circular imports
-                from tux.core.setup.orchestrator import BotSetupOrchestrator  # noqa: PLC0415
+                from tux.core.setup.orchestrator import (
+                    BotSetupOrchestrator,
+                )
 
                 orchestrator = BotSetupOrchestrator(self)
                 await orchestrator.setup(span)
@@ -235,9 +241,9 @@ class Tux(commands.Bot):
 
         # Schedule post-ready startup (banner, stats, instrumentation)
         # Only schedule if setup succeeded or is still running
-        if (self.setup_complete or (self.setup_task and not self.setup_task.done())) and (
-            self._startup_task is None or self._startup_task.done()
-        ):
+        if (
+            self.setup_complete or (self.setup_task and not self.setup_task.done())
+        ) and (self._startup_task is None or self._startup_task.done()):
             self._startup_task = self.loop.create_task(self._post_ready_startup())
 
     async def _post_ready_startup(self) -> None:
@@ -370,7 +376,9 @@ class Tux(commands.Bot):
 
                 except Exception as e:
                     # Setup failure is critical - cannot continue in degraded state
-                    logger.error(f"Setup failed during on_ready: {type(e).__name__}: {e}")
+                    logger.error(
+                        f"Setup failed during on_ready: {type(e).__name__}: {e}",
+                    )
                     capture_exception_safe(e)
                     # Trigger shutdown to prevent running with incomplete setup
                     await self.shutdown()

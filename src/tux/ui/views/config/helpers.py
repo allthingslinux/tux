@@ -15,7 +15,9 @@ if TYPE_CHECKING:
     from .dashboard import ConfigDashboard
 
 
-def create_back_button(dashboard: ConfigDashboard) -> discord.ui.Button[discord.ui.LayoutView]:
+def create_back_button(
+    dashboard: ConfigDashboard,
+) -> discord.ui.Button[discord.ui.LayoutView]:
     """
     Create a standardized "Back to Dashboard" button.
 

@@ -39,7 +39,10 @@ class TimestampMixin:
 
     updated_at: datetime | None = Field(
         sa_type=DateTime(timezone=True),
-        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP"), "onupdate": text("CURRENT_TIMESTAMP")},
+        sa_column_kwargs={
+            "server_default": text("CURRENT_TIMESTAMP"),
+            "onupdate": text("CURRENT_TIMESTAMP"),
+        },
         nullable=True,
         description="Timestamp when the record was last updated",
     )
@@ -94,7 +97,11 @@ class BaseModel(SQLModel, TimestampMixin):
         if "updated_at" not in self.__dict__:
             self.__dict__["updated_at"] = None
 
-    def to_dict(self, include_relationships: bool = False, relationships: list[str] | None = None) -> dict[str, Any]:
+    def to_dict(
+        self,
+        include_relationships: bool = False,
+        relationships: list[str] | None = None,
+    ) -> dict[str, Any]:
         """
         Convert model instance to dictionary with relationship support.
 
@@ -136,18 +143,23 @@ class BaseModel(SQLModel, TimestampMixin):
                 continue
 
             # Check if this relationship should be included
-            include_this_relationship = should_include_relationship or attr in (relationships or [])
+            include_this_relationship = should_include_relationship or attr in (
+                relationships or []
+            )
 
             # Handle relationships based on type
             if isinstance(value, list):
                 if (
                     include_this_relationship
                     and value
-                    and all(isinstance(item, BaseModel) for item in cast(list[Any], value))
+                    and all(
+                        isinstance(item, BaseModel) for item in cast(list[Any], value)
+                    )
                 ):
                     model_items = cast(list[BaseModel], value)
                     data[attr] = [
-                        model_item.to_dict(include_relationships, relationships) for model_item in model_items
+                        model_item.to_dict(include_relationships, relationships)
+                        for model_item in model_items
                     ]
                     continue
             elif isinstance(value, BaseModel):

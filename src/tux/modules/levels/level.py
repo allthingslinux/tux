@@ -81,7 +81,9 @@ class Level(BaseCog):
         level_display: int
         xp_display: str
         if self.levels_service.enable_xp_cap and level >= self.levels_service.max_level:
-            max_xp: float = self.levels_service.calculate_xp_for_level(self.levels_service.max_level)
+            max_xp: float = self.levels_service.calculate_xp_for_level(
+                self.levels_service.max_level,
+            )
             level_display = self.levels_service.max_level
             xp_display = f"{round(max_xp)} (limit reached)"
             logger.debug(f"XP cap reached for {member.id}")
@@ -93,7 +95,10 @@ class Level(BaseCog):
             xp_progress: int
             xp_required: int
             xp_progress, xp_required = self.levels_service.get_level_progress(xp, level)
-            progress_bar: str = self.levels_service.generate_progress_bar(xp_progress, xp_required)
+            progress_bar: str = self.levels_service.generate_progress_bar(
+                xp_progress,
+                xp_required,
+            )
 
             embed: discord.Embed = EmbedCreator.create_embed(
                 embed_type=EmbedType.DEFAULT,
@@ -114,7 +119,9 @@ class Level(BaseCog):
             )
 
         await ctx.send(embed=embed)
-        logger.info(f"📊 Level info sent for {member.name} ({member.id}): Level {level_display}, XP {xp_display}")
+        logger.info(
+            f"📊 Level info sent for {member.name} ({member.id}): Level {level_display}, XP {xp_display}",
+        )
 
 
 async def setup(bot: Tux) -> None:

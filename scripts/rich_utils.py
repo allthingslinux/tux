@@ -53,7 +53,12 @@ class RichCLI:
         """Print a rich formatted message."""
         self.console.print(message)
 
-    def print_rich_table(self, title: str, columns: list[tuple[str, str]], data: list[tuple[str, ...]]) -> None:
+    def print_rich_table(
+        self,
+        title: str,
+        columns: list[tuple[str, str]],
+        data: list[tuple[str, ...]],
+    ) -> None:
         """Print a Rich table with title, columns, and data."""
         table = Table(title=title)
         for column_name, style in columns:
@@ -64,7 +69,11 @@ class RichCLI:
 
         self.console.print(table)
 
-    def create_progress_bar(self, description: str = "Processing...", total: int | None = None) -> Progress:
+    def create_progress_bar(
+        self,
+        description: str = "Processing...",
+        total: int | None = None,
+    ) -> Progress:
         """Create a Rich progress bar with spinner and text.
 
         Returns

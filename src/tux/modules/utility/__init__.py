@@ -50,14 +50,26 @@ async def add_afk(
     """Set a member as AFK, updates their nickname, and saves to the database."""
     new_name = _generate_afk_nickname(target.display_name)
 
-    await db.afk.set_afk(target.id, target.display_name, reason, guild_id, is_perm, until, enforced)
+    await db.afk.set_afk(
+        target.id,
+        target.display_name,
+        reason,
+        guild_id,
+        is_perm,
+        until,
+        enforced,
+    )
 
     # Suppress Forbidden errors if the bot doesn't have permission to change the nickname
     with contextlib.suppress(discord.Forbidden):
         await target.edit(nick=new_name)
 
 
-async def del_afk(db: DatabaseCoordinator, target: discord.Member, nickname: str) -> None:
+async def del_afk(
+    db: DatabaseCoordinator,
+    target: discord.Member,
+    nickname: str,
+) -> None:
     """Remove a member's AFK status, restores their nickname, and updates the database."""
     await db.afk.remove_afk(target.id, target.guild.id)
 

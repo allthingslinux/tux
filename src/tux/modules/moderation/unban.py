@@ -32,7 +32,11 @@ class Unban(ModerationCogBase):
         """
         super().__init__(bot)
 
-    async def resolve_user_from_ban_list(self, ctx: commands.Context[Tux], identifier: str) -> discord.User | None:
+    async def resolve_user_from_ban_list(
+        self,
+        ctx: commands.Context[Tux],
+        identifier: str,
+    ) -> discord.User | None:
         """
         Resolve a user from the ban list using username, ID, or partial info.
 
@@ -69,7 +73,9 @@ class Unban(ModerationCogBase):
 
         # Try partial name matching
         identifier_lower = identifier.lower()
-        matches = [user for user in banned_users if identifier_lower in user.name.lower()]
+        matches = [
+            user for user in banned_users if identifier_lower in user.name.lower()
+        ]
 
         return matches[0] if len(matches) == 1 else None
 

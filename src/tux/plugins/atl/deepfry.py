@@ -55,7 +55,11 @@ class Deepfry(BaseCog):
         try:
             pil_image.load()
         except Exception as e:
-            await self._send_error_embed(ctx, "Invalid File", f"The file is not a valid image. {e}")
+            await self._send_error_embed(
+                ctx,
+                "Invalid File",
+                f"The file is not a valid image. {e}",
+            )
             return
 
         if getattr(pil_image, "is_animated", False):
@@ -68,13 +72,21 @@ class Deepfry(BaseCog):
                     durations.append(frame.info.get("duration", 50))
 
                 if not frames:
-                    await self._send_error_embed(ctx, "Invalid GIF", "The animated image has no frames.")
+                    await self._send_error_embed(
+                        ctx,
+                        "Invalid GIF",
+                        "The animated image has no frames.",
+                    )
                     return
 
                 await self._send_animated_result(ctx, frames, durations)
             except Exception as e:
                 logger.error(f"Error processing deepfry: {e}")
-                await self._send_error_embed(ctx, "Error", "An error occurred while processing the image.")
+                await self._send_error_embed(
+                    ctx,
+                    "Error",
+                    "An error occurred while processing the image.",
+                )
         else:
             # Process the image
             try:
@@ -82,9 +94,17 @@ class Deepfry(BaseCog):
                 await self._send_image_result(ctx, deepfried_image)
             except Exception as e:
                 logger.error(f"Error processing deepfry: {e}")
-                await self._send_error_embed(ctx, "Error", "An error occurred while processing the image.")
+                await self._send_error_embed(
+                    ctx,
+                    "Error",
+                    "An error occurred while processing the image.",
+                )
 
-    def _extract_image_url(self, ctx: commands.Context[Any], image: discord.Attachment) -> str:
+    def _extract_image_url(
+        self,
+        ctx: commands.Context[Any],
+        image: discord.Attachment,
+    ) -> str:
         """
         Extract image URL from the attachment.
 
@@ -133,7 +153,12 @@ class Deepfry(BaseCog):
         # Upscale back to original size
         return image.resize((int(image.width * 4), int(image.height * 4)))
 
-    async def _send_error_embed(self, ctx: commands.Context[Any], title: str, description: str) -> None:
+    async def _send_error_embed(
+        self,
+        ctx: commands.Context[Any],
+        title: str,
+        description: str,
+    ) -> None:
         """Send a standardized error embed."""
         embed = EmbedCreator.create_embed(
             bot=self.bot,
@@ -152,7 +177,11 @@ class Deepfry(BaseCog):
         else:
             await ctx.send(embed=embed)
 
-    async def _send_image_result(self, ctx: commands.Context[Any], image: Image.Image) -> None:
+    async def _send_image_result(
+        self,
+        ctx: commands.Context[Any],
+        image: Image.Image,
+    ) -> None:
         """Send the processed image result."""
         buffer = io.BytesIO()
         image.save(buffer, format="JPEG", quality=1)

@@ -35,7 +35,10 @@ from tux.shared.exceptions import TuxPermissionDeniedError
 F = TypeVar("F", bound=Callable[..., Awaitable[Any]])
 
 
-def requires_command_permission(*, allow_unconfigured: bool = False) -> Callable[[F], F]:
+def requires_command_permission(
+    *,
+    allow_unconfigured: bool = False,
+) -> Callable[[F], F]:
     """
     Provide dynamic, database-driven command permissions.
 
@@ -99,7 +102,9 @@ def requires_command_permission(*, allow_unconfigured: bool = False) -> Callable
             ctx, interaction = _extract_context_or_interaction(args)
 
             if ctx is None and interaction is None:
-                logger.error("Could not find context or interaction in command arguments")
+                logger.error(
+                    "Could not find context or interaction in command arguments",
+                )
                 msg = "Unable to find context or interaction parameter"
                 raise ValueError(msg)
 
@@ -111,10 +116,15 @@ def requires_command_permission(*, allow_unconfigured: bool = False) -> Callable
                 return await func(*args, **kwargs)
 
             # Get user ID
-            user_id = ctx.author.id if ctx else (interaction.user.id if interaction else 0)
+            user_id = (
+                ctx.author.id if ctx else (interaction.user.id if interaction else 0)
+            )
 
             # Bot owners and sysadmins bypass ALL permission checks
-            if user_id == CONFIG.USER_IDS.BOT_OWNER_ID or user_id in CONFIG.USER_IDS.SYSADMINS:
+            if (
+                user_id == CONFIG.USER_IDS.BOT_OWNER_ID
+                or user_id in CONFIG.USER_IDS.SYSADMINS
+            ):
                 logger.debug(f"Bot owner/sysadmin {user_id} bypassing permission check")
                 return await func(*args, **kwargs)
 
@@ -156,7 +166,10 @@ def requires_command_permission(*, allow_unconfigured: bool = False) -> Callable
             if ctx:
                 user_rank = await permission_system.get_user_permission_rank(ctx)
             elif interaction:
-                user_rank = await _get_user_rank_from_interaction(permission_system, interaction)
+                user_rank = await _get_user_rank_from_interaction(
+                    permission_system,
+                    interaction,
+                )
             else:
                 user_rank = 0  # Fallback
 
@@ -225,7 +238,10 @@ def _extract_context_or_interaction(
         # Hybrid commands can be either, check attributes
         if hasattr(arg, "interaction") and arg.interaction:
             # Hybrid command invoked as slash command
-            return (cast(commands.Context[Any], arg), cast(discord.Interaction[Any], arg.interaction))
+            return (
+                cast(commands.Context[Any], arg),
+                cast(discord.Interaction[Any], arg.interaction),
+            )
         if hasattr(arg, "bot") and hasattr(arg, "guild"):
             # Likely a context-like object
             return (cast(commands.Context[Any], arg), None)

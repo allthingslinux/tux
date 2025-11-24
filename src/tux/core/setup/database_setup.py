@@ -99,7 +99,11 @@ class DatabaseSetupService(BaseSetupService):
                     # Convert async URL to sync for this check
                     db_url = CONFIG.database_url
                     if db_url.startswith("postgresql+psycopg_async://"):
-                        db_url = db_url.replace("postgresql+psycopg_async://", "postgresql+psycopg://", 1)
+                        db_url = db_url.replace(
+                            "postgresql+psycopg_async://",
+                            "postgresql+psycopg://",
+                            1,
+                        )
 
                     engine = create_engine(db_url, connect_args={"connect_timeout": 2})
                     with engine.connect() as conn:
@@ -113,7 +117,9 @@ class DatabaseSetupService(BaseSetupService):
             db_available = await loop.run_in_executor(None, _check_db_available)
 
             if not db_available:
-                logger.warning("Database not available - skipping migrations during startup")
+                logger.warning(
+                    "Database not available - skipping migrations during startup",
+                )
                 logger.info("Run migrations manually when database is available")
                 return
 
@@ -138,7 +144,9 @@ class DatabaseSetupService(BaseSetupService):
                         logger.info("Database is already up to date")
                 except Exception as e:
                     logger.warning(f"Could not run migrations: {e}")
-                    logger.info("Database may be unavailable - migrations skipped for now")
+                    logger.info(
+                        "Database may be unavailable - migrations skipped for now",
+                    )
                     logger.info("Run migrations manually when database is available")
 
             # Run migrations with a timeout
@@ -215,8 +223,14 @@ class DatabaseSetupService(BaseSetupService):
             if schema_result["status"] == "valid":
                 self._log_step("Database schema validation passed", "success")
             else:
-                error_msg = schema_result.get("error", "Unknown schema validation error")
-                self._log_step(f"Database schema validation failed: {error_msg}", "error")
+                error_msg = schema_result.get(
+                    "error",
+                    "Unknown schema validation error",
+                )
+                self._log_step(
+                    f"Database schema validation failed: {error_msg}",
+                    "error",
+                )
                 _raise_schema_error(error_msg)
 
         except Exception as schema_error:

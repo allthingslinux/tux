@@ -65,7 +65,12 @@ class Levels(BaseCog):
     @requires_command_permission()
     @commands.guild_only()
     @levels.command(name="set", aliases=["s"])
-    async def set(self, ctx: commands.Context[Tux], member: discord.Member, new_level: int) -> None:
+    async def set(
+        self,
+        ctx: commands.Context[Tux],
+        member: discord.Member,
+        new_level: int,
+    ) -> None:
         """
         Set the level of a member.
 
@@ -117,7 +122,12 @@ class Levels(BaseCog):
     @requires_command_permission()
     @commands.guild_only()
     @levels.command(name="setxp", aliases=["sxp"])
-    async def set_xp(self, ctx: commands.Context[Tux], member: discord.Member, xp_amount: int) -> None:
+    async def set_xp(
+        self,
+        ctx: commands.Context[Tux],
+        member: discord.Member,
+        xp_amount: int,
+    ) -> None:
         """
         Set the xp of a member.
 
@@ -186,7 +196,9 @@ class Levels(BaseCog):
         old_xp: float = await self.db.levels.get_xp(member.id, ctx.guild.id)
         await self.db.levels.reset_xp(member.id, ctx.guild.id)
 
-        logger.info(f"XP reset for {member.name} ({member.id}) by {ctx.author.name}: {round(old_xp)} -> 0")
+        logger.info(
+            f"XP reset for {member.name} ({member.id}) by {ctx.author.name}: {round(old_xp)} -> 0",
+        )
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
@@ -200,7 +212,11 @@ class Levels(BaseCog):
     @requires_command_permission()
     @commands.guild_only()
     @levels.command(name="blacklist", aliases=["bl"])
-    async def blacklist(self, ctx: commands.Context[Tux], member: discord.Member) -> None:
+    async def blacklist(
+        self,
+        ctx: commands.Context[Tux],
+        member: discord.Member,
+    ) -> None:
         """
         Blacklists or unblacklists a member from leveling.
 

@@ -34,7 +34,10 @@ class Poll(ModerationCogBase):
         # Uses ModerationCogBase.is_pollbanned
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+    async def on_raw_reaction_add(
+        self,
+        payload: discord.RawReactionActionEvent,
+    ) -> None:
         """On raw reaction add event handler."""
         # get reaction from payload.message_id, payload.channel_id, payload.guild_id, payload.emoji
         channel = await get_channel_safe(self.bot, payload.channel_id)
@@ -46,7 +49,11 @@ class Poll(ModerationCogBase):
         if payload.emoji.id:
             # Custom emoji: match by ID
             reaction = next(
-                (r for r in message.reactions if getattr(r.emoji, "id", None) == payload.emoji.id),
+                (
+                    r
+                    for r in message.reactions
+                    if getattr(r.emoji, "id", None) == payload.emoji.id
+                ),
                 None,
             )
         else:
@@ -67,8 +74,16 @@ class Poll(ModerationCogBase):
                 await reaction.clear()
 
     @app_commands.command(name="poll", description="Creates a poll.")
-    @app_commands.describe(title="Title of the poll", options="Poll options, comma separated")
-    async def poll(self, interaction: discord.Interaction, title: str, options: str) -> None:
+    @app_commands.describe(
+        title="Title of the poll",
+        options="Poll options, comma separated",
+    )
+    async def poll(
+        self,
+        interaction: discord.Interaction,
+        title: str,
+        options: str,
+    ) -> None:
         """
         Create a poll with a title and options.
 
@@ -84,7 +99,10 @@ class Poll(ModerationCogBase):
 
         """
         if interaction.guild_id is None:
-            await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
+            await interaction.response.send_message(
+                "This command can only be used in a server.",
+                ephemeral=True,
+            )
             return
 
         # Split the options by comma

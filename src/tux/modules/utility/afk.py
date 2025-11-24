@@ -19,7 +19,12 @@ from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.database.models import AFK as AFKMODEL
 from tux.modules.utility import add_afk, del_afk
-from tux.shared.constants import AFK_ALLOWED_MENTIONS, AFK_REASON_MAX_LENGTH, AFK_SLEEPING_EMOJI, TRUNCATION_SUFFIX
+from tux.shared.constants import (
+    AFK_ALLOWED_MENTIONS,
+    AFK_REASON_MAX_LENGTH,
+    AFK_SLEEPING_EMOJI,
+    TRUNCATION_SUFFIX,
+)
 
 
 class Afk(BaseCog):
@@ -77,7 +82,9 @@ class Afk(BaseCog):
         )
 
         await add_afk(self.db, shortened_reason, target, ctx.guild.id, False)
-        logger.info(f"AFK status set: {target.name} ({target.id}) in {ctx.guild.name} - Reason: {shortened_reason}")
+        logger.info(
+            f"AFK status set: {target.name} ({target.id}) in {ctx.guild.name} - Reason: {shortened_reason}",
+        )
 
         await self._send_afk_response(
             ctx,
@@ -86,7 +93,12 @@ class Afk(BaseCog):
 
     @commands.hybrid_command(name="permafk")
     @commands.guild_only()
-    async def permafk(self, ctx: commands.Context[Tux], *, reason: str = "No reason.") -> None:
+    async def permafk(
+        self,
+        ctx: commands.Context[Tux],
+        *,
+        reason: str = "No reason.",
+    ) -> None:
         """
         Set yourself permanently AFK until you rerun the command.
 
@@ -104,7 +116,9 @@ class Afk(BaseCog):
         entry = await self._get_afk_entry(target.id, ctx.guild.id)
         if entry is not None:
             await del_afk(self.db, target, entry.nickname)
-            logger.info(f"Permanent AFK toggled off: {target.name} ({target.id}) in {ctx.guild.name}")
+            logger.info(
+                f"Permanent AFK toggled off: {target.name} ({target.id}) in {ctx.guild.name}",
+            )
             await self._send_afk_response(ctx, "Welcome back!")
             return
 
@@ -123,9 +137,17 @@ class Afk(BaseCog):
             f"{AFK_SLEEPING_EMOJI} || You are now permanently afk! To remove afk run this command again. Reason: `{shortened_reason}`",
         )
 
-    async def _send_afk_response(self, ctx: commands.Context[Tux], content: str) -> None:
+    async def _send_afk_response(
+        self,
+        ctx: commands.Context[Tux],
+        content: str,
+    ) -> None:
         """Send a response for AFK commands with consistent formatting."""
-        await ctx.reply(content=content, allowed_mentions=AFK_ALLOWED_MENTIONS, ephemeral=True)
+        await ctx.reply(
+            content=content,
+            allowed_mentions=AFK_ALLOWED_MENTIONS,
+            ephemeral=True,
+        )
 
     async def _get_afk_entry(self, member_id: int, guild_id: int) -> AFKMODEL | None:
         """
@@ -205,14 +227,19 @@ class Afk(BaseCog):
         if not afks_mentioned:
             return
 
-        logger.debug(f"AFK notification: {len(afks_mentioned)} AFK users mentioned in {message.guild.name}")
+        logger.debug(
+            f"AFK notification: {len(afks_mentioned)} AFK users mentioned in {message.guild.name}",
+        )
 
         msgs: list[str] = [
             f'{mentioned.mention} is currently AFK {f"until <t:{int(afk.until.timestamp())}:f>" if afk.until is not None else ""}: "{afk.reason}" [<t:{int(afk.since.timestamp())}:R>]'
             for mentioned, afk in afks_mentioned
         ]
 
-        await message.reply(content="\n".join(msgs), allowed_mentions=AFK_ALLOWED_MENTIONS)
+        await message.reply(
+            content="\n".join(msgs),
+            allowed_mentions=AFK_ALLOWED_MENTIONS,
+        )
 
     @tasks.loop(seconds=120)
     async def handle_afk_expiration(self):
@@ -221,17 +248,23 @@ class Afk(BaseCog):
             expired_entries = await self._get_expired_afk_entries(guild.id)
 
             if expired_entries:
-                logger.info(f"Processing {len(expired_entries)} expired AFK entries in {guild.name}")
+                logger.info(
+                    f"Processing {len(expired_entries)} expired AFK entries in {guild.name}",
+                )
 
             for entry in expired_entries:
                 member = guild.get_member(entry.member_id)
 
                 if member is None:
                     # Handles the edge case of a user leaving the guild while still temp-AFK
-                    logger.debug(f"Removing AFK for departed member {entry.member_id} from {guild.name}")
+                    logger.debug(
+                        f"Removing AFK for departed member {entry.member_id} from {guild.name}",
+                    )
                     await self.db.afk.remove_afk(entry.member_id, guild.id)
                 else:
-                    logger.debug(f"Expiring AFK status for {member.name} ({member.id}) in {guild.name}")
+                    logger.debug(
+                        f"Expiring AFK status for {member.name} ({member.id}) in {guild.name}",
+                    )
                     await del_afk(self.db, member, entry.nickname)
 
     async def _get_expired_afk_entries(self, guild_id: int) -> list[AFKMODEL]:

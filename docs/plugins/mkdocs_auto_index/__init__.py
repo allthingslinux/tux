@@ -40,7 +40,10 @@ class IndexGeneratorConfig(config_options.Config):  # type: ignore[misc]
     """
 
     enabled = config_options.Type(bool, default=True)
-    preserve_above_marker = config_options.Type(str, default="<!-- AUTO_INDEX_START -->")
+    preserve_above_marker = config_options.Type(
+        str,
+        default="<!-- AUTO_INDEX_START -->",
+    )
 
 
 class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
@@ -118,7 +121,11 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
             True if the path is a directory (has index.md), False otherwise.
         """
         # Construct full path relative to docs_dir
-        full_path = f"{base_path.rstrip('/')}/{md_path}/index.md" if base_path else f"{md_path}/index.md"
+        full_path = (
+            f"{base_path.rstrip('/')}/{md_path}/index.md"
+            if base_path
+            else f"{md_path}/index.md"
+        )
 
         # Normalize path (remove leading slash, ensure forward slashes)
         full_path = full_path.lstrip("/").replace("\\", "/")
@@ -174,7 +181,9 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
             True if the path represents a single file, False otherwise.
         """
         # Construct full path relative to docs_dir
-        full_path = f"{base_path.rstrip('/')}/{md_path}.md" if base_path else f"{md_path}.md"
+        full_path = (
+            f"{base_path.rstrip('/')}/{md_path}.md" if base_path else f"{md_path}.md"
+        )
         full_path = full_path.lstrip("/").replace("\\", "/")
 
         # First try MkDocs files collection if available
@@ -222,12 +231,19 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
 
         if has_children or not looks_like_single_file:
             # Directory with index - ensure /index.md is appended
-            return f"{md_path}index.md" if md_path.endswith("/") else f"{md_path}/index.md"
+            return (
+                f"{md_path}index.md" if md_path.endswith("/") else f"{md_path}/index.md"
+            )
 
         # Single file normalized by section-index: bot-token/index.html -> bot-token.md
         return f"{md_path}.md"
 
-    def _handle_trailing_slash_url(self, md_path: str, original_url: str, base_path: str = "") -> str:
+    def _handle_trailing_slash_url(
+        self,
+        md_path: str,
+        original_url: str,
+        base_path: str = "",
+    ) -> str:
         """Handle URLs ending with trailing slash.
 
         Parameters
@@ -268,7 +284,12 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
         # Default to single file
         return f"{path_without_slash}.md"
 
-    def _resolve_path_without_extension(self, original_url: str, md_path: str, base_path: str) -> str:
+    def _resolve_path_without_extension(
+        self,
+        original_url: str,
+        md_path: str,
+        base_path: str,
+    ) -> str:
         """Resolve path without extension by checking file system and URL format.
 
         Parameters
@@ -305,7 +326,13 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
         # Has hyphens/underscores - likely a single file (e.g., 'bot-token', 'first-run')
         return f"{md_path}.md"
 
-    def _resolve_markdown_path(self, original_url: str, md_path: str, base_path: str, has_children: bool) -> str:  # noqa: PLR0911
+    def _resolve_markdown_path(
+        self,
+        original_url: str,
+        md_path: str,
+        base_path: str,
+        has_children: bool,
+    ) -> str:
         """Resolve a markdown path, determining if it's a directory or single file.
 
         Parameters
@@ -358,7 +385,12 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
 
         return self._resolve_path_without_extension(original_url, md_path, base_path)
 
-    def _generate_markdown_from_nav(self, nav_item: Any, base_path: str = "", depth: int = 0) -> str:
+    def _generate_markdown_from_nav(
+        self,
+        nav_item: Any,
+        base_path: str = "",
+        depth: int = 0,
+    ) -> str:
         """Generate markdown content from a navigation item and its children.
 
         Parameters
@@ -385,7 +417,13 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
                     # Process its children instead
                     if hasattr(child, "children") and child.children:
                         for grandchild in child.children:
-                            lines.extend(self._generate_markdown_from_nav(grandchild, base_path, depth).splitlines())
+                            lines.extend(
+                                self._generate_markdown_from_nav(
+                                    grandchild,
+                                    base_path,
+                                    depth,
+                                ).splitlines(),
+                            )
                     continue
 
                 # Get title and URL
@@ -403,7 +441,12 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
                     md_path = md_path[len(base_path) :].lstrip("/")
 
                 # Resolve path (directory vs single file)
-                md_path = self._resolve_markdown_path(original_url, md_path, base_path, has_children)
+                md_path = self._resolve_markdown_path(
+                    original_url,
+                    md_path,
+                    base_path,
+                    has_children,
+                )
 
                 # Generate markdown link
                 indent = "  " * depth
@@ -411,7 +454,11 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
 
                 # Recursively process children
                 if hasattr(child, "children") and child.children:
-                    child_lines = self._generate_markdown_from_nav(child, base_path, depth + 1)
+                    child_lines = self._generate_markdown_from_nav(
+                        child,
+                        base_path,
+                        depth + 1,
+                    )
                     lines.extend(child_lines.splitlines())
 
         return "\n".join(lines)
@@ -498,7 +545,11 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
                 # But check original URL to be safe
                 if original_section_url.endswith("/index.html"):
                     # Directory with index - ensure index.md is present
-                    md_path = f"{md_path}index.md" if md_path.endswith("/") else f"{md_path}/index.md"
+                    md_path = (
+                        f"{md_path}index.md"
+                        if md_path.endswith("/")
+                        else f"{md_path}/index.md"
+                    )
                 elif md_path.endswith("/"):
                     # URL ends with / - for sections, this should be a directory
                     md_path = f"{md_path}index.md"
@@ -519,7 +570,13 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
 
         return "\n".join(lines).rstrip()
 
-    def _generate_section_items(self, items: list[Any], base_path: str, lines: list[str], depth: int = 0) -> None:
+    def _generate_section_items(
+        self,
+        items: list[Any],
+        base_path: str,
+        lines: list[str],
+        depth: int = 0,
+    ) -> None:
         """Recursively generate markdown links for section items.
 
         Parameters
@@ -555,7 +612,12 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
                 md_path = md_path[len(base_path) :].lstrip("/")
 
             # Resolve path (directory vs single file)
-            md_path = self._resolve_markdown_path(original_url, md_path, base_path, has_children)
+            md_path = self._resolve_markdown_path(
+                original_url,
+                md_path,
+                base_path,
+                has_children,
+            )
 
             # Generate markdown link with proper indentation
             indent = "  " * depth
@@ -565,7 +627,14 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
             if hasattr(item, "children") and item.children:
                 self._generate_section_items(item.children, base_path, lines, depth + 1)
 
-    def on_nav(self, nav: Navigation, /, *, config: MkDocsConfig, files: Files) -> Navigation | None:
+    def on_nav(
+        self,
+        nav: Navigation,
+        /,
+        *,
+        config: MkDocsConfig,
+        files: Files,
+    ) -> Navigation | None:
         """Store navigation structure and files collection for later use.
 
         Parameters
@@ -586,7 +655,15 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
         self.files = files
         return nav
 
-    def on_page_markdown(self, markdown: str, /, *, page: Page, config: MkDocsConfig, files: Files) -> str | None:
+    def on_page_markdown(
+        self,
+        markdown: str,
+        /,
+        *,
+        page: Page,
+        config: MkDocsConfig,
+        files: Files,
+    ) -> str | None:
         """Process markdown content to generate index page content.
 
         Automatically detects pages containing the marker comment and generates

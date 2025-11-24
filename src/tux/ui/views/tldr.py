@@ -41,8 +41,20 @@ class TldrPaginatorView(View):
         self.user = user
         self.bot = bot
         self.message: discord.Message | None = None
-        self.add_item(Button[View](label="Previous", style=discord.ButtonStyle.secondary, custom_id="prev"))
-        self.add_item(Button[View](label="Next", style=discord.ButtonStyle.secondary, custom_id="next"))
+        self.add_item(
+            Button[View](
+                label="Previous",
+                style=discord.ButtonStyle.secondary,
+                custom_id="prev",
+            ),
+        )
+        self.add_item(
+            Button[View](
+                label="Next",
+                style=discord.ButtonStyle.secondary,
+                custom_id="next",
+            ),
+        )
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         """Check if the interaction user is allowed to interact with this view.
@@ -64,7 +76,11 @@ class TldrPaginatorView(View):
         if self.message:
             await self.message.edit(view=None)
 
-    @discord.ui.button(label="Previous", style=discord.ButtonStyle.secondary, custom_id="prev")
+    @discord.ui.button(
+        label="Previous",
+        style=discord.ButtonStyle.secondary,
+        custom_id="prev",
+    )
     async def prev(self, interaction: discord.Interaction, button: Button[View]):
         """Navigate to the previous page.
 
@@ -81,7 +97,11 @@ class TldrPaginatorView(View):
         else:
             await interaction.response.defer()
 
-    @discord.ui.button(label="Next", style=discord.ButtonStyle.secondary, custom_id="next")
+    @discord.ui.button(
+        label="Next",
+        style=discord.ButtonStyle.secondary,
+        custom_id="next",
+    )
     async def next(self, interaction: discord.Interaction, button: Button[View]):
         """Navigate to the next page.
 

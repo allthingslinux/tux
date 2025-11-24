@@ -337,12 +337,19 @@ def transaction(
                 description=transaction_description,
             )
 
-        return create_instrumentation_wrapper(func, context_factory, is_transaction=True)
+        return create_instrumentation_wrapper(
+            func,
+            context_factory,
+            is_transaction=True,
+        )
 
     return decorator
 
 
-def span(op: str, description: str | None = None) -> Callable[[Callable[P, R]], Callable[P, R]]:
+def span(
+    op: str,
+    description: str | None = None,
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """
     Wrap a function with a Sentry span.
 
@@ -394,7 +401,11 @@ def span(op: str, description: str | None = None) -> Callable[[Callable[P, R]], 
             """
             return sentry_sdk.start_span(op=op, description=span_description)
 
-        return create_instrumentation_wrapper(func, context_factory, is_transaction=False)
+        return create_instrumentation_wrapper(
+            func,
+            context_factory,
+            is_transaction=False,
+        )
 
     return decorator
 
@@ -441,7 +452,11 @@ def start_span(op: str, name: str = "") -> Generator[DummySpan | Any]:
 
 
 @contextmanager
-def start_transaction(op: str, name: str, description: str = "") -> Generator[DummyTransaction | Any]:
+def start_transaction(
+    op: str,
+    name: str,
+    description: str = "",
+) -> Generator[DummyTransaction | Any]:
     """
     Context manager for creating a Sentry transaction for a block of code.
 
@@ -473,11 +488,18 @@ def start_transaction(op: str, name: str, description: str = "") -> Generator[Du
         finally:
             pass
     else:
-        with sentry_sdk.start_transaction(op=op, name=name, description=description) as transaction:
+        with sentry_sdk.start_transaction(
+            op=op,
+            name=name,
+            description=description,
+        ) as transaction:
             try:
                 yield transaction
             finally:
-                transaction.set_data("duration_ms", (time.perf_counter() - start_time) * 1000)
+                transaction.set_data(
+                    "duration_ms",
+                    (time.perf_counter() - start_time) * 1000,
+                )
 
 
 # --- Enhanced Helper Functions ---
@@ -582,7 +604,11 @@ def capture_span_exception(exception: Exception, **extra_data: Any) -> None:
 
 
 @contextmanager
-def enhanced_span(op: str, name: str = "", **initial_data: Any) -> Generator[DummySpan | Any]:
+def enhanced_span(
+    op: str,
+    name: str = "",
+    **initial_data: Any,
+) -> Generator[DummySpan | Any]:
     """
     Enhanced context manager for creating a Sentry span with initial data.
 
@@ -609,7 +635,10 @@ def enhanced_span(op: str, name: str = "", **initial_data: Any) -> Generator[Dum
         return
 
     # In production, skip tracing for certain frequent operations
-    if not CONFIG.DEBUG and any(skip_term in name.lower() for skip_term in ["safe_get_attr", "connect_or_create"]):
+    if not CONFIG.DEBUG and any(
+        skip_term in name.lower()
+        for skip_term in ["safe_get_attr", "connect_or_create"]
+    ):
         yield DummySpan()
         return
 

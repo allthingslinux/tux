@@ -504,7 +504,9 @@ class StructuredLogger:
 
         Examples
         --------
-        >>> StructuredLogger.performance("database_query", 0.123, query="SELECT * FROM users")
+        >>> StructuredLogger.performance(
+        ...     "database_query", 0.123, query="SELECT * FROM users"
+        ... )
         """
         logger.bind(
             operation=operation,
@@ -528,7 +530,9 @@ class StructuredLogger:
 
         Examples
         --------
-        >>> StructuredLogger.database("INSERT INTO users", duration=0.045, rows_affected=1)
+        >>> StructuredLogger.database(
+        ...     "INSERT INTO users", duration=0.045, rows_affected=1
+        ... )
         """
         log_context = {"query": query, **context}
         if duration is not None:
@@ -562,7 +566,9 @@ class StructuredLogger:
 
         Examples
         --------
-        >>> StructuredLogger.api_call("GET", "https://api.github.com/user", status=200, duration=0.234)
+        >>> StructuredLogger.api_call(
+        ...     "GET", "https://api.github.com/user", status=200, duration=0.234
+        ... )
         """
         log_context = {"method": method, "url": url, **context}
         if status is not None:

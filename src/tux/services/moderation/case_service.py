@@ -128,7 +128,11 @@ class CaseService:
         """
         return await self._case_controller.get_active_cases_by_user(user_id, guild_id)
 
-    async def update_mod_log_message_id(self, case_id: int, message_id: int) -> Case | None:
+    async def update_mod_log_message_id(
+        self,
+        case_id: int,
+        message_id: int,
+    ) -> Case | None:
         """
         Update the mod log message ID for a case.
 
@@ -144,4 +148,7 @@ class CaseService:
         Case | None
             The updated case, or None if not found.
         """
-        return await self._case_controller.update_mod_log_message_id(case_id, message_id)
+        return await self._case_controller.update_mod_log_message_id(
+            case_id,
+            message_id,
+        )

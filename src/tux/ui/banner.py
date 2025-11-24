@@ -85,7 +85,11 @@ class BannerBuilder:
 
         # Add columns for ASCII art and info
         table.add_column(width=12)  # ASCII art
-        table.add_column(justify="left", style=f"bold {self.config.colors.primary}", width=8)  # Labels
+        table.add_column(
+            justify="left",
+            style=f"bold {self.config.colors.primary}",
+            width=8,
+        )  # Labels
         table.add_column(style=self.config.colors.secondary)  # Values
 
         # Create ASCII art
@@ -98,7 +102,10 @@ class BannerBuilder:
             ("Bot Name", f"{self.config.bot_name} (Tux)"),
             ("Version", self.config.version),
             ("Bot ID", str(self.config.bot_id or "Unknown")),
-            ("Status", f"Watching {self.config.guild_count} servers with {self.config.user_count} users"),
+            (
+                "Status",
+                f"Watching {self.config.guild_count} servers with {self.config.user_count} users",
+            ),
             ("Prefix", self.config.prefix),
         ]
 

@@ -27,8 +27,16 @@ class BaseConfirmationView(discord.ui.View):
         self.value: bool | None = None
         self.user = user
 
-    @discord.ui.button(label="PLACEHOLDER", style=discord.ButtonStyle.secondary, custom_id="confirm")
-    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]) -> None:
+    @discord.ui.button(
+        label="PLACEHOLDER",
+        style=discord.ButtonStyle.secondary,
+        custom_id="confirm",
+    )
+    async def confirm(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button[discord.ui.View],
+    ) -> None:
         """Handle the confirm button press.
 
         Parameters
@@ -39,14 +47,21 @@ class BaseConfirmationView(discord.ui.View):
             The button that was pressed.
         """
         if interaction.user.id is not self.user:
-            await interaction.response.send_message("This interaction is locked to the command author.", ephemeral=True)
+            await interaction.response.send_message(
+                "This interaction is locked to the command author.",
+                ephemeral=True,
+            )
             return
         await interaction.response.send_message("Confirming", ephemeral=True)
         self.value = True
         self.stop()
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.grey)
-    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]) -> None:
+    async def cancel(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button[discord.ui.View],
+    ) -> None:
         """Handle the cancel button press.
 
         Parameters
@@ -57,7 +72,10 @@ class BaseConfirmationView(discord.ui.View):
             The button that was pressed.
         """
         if interaction.user.id is not self.user:
-            await interaction.response.send_message("This interaction is locked to the command author.", ephemeral=True)
+            await interaction.response.send_message(
+                "This interaction is locked to the command author.",
+                ephemeral=True,
+            )
             return
         await interaction.response.send_message("Cancelling", ephemeral=True)
         self.value = False

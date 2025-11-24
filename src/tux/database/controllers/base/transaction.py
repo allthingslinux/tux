@@ -28,7 +28,10 @@ class TransactionController[ModelT]:
         self.model = model
         self.db = db
 
-    async def with_session[R](self, operation: Callable[[AsyncSession], Awaitable[R]]) -> R:
+    async def with_session[R](
+        self,
+        operation: Callable[[AsyncSession], Awaitable[R]],
+    ) -> R:
         """
         Execute operation within a session context.
 
@@ -40,7 +43,10 @@ class TransactionController[ModelT]:
         async with self.db.session() as session:
             return await operation(session)
 
-    async def with_transaction[R](self, operation: Callable[[AsyncSession], Awaitable[R]]) -> R:
+    async def with_transaction[R](
+        self,
+        operation: Callable[[AsyncSession], Awaitable[R]],
+    ) -> R:
         """
         Execute operation within a transaction context.
 

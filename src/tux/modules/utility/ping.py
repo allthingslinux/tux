@@ -63,7 +63,9 @@ class Ping(BaseCog):
                 f"{minutes}m" if minutes else "",
                 f"{seconds}s",
             ]
-            bot_uptime_readable = " ".join(part for part in bot_uptime_parts if part).strip()
+            bot_uptime_readable = " ".join(
+                part for part in bot_uptime_parts if part
+            ).strip()
 
             # Get the CPU usage and RAM usage of the bot
             cpu_usage = psutil.Process().cpu_percent()

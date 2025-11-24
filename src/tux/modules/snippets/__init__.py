@@ -174,9 +174,14 @@ class SnippetsBaseCog(BaseCog):
         if (
             CONFIG.SNIPPETS.LIMIT_TO_ROLE_IDS
             and isinstance(ctx.author, discord.Member)
-            and all(role.id not in CONFIG.SNIPPETS.ACCESS_ROLE_IDS for role in ctx.author.roles)
+            and all(
+                role.id not in CONFIG.SNIPPETS.ACCESS_ROLE_IDS
+                for role in ctx.author.roles
+            )
         ):
-            roles_str = ", ".join([f"<@&{role_id}>" for role_id in CONFIG.SNIPPETS.ACCESS_ROLE_IDS])
+            roles_str = ", ".join(
+                [f"<@&{role_id}>" for role_id in CONFIG.SNIPPETS.ACCESS_ROLE_IDS],
+            )
             return (
                 False,
                 f"You do not have a role that allows you to manage snippets. Accepted roles: {roles_str}",
@@ -191,7 +196,11 @@ class SnippetsBaseCog(BaseCog):
 
         return True, "All checks passed."
 
-    async def _get_snippet_or_error(self, ctx: commands.Context[Tux], name: str) -> Snippet | None:
+    async def _get_snippet_or_error(
+        self,
+        ctx: commands.Context[Tux],
+        name: str,
+    ) -> Snippet | None:
         """Fetch a snippet by name and guild, sending an error embed if not found.
 
         Parameters
@@ -207,13 +216,20 @@ class SnippetsBaseCog(BaseCog):
             The fetched Snippet object, or None if not found.
         """
         assert ctx.guild
-        snippet = await self.db.snippet.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
+        snippet = await self.db.snippet.get_snippet_by_name_and_guild_id(
+            name,
+            ctx.guild.id,
+        )
         if snippet is None:
             await self.send_snippet_error(ctx, description="Snippet not found.")
             return None
         return snippet
 
-    async def send_snippet_error(self, ctx: commands.Context[Tux], description: str) -> None:
+    async def send_snippet_error(
+        self,
+        ctx: commands.Context[Tux],
+        description: str,
+    ) -> None:
         """Send a standardized snippet error embed.
 
         Parameters

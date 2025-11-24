@@ -115,7 +115,9 @@ class PrefixManager:
         # Priority 1: Check if prefix override is enabled by environment variable
         # This allows forcing a specific prefix across all guilds for testing
         if CONFIG.is_prefix_override_enabled():
-            logger.debug(f"Prefix override enabled, using default prefix '{self._default_prefix}' for guild {guild_id}")
+            logger.debug(
+                f"Prefix override enabled, using default prefix '{self._default_prefix}' for guild {guild_id}",
+            )
             return self._default_prefix
 
         # Priority 2: Check cache first (fast path - O(1) lookup)
@@ -213,7 +215,9 @@ class PrefixManager:
 
         except Exception as e:
             # Log error but don't crash - prefix resolution must always succeed
-            logger.warning(f"Failed to load prefix for guild {guild_id}: {type(e).__name__}")
+            logger.warning(
+                f"Failed to load prefix for guild {guild_id}: {type(e).__name__}",
+            )
 
         # Fallback to default prefix if any step fails
         return self._default_prefix
@@ -254,7 +258,9 @@ class PrefixManager:
             logger.debug(f"Prefix persisted for guild {guild_id}: '{prefix}'")
 
         except Exception as e:
-            logger.error(f"Failed to persist prefix for guild {guild_id}: {type(e).__name__}")
+            logger.error(
+                f"Failed to persist prefix for guild {guild_id}: {type(e).__name__}",
+            )
 
             # IMPORTANT: Remove from cache if persistence failed
             # This maintains consistency - we don't want a prefix in cache
@@ -310,11 +316,15 @@ class PrefixManager:
                         self._prefix_cache[config.id] = config.prefix
 
                 self._cache_loaded = True
-                logger.info(f"Loaded {len(self._prefix_cache)} guild prefixes into cache")
+                logger.info(
+                    f"Loaded {len(self._prefix_cache)} guild prefixes into cache",
+                )
 
             except TimeoutError:
                 # Timeout is not fatal - bot can still work with empty cache
-                logger.warning("Timeout loading prefix cache - continuing without cache")
+                logger.warning(
+                    "Timeout loading prefix cache - continuing without cache",
+                )
                 self._cache_loaded = True  # Mark as loaded to prevent retries
 
             except Exception as e:

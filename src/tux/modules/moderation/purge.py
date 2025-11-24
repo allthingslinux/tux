@@ -37,7 +37,10 @@ class Purge(BaseCog):
         self,
         interaction: discord.Interaction,
         limit: int,
-        channel: discord.TextChannel | discord.Thread | discord.VoiceChannel | None = None,
+        channel: discord.TextChannel
+        | discord.Thread
+        | discord.VoiceChannel
+        | None = None,
     ) -> None:
         """
         Delete a set number of messages in a channel.
@@ -57,13 +60,19 @@ class Purge(BaseCog):
 
         # Check if the limit is within the valid range
         if limit < 1 or limit > 500:
-            await interaction.followup.send("Invalid amount, maximum 500, minimum 1.", ephemeral=True)
+            await interaction.followup.send(
+                "Invalid amount, maximum 500, minimum 1.",
+                ephemeral=True,
+            )
             return
 
         # If the channel is not specified, default to the current channel
         if channel is None:
             # Check if the current channel is a text channel
-            if not isinstance(interaction.channel, discord.TextChannel | discord.Thread | discord.VoiceChannel):
+            if not isinstance(
+                interaction.channel,
+                discord.TextChannel | discord.Thread | discord.VoiceChannel,
+            ):
                 await interaction.followup.send(
                     "Invalid channel type, must be a text channel, thread, or voice channel.",
                     ephemeral=True,
@@ -110,11 +119,15 @@ class Purge(BaseCog):
             )
 
         except discord.HTTPException as error:
-            await interaction.edit_original_response(content=f"An error occurred while purging messages: {error}")
+            await interaction.edit_original_response(
+                content=f"An error occurred while purging messages: {error}",
+            )
 
         except Exception as error:
             logger.error(f"Unexpected error in purge command: {error}")
-            await interaction.edit_original_response(content="An unexpected error occurred while purging messages.")
+            await interaction.edit_original_response(
+                content="An unexpected error occurred while purging messages.",
+            )
 
     @commands.command(
         name="purge",
@@ -126,7 +139,10 @@ class Purge(BaseCog):
         self,
         ctx: commands.Context[Tux],
         limit: int,
-        channel: discord.TextChannel | discord.Thread | discord.VoiceChannel | None = None,
+        channel: discord.TextChannel
+        | discord.Thread
+        | discord.VoiceChannel
+        | None = None,
     ) -> None:
         """
         Delete a set number of messages in a channel.
@@ -150,7 +166,10 @@ class Purge(BaseCog):
         # If the channel is not specified, default to the current channel
         if channel is None:
             # Check if the current channel is a text channel
-            if not isinstance(ctx.channel, discord.TextChannel | discord.Thread | discord.VoiceChannel):
+            if not isinstance(
+                ctx.channel,
+                discord.TextChannel | discord.Thread | discord.VoiceChannel,
+            ):
                 await ctx.send(
                     "Invalid channel type, must be a text channel, thread, or voice channel.",
                     ephemeral=True,
@@ -192,17 +211,26 @@ class Purge(BaseCog):
                 )
 
         except discord.Forbidden:
-            await ctx.send("I don't have permission to delete messages in that channel.", ephemeral=True)
+            await ctx.send(
+                "I don't have permission to delete messages in that channel.",
+                ephemeral=True,
+            )
             return
 
         except discord.HTTPException as error:
             logger.error(f"An error occurred while purging messages: {error}")
-            await ctx.send(f"An error occurred while purging messages: {error}", ephemeral=True)
+            await ctx.send(
+                f"An error occurred while purging messages: {error}",
+                ephemeral=True,
+            )
             return
 
         except Exception as error:
             logger.error(f"Unexpected error in purge command: {error}")
-            await ctx.send("An unexpected error occurred while purging messages.", ephemeral=True)
+            await ctx.send(
+                "An unexpected error occurred while purging messages.",
+                ephemeral=True,
+            )
             return
 
 

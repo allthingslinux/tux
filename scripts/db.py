@@ -37,7 +37,10 @@ class DatabaseCLI(BaseCLI):
         Sets up the CLI with database-specific commands and configures
         the command registry for database operations.
         """
-        super().__init__(name="db", description="Database CLI - Clean commands for SQLModel + Alembic")
+        super().__init__(
+            name="db",
+            description="Database CLI - Clean commands for SQLModel + Alembic",
+        )
         self._setup_command_registry()
         self._setup_commands()
 
@@ -47,17 +50,37 @@ class DatabaseCLI(BaseCLI):
             # ============================================================================
             # CORE WORKFLOW COMMANDS
             # ============================================================================
-            Command("init", self.init, "Initialize database with proper migrations (recommended for new projects)"),
-            Command("dev", self.dev, "Development workflow: generate migration and apply it"),
+            Command(
+                "init",
+                self.init,
+                "Initialize database with proper migrations (recommended for new projects)",
+            ),
+            Command(
+                "dev",
+                self.dev,
+                "Development workflow: generate migration and apply it",
+            ),
             Command("push", self.push, "Apply all pending migrations to database"),
             Command("status", self.status, "Show current migration status"),
             # ============================================================================
             # MIGRATION MANAGEMENT
             # ============================================================================
-            Command("new", self.new_migration, "Generate new migration from model changes"),
+            Command(
+                "new",
+                self.new_migration,
+                "Generate new migration from model changes",
+            ),
             Command("history", self.history, "Show migration history"),
-            Command("check", self.check_migrations, "Validate migration files for issues"),
-            Command("show", self.show_migration, "Show details of a specific migration"),
+            Command(
+                "check",
+                self.check_migrations,
+                "Validate migration files for issues",
+            ),
+            Command(
+                "show",
+                self.show_migration,
+                "Show details of a specific migration",
+            ),
             # ============================================================================
             # DATABASE INSPECTION
             # ============================================================================
@@ -69,8 +92,16 @@ class DatabaseCLI(BaseCLI):
             # ADMIN COMMANDS
             # ============================================================================
             Command("reset", self.reset, "Reset database to clean state (safe)"),
-            Command("downgrade", self.downgrade, "Rollback to a previous migration revision"),
-            Command("nuke", self.nuke, "Nuclear reset: completely destroy database (dangerous)"),
+            Command(
+                "downgrade",
+                self.downgrade,
+                "Rollback to a previous migration revision",
+            ),
+            Command(
+                "nuke",
+                self.nuke,
+                "Nuclear reset: completely destroy database (dangerous)",
+            ),
             Command("version", self.version, "Show version information"),
         ]
 
@@ -116,8 +147,12 @@ class DatabaseCLI(BaseCLI):
         Use this for new projects or when you want proper migration files.
         """
         self.rich.print_section("🚀 Initialize Database", "green")
-        self.rich.rich_print("[bold green]Initializing database with proper migrations...[/bold green]")
-        self.rich.rich_print("[yellow]This will create a clean initial migration file.[/yellow]")
+        self.rich.rich_print(
+            "[bold green]Initializing database with proper migrations...[/bold green]",
+        )
+        self.rich.rich_print(
+            "[yellow]This will create a clean initial migration file.[/yellow]",
+        )
         self.rich.rich_print("")
 
         # Check if tables exist
@@ -165,7 +200,9 @@ class DatabaseCLI(BaseCLI):
 
                 # Query directly to avoid error logging for expected table-not-found errors
                 async with service.session() as session:
-                    result = await session.execute(text("SELECT COUNT(*) FROM alembic_version"))
+                    result = await session.execute(
+                        text("SELECT COUNT(*) FROM alembic_version"),
+                    )
                     migration_count = result.scalar() or 0
 
                 await service.disconnect()
@@ -179,9 +216,13 @@ class DatabaseCLI(BaseCLI):
 
         # Check if migration files already exist
         migration_dir = pathlib.Path("src/tux/database/migrations/versions")
-        migration_files = list(migration_dir.glob("*.py")) if migration_dir.exists() else []
+        migration_files = (
+            list(migration_dir.glob("*.py")) if migration_dir.exists() else []
+        )
         # Exclude __init__.py from count as it's just a package marker
-        migration_file_count = len([f for f in migration_files if f.name != "__init__.py"])
+        migration_file_count = len(
+            [f for f in migration_files if f.name != "__init__.py"],
+        )
 
         if table_count > 0 or migration_count > 0 or migration_file_count > 0:
             self.rich.rich_print(
@@ -196,13 +237,25 @@ class DatabaseCLI(BaseCLI):
             self.rich.rich_print(
                 "[yellow]Use 'db nuke --force --fresh' for a complete fresh start (deletes migration files too).[/yellow]",
             )
-            self.rich.rich_print("[yellow]Or work with your current database state using other commands.[/yellow]")
+            self.rich.rich_print(
+                "[yellow]Or work with your current database state using other commands.[/yellow]",
+            )
             return
 
         # Generate initial migration
         try:
             self.rich.rich_print("[blue]Generating initial migration...[/blue]")
-            self._run_command(["uv", "run", "alembic", "revision", "--autogenerate", "-m", "initial schema"])
+            self._run_command(
+                [
+                    "uv",
+                    "run",
+                    "alembic",
+                    "revision",
+                    "--autogenerate",
+                    "-m",
+                    "initial schema",
+                ],
+            )
 
             self.rich.rich_print("[blue]Applying initial migration...[/blue]")
             self._run_command(["uv", "run", "alembic", "upgrade", "head"])
@@ -219,8 +272,14 @@ class DatabaseCLI(BaseCLI):
 
     def dev(
         self,
-        create_only: Annotated[bool, Option("--create-only", help="Create migration but don't apply it")] = False,
-        name: Annotated[str | None, Option("--name", "-n", help="Name for the migration")] = None,
+        create_only: Annotated[
+            bool,
+            Option("--create-only", help="Create migration but don't apply it"),
+        ] = False,
+        name: Annotated[
+            str | None,
+            Option("--name", "-n", help="Name for the migration"),
+        ] = None,
     ) -> None:
         """Development workflow: create migration and apply it.
 
@@ -242,12 +301,38 @@ class DatabaseCLI(BaseCLI):
 
         try:
             if create_only:
-                self.rich.rich_print("[bold blue]Creating migration only...[/bold blue]")
-                self._run_command(["uv", "run", "alembic", "revision", "--autogenerate", "-m", name or "dev migration"])
-                self.rich.print_success("Migration created - review and apply with 'db push'")
+                self.rich.rich_print(
+                    "[bold blue]Creating migration only...[/bold blue]",
+                )
+                self._run_command(
+                    [
+                        "uv",
+                        "run",
+                        "alembic",
+                        "revision",
+                        "--autogenerate",
+                        "-m",
+                        name or "dev migration",
+                    ],
+                )
+                self.rich.print_success(
+                    "Migration created - review and apply with 'db push'",
+                )
             else:
-                self.rich.rich_print("[bold blue]Creating and applying migration...[/bold blue]")
-                self._run_command(["uv", "run", "alembic", "revision", "--autogenerate", "-m", name or "dev migration"])
+                self.rich.rich_print(
+                    "[bold blue]Creating and applying migration...[/bold blue]",
+                )
+                self._run_command(
+                    [
+                        "uv",
+                        "run",
+                        "alembic",
+                        "revision",
+                        "--autogenerate",
+                        "-m",
+                        name or "dev migration",
+                    ],
+                )
                 self._run_command(["uv", "run", "alembic", "upgrade", "head"])
                 self.rich.print_success("Migration created and applied!")
         except subprocess.CalledProcessError:
@@ -297,7 +382,10 @@ class DatabaseCLI(BaseCLI):
 
     def new_migration(
         self,
-        message: Annotated[str, Argument(help="Descriptive message for the migration", metavar="MESSAGE")],
+        message: Annotated[
+            str,
+            Argument(help="Descriptive message for the migration", metavar="MESSAGE"),
+        ],
         auto_generate: Annotated[
             bool,
             Option("--auto", help="Auto-generate migration from model changes"),
@@ -323,11 +411,23 @@ class DatabaseCLI(BaseCLI):
 
         try:
             if auto_generate:
-                self._run_command(["uv", "run", "alembic", "revision", "--autogenerate", "-m", message])
+                self._run_command(
+                    [
+                        "uv",
+                        "run",
+                        "alembic",
+                        "revision",
+                        "--autogenerate",
+                        "-m",
+                        message,
+                    ],
+                )
             else:
                 self._run_command(["uv", "run", "alembic", "revision", "-m", message])
             self.rich.print_success(f"Migration generated: {message}")
-            self.rich.rich_print("[yellow]💡 Review the migration file before applying![/yellow]")
+            self.rich.rich_print(
+                "[yellow]💡 Review the migration file before applying![/yellow]",
+            )
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to generate migration")
             raise typer.Exit(1) from None
@@ -354,17 +454,26 @@ class DatabaseCLI(BaseCLI):
         can be applied without conflicts. Useful before deployments.
         """
         self.rich.print_section("✅ Validate Migrations", "blue")
-        self.rich.rich_print("[bold blue]Checking migration files for issues...[/bold blue]")
+        self.rich.rich_print(
+            "[bold blue]Checking migration files for issues...[/bold blue]",
+        )
 
         try:
             self._run_command(["uv", "run", "alembic", "check"])
             self.rich.print_success("All migrations validated successfully!")
         except subprocess.CalledProcessError:
-            self.rich.print_error("Migration validation failed - check your migration files")
+            self.rich.print_error(
+                "Migration validation failed - check your migration files",
+            )
 
     def show_migration(
         self,
-        revision: Annotated[str, Argument(help="Migration revision ID to show (e.g., 'head', 'base', or specific ID)")],
+        revision: Annotated[
+            str,
+            Argument(
+                help="Migration revision ID to show (e.g., 'head', 'base', or specific ID)",
+            ),
+        ],
     ) -> None:
         """Show details of a specific migration.
 
@@ -439,7 +548,9 @@ class DatabaseCLI(BaseCLI):
 
                 self.rich.rich_print(f"[green]Found {len(tables)} tables:[/green]")
                 for table_name, column_count in tables:
-                    self.rich.rich_print(f"  📊 [cyan]{table_name}[/cyan]: {column_count} columns")
+                    self.rich.rich_print(
+                        f"  📊 [cyan]{table_name}[/cyan]: {column_count} columns",
+                    )
 
                 await service.disconnect()
                 self.rich.print_success("Database tables listed")
@@ -468,11 +579,17 @@ class DatabaseCLI(BaseCLI):
 
                 if health["status"] == "healthy":
                     self.rich.rich_print("[green]✅ Database is healthy![/green]")
-                    self.rich.rich_print(f"[green]Connection: {health.get('connection', 'OK')}[/green]")
-                    self.rich.rich_print(f"[green]Response time: {health.get('response_time', 'N/A')}[/green]")
+                    self.rich.rich_print(
+                        f"[green]Connection: {health.get('connection', 'OK')}[/green]",
+                    )
+                    self.rich.rich_print(
+                        f"[green]Response time: {health.get('response_time', 'N/A')}[/green]",
+                    )
                 else:
                     self.rich.rich_print("[red]❌ Database is unhealthy![/red]")
-                    self.rich.rich_print(f"[red]Error: {health.get('error', 'Unknown error')}[/red]")
+                    self.rich.rich_print(
+                        f"[red]Error: {health.get('error', 'Unknown error')}[/red]",
+                    )
 
                 await service.disconnect()
                 self.rich.print_success("Health check completed")
@@ -490,7 +607,9 @@ class DatabaseCLI(BaseCLI):
         Useful for catching schema mismatches after code changes.
         """
         self.rich.print_section("🔍 Schema Validation", "blue")
-        self.rich.rich_print("[bold blue]Validating database schema against models...[/bold blue]")
+        self.rich.rich_print(
+            "[bold blue]Validating database schema against models...[/bold blue]",
+        )
 
         def _exit_with_error() -> None:
             """Exit with error status."""
@@ -505,17 +624,32 @@ class DatabaseCLI(BaseCLI):
                 schema_result = await service.validate_schema()
 
                 if schema_result["status"] == "valid":
-                    self.rich.rich_print("[green]✅ Database schema validation passed![/green]")
-                    self.rich.rich_print("[green]All tables and columns match model definitions.[/green]")
+                    self.rich.rich_print(
+                        "[green]✅ Database schema validation passed![/green]",
+                    )
+                    self.rich.rich_print(
+                        "[green]All tables and columns match model definitions.[/green]",
+                    )
                 else:
-                    error_msg = schema_result.get("error", "Unknown schema validation error")
-                    self.rich.rich_print("[red]❌ Database schema validation failed![/red]")
+                    error_msg = schema_result.get(
+                        "error",
+                        "Unknown schema validation error",
+                    )
+                    self.rich.rich_print(
+                        "[red]❌ Database schema validation failed![/red]",
+                    )
                     self.rich.rich_print(f"[red]Error: {error_msg}[/red]")
                     self.rich.rich_print("")
                     self.rich.rich_print("[yellow]💡 Suggested fixes:[/yellow]")
-                    self.rich.rich_print("  • Run 'uv run db reset' to reset and reapply migrations")
-                    self.rich.rich_print("  • Run 'uv run db nuke --force' for complete database reset")
-                    self.rich.rich_print("  • Check that your models match the latest migration files")
+                    self.rich.rich_print(
+                        "  • Run 'uv run db reset' to reset and reapply migrations",
+                    )
+                    self.rich.rich_print(
+                        "  • Run 'uv run db nuke --force' for complete database reset",
+                    )
+                    self.rich.rich_print(
+                        "  • Check that your models match the latest migration files",
+                    )
                     _exit_with_error()
 
                 await service.disconnect()
@@ -534,7 +668,9 @@ class DatabaseCLI(BaseCLI):
         causing performance issues or blocking operations.
         """
         self.rich.print_section("⏱️ Query Analysis", "blue")
-        self.rich.rich_print("[bold blue]Checking for long-running queries...[/bold blue]")
+        self.rich.rich_print(
+            "[bold blue]Checking for long-running queries...[/bold blue]",
+        )
 
         async def _check_queries():
             """Check for long-running queries in the database."""
@@ -542,7 +678,9 @@ class DatabaseCLI(BaseCLI):
                 service = DatabaseService(echo=False)
                 await service.connect(CONFIG.database_url)
 
-                async def _get_long_queries(session: Any) -> list[tuple[Any, Any, str, str]]:
+                async def _get_long_queries(
+                    session: Any,
+                ) -> list[tuple[Any, Any, str, str]]:
                     """Get list of queries running longer than 5 minutes.
 
                     Parameters
@@ -570,15 +708,24 @@ class DatabaseCLI(BaseCLI):
                     )
                     return result.fetchall()
 
-                long_queries = await service.execute_query(_get_long_queries, "get_long_queries")
+                long_queries = await service.execute_query(
+                    _get_long_queries,
+                    "get_long_queries",
+                )
 
                 if long_queries:
-                    self.rich.rich_print(f"[yellow]Found {len(long_queries)} long-running queries:[/yellow]")
+                    self.rich.rich_print(
+                        f"[yellow]Found {len(long_queries)} long-running queries:[/yellow]",
+                    )
                     for pid, duration, query, state in long_queries:
-                        self.rich.rich_print(f"  🔴 [red]PID {pid}[/red]: {state} for {duration}")
+                        self.rich.rich_print(
+                            f"  🔴 [red]PID {pid}[/red]: {state} for {duration}",
+                        )
                         self.rich.rich_print(f"     Query: {query[:100]}...")
                 else:
-                    self.rich.rich_print("[green]✅ No long-running queries found[/green]")
+                    self.rich.rich_print(
+                        "[green]✅ No long-running queries found[/green]",
+                    )
 
                 await service.disconnect()
                 self.rich.print_success("Query analysis completed")
@@ -601,8 +748,12 @@ class DatabaseCLI(BaseCLI):
         Use this to test the full migration chain or fix migration issues.
         """
         self.rich.print_section("🔄 Reset Database", "yellow")
-        self.rich.rich_print("[bold yellow]⚠️  This will reset your database![/bold yellow]")
-        self.rich.rich_print("[yellow]Downgrading to base and reapplying all migrations...[/yellow]")
+        self.rich.rich_print(
+            "[bold yellow]⚠️  This will reset your database![/bold yellow]",
+        )
+        self.rich.rich_print(
+            "[yellow]Downgrading to base and reapplying all migrations...[/yellow]",
+        )
 
         try:
             self._run_command(["uv", "run", "alembic", "downgrade", "base"])
@@ -613,12 +764,21 @@ class DatabaseCLI(BaseCLI):
 
     def nuke(  # noqa: PLR0915
         self,
-        force: Annotated[bool, Option("--force", "-f", help="Skip confirmation prompt")] = False,
+        force: Annotated[
+            bool,
+            Option("--force", "-f", help="Skip confirmation prompt"),
+        ] = False,
         fresh: Annotated[
             bool,
-            Option("--fresh", help="Also delete all migration files for complete fresh start"),
+            Option(
+                "--fresh",
+                help="Also delete all migration files for complete fresh start",
+            ),
         ] = False,
-        yes: Annotated[bool, Option("--yes", "-y", help="Automatically answer 'yes' to all prompts")] = False,
+        yes: Annotated[
+            bool,
+            Option("--yes", "-y", help="Automatically answer 'yes' to all prompts"),
+        ] = False,
     ) -> None:
         """Nuclear reset: completely destroy the database.
 
@@ -638,8 +798,12 @@ class DatabaseCLI(BaseCLI):
         For normal development, use 'db reset' instead.
         """
         self.rich.print_section("💥 Nuclear Reset", "red")
-        self.rich.rich_print("[bold red]🚨 DANGER: This will DELETE ALL DATA![/bold red]")
-        self.rich.rich_print("[red]This is extremely destructive - only use when migrations are broken![/red]")
+        self.rich.rich_print(
+            "[bold red]🚨 DANGER: This will DELETE ALL DATA![/bold red]",
+        )
+        self.rich.rich_print(
+            "[red]This is extremely destructive - only use when migrations are broken![/red]",
+        )
         self.rich.rich_print("")
         self.rich.rich_print("[yellow]This operation will:[/yellow]")
         self.rich.rich_print("  1. Drop ALL tables and reset migration tracking")
@@ -651,7 +815,9 @@ class DatabaseCLI(BaseCLI):
         # Require explicit confirmation unless --force or --yes is used
         if not (force or yes):
             if not sys.stdin.isatty():
-                self.rich.print_error("Cannot run nuke in non-interactive mode without --force or --yes flag")
+                self.rich.print_error(
+                    "Cannot run nuke in non-interactive mode without --force or --yes flag",
+                )
                 return
 
             response = input("Type 'NUKE' to confirm (case sensitive): ")
@@ -682,30 +848,44 @@ class DatabaseCLI(BaseCLI):
                     await session.execute(text("GRANT ALL ON SCHEMA public TO public"))
                     await session.commit()
 
-                self.rich.rich_print("[yellow]Dropping all tables and schema...[/yellow]")
+                self.rich.rich_print(
+                    "[yellow]Dropping all tables and schema...[/yellow]",
+                )
                 await service.execute_query(_drop_all_tables, "drop_all_tables")
                 await service.disconnect()
 
-                self.rich.print_success("Nuclear reset completed - database is completely empty")
+                self.rich.print_success(
+                    "Nuclear reset completed - database is completely empty",
+                )
 
                 # Delete migration files if --fresh flag is used
                 if fresh:
                     migration_dir = pathlib.Path("src/tux/database/migrations/versions")
                     if migration_dir.exists():
-                        self.rich.rich_print("[yellow]Deleting all migration files...[/yellow]")
+                        self.rich.rich_print(
+                            "[yellow]Deleting all migration files...[/yellow]",
+                        )
                         deleted_count = 0
                         for migration_file in migration_dir.glob("*.py"):
                             if migration_file.name != "__init__.py":  # Keep __init__.py
                                 migration_file.unlink()
                                 deleted_count += 1
-                        self.rich.print_success(f"Deleted {deleted_count} migration files")
+                        self.rich.print_success(
+                            f"Deleted {deleted_count} migration files",
+                        )
 
                 self.rich.rich_print("[yellow]Next steps:[/yellow]")
                 if fresh:
-                    self.rich.rich_print("  • Run 'db init' to create new initial migration and setup")
+                    self.rich.rich_print(
+                        "  • Run 'db init' to create new initial migration and setup",
+                    )
                 else:
-                    self.rich.rich_print("  • Run 'db push' to recreate tables from existing migrations")
-                    self.rich.rich_print("  • For completely fresh start: delete migration files, then run 'db init'")
+                    self.rich.rich_print(
+                        "  • Run 'db push' to recreate tables from existing migrations",
+                    )
+                    self.rich.rich_print(
+                        "  • For completely fresh start: delete migration files, then run 'db init'",
+                    )
                 self.rich.rich_print("  • Or manually recreate tables as needed")
 
             except Exception as e:
@@ -722,7 +902,10 @@ class DatabaseCLI(BaseCLI):
                 help="Revision to downgrade to (e.g., '-1' for one step back, 'base' for initial state, or specific revision ID)",
             ),
         ],
-        force: Annotated[bool, Option("--force", "-f", help="Skip confirmation prompt")] = False,
+        force: Annotated[
+            bool,
+            Option("--force", "-f", help="Skip confirmation prompt"),
+        ] = False,
     ) -> None:
         """Rollback to a previous migration revision.
 
@@ -739,8 +922,12 @@ class DatabaseCLI(BaseCLI):
         that added tables/columns. Always backup first!
         """
         self.rich.print_section("⬇️ Downgrade Database", "yellow")
-        self.rich.rich_print(f"[bold yellow]⚠️  Rolling back to revision: {revision}[/bold yellow]")
-        self.rich.rich_print("[yellow]This may cause data loss - backup your database first![/yellow]")
+        self.rich.rich_print(
+            f"[bold yellow]⚠️  Rolling back to revision: {revision}[/bold yellow]",
+        )
+        self.rich.rich_print(
+            "[yellow]This may cause data loss - backup your database first![/yellow]",
+        )
         self.rich.rich_print("")
 
         # Require confirmation for dangerous operations (unless --force is used)
@@ -763,7 +950,9 @@ class DatabaseCLI(BaseCLI):
         and database driver components.
         """
         self.rich.print_section("📌 Version Information", "blue")
-        self.rich.rich_print("[bold blue]Showing database version information...[/bold blue]")
+        self.rich.rich_print(
+            "[bold blue]Showing database version information...[/bold blue]",
+        )
 
         try:
             self.rich.rich_print("[cyan]Current migration:[/cyan]")
@@ -771,7 +960,13 @@ class DatabaseCLI(BaseCLI):
 
             self.rich.rich_print("[cyan]Database driver:[/cyan]")
             self._run_command(
-                ["uv", "run", "python", "-c", "import psycopg; print(f'psycopg version: {psycopg.__version__}')"],
+                [
+                    "uv",
+                    "run",
+                    "python",
+                    "-c",
+                    "import psycopg; print(f'psycopg version: {psycopg.__version__}')",
+                ],
             )
 
             self.rich.print_success("Version information displayed")

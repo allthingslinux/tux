@@ -39,7 +39,11 @@ class SnippetController(BaseController[Snippet]):
         """
         return await self.get_by_id(snippet_id)
 
-    async def get_snippet_by_name_and_guild(self, snippet_name: str, guild_id: int) -> Snippet | None:
+    async def get_snippet_by_name_and_guild(
+        self,
+        snippet_name: str,
+        guild_id: int,
+    ) -> Snippet | None:
         """
         Get a snippet by name and guild.
 
@@ -48,7 +52,10 @@ class SnippetController(BaseController[Snippet]):
         Snippet | None
             The snippet if found, None otherwise.
         """
-        return await self.find_one(filters=(Snippet.snippet_name == snippet_name) & (Snippet.guild_id == guild_id))
+        return await self.find_one(
+            filters=(Snippet.snippet_name == snippet_name)
+            & (Snippet.guild_id == guild_id),
+        )
 
     async def get_snippets_by_guild(self, guild_id: int) -> list[Snippet]:
         """
@@ -100,7 +107,11 @@ class SnippetController(BaseController[Snippet]):
         """
         return await self.update_by_id(snippet_id, **kwargs)
 
-    async def update_snippet_by_id(self, snippet_id: int, **kwargs: Any) -> Snippet | None:
+    async def update_snippet_by_id(
+        self,
+        snippet_id: int,
+        **kwargs: Any,
+    ) -> Snippet | None:
         """
         Update a snippet by ID - alias for update_snippet.
 
@@ -133,7 +144,11 @@ class SnippetController(BaseController[Snippet]):
         """
         return await self.delete_snippet(snippet_id)
 
-    async def get_snippets_by_creator(self, creator_id: int, guild_id: int) -> list[Snippet]:
+    async def get_snippets_by_creator(
+        self,
+        creator_id: int,
+        guild_id: int,
+    ) -> list[Snippet]:
         """
         Get all snippets created by a specific user in a guild.
 
@@ -142,7 +157,10 @@ class SnippetController(BaseController[Snippet]):
         list[Snippet]
             List of snippets created by the user.
         """
-        return await self.find_all(filters=(Snippet.snippet_user_id == creator_id) & (Snippet.guild_id == guild_id))
+        return await self.find_all(
+            filters=(Snippet.snippet_user_id == creator_id)
+            & (Snippet.guild_id == guild_id),
+        )
 
     async def search_snippets(self, guild_id: int, search_term: str) -> list[Snippet]:
         """
@@ -162,7 +180,10 @@ class SnippetController(BaseController[Snippet]):
             for snippet in all_snippets
             if (
                 search_lower in snippet.snippet_name.lower()
-                or (snippet.snippet_content and search_lower in snippet.snippet_content.lower())
+                or (
+                    snippet.snippet_content
+                    and search_lower in snippet.snippet_content.lower()
+                )
             )
         ]
 
@@ -189,7 +210,11 @@ class SnippetController(BaseController[Snippet]):
         """
         return await self.find_all()
 
-    async def get_snippet_by_name_and_guild_id(self, name: str, guild_id: int) -> Snippet | None:
+    async def get_snippet_by_name_and_guild_id(
+        self,
+        name: str,
+        guild_id: int,
+    ) -> Snippet | None:
         """
         Get a snippet by name and guild ID.
 
@@ -198,9 +223,16 @@ class SnippetController(BaseController[Snippet]):
         Snippet | None
             The snippet if found, None otherwise.
         """
-        return await self.find_one(filters=(Snippet.snippet_name == name) & (Snippet.guild_id == guild_id))
+        return await self.find_one(
+            filters=(Snippet.snippet_name == name) & (Snippet.guild_id == guild_id),
+        )
 
-    async def create_snippet_alias(self, original_name: str, alias_name: str, guild_id: int) -> Snippet:
+    async def create_snippet_alias(
+        self,
+        original_name: str,
+        alias_name: str,
+        guild_id: int,
+    ) -> Snippet:
         """
         Create a snippet alias.
 
@@ -240,7 +272,10 @@ class SnippetController(BaseController[Snippet]):
         int
             The count of snippets created by the user.
         """
-        return await self.count(filters=(Snippet.snippet_user_id == creator_id) & (Snippet.guild_id == guild_id))
+        return await self.count(
+            filters=(Snippet.snippet_user_id == creator_id)
+            & (Snippet.guild_id == guild_id),
+        )
 
     async def toggle_snippet_lock(self, snippet_id: int) -> Snippet | None:
         """
@@ -281,7 +316,11 @@ class SnippetController(BaseController[Snippet]):
             return None
         return await self.update_by_id(snippet_id, uses=snippet.uses + 1)
 
-    async def get_popular_snippets(self, guild_id: int, limit: int = 10) -> list[Snippet]:
+    async def get_popular_snippets(
+        self,
+        guild_id: int,
+        limit: int = 10,
+    ) -> list[Snippet]:
         """
         Get the most popular snippets in a guild by usage count.
 
@@ -305,7 +344,9 @@ class SnippetController(BaseController[Snippet]):
         list[Snippet]
             List of snippets with the specified alias.
         """
-        return await self.find_all(filters=(Snippet.alias == alias) & (Snippet.guild_id == guild_id))
+        return await self.find_all(
+            filters=(Snippet.alias == alias) & (Snippet.guild_id == guild_id),
+        )
 
     async def get_all_aliases(self, guild_id: int) -> list[Snippet]:
         """
@@ -316,7 +357,9 @@ class SnippetController(BaseController[Snippet]):
         list[Snippet]
             List of all alias snippets.
         """
-        return await self.find_all(filters=(Snippet.alias is not None) & (Snippet.guild_id == guild_id))
+        return await self.find_all(
+            filters=(Snippet.alias is not None) & (Snippet.guild_id == guild_id),
+        )
 
     async def get_all_snippets_by_guild_id(self, guild_id: int) -> list[Snippet]:
         """

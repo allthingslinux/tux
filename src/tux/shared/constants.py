@@ -157,7 +157,11 @@ TRUNCATION_SUFFIX: Final[str] = "..."
 # AFK constants
 AFK_PREFIX: Final[str] = "[AFK] "
 AFK_SLEEPING_EMOJI: Final[str] = "\N{SLEEPING SYMBOL}"
-AFK_ALLOWED_MENTIONS: Final[discord.AllowedMentions] = discord.AllowedMentions(users=False, everyone=False, roles=False)
+AFK_ALLOWED_MENTIONS: Final[discord.AllowedMentions] = discord.AllowedMentions(
+    users=False,
+    everyone=False,
+    roles=False,
+)
 AFK_REASON_MAX_LENGTH: Final[int] = 100
 
 # 8ball constants
@@ -243,7 +247,9 @@ ENCODING_UTF8: Final[str] = "utf-8"
 XKCD_BASE_URL: Final[str] = "https://xkcd.com"
 EXPLAINXKCD_BASE_URL: Final[str] = "https://www.explainxkcd.com/wiki/index.php/"
 WANDBOX_API_URL: Final[str] = "https://wandbox.org/api/compile.json"
-TLDR_PAGES_URL: Final[str] = "https://raw.githubusercontent.com/tldr-pages/tldr/main/pages"
+TLDR_PAGES_URL: Final[str] = (
+    "https://raw.githubusercontent.com/tldr-pages/tldr/main/pages"
+)
 ARCH_WIKI_API_URL: Final[str] = "https://wiki.archlinux.org/api.php"
 ARCH_WIKI_BASE_URL: Final[str] = "https://wiki.archlinux.org/title/"
 

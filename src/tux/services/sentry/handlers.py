@@ -130,7 +130,11 @@ def get_transaction_operation_mapping(transaction_name: str) -> str:
     ]
 
     return next(
-        (operation for keywords, operation in mappings if any(keyword in name_lower for keyword in keywords)),
+        (
+            operation
+            for keywords, operation in mappings
+            if any(keyword in name_lower for keyword in keywords)
+        ),
         "app.operation",
     )
 
@@ -152,7 +156,9 @@ def _filter_and_group_spans(spans: list[dict[str, Any]]) -> list[dict[str, Any]]
         description = span.get("description", "")
 
         # Skip noisy operations
-        if op in ["http.request"] and any(domain in description for domain in ["discord.com", "discordapp.com"]):
+        if op in ["http.request"] and any(
+            domain in description for domain in ["discord.com", "discordapp.com"]
+        ):
             continue
 
         # Group similar spans

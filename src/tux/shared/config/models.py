@@ -22,37 +22,64 @@ class UserIds(BaseModel):
     """User ID configuration."""
 
     BOT_OWNER_ID: int = Field(default=0, description="Bot owner user ID")
-    SYSADMINS: list[int] = Field(default_factory=list, description="System admin user IDs")
+    SYSADMINS: list[int] = Field(
+        default_factory=list,
+        description="System admin user IDs",
+    )
 
 
 class StatusRoles(BaseModel):
     """Status roles configuration."""
 
-    MAPPINGS: list[dict[str, Any]] = Field(default_factory=list, description="Status to role mappings")
+    MAPPINGS: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Status to role mappings",
+    )
 
 
 class TempVC(BaseModel):
     """Temporary voice channel configuration."""
 
-    TEMPVC_CHANNEL_ID: str | None = Field(default=None, description="Temporary VC channel ID")
-    TEMPVC_CATEGORY_ID: str | None = Field(default=None, description="Temporary VC category ID")
+    TEMPVC_CHANNEL_ID: str | None = Field(
+        default=None,
+        description="Temporary VC channel ID",
+    )
+    TEMPVC_CATEGORY_ID: str | None = Field(
+        default=None,
+        description="Temporary VC category ID",
+    )
 
 
 class GifLimiter(BaseModel):
     """GIF limiter configuration."""
 
     RECENT_GIF_AGE: int = Field(default=60, description="Recent GIF age limit")
-    GIF_LIMITS_USER: dict[int, int] = Field(default_factory=dict, description="User GIF limits")
-    GIF_LIMITS_CHANNEL: dict[int, int] = Field(default_factory=dict, description="Channel GIF limits")
-    GIF_LIMIT_EXCLUDE: list[int] = Field(default_factory=list, description="Excluded channels")
+    GIF_LIMITS_USER: dict[int, int] = Field(
+        default_factory=dict,
+        description="User GIF limits",
+    )
+    GIF_LIMITS_CHANNEL: dict[int, int] = Field(
+        default_factory=dict,
+        description="Channel GIF limits",
+    )
+    GIF_LIMIT_EXCLUDE: list[int] = Field(
+        default_factory=list,
+        description="Excluded channels",
+    )
 
 
 class XP(BaseModel):
     """XP system configuration."""
 
-    XP_BLACKLIST_CHANNELS: list[int] = Field(default_factory=list, description="XP blacklist channels")
+    XP_BLACKLIST_CHANNELS: list[int] = Field(
+        default_factory=list,
+        description="XP blacklist channels",
+    )
     XP_ROLES: list[dict[str, int]] = Field(default_factory=list, description="XP roles")
-    XP_MULTIPLIERS: list[dict[str, int | float]] = Field(default_factory=list, description="XP multipliers")
+    XP_MULTIPLIERS: list[dict[str, int | float]] = Field(
+        default_factory=list,
+        description="XP multipliers",
+    )
     XP_COOLDOWN: int = Field(default=1, description="XP cooldown in seconds")
     LEVELS_EXPONENT: int = Field(default=2, description="Levels exponent")
     SHOW_XP_PROGRESS: bool = Field(default=True, description="Show XP progress")
@@ -62,14 +89,23 @@ class XP(BaseModel):
 class Snippets(BaseModel):
     """Snippets configuration."""
 
-    LIMIT_TO_ROLE_IDS: bool = Field(default=False, description="Limit snippets to specific roles")
-    ACCESS_ROLE_IDS: list[int] = Field(default_factory=list, description="Snippet access role IDs")
+    LIMIT_TO_ROLE_IDS: bool = Field(
+        default=False,
+        description="Limit snippets to specific roles",
+    )
+    ACCESS_ROLE_IDS: list[int] = Field(
+        default_factory=list,
+        description="Snippet access role IDs",
+    )
 
 
 class IRC(BaseModel):
     """IRC bridge configuration."""
 
-    BRIDGE_WEBHOOK_IDS: list[int] = Field(default_factory=list, description="IRC bridge webhook IDs")
+    BRIDGE_WEBHOOK_IDS: list[int] = Field(
+        default_factory=list,
+        description="IRC bridge webhook IDs",
+    )
 
 
 class ExternalServices(BaseModel):
@@ -77,7 +113,10 @@ class ExternalServices(BaseModel):
 
     SENTRY_DSN: str = Field(default="", description="Sentry DSN")
     GITHUB_APP_ID: str = Field(default="", description="GitHub app ID")
-    GITHUB_INSTALLATION_ID: str = Field(default="", description="GitHub installation ID")
+    GITHUB_INSTALLATION_ID: str = Field(
+        default="",
+        description="GitHub installation ID",
+    )
     GITHUB_PRIVATE_KEY: str = Field(default="", description="GitHub private key")
     GITHUB_CLIENT_ID: str = Field(default="", description="GitHub client ID")
     GITHUB_CLIENT_SECRET: str = Field(default="", description="GitHub client secret")

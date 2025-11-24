@@ -18,7 +18,11 @@ import warnings
 from pathlib import Path
 
 from pydantic import Field, computed_field
-from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
+from pydantic_settings import (
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+)
 
 from tux.shared.constants import ENCODING_UTF8
 
@@ -58,7 +62,11 @@ def validate_environment() -> None:
         )
 
     # Don't enforce length requirement for Docker default password
-    if db_password and len(db_password) < 12 and db_password not in ["ChangeThisToAStrongPassword123!"]:
+    if (
+        db_password
+        and len(db_password) < 12
+        and db_password not in ["ChangeThisToAStrongPassword123!"]
+    ):
         warnings.warn(
             "⚠️  SECURITY WARNING: Database password is very short (<12 chars). "
             "Use a longer password for better security.",
@@ -114,7 +122,10 @@ class Config(BaseSettings):
     POSTGRES_PORT: int = Field(default=5432, description="PostgreSQL port")
     POSTGRES_DB: str = Field(default="tuxdb", description="PostgreSQL database name")
     POSTGRES_USER: str = Field(default="tuxuser", description="PostgreSQL username")
-    POSTGRES_PASSWORD: str = Field(default="ChangeThisToAStrongPassword123!", description="PostgreSQL password")
+    POSTGRES_PASSWORD: str = Field(
+        default="ChangeThisToAStrongPassword123!",
+        description="PostgreSQL password",
+    )
 
     # Optional: Custom database URL override
     DATABASE_URL: str = Field(default="", description="Custom database URL override")
@@ -124,7 +135,10 @@ class Config(BaseSettings):
 
     # User permissions
     USER_IDS: UserIds = Field(default_factory=UserIds)
-    ALLOW_SYSADMINS_EVAL: bool = Field(default=False, description="Allow sysadmins to use eval")
+    ALLOW_SYSADMINS_EVAL: bool = Field(
+        default=False,
+        description="Allow sysadmins to use eval",
+    )
 
     # Features
     STATUS_ROLES: StatusRoles = Field(default_factory=StatusRoles)

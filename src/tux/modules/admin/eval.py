@@ -88,11 +88,17 @@ class Eval(BaseCog):
         # Check if the user is in the discord.py owner_ids list in the bot instance
         if self.bot.owner_ids is None:
             logger.warning("Bot owner IDs are not set.")
-            await ctx.send("Bot owner IDs are not set. Better luck next time!", ephemeral=True)
+            await ctx.send(
+                "Bot owner IDs are not set. Better luck next time!",
+                ephemeral=True,
+            )
             return
 
         if ctx.author.id not in self.bot.owner_ids:
-            if not CONFIG.ALLOW_SYSADMINS_EVAL and ctx.author.id in CONFIG.USER_IDS.SYSADMINS:
+            if (
+                not CONFIG.ALLOW_SYSADMINS_EVAL
+                and ctx.author.id in CONFIG.USER_IDS.SYSADMINS
+            ):
                 logger.warning(
                     f"{ctx.author} tried to run eval but is not the bot owner. (User ID: {ctx.author.id})",
                 )
@@ -104,7 +110,11 @@ class Eval(BaseCog):
             logger.warning(
                 f"{ctx.author} tried to run eval but is not the bot owner or sysadmin. (User ID: {ctx.author.id})",
             )
-            prefix = await self.bot.prefix_manager.get_prefix(ctx.guild.id) if ctx.guild else "$"
+            prefix = (
+                await self.bot.prefix_manager.get_prefix(ctx.guild.id)
+                if ctx.guild
+                else "$"
+            )
             await ctx.send(
                 f"You are not the bot owner. Better luck next time! (hint: if you are looking for the regular run command its {prefix}run)",
             )

@@ -148,7 +148,11 @@ class UpsertController[ModelT]:
         new_instance = await crud_controller.create(**create_data)
         return new_instance, True
 
-    async def get_or_create(self, defaults: dict[str, Any] | None = None, **filters: Any) -> tuple[ModelT, bool]:
+    async def get_or_create(
+        self,
+        defaults: dict[str, Any] | None = None,
+        **filters: Any,
+    ) -> tuple[ModelT, bool]:
         """
         Get existing record or create new one.
 

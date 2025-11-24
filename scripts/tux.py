@@ -34,7 +34,10 @@ class TuxCLI(BaseCLI):
         Sets up the CLI with the Tux bot name and description,
         configures the command registry, and registers all available commands.
         """
-        super().__init__(name="tux", description="Tux Bot CLI - A unified interface for all bot operations")
+        super().__init__(
+            name="tux",
+            description="Tux Bot CLI - A unified interface for all bot operations",
+        )
         self._setup_command_registry()
         self._setup_commands()
 
@@ -121,7 +124,9 @@ class TuxCLI(BaseCLI):
         Displays the current version of Tux and related components.
         """
         self.rich.print_section("📋 Tux Version Information", "blue")
-        self.rich.rich_print("[bold blue]Showing Tux version information...[/bold blue]")
+        self.rich.rich_print(
+            "[bold blue]Showing Tux version information...[/bold blue]",
+        )
 
         try:
             from tux import __version__  # type: ignore[attr-defined] # noqa: PLC0415

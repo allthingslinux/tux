@@ -67,7 +67,11 @@ class TuxDatabaseError(TuxError):
 class TuxDatabaseConnectionError(TuxDatabaseError):
     """Raised when database connection fails."""
 
-    def __init__(self, message: str = "Database connection failed", original_error: Exception | None = None):
+    def __init__(
+        self,
+        message: str = "Database connection failed",
+        original_error: Exception | None = None,
+    ):
         """Initialize the database connection error.
 
         Parameters
@@ -129,7 +133,12 @@ class TuxAppCommandPermissionLevelError(TuxPermissionError):
 class TuxPermissionDeniedError(TuxPermissionError):
     """Raised when a user doesn't have permission to run a command (dynamic system)."""
 
-    def __init__(self, required_rank: int, user_rank: int, command_name: str | None = None):
+    def __init__(
+        self,
+        required_rank: int,
+        user_rank: int,
+        command_name: str | None = None,
+    ):
         """Initialize the permission denied error.
 
         Parameters
@@ -146,9 +155,7 @@ class TuxPermissionDeniedError(TuxPermissionError):
         self.command_name = command_name
 
         if command_name:
-            message = (
-                f"You need permission rank **{required_rank}** to use `{command_name}`. Your rank: **{user_rank}**"
-            )
+            message = f"You need permission rank **{required_rank}** to use `{command_name}`. Your rank: **{user_rank}**"
         else:
             message = f"You need permission rank **{required_rank}**. Your rank: **{user_rank}**"
 
@@ -198,13 +205,20 @@ class TuxAPIRequestError(TuxAPIError):
         self.service_name = service_name
         self.status_code = status_code
         self.reason = reason
-        super().__init__(f"API request to {service_name} failed with status {status_code}: {reason}")
+        super().__init__(
+            f"API request to {service_name} failed with status {status_code}: {reason}",
+        )
 
 
 class TuxAPIResourceNotFoundError(TuxAPIRequestError):
     """Raised when an API request results in a 404 or similar resource not found error."""
 
-    def __init__(self, service_name: str, resource_identifier: str, status_code: int = 404) -> None:
+    def __init__(
+        self,
+        service_name: str,
+        resource_identifier: str,
+        status_code: int = 404,
+    ) -> None:
         """Initialize the API resource not found error.
 
         Parameters
@@ -309,7 +323,9 @@ class TuxCompilationError(TuxCodeExecutionError):
 
     def __init__(self) -> None:
         """Initialize the compilation error with default message."""
-        super().__init__("Failed to get output from the compiler. The code may have compilation errors.")
+        super().__init__(
+            "Failed to get output from the compiler. The code may have compilation errors.",
+        )
 
 
 # === Service Exceptions ===

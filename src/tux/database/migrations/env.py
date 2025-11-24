@@ -129,7 +129,14 @@ _keep_refs = (
 def include_object(
     obj: SchemaItem,
     name: str | None,
-    type_: Literal["schema", "table", "column", "index", "unique_constraint", "foreign_key_constraint"],
+    type_: Literal[
+        "schema",
+        "table",
+        "column",
+        "index",
+        "unique_constraint",
+        "foreign_key_constraint",
+    ],
     reflected: bool,
     compare_to: SchemaItem | None,
 ) -> bool:
@@ -164,7 +171,9 @@ def include_object(
     - Could exclude temporary or external tables
     """
     # Exclude views from autogenerate (mark with __table_args__ = {'info': {'is_view': True}})
-    return not (type_ == "table" and hasattr(obj, "info") and obj.info.get("is_view", False))
+    return not (
+        type_ == "table" and hasattr(obj, "info") and obj.info.get("is_view", False)
+    )
 
 
 def process_revision_directives(
@@ -196,7 +205,9 @@ def process_revision_directives(
         script = directives[0]
         if script.upgrade_ops is not None and script.upgrade_ops.is_empty():
             directives[:] = []
-            logger.info("No schema changes detected, skipping migration file generation")
+            logger.info(
+                "No schema changes detected, skipping migration file generation",
+            )
 
 
 # =============================================================================
@@ -285,7 +296,11 @@ def run_migrations_online() -> None:
     # Convert async database URL to sync format (Alembic doesn't support async)
     database_url = CONFIG.database_url
     if database_url.startswith("postgresql+psycopg_async://"):
-        database_url = database_url.replace("postgresql+psycopg_async://", "postgresql+psycopg://", 1)
+        database_url = database_url.replace(
+            "postgresql+psycopg_async://",
+            "postgresql+psycopg://",
+            1,
+        )
 
     # Log sanitized database URL (mask password for security)
     debug_url = re.sub(r":([^:@]{4})[^:@]*@", r":****@", database_url)
@@ -318,7 +333,9 @@ def run_migrations_online() -> None:
                 logger.error(f"Failed to connect after {max_retries} attempts: {e}")
                 raise
 
-            logger.warning(f"Connection attempt {attempt + 1} failed, retrying in {retry_delay}s")
+            logger.warning(
+                f"Connection attempt {attempt + 1} failed, retrying in {retry_delay}s",
+            )
             time.sleep(retry_delay)
 
     if connectable is None:

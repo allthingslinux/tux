@@ -55,7 +55,9 @@ class CaseController(BaseController[Case]):
         list[Case]
             List of all cases for the user in the guild.
         """
-        return await self.find_all(filters=(Case.case_user_id == user_id) & (Case.guild_id == guild_id))
+        return await self.find_all(
+            filters=(Case.case_user_id == user_id) & (Case.guild_id == guild_id),
+        )
 
     async def get_active_cases_by_user(self, user_id: int, guild_id: int) -> list[Case]:
         """
@@ -67,7 +69,9 @@ class CaseController(BaseController[Case]):
             List of active cases for the user in the guild.
         """
         return await self.find_all(
-            filters=(Case.case_user_id == user_id) & (Case.guild_id == guild_id) & (Case.case_status),
+            filters=(Case.case_user_id == user_id)
+            & (Case.guild_id == guild_id)
+            & (Case.case_status),
         )
 
     async def create_case(
@@ -144,7 +148,9 @@ class CaseController(BaseController[Case]):
                 await session.flush()
                 logger.debug(f"Created new guild {guild_id} with case_count=0")
             else:
-                logger.debug(f"Locked guild {guild_id} with case_count={guild.case_count}")
+                logger.debug(
+                    f"Locked guild {guild_id} with case_count={guild.case_count}",
+                )
 
             # Increment case count to get the next case number
             case_number = guild.case_count + 1
@@ -193,7 +199,11 @@ class CaseController(BaseController[Case]):
         """
         return await self.update_by_id(case_id, **kwargs)
 
-    async def update_mod_log_message_id(self, case_id: int, message_id: int) -> Case | None:
+    async def update_mod_log_message_id(
+        self,
+        case_id: int,
+        message_id: int,
+    ) -> Case | None:
         """
         Update the mod log message ID for a case.
 
@@ -233,7 +243,11 @@ class CaseController(BaseController[Case]):
         """
         return await self.delete_by_id(case_id)
 
-    async def get_cases_by_guild(self, guild_id: int, limit: int | None = None) -> list[Case]:
+    async def get_cases_by_guild(
+        self,
+        guild_id: int,
+        limit: int | None = None,
+    ) -> list[Case]:
         """
         Get all cases for a guild, optionally limited.
 
@@ -253,7 +267,9 @@ class CaseController(BaseController[Case]):
         list[Case]
             List of cases matching the specified type.
         """
-        return await self.find_all(filters=(Case.guild_id == guild_id) & (Case.case_type == case_type))
+        return await self.find_all(
+            filters=(Case.guild_id == guild_id) & (Case.case_type == case_type),
+        )
 
     async def get_recent_cases(self, guild_id: int, hours: int = 24) -> list[Case]:
         """
@@ -315,9 +331,15 @@ class CaseController(BaseController[Case]):
         Case | None
             The case if found, None otherwise.
         """
-        return await self.find_one(filters=(Case.case_number == case_number) & (Case.guild_id == guild_id))
+        return await self.find_one(
+            filters=(Case.case_number == case_number) & (Case.guild_id == guild_id),
+        )
 
-    async def get_cases_by_options(self, guild_id: int, options: dict[str, Any] | None = None) -> list[Case]:
+    async def get_cases_by_options(
+        self,
+        guild_id: int,
+        options: dict[str, Any] | None = None,
+    ) -> list[Case]:
         """
         Get cases by various filter options.
 
@@ -348,7 +370,12 @@ class CaseController(BaseController[Case]):
 
         return await self.find_all(filters=combined_filter)
 
-    async def update_case_by_number(self, guild_id: int, case_number: int, **kwargs: Any) -> Case | None:
+    async def update_case_by_number(
+        self,
+        guild_id: int,
+        case_number: int,
+        **kwargs: Any,
+    ) -> Case | None:
         """
         Update a case by guild ID and case number.
 
@@ -385,14 +412,20 @@ class CaseController(BaseController[Case]):
         Case | None
             The most recent case if found, None otherwise.
         """
-        cases = await self.find_all(filters=(Case.case_user_id == user_id) & (Case.guild_id == guild_id))
+        cases = await self.find_all(
+            filters=(Case.case_user_id == user_id) & (Case.guild_id == guild_id),
+        )
         # Sort by ID descending (assuming higher ID = newer case) and return the first one
         if cases:
             sorted_cases = sorted(cases, key=lambda x: x.id or 0, reverse=True)
             return sorted_cases[0]
         return None
 
-    async def set_tempban_expired(self, case_id: int, guild_id: int | None = None) -> bool:
+    async def set_tempban_expired(
+        self,
+        case_id: int,
+        guild_id: int | None = None,
+    ) -> bool:
         """
         Mark a tempban case as processed after the user has been unbanned.
 
@@ -412,11 +445,15 @@ class CaseController(BaseController[Case]):
         bool
             True if the case was updated, False if not found
         """
-        logger.debug(f"Marking tempban case {case_id} as processed (setting case_processed=True)")
+        logger.debug(
+            f"Marking tempban case {case_id} as processed (setting case_processed=True)",
+        )
         result = await self.update_by_id(case_id, case_processed=True)
         success = result is not None
         if success:
-            logger.debug(f"Case {case_id} marked as processed (case_processed=True, case_status unchanged)")
+            logger.debug(
+                f"Case {case_id} marked as processed (case_processed=True, case_status unchanged)",
+            )
         return success
 
     async def get_expired_tempbans(self, guild_id: int) -> list[Case]:
@@ -430,7 +467,9 @@ class CaseController(BaseController[Case]):
             case_processed=False, and case_status=True.
         """
         now = datetime.now(UTC)
-        logger.debug(f"Checking for unprocessed expired tempbans in guild {guild_id}, current time: {now}")
+        logger.debug(
+            f"Checking for unprocessed expired tempbans in guild {guild_id}, current time: {now}",
+        )
 
         # Find valid, unprocessed tempban cases where case_expires_at is in the past
         # Type ignore for SQLAlchemy comparison operators on nullable fields
@@ -445,7 +484,9 @@ class CaseController(BaseController[Case]):
             ),
         )
 
-        logger.debug(f"Found {len(expired_cases)} unprocessed expired tempbans in guild {guild_id}")
+        logger.debug(
+            f"Found {len(expired_cases)} unprocessed expired tempbans in guild {guild_id}",
+        )
         for case in expired_cases:
             logger.debug(
                 f"Unprocessed expired tempban: case_id={case.id}, user={case.case_user_id}, "
@@ -463,9 +504,15 @@ class CaseController(BaseController[Case]):
         int
             The total count of cases for the user.
         """
-        return await self.count(filters=(Case.case_user_id == user_id) & (Case.guild_id == guild_id))
+        return await self.count(
+            filters=(Case.case_user_id == user_id) & (Case.guild_id == guild_id),
+        )
 
-    async def get_cases_by_moderator(self, moderator_id: int, guild_id: int) -> list[Case]:
+    async def get_cases_by_moderator(
+        self,
+        moderator_id: int,
+        guild_id: int,
+    ) -> list[Case]:
         """
         Get all cases moderated by a specific user in a guild.
 
@@ -474,7 +521,10 @@ class CaseController(BaseController[Case]):
         list[Case]
             List of cases moderated by the user.
         """
-        return await self.find_all(filters=(Case.case_moderator_id == moderator_id) & (Case.guild_id == guild_id))
+        return await self.find_all(
+            filters=(Case.case_moderator_id == moderator_id)
+            & (Case.guild_id == guild_id),
+        )
 
     async def get_expired_cases(self, guild_id: int) -> list[Case]:
         """

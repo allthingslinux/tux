@@ -211,7 +211,9 @@ class ErrorTestRegistry:
                 else:
                     category = "Traditional Commands"
                 self._add_traditional_command_test(error_type)
-            elif error_type.__module__ == "discord" or error_type.__module__.startswith("discord."):
+            elif error_type.__module__ == "discord" or error_type.__module__.startswith(
+                "discord.",
+            ):
                 # Sub-categorize Discord API errors
                 if name in [
                     "ConnectionClosed",
@@ -302,7 +304,13 @@ class ErrorTestRegistry:
             # If this name already exists, use module-qualified name
             key = f"{error_class.__module__}.{name}"
 
-        self.tests[key] = ErrorTestDefinition(error_class, args, {}, description, category)
+        self.tests[key] = ErrorTestDefinition(
+            error_class,
+            args,
+            {},
+            description,
+            category,
+        )
 
     def _add_app_command_test(self, error_type: type[Exception]) -> None:
         """Add app command specific test cases."""
@@ -316,14 +324,24 @@ class ErrorTestRegistry:
             ),
             app_commands.TransformerError: (
                 "App command argument transformation failed",
-                ("Transformer failed", discord.AppCommandOptionType.string, type("MockTransformer", (), {})),
+                (
+                    "Transformer failed",
+                    discord.AppCommandOptionType.string,
+                    type("MockTransformer", (), {}),
+                ),
             ),
-            app_commands.MissingAnyRole: ("App command missing any of multiple roles", ([987654321, "AnotherRole"],)),
+            app_commands.MissingAnyRole: (
+                "App command missing any of multiple roles",
+                ([987654321, "AnotherRole"],),
+            ),
             app_commands.MissingPermissions: (
                 "App command missing permissions",
                 (["manage_messages", "kick_members"],),
             ),
-            app_commands.CommandOnCooldown: ("App command on cooldown", (app_commands.Cooldown(1, 10.0), 7.54)),
+            app_commands.CommandOnCooldown: (
+                "App command on cooldown",
+                (app_commands.Cooldown(1, 10.0), 7.54),
+            ),
             app_commands.BotMissingPermissions: (
                 "Bot missing permissions for app command",
                 (["send_messages", "embed_links"],),
@@ -332,7 +350,13 @@ class ErrorTestRegistry:
 
         if error_type in specific_mappings:
             description, args = specific_mappings[error_type]
-            self.tests[name] = ErrorTestDefinition(error_type, args, {}, description, "Application Commands")
+            self.tests[name] = ErrorTestDefinition(
+                error_type,
+                args,
+                {},
+                description,
+                "Application Commands",
+            )
         elif error_type == app_commands.MissingRole:
             self.tests[f"{name}_str"] = ErrorTestDefinition(
                 error_type,
@@ -401,7 +425,13 @@ class ErrorTestRegistry:
             "NSFWChannelRequired",
         ]:
             category = "Check Failures"
-        elif name in ["FlagError", "BadFlagArgument", "MissingRequiredFlag", "MissingFlagArgument", "TooManyFlags"]:
+        elif name in [
+            "FlagError",
+            "BadFlagArgument",
+            "MissingRequiredFlag",
+            "MissingFlagArgument",
+            "TooManyFlags",
+        ]:
             category = "Flag Errors"
         elif name.startswith("Extension") or name in [
             "NoEntryPointError",
@@ -430,24 +460,42 @@ class ErrorTestRegistry:
                 "Traditional command missing permissions",
                 (["manage_guild", "ban_members"],),
             ),
-            commands.FlagError: ("Traditional command flag error", ("Generic flag parsing error",)),
+            commands.FlagError: (
+                "Traditional command flag error",
+                ("Generic flag parsing error",),
+            ),
             commands.BadFlagArgument: (
                 "Traditional command bad flag argument",
                 (MockFlag("test_flag"), ValueError("Invalid flag value")),
             ),
-            commands.MissingRequiredFlag: ("Traditional command missing required flag", (MockFlag("required_flag"),)),
-            commands.CommandOnCooldown: ("Traditional command on cooldown", (commands.Cooldown(1, 15.0), 11.99)),
+            commands.MissingRequiredFlag: (
+                "Traditional command missing required flag",
+                (MockFlag("required_flag"),),
+            ),
+            commands.CommandOnCooldown: (
+                "Traditional command on cooldown",
+                (commands.Cooldown(1, 15.0), 11.99),
+            ),
             commands.MissingRequiredArgument: (
                 "Traditional command missing required argument",
                 (MockParameter("required_arg"),),
             ),
-            commands.TooManyArguments: ("Traditional command too many arguments", ("Too many arguments provided",)),
+            commands.TooManyArguments: (
+                "Traditional command too many arguments",
+                ("Too many arguments provided",),
+            ),
             commands.BotMissingPermissions: (
                 "Bot missing permissions for traditional command",
                 (["administrator", "manage_channels"],),
             ),
-            commands.MemberNotFound: ("Traditional command member not found", ("NonExistentUser#1234",)),
-            commands.ExtensionNotLoaded: ("Extension not loaded error", ("fake.extension.name",)),
+            commands.MemberNotFound: (
+                "Traditional command member not found",
+                ("NonExistentUser#1234",),
+            ),
+            commands.ExtensionNotLoaded: (
+                "Extension not loaded error",
+                ("fake.extension.name",),
+            ),
         }
 
         if error_type in specific_mappings:
@@ -463,7 +511,13 @@ class ErrorTestRegistry:
                 "NSFWChannelRequired",
             ]:
                 category = "Check Failures"
-            elif name in ["FlagError", "BadFlagArgument", "MissingRequiredFlag", "MissingFlagArgument", "TooManyFlags"]:
+            elif name in [
+                "FlagError",
+                "BadFlagArgument",
+                "MissingRequiredFlag",
+                "MissingFlagArgument",
+                "TooManyFlags",
+            ]:
                 category = "Flag Errors"
             elif name.startswith("Extension") or name in [
                 "NoEntryPointError",
@@ -473,7 +527,13 @@ class ErrorTestRegistry:
                 category = "Extension Management"
             elif "NotFound" in name and name.endswith("NotFound"):
                 category = "Entity Not Found"
-            self.tests[name] = ErrorTestDefinition(error_type, args, {}, description, category)
+            self.tests[name] = ErrorTestDefinition(
+                error_type,
+                args,
+                {},
+                description,
+                category,
+            )
         elif error_type == commands.MissingRole:
             self.tests[f"{name}_str"] = ErrorTestDefinition(
                 error_type,
@@ -489,7 +549,9 @@ class ErrorTestRegistry:
                 "Traditional command missing role (by ID)",
                 "Check Failures",
             )
-        elif hasattr(error_type, "__name__") and not error_type.__name__.startswith("Extension"):
+        elif hasattr(error_type, "__name__") and not error_type.__name__.startswith(
+            "Extension",
+        ):
             realistic_args = self._get_realistic_traditional_command_args(name)
             self.tests[name] = ErrorTestDefinition(
                 error_type,
@@ -499,7 +561,10 @@ class ErrorTestRegistry:
                 category,
             )
 
-    def _get_realistic_traditional_command_args(self, error_name: str) -> tuple[Any, ...]:
+    def _get_realistic_traditional_command_args(
+        self,
+        error_name: str,
+    ) -> tuple[Any, ...]:
         """
         Get realistic arguments for traditional command errors.
 
@@ -546,10 +611,16 @@ class ErrorTestRegistry:
 
         # Specific mappings for Discord API errors
         # Format: (description, args, kwargs)
-        specific_mappings: dict[type[Exception], tuple[str, tuple[Any, ...], dict[str, Any]]] = {
+        specific_mappings: dict[
+            type[Exception],
+            tuple[str, tuple[Any, ...], dict[str, Any]],
+        ] = {
             discord.HTTPException: (
                 "Discord API HTTP error response",
-                (MockObject(status=500, reason="Internal Server Error"), "Mock HTTP Error"),
+                (
+                    MockObject(status=500, reason="Internal Server Error"),
+                    "Mock HTTP Error",
+                ),
                 {},
             ),
             discord.RateLimited: ("Discord API rate limit hit", (15.5,), {}),
@@ -565,22 +636,37 @@ class ErrorTestRegistry:
             ),
             discord.DiscordServerError: (
                 "Discord server error",
-                (MockObject(status=500, reason="Internal Server Error"), "Mock server error"),
+                (
+                    MockObject(status=500, reason="Internal Server Error"),
+                    "Mock server error",
+                ),
                 {},
             ),
-            discord.ConnectionClosed: ("Discord connection closed", (MockObject(),), {"shard_id": None, "code": 4004}),
+            discord.ConnectionClosed: (
+                "Discord connection closed",
+                (MockObject(),),
+                {"shard_id": None, "code": 4004},
+            ),
             discord.GatewayNotFound: (
                 "Discord gateway not found",
                 (),
                 {},
             ),
-            discord.InvalidData: ("Discord API invalid data", ("Invalid JSON response",), {}),
+            discord.InvalidData: (
+                "Discord API invalid data",
+                ("Invalid JSON response",),
+                {},
+            ),
             discord.LoginFailure: (
                 "Bot authentication failed",
                 (),
                 {},
             ),
-            discord.PrivilegedIntentsRequired: ("Missing privileged intents", (None,), {}),
+            discord.PrivilegedIntentsRequired: (
+                "Missing privileged intents",
+                (None,),
+                {},
+            ),
             discord.InteractionResponded: (
                 "Interaction already responded",
                 (MockObject(),),
@@ -607,7 +693,13 @@ class ErrorTestRegistry:
                 "MissingApplicationID",
             ]:
                 category = "Client Connection"
-            self.tests[name] = ErrorTestDefinition(error_type, args, kwargs, description, category)
+            self.tests[name] = ErrorTestDefinition(
+                error_type,
+                args,
+                kwargs,
+                description,
+                category,
+            )
         elif hasattr(error_type, "__name__"):
             realistic_args = self._get_realistic_discord_args(name)
             # Determine specific category for Discord API errors
@@ -681,7 +773,13 @@ class ErrorTestRegistry:
 
         if error_type in specific_mappings:
             description, args = specific_mappings[error_type]
-            self.tests[name] = ErrorTestDefinition(error_type, args, {}, description, "HTTPX Errors")
+            self.tests[name] = ErrorTestDefinition(
+                error_type,
+                args,
+                {},
+                description,
+                "HTTPX Errors",
+            )
         elif hasattr(error_type, "__name__"):
             # Generic HTTPX error
             realistic_args = self._get_realistic_httpx_args(name)
@@ -735,13 +833,18 @@ class ErrorTestRegistry:
             "keyerror": ("'missing_key'",),
             "indexerror": ("list index out of range",),
             "attributeerror": ("'str' object has no attribute 'missing_attr'",),
-            "filenotfounderror": ("[Errno 2] No such file or directory: 'missing_file.txt'",),
+            "filenotfounderror": (
+                "[Errno 2] No such file or directory: 'missing_file.txt'",
+            ),
             "permissionerror": ("[Errno 13] Permission denied: '/protected/file.txt'",),
             "zerodivisionerror": ("division by zero",),
             "assertionerror": ("Test assertion failed",),
         }
 
-        return arg_mappings.get(error_name_lower, (f"python_{error_name_lower}_example",))
+        return arg_mappings.get(
+            error_name_lower,
+            (f"python_{error_name_lower}_example",),
+        )
 
     def _add_custom_test(self, error_type: type[Exception]) -> None:
         """Add custom error test cases for tux module errors."""
@@ -866,8 +969,15 @@ class Mock(BaseCog):
         if config:
             sentry_status = "✅ Enabled" if config["send_to_sentry"] else "❌ Disabled"
             log_level = config["log_level"]
-            log_icon = {"ERROR": "🔴", "WARNING": "🟡", "INFO": "🔵", "DEBUG": "⚪"}.get(log_level, "🔵")
-            embed_type = "📁 Custom" if config["has_detail_extractor"] else "📁 Standard"
+            log_icon = {
+                "ERROR": "🔴",
+                "WARNING": "🟡",
+                "INFO": "🔵",
+                "DEBUG": "⚪",
+            }.get(log_level, "🔵")
+            embed_type = (
+                "📁 Custom" if config["has_detail_extractor"] else "📁 Standard"
+            )
             category_icon = {
                 "Application Commands": "🔵",
                 "Traditional Commands": "🔵",
@@ -975,7 +1085,9 @@ class Mock(BaseCog):
 
         # Get the active prefix for this guild
         prefix = (
-            await self.bot.prefix_manager.get_prefix(ctx.guild.id) if ctx.guild and self.bot.prefix_manager else "$"
+            await self.bot.prefix_manager.get_prefix(ctx.guild.id)
+            if ctx.guild and self.bot.prefix_manager
+            else "$"
         )
 
         embed.add_field(
@@ -986,7 +1098,10 @@ class Mock(BaseCog):
 
         await ctx.send(embed=embed)
 
-    @commands.hybrid_group(name="mock", description="Commands to mock bot behaviors for testing.")
+    @commands.hybrid_group(
+        name="mock",
+        description="Commands to mock bot behaviors for testing.",
+    )
     @requires_command_permission()
     async def mock(self, ctx: commands.Context[Tux]) -> None:
         """
@@ -1043,7 +1158,11 @@ class Mock(BaseCog):
                 available_errors = categories.get(category, [])
 
             # Filter based on current input and limit to 25
-            filtered_errors = [error_name for error_name in available_errors if current.lower() in error_name.lower()]
+            filtered_errors = [
+                error_name
+                for error_name in available_errors
+                if current.lower() in error_name.lower()
+            ]
 
             choices = [
                 app_commands.Choice(
@@ -1061,7 +1180,10 @@ class Mock(BaseCog):
         choices.sort(key=lambda x: x.name)
         return choices[:25]
 
-    @mock.command(name="error", description="Raise a specified error for testing error handling.")
+    @mock.command(
+        name="error",
+        description="Raise a specified error for testing error handling.",
+    )
     @app_commands.describe(
         category="Select the category of error to test",
         error_name="Choose the specific error from the selected category",
@@ -1069,11 +1191,20 @@ class Mock(BaseCog):
     @app_commands.choices(
         category=[
             app_commands.Choice(name="All Categories", value="All"),
-            app_commands.Choice(name="Application Commands", value="Application Commands"),
-            app_commands.Choice(name="Traditional Commands", value="Traditional Commands"),
+            app_commands.Choice(
+                name="Application Commands",
+                value="Application Commands",
+            ),
+            app_commands.Choice(
+                name="Traditional Commands",
+                value="Traditional Commands",
+            ),
             app_commands.Choice(name="Check Failures", value="Check Failures"),
             app_commands.Choice(name="Flag Errors", value="Flag Errors"),
-            app_commands.Choice(name="Extension Management", value="Extension Management"),
+            app_commands.Choice(
+                name="Extension Management",
+                value="Extension Management",
+            ),
             app_commands.Choice(name="Entity Not Found", value="Entity Not Found"),
             app_commands.Choice(name="Client Connection", value="Client Connection"),
             app_commands.Choice(name="Discord API", value="Discord API"),
@@ -1084,7 +1215,12 @@ class Mock(BaseCog):
     )
     @app_commands.autocomplete(error_name=error_name_autocomplete)
     @requires_command_permission()
-    async def mock_error(self, ctx: commands.Context[Tux], category: str, error_name: str | None = None) -> None:
+    async def mock_error(
+        self,
+        ctx: commands.Context[Tux],
+        category: str,
+        error_name: str | None = None,
+    ) -> None:
         """
         Raise a specified error to test the global error handler.
 
@@ -1114,7 +1250,10 @@ class Mock(BaseCog):
         # Handle "All" category - need to find the error across all categories
         if category != "All":
             # Find the error in the specific category
-            category_tests = self.error_registry.get_test_names_by_category().get(category, [])
+            category_tests = self.error_registry.get_test_names_by_category().get(
+                category,
+                [],
+            )
             if error_name not in category_tests:
                 await self._send_error_not_in_category(ctx, error_name, category)
                 return
@@ -1138,7 +1277,11 @@ class Mock(BaseCog):
         error = test_def.create_error()
         raise error
 
-    async def _send_category_summary(self, ctx: commands.Context[Tux], category: str) -> None:
+    async def _send_category_summary(
+        self,
+        ctx: commands.Context[Tux],
+        category: str,
+    ) -> None:
         """Send a summary of available errors in a specific category."""
         categories = self.error_registry.get_test_names_by_category()
 
@@ -1188,7 +1331,12 @@ class Mock(BaseCog):
 
         await ctx.send(embed=embed)
 
-    async def _send_error_not_in_category(self, ctx: commands.Context[Tux], error_name: str, category: str) -> None:
+    async def _send_error_not_in_category(
+        self,
+        ctx: commands.Context[Tux],
+        error_name: str,
+        category: str,
+    ) -> None:
         """Send an error message when the error is not found in the specified category."""
         categories = self.error_registry.get_test_names_by_category()
         category_tests = categories.get(category, [])
@@ -1227,7 +1375,12 @@ class Mock(BaseCog):
 
         await ctx.send(embed=embed)
 
-    async def _send_error_not_found(self, ctx: commands.Context[Tux], error_name: str, category: str) -> None:
+    async def _send_error_not_found(
+        self,
+        ctx: commands.Context[Tux],
+        error_name: str,
+        category: str,
+    ) -> None:
         """Send an error message when the error is not found at all."""
         available_categories = self.error_registry.get_test_names_by_category()
         embed = EmbedCreator.create_embed(
@@ -1240,7 +1393,9 @@ class Mock(BaseCog):
         )
 
         # Show available categories
-        for cat_name, tests in list(available_categories.items())[:3]:  # Show first 3 categories
+        for cat_name, tests in list(available_categories.items())[
+            :3
+        ]:  # Show first 3 categories
             test_list = ", ".join(f"`{test}`" for test in sorted(tests)[:3])
             if len(tests) > 3:
                 test_list = f"{test_list} ... ({len(tests)} total)"
@@ -1248,7 +1403,9 @@ class Mock(BaseCog):
 
         # Get the active prefix for this guild
         prefix = (
-            await self.bot.prefix_manager.get_prefix(ctx.guild.id) if ctx.guild and self.bot.prefix_manager else "$"
+            await self.bot.prefix_manager.get_prefix(ctx.guild.id)
+            if ctx.guild and self.bot.prefix_manager
+            else "$"
         )
 
         embed.add_field(
@@ -1284,7 +1441,10 @@ class Mock(BaseCog):
         return choices[:25]
 
     # Add a separate command for the old-style interface for prefix commands
-    @mock.command(name="test", description="Test a specific error by name (with autocomplete).")
+    @mock.command(
+        name="test",
+        description="Test a specific error by name (with autocomplete).",
+    )
     @app_commands.autocomplete(error_type=error_type_autocomplete)
     @requires_command_permission()
     async def mock_test(self, ctx: commands.Context[Tux], *, error_type: str) -> None:

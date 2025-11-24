@@ -201,7 +201,10 @@ class Mail(BaseCog):
                 )
 
         elif response.status_code == 401:
-            await interaction.response.send_message("Unauthorized. Check your API credentials.", ephemeral=True)
+            await interaction.response.send_message(
+                "Unauthorized. Check your API credentials.",
+                ephemeral=True,
+            )
 
         else:
             await interaction.response.send_message(
@@ -270,7 +273,10 @@ After changing, you Ban also set up your mailbox on your mobile device or email 
 If you have any questions or need assistance, please feel free to reach out to the server staff. Enjoy your new mailbox! 📬
         """
         try:
-            await member.send(f"Hello {member.mention},\n{dm_message.strip()}", suppress_embeds=True)
+            await member.send(
+                f"Hello {member.mention},\n{dm_message.strip()}",
+                suppress_embeds=True,
+            )
 
         except discord.Forbidden:
             await interaction.response.send_message(

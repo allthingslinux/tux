@@ -52,7 +52,9 @@ class TaskMonitor:
         """
         with start_span("bot.monitor_tasks", "Monitoring async tasks"):
             try:
-                all_tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+                all_tasks = [
+                    t for t in asyncio.all_tasks() if t is not asyncio.current_task()
+                ]
                 tasks_by_type = self._categorize_tasks(all_tasks)
                 await self._process_finished_tasks(tasks_by_type)
             except Exception as e:
@@ -61,7 +63,10 @@ class TaskMonitor:
                 msg = "Critical failure in task monitoring system"
                 raise RuntimeError(msg) from e
 
-    def _categorize_tasks(self, tasks_list: list[asyncio.Task[Any]]) -> dict[str, list[asyncio.Task[Any]]]:
+    def _categorize_tasks(
+        self,
+        tasks_list: list[asyncio.Task[Any]],
+    ) -> dict[str, list[asyncio.Task[Any]]]:
         """
         Categorize tasks by type for monitoring and cleanup.
 
@@ -94,7 +99,10 @@ class TaskMonitor:
 
         return tasks_by_type
 
-    async def _process_finished_tasks(self, tasks_by_type: dict[str, list[asyncio.Task[Any]]]) -> None:
+    async def _process_finished_tasks(
+        self,
+        tasks_by_type: dict[str, list[asyncio.Task[Any]]],
+    ) -> None:
         """Process and clean up finished tasks."""
         for task_list in tasks_by_type.values():
             for task in task_list:
@@ -108,7 +116,9 @@ class TaskMonitor:
             try:
                 await self._stop_task_loops()
 
-                all_tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+                all_tasks = [
+                    t for t in asyncio.all_tasks() if t is not asyncio.current_task()
+                ]
                 tasks_by_type = self._categorize_tasks(all_tasks)
 
                 await self._cancel_tasks(tasks_by_type)
@@ -130,12 +140,17 @@ class TaskMonitor:
                             value.stop()
                             logger.debug(f"Stopped task loop {cog_name}.{name}")
                         except Exception as e:
-                            logger.error(f"Error stopping task loop {cog_name}.{name}: {e}")
+                            logger.error(
+                                f"Error stopping task loop {cog_name}.{name}: {e}",
+                            )
 
             if self._monitor_loop.is_running():
                 self._monitor_loop.stop()
 
-    async def _cancel_tasks(self, tasks_by_type: dict[str, list[asyncio.Task[Any]]]) -> None:
+    async def _cancel_tasks(
+        self,
+        tasks_by_type: dict[str, list[asyncio.Task[Any]]],
+    ) -> None:
         """Cancel tasks by category and await their completion."""
         with start_span("bot.cancel_tasks", "Cancelling tasks by category") as span:
             for task_type, task_list in tasks_by_type.items():
@@ -200,8 +215,13 @@ class TaskMonitor:
 
                 results = await asyncio.gather(*task_list, return_exceptions=True)
                 for result in results:
-                    if isinstance(result, Exception) and not isinstance(result, asyncio.CancelledError):
-                        logger.error(f"Exception during task cancellation for {task_type}: {result!r}")
+                    if isinstance(result, Exception) and not isinstance(
+                        result,
+                        asyncio.CancelledError,
+                    ):
+                        logger.error(
+                            f"Exception during task cancellation for {task_type}: {result!r}",
+                        )
 
 
 __all__ = ["TaskMonitor"]

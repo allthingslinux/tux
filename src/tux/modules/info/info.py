@@ -34,7 +34,10 @@ class Info(BaseCog):
             The bot instance to attach this cog to.
         """
         super().__init__(bot)
-        self._type_handlers: dict[type, Callable[[commands.Context[Tux], Any], Awaitable[None]]] = {
+        self._type_handlers: dict[
+            type,
+            Callable[[commands.Context[Tux], Any], Awaitable[None]],
+        ] = {
             discord.Member: self._show_member_info,
             discord.User: self._show_user_info,
             discord.Message: self._show_message_info,
@@ -152,7 +155,11 @@ class Info(BaseCog):
 
         # Only add InviteConverter if the entity looks like it could be an invite code
         # Discord invite codes are minimum 6 characters (vanity URLs can be longer)
-        if len(entity) >= 6 or "discord.gg/" in entity.lower() or "discord.com/invite/" in entity.lower():
+        if (
+            len(entity) >= 6
+            or "discord.gg/" in entity.lower()
+            or "discord.com/invite/" in entity.lower()
+        ):
             converters.append(commands.InviteConverter())
 
         converters.extend(
@@ -169,7 +176,10 @@ class Info(BaseCog):
                 for handler_type, handler in self._type_handlers.items():
                     if isinstance(converted, handler_type):
                         # Skip @everyone role if it conflicts with guild ID
-                        if isinstance(converted, discord.Role) and converted.name == "@everyone":
+                        if (
+                            isinstance(converted, discord.Role)
+                            and converted.name == "@everyone"
+                        ):
                             continue
                         await handler(ctx, converted)
                         return
@@ -178,7 +188,9 @@ class Info(BaseCog):
 
         # Special handling for potential guild IDs (check last to avoid conflicts with member/user IDs)
         # Only check if it looks like a guild ID AND none of the other converters worked
-        if entity.isdigit() and 15 <= len(entity) <= 20:  # Guild IDs are typically 17-19 digits
+        if (
+            entity.isdigit() and 15 <= len(entity) <= 20
+        ):  # Guild IDs are typically 17-19 digits
             with contextlib.suppress(ValueError):
                 guild_id = int(entity)
                 # Check if bot is in this guild
@@ -248,7 +260,11 @@ class Info(BaseCog):
 
     #     await ctx.send(embed=embed)
 
-    async def _show_guild_info(self, ctx: commands.Context[Tux], guild: discord.Guild) -> None:
+    async def _show_guild_info(
+        self,
+        ctx: commands.Context[Tux],
+        guild: discord.Guild,
+    ) -> None:
         """Show information about a guild/server."""
         embed = (
             self._create_info_embed(
@@ -257,23 +273,42 @@ class Info(BaseCog):
                 thumbnail_url=guild.icon.url if guild.icon else None,
                 footer_text=f"ID: {guild.id} | Created: {guild.created_at.strftime('%B %d, %Y')}",
             )
-            .add_field(name="Owner", value=str(guild.owner.mention) if guild.owner else "Unknown")
+            .add_field(
+                name="Owner",
+                value=str(guild.owner.mention) if guild.owner else "Unknown",
+            )
             .add_field(name="Vanity URL", value=guild.vanity_url_code or "None")
             .add_field(name="Boosts", value=guild.premium_subscription_count)
             .add_field(name="Text Channels", value=len(guild.text_channels))
             .add_field(name="Voice Channels", value=len(guild.voice_channels))
             .add_field(name="Forum Channels", value=len(guild.forums))
-            .add_field(name="Emojis", value=f"{len(guild.emojis)}/{2 * guild.emoji_limit}")
-            .add_field(name="Stickers", value=f"{len(guild.stickers)}/{guild.sticker_limit}")
+            .add_field(
+                name="Emojis",
+                value=f"{len(guild.emojis)}/{2 * guild.emoji_limit}",
+            )
+            .add_field(
+                name="Stickers",
+                value=f"{len(guild.stickers)}/{guild.sticker_limit}",
+            )
             .add_field(name="Roles", value=len(guild.roles))
-            .add_field(name="Humans", value=sum(not member.bot for member in guild.members))
+            .add_field(
+                name="Humans",
+                value=sum(not member.bot for member in guild.members),
+            )
             .add_field(name="Bots", value=sum(member.bot for member in guild.members))
-            .add_field(name="Bans", value=len([entry async for entry in guild.bans(limit=BANS_LIMIT)]))
+            .add_field(
+                name="Bans",
+                value=len([entry async for entry in guild.bans(limit=BANS_LIMIT)]),
+            )
         )
 
         await ctx.send(embed=embed)
 
-    async def _show_member_info(self, ctx: commands.Context[Tux], member: discord.Member) -> None:
+    async def _show_member_info(
+        self,
+        ctx: commands.Context[Tux],
+        member: discord.Member,
+    ) -> None:
         """
         Show information about a member.
 
@@ -295,18 +330,32 @@ class Info(BaseCog):
             .add_field(name="Bot?", value=self._format_bool(member.bot), inline=False)
             .add_field(name="Username", value=member.name, inline=False)
             .add_field(name="ID", value=str(member.id), inline=False)
-            .add_field(name="Joined", value=self._format_datetime(member.joined_at), inline=False)
-            .add_field(name="Registered", value=self._format_datetime(member.created_at), inline=False)
+            .add_field(
+                name="Joined",
+                value=self._format_datetime(member.joined_at),
+                inline=False,
+            )
+            .add_field(
+                name="Registered",
+                value=self._format_datetime(member.created_at),
+                inline=False,
+            )
             .add_field(
                 name="Roles",
-                value=", ".join(role.mention for role in member.roles[1:]) if member.roles[1:] else "No roles",
+                value=", ".join(role.mention for role in member.roles[1:])
+                if member.roles[1:]
+                else "No roles",
                 inline=False,
             )
         )
 
         await ctx.send(embed=embed)
 
-    async def _show_user_info(self, ctx: commands.Context[Tux], user: discord.User) -> None:
+    async def _show_user_info(
+        self,
+        ctx: commands.Context[Tux],
+        user: discord.User,
+    ) -> None:
         """Show information about a user."""
         embed = (
             self._create_info_embed(
@@ -318,12 +367,20 @@ class Info(BaseCog):
             .add_field(name="Bot?", value=self._format_bool(user.bot), inline=False)
             .add_field(name="Username", value=user.name, inline=False)
             .add_field(name="ID", value=str(user.id), inline=False)
-            .add_field(name="Registered", value=self._format_datetime(user.created_at), inline=False)
+            .add_field(
+                name="Registered",
+                value=self._format_datetime(user.created_at),
+                inline=False,
+            )
         )
 
         await ctx.send(embed=embed)
 
-    async def _show_channel_info(self, ctx: commands.Context[Tux], channel: discord.abc.GuildChannel) -> None:
+    async def _show_channel_info(
+        self,
+        ctx: commands.Context[Tux],
+        channel: discord.abc.GuildChannel,
+    ) -> None:
         """
         Show information about a channel.
 
@@ -347,27 +404,57 @@ class Info(BaseCog):
             )
             .add_field(name="Type", value=channel.__class__.__name__, inline=True)
             .add_field(name="Position", value=channel.position, inline=True)
-            .add_field(name="Category", value=channel.category.name if channel.category else "None", inline=True)
+            .add_field(
+                name="Category",
+                value=channel.category.name if channel.category else "None",
+                inline=True,
+            )
         )
 
         # Add specific fields based on channel type
         if isinstance(channel, discord.TextChannel):
             embed.add_field(
                 name="Slowmode",
-                value=f"{channel.slowmode_delay}s" if channel.slowmode_delay > 0 else "None",
+                value=f"{channel.slowmode_delay}s"
+                if channel.slowmode_delay > 0
+                else "None",
                 inline=True,
             )
-            embed.add_field(name="NSFW", value="✅" if channel.nsfw else "❌", inline=True)
+            embed.add_field(
+                name="NSFW",
+                value="✅" if channel.nsfw else "❌",
+                inline=True,
+            )
         elif isinstance(channel, discord.VoiceChannel):
-            embed.add_field(name="Bitrate", value=f"{channel.bitrate // 1000}kbps", inline=True)
-            embed.add_field(name="User Limit", value=channel.user_limit or "Unlimited", inline=True)
+            embed.add_field(
+                name="Bitrate",
+                value=f"{channel.bitrate // 1000}kbps",
+                inline=True,
+            )
+            embed.add_field(
+                name="User Limit",
+                value=channel.user_limit or "Unlimited",
+                inline=True,
+            )
         elif isinstance(channel, discord.ForumChannel):
-            embed.add_field(name="Available Tags", value=len(channel.available_tags), inline=True)
-            embed.add_field(name="Default Layout", value=str(channel.default_layout), inline=True)
+            embed.add_field(
+                name="Available Tags",
+                value=len(channel.available_tags),
+                inline=True,
+            )
+            embed.add_field(
+                name="Default Layout",
+                value=str(channel.default_layout),
+                inline=True,
+            )
 
         await ctx.send(embed=embed)
 
-    async def _show_role_info(self, ctx: commands.Context[Tux], role: discord.Role) -> None:
+    async def _show_role_info(
+        self,
+        ctx: commands.Context[Tux],
+        role: discord.Role,
+    ) -> None:
         """
         Show information about a role.
 
@@ -385,23 +472,39 @@ class Info(BaseCog):
             EmbedCreator.create_embed(
                 embed_type=EmbedType.INFO,
                 title=role.name,
-                custom_color=role.color if role.color != discord.Color.default() else discord.Color.blurple(),
+                custom_color=role.color
+                if role.color != discord.Color.default()
+                else discord.Color.blurple(),
                 description="Here is some information about the role.",
                 custom_footer_text=f"ID: {role.id} | Created: {role.created_at.strftime('%B %d, %Y')}",
             )
             .add_field(
                 name="Color",
-                value=f"#{role.color.value:06x}" if role.color != discord.Color.default() else "Default",
+                value=f"#{role.color.value:06x}"
+                if role.color != discord.Color.default()
+                else "Default",
                 inline=True,
             )
             .add_field(name="Position", value=role.position, inline=True)
-            .add_field(name="Mentionable", value="✅" if role.mentionable else "❌", inline=True)
+            .add_field(
+                name="Mentionable",
+                value="✅" if role.mentionable else "❌",
+                inline=True,
+            )
             .add_field(name="Hoisted", value="✅" if role.hoist else "❌", inline=True)
-            .add_field(name="Managed", value="✅" if role.managed else "❌", inline=True)
+            .add_field(
+                name="Managed",
+                value="✅" if role.managed else "❌",
+                inline=True,
+            )
             .add_field(name="Members", value=len(role.members), inline=True)
             .add_field(
                 name="Permissions",
-                value=", ".join(perm.replace("_", " ").title() for perm, value in role.permissions if value)[:1024]
+                value=", ".join(
+                    perm.replace("_", " ").title()
+                    for perm, value in role.permissions
+                    if value
+                )[:1024]
                 or "None",
                 inline=False,
             )
@@ -409,7 +512,11 @@ class Info(BaseCog):
 
         await ctx.send(embed=embed)
 
-    async def _show_emoji_info(self, ctx: commands.Context[Tux], emoji: discord.Emoji) -> None:
+    async def _show_emoji_info(
+        self,
+        ctx: commands.Context[Tux],
+        emoji: discord.Emoji,
+    ) -> None:
         """
         Show information about an emoji.
 
@@ -427,15 +534,35 @@ class Info(BaseCog):
                 thumbnail_url=emoji.url,
                 footer_text=f"ID: {emoji.id} | Created: {emoji.created_at.strftime('%B %d, %Y')}",
             )
-            .add_field(name="Animated", value=self._format_bool(emoji.animated), inline=True)
-            .add_field(name="Managed", value=self._format_bool(emoji.managed), inline=True)
-            .add_field(name="Available", value=self._format_bool(emoji.available), inline=True)
-            .add_field(name="Requires Colons", value=self._format_bool(emoji.require_colons), inline=True)
+            .add_field(
+                name="Animated",
+                value=self._format_bool(emoji.animated),
+                inline=True,
+            )
+            .add_field(
+                name="Managed",
+                value=self._format_bool(emoji.managed),
+                inline=True,
+            )
+            .add_field(
+                name="Available",
+                value=self._format_bool(emoji.available),
+                inline=True,
+            )
+            .add_field(
+                name="Requires Colons",
+                value=self._format_bool(emoji.require_colons),
+                inline=True,
+            )
         )
 
         await ctx.send(embed=embed)
 
-    async def _show_sticker_info(self, ctx: commands.Context[Tux], sticker: discord.GuildSticker) -> None:
+    async def _show_sticker_info(
+        self,
+        ctx: commands.Context[Tux],
+        sticker: discord.GuildSticker,
+    ) -> None:
         """
         Show information about a sticker.
 
@@ -456,12 +583,20 @@ class Info(BaseCog):
                 custom_footer_text=f"ID: {sticker.id} | Created: {sticker.created_at.strftime('%B %d, %Y')}",
             )
             .add_field(name="Format", value=str(sticker.format), inline=True)
-            .add_field(name="Available", value="✅" if sticker.available else "❌", inline=True)
+            .add_field(
+                name="Available",
+                value="✅" if sticker.available else "❌",
+                inline=True,
+            )
         )
 
         await ctx.send(embed=embed)
 
-    async def _show_message_info(self, ctx: commands.Context[Tux], message: discord.Message) -> None:
+    async def _show_message_info(
+        self,
+        ctx: commands.Context[Tux],
+        message: discord.Message,
+    ) -> None:
         """
         Show information about a message.
 
@@ -476,7 +611,12 @@ class Info(BaseCog):
 
         if isinstance(
             message.channel,
-            (discord.TextChannel, discord.VoiceChannel, discord.Thread, discord.ForumChannel),
+            (
+                discord.TextChannel,
+                discord.VoiceChannel,
+                discord.Thread,
+                discord.ForumChannel,
+            ),
         ):
             channel_display = f"#{message.channel.name}"
             channel_mention = message.channel.mention
@@ -490,12 +630,17 @@ class Info(BaseCog):
                 embed_type=EmbedType.INFO,
                 title=f"Message in {channel_display}",
                 custom_color=discord.Color.blurple(),
-                description=message.content[:2000] + ("..." if len(message.content) > 2000 else ""),
+                description=message.content[:2000]
+                + ("..." if len(message.content) > 2000 else ""),
                 custom_footer_text=f"ID: {message.id} | Created: {message.created_at.strftime('%B %d, %Y')}",
             )
             .add_field(name="Author", value=message.author.mention, inline=True)
             .add_field(name="Channel", value=channel_mention, inline=True)
-            .add_field(name="Jump", value=f"[Jump to Message]({message.jump_url})", inline=True)
+            .add_field(
+                name="Jump",
+                value=f"[Jump to Message]({message.jump_url})",
+                inline=True,
+            )
             .add_field(name="Attachments", value=len(message.attachments), inline=True)
             .add_field(name="Embeds", value=len(message.embeds), inline=True)
             .add_field(name="Reactions", value=len(message.reactions), inline=True)
@@ -503,7 +648,11 @@ class Info(BaseCog):
 
         await ctx.send(embed=embed)
 
-    async def _show_invite_info(self, ctx: commands.Context[Tux], invite: discord.Invite) -> None:
+    async def _show_invite_info(
+        self,
+        ctx: commands.Context[Tux],
+        invite: discord.Invite,
+    ) -> None:
         """
         Show information about an invite.
 
@@ -526,35 +675,53 @@ class Info(BaseCog):
             )
             .add_field(
                 name="Guild",
-                value=getattr(invite.guild, "name", "Unknown") if invite.guild else "Unknown",
+                value=getattr(invite.guild, "name", "Unknown")
+                if invite.guild
+                else "Unknown",
                 inline=True,
             )
             .add_field(
                 name="Channel",
-                value=getattr(invite.channel, "mention", "Unknown") if invite.channel else "Unknown",
+                value=getattr(invite.channel, "mention", "Unknown")
+                if invite.channel
+                else "Unknown",
                 inline=True,
             )
             .add_field(
                 name="Inviter",
-                value=getattr(invite.inviter, "mention", "Unknown") if invite.inviter else "Unknown",
+                value=getattr(invite.inviter, "mention", "Unknown")
+                if invite.inviter
+                else "Unknown",
                 inline=True,
             )
             .add_field(
                 name="Uses",
-                value=f"{invite.uses}/{invite.max_uses}" if invite.max_uses else f"{invite.uses}/∞",
+                value=f"{invite.uses}/{invite.max_uses}"
+                if invite.max_uses
+                else f"{invite.uses}/∞",
                 inline=True,
             )
             .add_field(
                 name="Expires",
-                value=discord.utils.format_dt(invite.expires_at, "R") if invite.expires_at else "Never",
+                value=discord.utils.format_dt(invite.expires_at, "R")
+                if invite.expires_at
+                else "Never",
                 inline=True,
             )
-            .add_field(name="Temporary", value="✅" if invite.temporary else "❌", inline=True)
+            .add_field(
+                name="Temporary",
+                value="✅" if invite.temporary else "❌",
+                inline=True,
+            )
         )
 
         await ctx.send(embed=embed)
 
-    async def _show_thread_info(self, ctx: commands.Context[Tux], thread: discord.Thread) -> None:
+    async def _show_thread_info(
+        self,
+        ctx: commands.Context[Tux],
+        thread: discord.Thread,
+    ) -> None:
         """
         Show information about a thread.
 
@@ -574,16 +741,36 @@ class Info(BaseCog):
                 custom_footer_text=f"ID: {thread.id} | Created: {thread.created_at.strftime('%B %d, %Y') if thread.created_at else 'Unknown'}",
             )
             .add_field(name="Type", value=thread.__class__.__name__, inline=True)
-            .add_field(name="Owner", value=thread.owner.mention if thread.owner else "Unknown", inline=True)
-            .add_field(name="Parent", value=thread.parent.mention if thread.parent else "None", inline=True)
-            .add_field(name="Archived", value="✅" if thread.archived else "❌", inline=True)
-            .add_field(name="Locked", value="✅" if thread.locked else "❌", inline=True)
+            .add_field(
+                name="Owner",
+                value=thread.owner.mention if thread.owner else "Unknown",
+                inline=True,
+            )
+            .add_field(
+                name="Parent",
+                value=thread.parent.mention if thread.parent else "None",
+                inline=True,
+            )
+            .add_field(
+                name="Archived",
+                value="✅" if thread.archived else "❌",
+                inline=True,
+            )
+            .add_field(
+                name="Locked",
+                value="✅" if thread.locked else "❌",
+                inline=True,
+            )
             .add_field(name="Message Count", value=thread.message_count, inline=True)
         )
 
         await ctx.send(embed=embed)
 
-    async def _show_event_info(self, ctx: commands.Context[Tux], event: discord.ScheduledEvent) -> None:
+    async def _show_event_info(
+        self,
+        ctx: commands.Context[Tux],
+        event: discord.ScheduledEvent,
+    ) -> None:
         """
         Show information about a scheduled event.
 
@@ -603,16 +790,28 @@ class Info(BaseCog):
                 custom_footer_text=f"ID: {event.id}",
             )
             .add_field(name="Status", value=str(event.status).title(), inline=True)
-            .add_field(name="Privacy", value=str(event.privacy_level).title(), inline=True)
-            .add_field(name="Entity Type", value=str(event.entity_type).title(), inline=True)
+            .add_field(
+                name="Privacy",
+                value=str(event.privacy_level).title(),
+                inline=True,
+            )
+            .add_field(
+                name="Entity Type",
+                value=str(event.entity_type).title(),
+                inline=True,
+            )
             .add_field(
                 name="Start Time",
-                value=discord.utils.format_dt(event.start_time, "F") if event.start_time else "Not set",
+                value=discord.utils.format_dt(event.start_time, "F")
+                if event.start_time
+                else "Not set",
                 inline=True,
             )
             .add_field(
                 name="End Time",
-                value=discord.utils.format_dt(event.end_time, "F") if event.end_time else "Not set",
+                value=discord.utils.format_dt(event.end_time, "F")
+                if event.end_time
+                else "Not set",
                 inline=True,
             )
             .add_field(name="User Count", value=event.user_count, inline=True)
@@ -702,7 +901,9 @@ class Info(BaseCog):
         menu: ViewMenu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed)
         for chunk in chunks:
             page_embed: discord.Embed = embed.copy()
-            page_embed.description = f"{list_type.capitalize()} list for {guild_name}:\n{' '.join(chunk)}"
+            page_embed.description = (
+                f"{list_type.capitalize()} list for {guild_name}:\n{' '.join(chunk)}"
+            )
             menu.add_page(page_embed)
 
         buttons = [

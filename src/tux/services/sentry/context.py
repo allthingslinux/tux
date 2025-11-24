@@ -77,7 +77,11 @@ def track_command_start(command_name: str) -> None:
     _command_start_times[command_name] = time.perf_counter()
 
 
-def track_command_end(command_name: str, success: bool, error: Exception | None = None) -> None:
+def track_command_end(
+    command_name: str,
+    success: bool,
+    error: Exception | None = None,
+) -> None:
     """Track command execution end and performance metrics."""
     if not is_initialized():
         return
@@ -167,7 +171,9 @@ def _set_command_context_from_interaction(interaction: Interaction) -> None:
             "guild_name": interaction.guild.name,
             "guild_member_count": str(interaction.guild.member_count),
             "channel_name": getattr(interaction.channel, "name", None),
-            "channel_type": str(interaction.channel.type) if interaction.channel else None,
+            "channel_type": str(interaction.channel.type)
+            if interaction.channel
+            else None,
         }
 
     set_context("interaction", command_data)

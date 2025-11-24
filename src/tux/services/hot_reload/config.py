@@ -3,7 +3,11 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from tux.shared.constants import DEPENDENCY_CACHE_SIZE, MAX_DEPENDENCY_DEPTH, RELOAD_TIMEOUT
+from tux.shared.constants import (
+    DEPENDENCY_CACHE_SIZE,
+    MAX_DEPENDENCY_DEPTH,
+    RELOAD_TIMEOUT,
+)
 
 
 @dataclass(frozen=True)
@@ -14,7 +18,9 @@ class HotReloadConfig:
     enabled: bool = True
     watch_directories: list[Path] = field(default_factory=lambda: [Path("src/tux")])
     file_patterns: list[str] = field(default_factory=lambda: ["*.py"])
-    ignore_patterns: list[str] = field(default_factory=lambda: ["__pycache__", "*.pyc", ".git"])
+    ignore_patterns: list[str] = field(
+        default_factory=lambda: ["__pycache__", "*.pyc", ".git"],
+    )
 
     # Performance settings
     debounce_delay: float = 0.5

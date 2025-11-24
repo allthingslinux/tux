@@ -47,7 +47,9 @@ class BaseSetupService(ABC):
                 span.set_tag(f"{self.name}.setup", "success")
             except KeyboardInterrupt:
                 # Re-raise KeyboardInterrupt to allow signal handling
-                self.logger.info(f"{self.name.title()} setup interrupted by user signal")
+                self.logger.info(
+                    f"{self.name.title()} setup interrupted by user signal",
+                )
                 raise
             except Exception as e:
                 # Only log if error wasn't already logged by the service

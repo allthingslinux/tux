@@ -88,7 +88,9 @@ class ClassDefinitionTracker:
 
     def update_signatures(self, file_path: Path) -> None:
         """Update stored signatures for a file."""
-        self._class_signatures[str(file_path)] = self.extract_class_signatures(file_path)
+        self._class_signatures[str(file_path)] = self.extract_class_signatures(
+            file_path,
+        )
 
 
 class DependencyGraph(DependencyTracker):

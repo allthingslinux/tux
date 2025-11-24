@@ -71,6 +71,8 @@ def get_moderation_commands(bot: Tux) -> list[str]:
     }
 
     # Add known commands as fallback, excluding restricted commands
-    command_names.update(cmd for cmd in known_commands if cmd.lower() not in RESTRICTED_COMMANDS)
+    command_names.update(
+        cmd for cmd in known_commands if cmd.lower() not in RESTRICTED_COMMANDS
+    )
 
     return sorted(command_names)

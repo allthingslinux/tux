@@ -46,7 +46,9 @@ class BaseController[ModelT]:
             If db is None, as database service is required.
         """
         if db is None:
-            error_msg = "DatabaseService must be provided. Use DI container to get the service."
+            error_msg = (
+                "DatabaseService must be provided. Use DI container to get the service."
+            )
             raise RuntimeError(error_msg)
 
         self.model = model
@@ -217,7 +219,11 @@ class BaseController[ModelT]:
     # Query Methods - Delegated to QueryController
     # ------------------------------------------------------------------
 
-    async def find_one(self, filters: Any | None = None, order_by: Any | None = None) -> ModelT | None:
+    async def find_one(
+        self,
+        filters: Any | None = None,
+        order_by: Any | None = None,
+    ) -> ModelT | None:
         """
         Find one record.
 
@@ -261,7 +267,13 @@ class BaseController[ModelT]:
         list[ModelT]
             List of found records with loaded relationships.
         """
-        return await self._query.find_all_with_options(filters, order_by, limit, offset, load_relationships)
+        return await self._query.find_all_with_options(
+            filters,
+            order_by,
+            limit,
+            offset,
+            load_relationships,
+        )
 
     async def count(self, filters: Any | None = None) -> int:
         """
@@ -274,7 +286,11 @@ class BaseController[ModelT]:
         """
         return await self._query.count(filters)
 
-    async def get_all(self, filters: Any | None = None, order_by: Any | None = None) -> list[ModelT]:
+    async def get_all(
+        self,
+        filters: Any | None = None,
+        order_by: Any | None = None,
+    ) -> list[ModelT]:
         """
         Get all records (alias for find_all without pagination).
 
@@ -311,7 +327,12 @@ class BaseController[ModelT]:
         list[ModelT]
             List of records matching the JSON query.
         """
-        return await self._query.find_with_json_query(json_column, json_path, value, filters)
+        return await self._query.find_with_json_query(
+            json_column,
+            json_path,
+            value,
+            filters,
+        )
 
     async def find_with_array_contains(
         self,
@@ -343,7 +364,11 @@ class BaseController[ModelT]:
         list[ModelT]
             List of records matching the search term.
         """
-        return await self._query.find_with_full_text_search(search_columns, search_term, filters)
+        return await self._query.find_with_full_text_search(
+            search_columns,
+            search_term,
+            filters,
+        )
 
     # ------------------------------------------------------------------
     # Pagination Methods - Lazy-loaded
@@ -382,7 +407,13 @@ class BaseController[ModelT]:
         PaginationResult[ModelT]
             Pagination result with items and relationships loaded.
         """
-        return await self._get_pagination().find_paginated(page, per_page, filters, order_by, load_relationships)
+        return await self._get_pagination().find_paginated(
+            page,
+            per_page,
+            filters,
+            order_by,
+            load_relationships,
+        )
 
     # ------------------------------------------------------------------
     # Bulk Operations - Lazy-loaded
@@ -457,7 +488,11 @@ class BaseController[ModelT]:
         list[ModelT]
             List of upserted records.
         """
-        return await self._get_bulk().bulk_upsert_with_conflict_resolution(items, conflict_columns, update_columns)
+        return await self._get_bulk().bulk_upsert_with_conflict_resolution(
+            items,
+            conflict_columns,
+            update_columns,
+        )
 
     # ------------------------------------------------------------------
     # Transaction Methods - Lazy-loaded
@@ -525,7 +560,11 @@ class BaseController[ModelT]:
         dict[str, Any]
             Dictionary containing query execution plan and statistics.
         """
-        return await self._get_performance().explain_query_performance(query, analyze, buffers)
+        return await self._get_performance().explain_query_performance(
+            query,
+            analyze,
+            buffers,
+        )
 
     # ------------------------------------------------------------------
     # Upsert Methods - Lazy-loaded
@@ -546,7 +585,12 @@ class BaseController[ModelT]:
         tuple[ModelT, bool]
             Tuple of (record, created) where created is True if new record was created.
         """
-        return await self._get_upsert().upsert_by_field(field_name, field_value, defaults, **kwargs)
+        return await self._get_upsert().upsert_by_field(
+            field_name,
+            field_value,
+            defaults,
+            **kwargs,
+        )
 
     async def upsert_by_id(
         self,
@@ -579,9 +623,18 @@ class BaseController[ModelT]:
         tuple[ModelT, bool]
             Tuple of (record, created) where created is True if new record was created.
         """
-        return await self._get_upsert().get_or_create_by_field(field_name, field_value, defaults, **kwargs)
+        return await self._get_upsert().get_or_create_by_field(
+            field_name,
+            field_value,
+            defaults,
+            **kwargs,
+        )
 
-    async def get_or_create(self, defaults: dict[str, Any] | None = None, **filters: Any) -> tuple[ModelT, bool]:
+    async def get_or_create(
+        self,
+        defaults: dict[str, Any] | None = None,
+        **filters: Any,
+    ) -> tuple[ModelT, bool]:
         """
         Get existing record or create new one.
 

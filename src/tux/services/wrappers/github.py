@@ -119,7 +119,10 @@ class GithubService:
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(
+                    service_name="GitHub",
+                    original_error=e,
+                ) from e
             raise  # Re-raise other unexpected exceptions
 
         else:
@@ -172,7 +175,10 @@ class GithubService:
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(
+                    service_name="GitHub",
+                    original_error=e,
+                ) from e
             raise
 
         else:
@@ -206,7 +212,9 @@ class GithubService:
             If the issue is not found.
         """
         try:
-            response: Response[IssueComment] = await self.github.rest.issues.async_create_comment(
+            response: Response[
+                IssueComment
+            ] = await self.github.rest.issues.async_create_comment(
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO,
                 issue_number,
@@ -231,7 +239,10 @@ class GithubService:
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(
+                    service_name="GitHub",
+                    original_error=e,
+                ) from e
             raise
 
         else:
@@ -288,7 +299,10 @@ class GithubService:
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(
+                    service_name="GitHub",
+                    original_error=e,
+                ) from e
             raise
 
         else:
@@ -340,7 +354,10 @@ class GithubService:
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(
+                    service_name="GitHub",
+                    original_error=e,
+                ) from e
             raise
 
         else:
@@ -363,7 +380,9 @@ class GithubService:
             If the API request fails.
         """
         try:
-            response: Response[list[Issue]] = await self.github.rest.issues.async_list_for_repo(
+            response: Response[
+                list[Issue]
+            ] = await self.github.rest.issues.async_list_for_repo(
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO,
                 state="open",
@@ -380,7 +399,10 @@ class GithubService:
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(
+                    service_name="GitHub",
+                    original_error=e,
+                ) from e
             raise
 
         else:
@@ -403,7 +425,9 @@ class GithubService:
             If the API request fails.
         """
         try:
-            response: Response[list[Issue]] = await self.github.rest.issues.async_list_for_repo(
+            response: Response[
+                list[Issue]
+            ] = await self.github.rest.issues.async_list_for_repo(
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO,
                 state="closed",
@@ -420,7 +444,10 @@ class GithubService:
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(
+                    service_name="GitHub",
+                    original_error=e,
+                ) from e
             raise
 
         else:
@@ -443,7 +470,9 @@ class GithubService:
             If the API request fails.
         """
         try:
-            response: Response[list[PullRequestSimple]] = await self.github.rest.pulls.async_list(
+            response: Response[
+                list[PullRequestSimple]
+            ] = await self.github.rest.pulls.async_list(
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO,
                 state="open",
@@ -460,7 +489,10 @@ class GithubService:
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(
+                    service_name="GitHub",
+                    original_error=e,
+                ) from e
             raise
 
         else:
@@ -483,7 +515,9 @@ class GithubService:
             If the API request fails.
         """
         try:
-            response: Response[list[PullRequestSimple]] = await self.github.rest.pulls.async_list(
+            response: Response[
+                list[PullRequestSimple]
+            ] = await self.github.rest.pulls.async_list(
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO,
                 state="closed",
@@ -500,7 +534,10 @@ class GithubService:
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(
+                    service_name="GitHub",
+                    original_error=e,
+                ) from e
             raise
 
         else:
@@ -552,7 +589,10 @@ class GithubService:
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(
+                    service_name="GitHub",
+                    original_error=e,
+                ) from e
             raise
 
         else:

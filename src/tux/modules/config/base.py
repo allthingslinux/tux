@@ -33,7 +33,12 @@ class BaseConfigManager:
         """
         self.bot = bot
 
-    async def configure_dashboard(self, ctx: commands.Context[Tux], mode: str, description: str | None = None) -> None:
+    async def configure_dashboard(
+        self,
+        ctx: commands.Context[Tux],
+        mode: str,
+        description: str | None = None,
+    ) -> None:
         """
         Open the unified config dashboard in a specific mode.
 
@@ -142,7 +147,12 @@ class BaseConfigManager:
             custom_color=discord.Color.blue(),
         )
 
-    async def handle_error(self, ctx: commands.Context[Tux], error: Exception, operation: str) -> None:
+    async def handle_error(
+        self,
+        ctx: commands.Context[Tux],
+        error: Exception,
+        operation: str,
+    ) -> None:
         """
         Handle errors consistently across managers.
 

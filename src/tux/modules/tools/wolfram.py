@@ -37,9 +37,14 @@ class Wolfram(BaseCog):
         ):
             return
 
-        logger.info("Wolfram Alpha API ID is set, Science/Math commands that depend on it will work.")
+        logger.info(
+            "Wolfram Alpha API ID is set, Science/Math commands that depend on it will work.",
+        )
 
-    @commands.hybrid_command(name="wolfram", description="Query Wolfram|Alpha Simple API and return an image result.")
+    @commands.hybrid_command(
+        name="wolfram",
+        description="Query Wolfram|Alpha Simple API and return an image result.",
+    )
     @app_commands.describe(
         query="The input query for Wolfram|Alpha, e.g. 'integrate x^2' or 'What is the capital of France?'",
     )
@@ -63,7 +68,10 @@ class Wolfram(BaseCog):
         try:
             # Perform async HTTP GET with a 10-second timeout
             timeout = aiohttp.ClientTimeout(total=10)
-            async with aiohttp.ClientSession() as session, session.get(url, timeout=timeout) as resp:
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(url, timeout=timeout) as resp,
+            ):
                 resp.raise_for_status()
                 img_data = await resp.read()
         except Exception:

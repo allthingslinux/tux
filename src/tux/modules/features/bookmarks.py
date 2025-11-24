@@ -47,7 +47,10 @@ class Bookmarks(BaseCog):
         await self.session.close()
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+    async def on_raw_reaction_add(
+        self,
+        payload: discord.RawReactionActionEvent,
+    ) -> None:
         """
         Handle bookmarking messages via reactions.
 
@@ -60,7 +63,11 @@ class Bookmarks(BaseCog):
             The event payload containing information about the reaction.
         """
         # If the bot reacted to the message, or the user is the bot, or the emoji is not valid, return
-        if not self.bot.user or payload.user_id == self.bot.user.id or not payload.emoji.name:
+        if (
+            not self.bot.user
+            or payload.user_id == self.bot.user.id
+            or not payload.emoji.name
+        ):
             return
 
         # If the emoji is not valid, return
@@ -69,7 +76,9 @@ class Bookmarks(BaseCog):
 
         try:
             # Get the user who reacted to the message
-            user = self.bot.get_user(payload.user_id) or await self.bot.fetch_user(payload.user_id)
+            user = self.bot.get_user(payload.user_id) or await self.bot.fetch_user(
+                payload.user_id,
+            )
 
             # Get the channel where the reaction was added
             channel = self.bot.get_channel(payload.channel_id)
@@ -78,7 +87,9 @@ class Bookmarks(BaseCog):
 
             # If the channel is not messageable, return
             if not isinstance(channel, Messageable):
-                logger.warning(f"Bookmark reaction in non-messageable channel {payload.channel_id}.")
+                logger.warning(
+                    f"Bookmark reaction in non-messageable channel {payload.channel_id}.",
+                )
                 return
 
             # Get the message that was reacted to
@@ -98,7 +109,10 @@ class Bookmarks(BaseCog):
             return
 
         # If the emoji is the remove bookmark emoji and reaction is on the bot, remove the bookmark
-        if payload.emoji.name in self.remove_bookmark_emojis and message.author is self.bot.user:
+        if (
+            payload.emoji.name in self.remove_bookmark_emojis
+            and message.author is self.bot.user
+        ):
             await self.remove_bookmark(message)
 
     async def add_bookmark(self, user: discord.User, message: discord.Message) -> None:
@@ -128,7 +142,9 @@ class Bookmarks(BaseCog):
                 )
 
             except (discord.Forbidden, discord.HTTPException) as e2:
-                logger.error(f"Could not send notification in channel {message.channel.id}: {e2}")
+                logger.error(
+                    f"Could not send notification in channel {message.channel.id}: {e2}",
+                )
 
     @staticmethod
     async def remove_bookmark(message: discord.Message) -> None:
@@ -146,7 +162,11 @@ class Bookmarks(BaseCog):
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to delete bookmark message {message.id}: {e}")
 
-    async def _get_files_from_attachments(self, message: discord.Message, files: list[discord.File]) -> None:
+    async def _get_files_from_attachments(
+        self,
+        message: discord.Message,
+        files: list[discord.File],
+    ) -> None:
         """Extract image files from message attachments.
 
         Parameters
@@ -166,7 +186,11 @@ class Bookmarks(BaseCog):
                 except (discord.HTTPException, discord.NotFound) as e:
                     logger.error(f"Failed to get attachment {attachment.filename}: {e}")
 
-    async def _get_files_from_stickers(self, message: discord.Message, files: list[discord.File]) -> None:
+    async def _get_files_from_stickers(
+        self,
+        message: discord.Message,
+        files: list[discord.File],
+    ) -> None:
         """Extract image files from message stickers.
 
         Parameters
@@ -183,14 +207,26 @@ class Bookmarks(BaseCog):
             if len(files) >= 10:
                 break
 
-            if sticker.format in {discord.StickerFormatType.png, discord.StickerFormatType.apng}:
+            if sticker.format in {
+                discord.StickerFormatType.png,
+                discord.StickerFormatType.apng,
+            }:
                 try:
                     sticker_bytes = await sticker.read()
-                    files.append(discord.File(io.BytesIO(sticker_bytes), filename=f"{sticker.name}.png"))
+                    files.append(
+                        discord.File(
+                            io.BytesIO(sticker_bytes),
+                            filename=f"{sticker.name}.png",
+                        ),
+                    )
                 except (discord.HTTPException, discord.NotFound) as e:
                     logger.error(f"Failed to read sticker {sticker.name}: {e}")
 
-    async def _get_files_from_embeds(self, message: discord.Message, files: list[discord.File]) -> None:
+    async def _get_files_from_embeds(
+        self,
+        message: discord.Message,
+        files: list[discord.File],
+    ) -> None:
         """Extract image files from message embeds.
 
         Parameters
@@ -213,11 +249,16 @@ class Bookmarks(BaseCog):
                         if resp.status == 200:
                             data = await resp.read()
                             filename = embed.image.url.split("/")[-1].split("?")[0]
-                            files.append(discord.File(io.BytesIO(data), filename=filename))
+                            files.append(
+                                discord.File(io.BytesIO(data), filename=filename),
+                            )
                 except aiohttp.ClientError as e:
                     logger.error(f"Failed to fetch embed image {embed.image.url}: {e}")
 
-    async def _get_files_from_message(self, message: discord.Message) -> list[discord.File]:
+    async def _get_files_from_message(
+        self,
+        message: discord.Message,
+    ) -> list[discord.File]:
         """
         Gathers images from a message to be sent as attachments.
 
@@ -270,7 +311,9 @@ class Bookmarks(BaseCog):
             bot=self.bot,
             embed_type=EmbedCreator.INFO,
             title="Message Bookmarked",
-            description=f"{content}" if content else "> No content available to display",
+            description=f"{content}"
+            if content
+            else "> No content available to display",
         )
 
         # Add author to the embed
@@ -296,7 +339,9 @@ class Bookmarks(BaseCog):
 
         # Add attachments to the embed
         if message.attachments:
-            attachments = "\n".join(f"[{a.filename}]({a.url})" for a in message.attachments)
+            attachments = "\n".join(
+                f"[{a.filename}]({a.url})" for a in message.attachments
+            )
             embed.add_field(name="Attachments", value=attachments, inline=False)
 
         # Add stickers to the embed
@@ -313,7 +358,10 @@ class Bookmarks(BaseCog):
             )
 
         # Add footer to the embed
-        if message.guild and isinstance(message.channel, discord.TextChannel | discord.Thread):
+        if message.guild and isinstance(
+            message.channel,
+            discord.TextChannel | discord.Thread,
+        ):
             embed.set_footer(text=f"In #{message.channel.name} on {message.guild.name}")
 
         # Add timestamp to the embed

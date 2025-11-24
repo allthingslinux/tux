@@ -84,7 +84,9 @@ def _read_emoji_file(file_path: Path) -> bytes | None:
         return None
 
     except Exception as e:
-        logger.exception(f"An unexpected error occurred reading file '{file_path}': {e}")
+        logger.exception(
+            f"An unexpected error occurred reading file '{file_path}': {e}",
+        )
         return None
 
 
@@ -116,13 +118,21 @@ class EmojiManager:
         self.bot = bot
         self.cache: dict[str, discord.Emoji] = {}
         self.emojis_path = emojis_path or DEFAULT_EMOJI_ASSETS_PATH
-        self.create_delay = create_delay if create_delay is not None else DEFAULT_EMOJI_CREATE_DELAY
+        self.create_delay = (
+            create_delay if create_delay is not None else DEFAULT_EMOJI_CREATE_DELAY
+        )
         self._init_lock = asyncio.Lock()
         self._initialized = False
 
         # If in Docker and no custom path was provided, use the Docker path
-        if not emojis_path and DOCKER_EMOJI_ASSETS_PATH.exists() and DOCKER_EMOJI_ASSETS_PATH.is_dir():
-            logger.info(f"Docker environment detected, using emoji path: {DOCKER_EMOJI_ASSETS_PATH}")
+        if (
+            not emojis_path
+            and DOCKER_EMOJI_ASSETS_PATH.exists()
+            and DOCKER_EMOJI_ASSETS_PATH.is_dir()
+        ):
+            logger.info(
+                f"Docker environment detected, using emoji path: {DOCKER_EMOJI_ASSETS_PATH}",
+            )
             self.emojis_path = DOCKER_EMOJI_ASSETS_PATH
 
         # Ensure the emoji path exists and is a directory
@@ -165,7 +175,11 @@ class EmojiManager:
 
             try:
                 app_emojis = await self.bot.fetch_application_emojis()
-                self.cache = {emoji.name: emoji for emoji in app_emojis if _is_valid_emoji_name(emoji.name)}
+                self.cache = {
+                    emoji.name: emoji
+                    for emoji in app_emojis
+                    if _is_valid_emoji_name(emoji.name)
+                }
 
                 logger.info(f"Initialized emoji cache with {len(self.cache)} emojis.")
                 self._initialized = True
@@ -175,11 +189,15 @@ class EmojiManager:
                 self._initialized = False
                 return False
             except discord.DiscordException:
-                logger.exception("Unexpected Discord error during emoji cache initialization.")
+                logger.exception(
+                    "Unexpected Discord error during emoji cache initialization.",
+                )
                 self._initialized = False
                 return False
             except Exception:
-                logger.exception("Unexpected non-Discord error during emoji cache initialization.")
+                logger.exception(
+                    "Unexpected non-Discord error during emoji cache initialization.",
+                )
                 self._initialized = False
                 return False
 
@@ -202,7 +220,9 @@ class EmojiManager:
             The discord.Emoji object if found, None otherwise.
         """
         if not self._initialized:
-            logger.warning("Attempted to get emoji before cache initialization. Call await manager.init() first.")
+            logger.warning(
+                "Attempted to get emoji before cache initialization. Call await manager.init() first.",
+            )
 
             # Avoid deadlocks: Do not call init() here directly.
             # Rely on the initial setup_hook call.
@@ -210,7 +230,11 @@ class EmojiManager:
 
         return self.cache.get(name)
 
-    async def _create_discord_emoji(self, name: str, image_bytes: bytes) -> discord.Emoji | None:
+    async def _create_discord_emoji(
+        self,
+        name: str,
+        image_bytes: bytes,
+    ) -> discord.Emoji | None:
         """Create a Discord emoji with error handling and delay.
 
         Parameters
@@ -231,7 +255,10 @@ class EmojiManager:
 
         try:
             await asyncio.sleep(self.create_delay)
-            emoji = await self.bot.create_application_emoji(name=name, image=image_bytes)
+            emoji = await self.bot.create_application_emoji(
+                name=name,
+                image=image_bytes,
+            )
             self.cache[name] = emoji  # Update cache immediately
             logger.info(f"Successfully created emoji '{name}'. ID: {emoji.id}")
             return emoji  # noqa: TRY300
@@ -241,11 +268,16 @@ class EmojiManager:
         except ValueError as e:
             logger.error(f"Invalid value for creating emoji '{name}': {e}")
         except Exception as e:
-            logger.exception(f"An unexpected error occurred creating emoji '{name}': {e}")
+            logger.exception(
+                f"An unexpected error occurred creating emoji '{name}': {e}",
+            )
 
         return None
 
-    async def _process_emoji_file(self, file_path: Path) -> tuple[discord.Emoji | None, Path | None]:
+    async def _process_emoji_file(
+        self,
+        file_path: Path,
+    ) -> tuple[discord.Emoji | None, Path | None]:
         """Process a single emoji file.
 
         Parameters
@@ -266,14 +298,18 @@ class EmojiManager:
         emoji_name = file_path.stem
 
         if not _is_valid_emoji_name(emoji_name):
-            logger.warning(f"Skipping file with invalid potential emoji name: {file_path.name}")
+            logger.warning(
+                f"Skipping file with invalid potential emoji name: {file_path.name}",
+            )
             return None, file_path
 
         if self.get(emoji_name):
             logger.trace(f"Emoji '{emoji_name}' already exists, skipping.")
             return None, file_path
 
-        logger.debug(f"Emoji '{emoji_name}' not found in cache, attempting to create from {file_path.name}.")
+        logger.debug(
+            f"Emoji '{emoji_name}' not found in cache, attempting to create from {file_path.name}.",
+        )
 
         if img_bytes := _read_emoji_file(file_path):
             new_emoji = await self._create_discord_emoji(emoji_name, img_bytes)
@@ -311,7 +347,9 @@ class EmojiManager:
         try:
             files_to_process = list(self.emojis_path.iterdir())
         except OSError as e:
-            logger.error(f"Failed to list files in emoji directory {self.emojis_path}: {e}")
+            logger.error(
+                f"Failed to list files in emoji directory {self.emojis_path}: {e}",
+            )
             return [], []
 
         if not files_to_process:
@@ -343,7 +381,9 @@ class EmojiManager:
         """
         if self._initialized:
             return True
-        logger.warning("Operation called before cache was initialized. Call await manager.init() first.")
+        logger.warning(
+            "Operation called before cache was initialized. Call await manager.init() first.",
+        )
         # Attempting init() again might lead to issues/deadlocks depending on context.
         # Force initialization in setup_hook.
         return False
@@ -363,7 +403,9 @@ class EmojiManager:
         """
         existing_emoji = self.get(name)
         if not existing_emoji:
-            logger.info(f"No existing emoji '{name}' found in cache. Skipping deletion.")
+            logger.info(
+                f"No existing emoji '{name}' found in cache. Skipping deletion.",
+            )
             return False  # Indicate no deletion occurred
 
         logger.debug(f"Attempting deletion of application emoji '{name}'...")
@@ -375,13 +417,17 @@ class EmojiManager:
             deleted_on_discord = True
 
         except discord.NotFound:
-            logger.warning(f"Emoji '{name}' was in cache but not found on Discord for deletion.")
+            logger.warning(
+                f"Emoji '{name}' was in cache but not found on Discord for deletion.",
+            )
         except discord.Forbidden:
             logger.error(f"Missing permissions to delete application emoji '{name}'.")
         except discord.HTTPException as e:
             logger.error(f"Failed to delete application emoji '{name}': {e}")
         except Exception as e:
-            logger.exception(f"An unexpected error occurred deleting emoji '{name}': {e}")
+            logger.exception(
+                f"An unexpected error occurred deleting emoji '{name}': {e}",
+            )
 
         finally:
             # Always remove from cache if it was found initially
@@ -422,11 +468,15 @@ class EmojiManager:
         new_emoji, _ = await self._process_emoji_file(local_file_path)
 
         if new_emoji:
-            logger.info(f"Resync completed successfully for '{name}'. New ID: {new_emoji.id}")
+            logger.info(
+                f"Resync completed successfully for '{name}'. New ID: {new_emoji.id}",
+            )
         else:
             logger.error(f"Resync failed for '{name}' during creation step.")
 
-        logger.info(f"Resync process for emoji '{name}' finished.")  # Log finish regardless of success
+        logger.info(
+            f"Resync process for emoji '{name}' finished.",
+        )  # Log finish regardless of success
         return new_emoji
 
     async def delete_all_emojis(self) -> tuple[list[str], list[str]]:
@@ -448,7 +498,9 @@ class EmojiManager:
             logger.error("Cannot delete emojis: Cache initialization failed.")
             return [], []
 
-        logger.info("Starting deletion of all application emojis matching asset directory...")
+        logger.info(
+            "Starting deletion of all application emojis matching asset directory...",
+        )
 
         # Get all potential emoji names from the asset directory
         emoji_names_to_delete: set[str] = set()
@@ -457,11 +509,15 @@ class EmojiManager:
                 if file_path.is_file() and _is_valid_emoji_name(file_path.stem):
                     emoji_names_to_delete.add(file_path.stem)
         except OSError as e:
-            logger.error(f"Failed to list files in emoji directory {self.emojis_path}: {e}")
+            logger.error(
+                f"Failed to list files in emoji directory {self.emojis_path}: {e}",
+            )
             return [], []
 
         if not emoji_names_to_delete:
-            logger.warning(f"No valid emoji names found in directory: {self.emojis_path}")
+            logger.warning(
+                f"No valid emoji names found in directory: {self.emojis_path}",
+            )
             return [], []
 
         deleted_names: list[str] = []

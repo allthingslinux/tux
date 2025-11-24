@@ -207,7 +207,11 @@ class Client:
         comic_url: str = f"{self._api_url}/{response_dict['num']}/"
         explanation_url: str = f"{self._explanation_wiki_url}{response_dict['num']}"
 
-        return Comic(response_dict, comic_url=comic_url, explanation_url=explanation_url)
+        return Comic(
+            response_dict,
+            comic_url=comic_url,
+            explanation_url=explanation_url,
+        )
 
     def _fetch_comic(self, comic_id: int, raw_comic_image: bool) -> Comic:
         """
@@ -309,7 +313,9 @@ class Client:
         TuxAPIResourceNotFoundError
             If the comic is not found.
         """
-        comic_url = self.latest_comic_url() if comic_id <= 0 else self.comic_id_url(comic_id)
+        comic_url = (
+            self.latest_comic_url() if comic_id <= 0 else self.comic_id_url(comic_id)
+        )
 
         try:
             response = httpx.get(comic_url)
@@ -317,14 +323,20 @@ class Client:
 
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code == 404:
-                raise TuxAPIResourceNotFoundError(service_name="xkcd", resource_identifier=str(comic_id)) from exc
+                raise TuxAPIResourceNotFoundError(
+                    service_name="xkcd",
+                    resource_identifier=str(comic_id),
+                ) from exc
             raise TuxAPIRequestError(
                 service_name="xkcd",
                 status_code=exc.response.status_code,
                 reason=exc.response.reason_phrase,
             ) from exc
         except httpx.RequestError as exc:
-            raise TuxAPIConnectionError(service_name="xkcd", original_error=exc) from exc
+            raise TuxAPIConnectionError(
+                service_name="xkcd",
+                original_error=exc,
+            ) from exc
 
         return response.text
 
@@ -353,7 +365,10 @@ class Client:
             If the image is not found or URL is not provided.
         """
         if not raw_image_url:
-            raise TuxAPIResourceNotFoundError(service_name="xkcd", resource_identifier="image_url_not_provided")
+            raise TuxAPIResourceNotFoundError(
+                service_name="xkcd",
+                resource_identifier="image_url_not_provided",
+            )
 
         try:
             response = httpx.get(raw_image_url)
@@ -361,14 +376,20 @@ class Client:
 
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code == 404:
-                raise TuxAPIResourceNotFoundError(service_name="xkcd", resource_identifier=raw_image_url) from exc
+                raise TuxAPIResourceNotFoundError(
+                    service_name="xkcd",
+                    resource_identifier=raw_image_url,
+                ) from exc
             raise TuxAPIRequestError(
                 service_name="xkcd",
                 status_code=exc.response.status_code,
                 reason=exc.response.reason_phrase,
             ) from exc
         except httpx.RequestError as exc:
-            raise TuxAPIConnectionError(service_name="xkcd", original_error=exc) from exc
+            raise TuxAPIConnectionError(
+                service_name="xkcd",
+                original_error=exc,
+            ) from exc
 
         return response.content
 

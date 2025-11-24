@@ -68,8 +68,14 @@ def generate(
     console.print(Panel.fit("🔧 Configuration Generator", style="bold blue"))
 
     if output is not None:
-        console.print("✗ Custom output paths are not supported when using CLI approach", style="red")
-        console.print("  Use pyproject.toml configuration to specify custom paths", style="yellow")
+        console.print(
+            "✗ Custom output paths are not supported when using CLI approach",
+            style="red",
+        )
+        console.print(
+            "  Use pyproject.toml configuration to specify custom paths",
+            style="yellow",
+        )
         raise typer.Exit(code=1)
 
     pyproject_path = Path("pyproject.toml")
@@ -78,7 +84,13 @@ def generate(
         raise typer.Exit(code=1)
 
     # Build base command with config file
-    base_cmd = ["uv", "run", "pydantic-settings-export", "--config-file", str(pyproject_path)]
+    base_cmd = [
+        "uv",
+        "run",
+        "pydantic-settings-export",
+        "--config-file",
+        str(pyproject_path),
+    ]
 
     # Map formats to generators
     format_map = {
@@ -116,7 +128,10 @@ def generate(
                 console.print(f"  Stderr: {e.stderr}", style="red")
             raise typer.Exit(code=1) from e
 
-    console.print("\n✅ Configuration files generated successfully!", style="bold green")
+    console.print(
+        "\n✅ Configuration files generated successfully!",
+        style="bold green",
+    )
 
 
 @app.command()
@@ -138,14 +153,22 @@ def validate() -> None:
         config = Config()
 
         # Create a summary table
-        table = Table(title="Configuration Summary", show_header=True, header_style="bold magenta")
+        table = Table(
+            title="Configuration Summary",
+            show_header=True,
+            header_style="bold magenta",
+        )
         table.add_column("Setting", style="cyan", no_wrap=True)
         table.add_column("Value", style="green")
         table.add_column("Source", style="yellow")
 
         # Show some key settings
         table.add_row("DEBUG", str(config.DEBUG), "✓")
-        table.add_row("BOT_TOKEN", "***" if config.BOT_TOKEN else "NOT SET", "✓" if config.BOT_TOKEN else "✗")
+        table.add_row(
+            "BOT_TOKEN",
+            "***" if config.BOT_TOKEN else "NOT SET",
+            "✓" if config.BOT_TOKEN else "✗",
+        )
         table.add_row("Database URL", f"{config.database_url[:50]}...", "✓")
         table.add_row("Bot Name", config.BOT_INFO.BOT_NAME, "✓")
         table.add_row("Prefix", config.BOT_INFO.PREFIX, "✓")
@@ -159,7 +182,10 @@ def validate() -> None:
             if path.exists():
                 console.print(f"  ✓ {file_path} found", style="green")
             else:
-                console.print(f"  ○ {file_path} not found (using defaults)", style="dim")
+                console.print(
+                    f"  ○ {file_path} not found (using defaults)",
+                    style="dim",
+                )
 
         # Also check config/ directory for example files
         console.print("\n[bold]Example Files:[/bold]")
@@ -169,7 +195,10 @@ def validate() -> None:
                 for example_file in sorted(example_files):
                     console.print(f"✓ {example_file} available", style="green")
             else:
-                console.print(f"✗ No example files in {config_dir}/ (run 'config generate')", style="red")
+                console.print(
+                    f"✗ No example files in {config_dir}/ (run 'config generate')",
+                    style="red",
+                )
 
         console.print("\n✅ Configuration is valid!", style="bold green")
 
@@ -196,7 +225,11 @@ def show() -> None:
         config = Config()
 
         # Create detailed table
-        table = Table(show_header=True, header_style="bold magenta", title="All Configuration Settings")
+        table = Table(
+            show_header=True,
+            header_style="bold magenta",
+            title="All Configuration Settings",
+        )
         table.add_column("Category", style="cyan")
         table.add_column("Setting", style="yellow")
         table.add_column("Value", style="green")
@@ -210,7 +243,11 @@ def show() -> None:
         table.add_row("Database", "POSTGRES_PORT", str(config.POSTGRES_PORT))
         table.add_row("Database", "POSTGRES_DB", config.POSTGRES_DB)
         table.add_row("Database", "POSTGRES_USER", config.POSTGRES_USER)
-        table.add_row("Database", "POSTGRES_PASSWORD", "***" if config.POSTGRES_PASSWORD else "NOT SET")
+        table.add_row(
+            "Database",
+            "POSTGRES_PASSWORD",
+            "***" if config.POSTGRES_PASSWORD else "NOT SET",
+        )
 
         # Bot info
         table.add_row("Bot Info", "BOT_NAME", config.BOT_INFO.BOT_NAME)

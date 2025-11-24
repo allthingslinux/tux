@@ -142,7 +142,10 @@ shell_ids = [
 vanity_ids = [
     [1179277471883993219, "wheel"],  # %wheel
     [1197348658052616254, "mag"],  # Log Reader
-    [1175237664811790366, "regional_indicator_e"],  # ? (Yes seriously thats the role name.)
+    [
+        1175237664811790366,
+        "regional_indicator_e",
+    ],  # ? (Yes seriously thats the role name.)
     [1186473849294962728, "smirk_cat"],  # :3
     [1180568491527516180, "supertuxkart"],  # STKS Award
     [1179551412070404146, "100"],  # Based
@@ -213,7 +216,10 @@ class RoleCount(BaseCog):
         """
         if interaction.guild:
             # Get the roles and emojis for the selected option
-            roles_emojis: list[list[int | str]] = self.roles_emoji_mapping.get(which.value, [])
+            roles_emojis: list[list[int | str]] = self.roles_emoji_mapping.get(
+                which.value,
+                [],
+            )
             # Process the roles and emojis for the selected option
             await self._process_roles(interaction, roles_emojis, which)
 
@@ -308,7 +314,11 @@ class RoleCount(BaseCog):
             embed = self._create_embed(interaction, which)
             role_count = 0
 
-        emoji = discord.utils.get(self.bot.emojis, name=role_emoji[1]) or f":{role_emoji[1]}:" or "❔"
+        emoji = (
+            discord.utils.get(self.bot.emojis, name=role_emoji[1])
+            or f":{role_emoji[1]}:"
+            or "❔"
+        )
 
         embed.add_field(
             name=f"{emoji!s} {role.name}",

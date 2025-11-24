@@ -105,7 +105,12 @@ class Snippet(SnippetsBaseCog):
 
             await reply_target.reply(
                 text,
-                allowed_mentions=AllowedMentions(users=False, roles=False, everyone=False, replied_user=True),
+                allowed_mentions=AllowedMentions(
+                    users=False,
+                    roles=False,
+                    everyone=False,
+                    replied_user=True,
+                ),
             )
             return
 

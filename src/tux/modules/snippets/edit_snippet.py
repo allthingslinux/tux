@@ -32,7 +32,13 @@ class EditSnippet(SnippetsBaseCog):
         aliases=["es"],
     )
     @commands.guild_only()
-    async def edit_snippet(self, ctx: commands.Context[Tux], name: str, *, content: str) -> None:
+    async def edit_snippet(
+        self,
+        ctx: commands.Context[Tux],
+        name: str,
+        *,
+        content: str,
+    ) -> None:
         """Edit an existing snippet.
 
         Checks for ownership and lock status before editing.

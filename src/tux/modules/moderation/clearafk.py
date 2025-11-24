@@ -59,7 +59,10 @@ class ClearAFK(BaseCog):
         assert ctx.guild
 
         if not await self.db.afk.is_afk(member.id, guild_id=ctx.guild.id):
-            return await ctx.send(f"{member.mention} is not currently AFK.", ephemeral=True)
+            return await ctx.send(
+                f"{member.mention} is not currently AFK.",
+                ephemeral=True,
+            )
 
         # Fetch the AFK entry to retrieve the original nickname
         entry = await self.db.afk.get_afk_member(member.id, guild_id=ctx.guild.id)
@@ -70,10 +73,15 @@ class ClearAFK(BaseCog):
             if entry.nickname:
                 with contextlib.suppress(discord.Forbidden):
                     await member.edit(nick=entry.nickname)  # Reset nickname to original
-            if entry.enforced:  # untimeout the user if  the afk status is a self-timeout
+            if (
+                entry.enforced
+            ):  # untimeout the user if  the afk status is a self-timeout
                 await member.timeout(None, reason="removing self-timeout")
 
-        return await ctx.send(f"AFK status for {member.mention} has been cleared.", ephemeral=True)
+        return await ctx.send(
+            f"AFK status for {member.mention} has been cleared.",
+            ephemeral=True,
+        )
 
 
 async def setup(bot: Tux) -> None:

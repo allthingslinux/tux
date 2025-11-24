@@ -65,7 +65,10 @@ async def validate_interaction_data(interaction: discord.Interaction) -> bool:
         True if valid, False otherwise
     """
     if not interaction.data:
-        await interaction.response.send_message("❌ Invalid interaction data", ephemeral=True)
+        await interaction.response.send_message(
+            "❌ Invalid interaction data",
+            ephemeral=True,
+        )
         return False
     return True
 
@@ -125,7 +128,10 @@ async def invalidate_and_rebuild(
     dashboard.current_mode = mode
     await rebuild_method()
     if interaction.message:
-        await interaction.followup.edit_message(message_id=interaction.message.id, view=dashboard)
+        await interaction.followup.edit_message(
+            message_id=interaction.message.id,
+            view=dashboard,
+        )
 
 
 def create_authorized_callback(
@@ -152,7 +158,11 @@ def create_authorized_callback(
     """
 
     async def wrapped_callback(interaction: discord.Interaction) -> None:
-        if not await validate_author(interaction, dashboard.author, unauthorized_message):
+        if not await validate_author(
+            interaction,
+            dashboard.author,
+            unauthorized_message,
+        ):
             return
         if not await validate_interaction_data(interaction):
             return
@@ -161,7 +171,11 @@ def create_authorized_callback(
     return wrapped_callback
 
 
-def create_role_update_callback(dashboard: ConfigDashboard, rank_value: int, rank_db_id: int) -> Any:
+def create_role_update_callback(
+    dashboard: ConfigDashboard,
+    rank_value: int,
+    rank_db_id: int,
+) -> Any:
     """Create a callback for role selection that updates the database based on new state."""
 
     async def callback(interaction: discord.Interaction) -> None:
@@ -184,11 +198,15 @@ def create_role_update_callback(dashboard: ConfigDashboard, rank_value: int, ran
                 selected_role_ids = {int(role_id) for role_id in values}
 
             # Get current assignments for this rank
-            existing_assignments = await dashboard.bot.db.permission_assignments.get_assignments_by_guild(
-                dashboard.guild.id,
+            existing_assignments = (
+                await dashboard.bot.db.permission_assignments.get_assignments_by_guild(
+                    dashboard.guild.id,
+                )
             )
             current_role_ids = {
-                assignment.role_id for assignment in existing_assignments if assignment.permission_rank_id == rank_db_id
+                assignment.role_id
+                for assignment in existing_assignments
+                if assignment.permission_rank_id == rank_db_id
             }
 
             # Calculate changes
@@ -210,12 +228,14 @@ def create_role_update_callback(dashboard: ConfigDashboard, rank_value: int, ran
 
             # Remove unselected roles
             for role_id in roles_to_remove:
-                deleted_count = await dashboard.bot.db.permission_assignments.delete_where(
-                    filters=(
-                        PermissionAssignment.guild_id == dashboard.guild.id,
-                        PermissionAssignment.permission_rank_id == rank_db_id,
-                        PermissionAssignment.role_id == role_id,
-                    ),
+                deleted_count = (
+                    await dashboard.bot.db.permission_assignments.delete_where(
+                        filters=(
+                            PermissionAssignment.guild_id == dashboard.guild.id,
+                            PermissionAssignment.permission_rank_id == rank_db_id,
+                            PermissionAssignment.role_id == role_id,
+                        ),
+                    )
                 )
                 if deleted_count > 0:
                     removed_count += 1
@@ -233,10 +253,20 @@ def create_role_update_callback(dashboard: ConfigDashboard, rank_value: int, ran
             await interaction.response.send_message(message, ephemeral=True)
 
             # Invalidate cache and rebuild to show updated assignments
-            await invalidate_and_rebuild(dashboard, "roles", dashboard.build_roles_mode, interaction)
+            await invalidate_and_rebuild(
+                dashboard,
+                "roles",
+                dashboard.build_roles_mode,
+                interaction,
+            )
 
         except Exception as e:
-            await handle_callback_error(interaction, e, "updating roles", f"for rank {rank_value}")
+            await handle_callback_error(
+                interaction,
+                e,
+                "updating roles",
+                f"for rank {rank_value}",
+            )
 
     return callback
 
@@ -282,7 +312,9 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
                 rank_value = int(selected_value)
 
                 # Validate rank exists
-                ranks = await dashboard.bot.db.permission_ranks.get_permission_ranks_by_guild(dashboard.guild.id)
+                ranks = await dashboard.bot.db.permission_ranks.get_permission_ranks_by_guild(
+                    dashboard.guild.id,
+                )
                 rank_obj = next((r for r in ranks if r.rank == rank_value), None)
                 if not rank_obj:
                     await interaction.response.send_message(
@@ -301,10 +333,20 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
             await interaction.response.send_message(message, ephemeral=True)
 
             # Invalidate cache and rebuild to show updated assignments
-            await invalidate_and_rebuild(dashboard, "commands", dashboard.build_commands_mode, interaction)
+            await invalidate_and_rebuild(
+                dashboard,
+                "commands",
+                dashboard.build_commands_mode,
+                interaction,
+            )
 
         except Exception as e:
-            await handle_callback_error(interaction, e, "updating command permission", f"for {command_name}")
+            await handle_callback_error(
+                interaction,
+                e,
+                "updating command permission",
+                f"for {command_name}",
+            )
 
     return callback
 
@@ -334,7 +376,10 @@ def create_channel_callback(dashboard: ConfigDashboard, option_key: str) -> Any:
                 return
 
             # Resolve selected channel
-            selected_channel = dashboard.resolve_channel_from_interaction(channel_select, interaction)
+            selected_channel = dashboard.resolve_channel_from_interaction(
+                channel_select,
+                interaction,
+            )
 
             if selected_channel:
                 await dashboard.update_channel_and_rebuild(
@@ -344,9 +389,19 @@ def create_channel_callback(dashboard: ConfigDashboard, option_key: str) -> Any:
                     f"✅ Channel set to {selected_channel.mention}",
                 )
             else:
-                await dashboard.update_channel_and_rebuild(option_key, None, interaction, "✅ Channel cleared")
+                await dashboard.update_channel_and_rebuild(
+                    option_key,
+                    None,
+                    interaction,
+                    "✅ Channel cleared",
+                )
         except Exception as e:
-            await handle_callback_error(interaction, e, "updating channel", f"for {option_key}")
+            await handle_callback_error(
+                interaction,
+                e,
+                "updating channel",
+                f"for {option_key}",
+            )
 
     return callback
 
@@ -361,27 +416,49 @@ def create_edit_rank_callback(
 
     async def callback(interaction: discord.Interaction) -> None:
         """Handle rank edit button click - opens modal."""
-        if not await validate_author(interaction, dashboard.author, "❌ You are not authorized to edit ranks."):
+        if not await validate_author(
+            interaction,
+            dashboard.author,
+            "❌ You are not authorized to edit ranks.",
+        ):
             return
 
         # Create modal with pre-filled values
-        modal = EditRankModal(dashboard.bot, dashboard.guild, dashboard, rank_value, current_name, current_description)
+        modal = EditRankModal(
+            dashboard.bot,
+            dashboard.guild,
+            dashboard,
+            rank_value,
+            current_name,
+            current_description,
+        )
         await interaction.response.send_modal(modal)
 
     return callback
 
 
-def create_delete_rank_callback(dashboard: ConfigDashboard, rank_value: int, rank_name: str) -> Any:
+def create_delete_rank_callback(
+    dashboard: ConfigDashboard,
+    rank_value: int,
+    rank_name: str,
+) -> Any:
     """Create a callback for deleting a rank."""
 
     async def callback(interaction: discord.Interaction) -> None:
         """Handle rank deletion."""
-        if not await validate_author(interaction, dashboard.author, "❌ You are not authorized to delete ranks."):
+        if not await validate_author(
+            interaction,
+            dashboard.author,
+            "❌ You are not authorized to delete ranks.",
+        ):
             return
 
         try:
             # Check if rank exists
-            existing = await dashboard.bot.db.permission_ranks.get_permission_rank(dashboard.guild.id, rank_value)
+            existing = await dashboard.bot.db.permission_ranks.get_permission_rank(
+                dashboard.guild.id,
+                rank_value,
+            )
             if not existing:
                 await interaction.response.send_message(
                     f"❌ Rank {rank_value} does not exist.",
@@ -390,15 +467,31 @@ def create_delete_rank_callback(dashboard: ConfigDashboard, rank_value: int, ran
                 return
 
             # Delete the rank
-            await dashboard.bot.db.permission_ranks.delete_permission_rank(dashboard.guild.id, rank_value)
+            await dashboard.bot.db.permission_ranks.delete_permission_rank(
+                dashboard.guild.id,
+                rank_value,
+            )
 
             await interaction.response.defer()
-            await interaction.followup.send(f"✅ Deleted rank **{rank_value}**: **{rank_name}**", ephemeral=True)
+            await interaction.followup.send(
+                f"✅ Deleted rank **{rank_value}**: **{rank_name}**",
+                ephemeral=True,
+            )
 
             # Invalidate cache and rebuild to show updated ranks
-            await invalidate_and_rebuild(dashboard, "ranks", dashboard.build_ranks_mode, interaction)
+            await invalidate_and_rebuild(
+                dashboard,
+                "ranks",
+                dashboard.build_ranks_mode,
+                interaction,
+            )
         except Exception as e:
-            await handle_callback_error(interaction, e, "deleting rank", f"{rank_value}")
+            await handle_callback_error(
+                interaction,
+                e,
+                "deleting rank",
+                f"{rank_value}",
+            )
 
     return callback
 
@@ -407,7 +500,10 @@ def create_cancel_assignment_callback() -> Any:
     """Create callback for canceling role assignment."""
 
     async def cancel_assignment_callback(interaction: discord.Interaction) -> None:
-        await interaction.response.send_message("❌ Role assignment cancelled.", ephemeral=True)
+        await interaction.response.send_message(
+            "❌ Role assignment cancelled.",
+            ephemeral=True,
+        )
 
     return cancel_assignment_callback
 
@@ -429,25 +525,33 @@ def create_confirm_assignment_callback(
             return
 
         if not selected_roles:
-            await interaction.response.send_message("❌ No roles selected.", ephemeral=True)
+            await interaction.response.send_message(
+                "❌ No roles selected.",
+                ephemeral=True,
+            )
             return
 
         try:
             assigned_count = 0
-            existing_assignments = await dashboard.bot.db.permission_assignments.get_assignments_by_guild(
-                dashboard.guild.id,
+            existing_assignments = (
+                await dashboard.bot.db.permission_assignments.get_assignments_by_guild(
+                    dashboard.guild.id,
+                )
             )
 
             for role in selected_roles:
                 existing = any(
-                    assignment.permission_rank_id == rank_db_id and assignment.role_id == role.id
+                    assignment.permission_rank_id == rank_db_id
+                    and assignment.role_id == role.id
                     for assignment in existing_assignments
                 )
                 if not existing:
-                    await dashboard.bot.db.permission_assignments.assign_permission_rank(
-                        dashboard.guild.id,
-                        rank_db_id,
-                        role.id,
+                    await (
+                        dashboard.bot.db.permission_assignments.assign_permission_rank(
+                            dashboard.guild.id,
+                            rank_db_id,
+                            role.id,
+                        )
                     )
                     assigned_count += 1
 
@@ -456,10 +560,20 @@ def create_confirm_assignment_callback(
                 ephemeral=True,
             )
 
-            await invalidate_and_rebuild(dashboard, "roles", dashboard.build_roles_mode, interaction)
+            await invalidate_and_rebuild(
+                dashboard,
+                "roles",
+                dashboard.build_roles_mode,
+                interaction,
+            )
 
         except Exception as e:
-            await handle_callback_error(interaction, e, "assigning roles", f"to rank {rank_id}")
+            await handle_callback_error(
+                interaction,
+                e,
+                "assigning roles",
+                f"to rank {rank_id}",
+            )
 
     return confirm_assignment_callback
 

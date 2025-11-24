@@ -144,7 +144,10 @@ class SbomPlugin(BasePlugin[SbomPluginConfig]):
             lines: list[str] = []
 
             # Helper function to create a table from packages
-            def create_table(packages: list[dict[str, str | list[str]]], title: str | None = None) -> list[str]:
+            def create_table(
+                packages: list[dict[str, str | list[str]]],
+                title: str | None = None,
+            ) -> list[str]:
                 """Create a markdown table from a list of packages."""
                 table_lines: list[str] = []
 
@@ -162,7 +165,10 @@ class SbomPlugin(BasePlugin[SbomPluginConfig]):
                 table_lines.append(f"{indent}|---------|----------|---------|--------|")
 
                 # Table rows
-                for package in sorted(packages, key=lambda p: str(p.get("name", "")).lower()):
+                for package in sorted(
+                    packages,
+                    key=lambda p: str(p.get("name", "")).lower(),
+                ):
                     name = str(package.get("name") or "Unknown Package")
                     version = str(package.get("version") or "Unknown Version")
                     licenses = package.get("licenses", [])
@@ -172,7 +178,11 @@ class SbomPlugin(BasePlugin[SbomPluginConfig]):
                     homepage = str(package.get("homePage", "")).strip()
 
                     # Format licenses
-                    license_str = ", ".join(f"`{lic}`" for lic in licenses) if licenses else "*License Unknown*"
+                    license_str = (
+                        ", ".join(f"`{lic}`" for lic in licenses)
+                        if licenses
+                        else "*License Unknown*"
+                    )
 
                     # Format package name with optional link
                     if homepage and homepage.strip() and homepage.upper() != "UNKNOWN":
@@ -181,7 +191,11 @@ class SbomPlugin(BasePlugin[SbomPluginConfig]):
                         name_cell = name
 
                     # Format author (handle unknown/empty)
-                    author_cell = author if author and author.lower() not in ("unknown", "n/a", "") else "—"
+                    author_cell = (
+                        author
+                        if author and author.lower() not in ("unknown", "n/a", "")
+                        else "—"
+                    )
 
                     # Escape pipe characters in cells
                     name_cell = name_cell.replace("|", "\\|")
@@ -189,14 +203,18 @@ class SbomPlugin(BasePlugin[SbomPluginConfig]):
                     version = version.replace("|", "\\|")
                     author_cell = author_cell.replace("|", "\\|")
 
-                    table_lines.append(f"{indent}| {name_cell} | {license_str} | {version} | {author_cell} |")
+                    table_lines.append(
+                        f"{indent}| {name_cell} | {license_str} | {version} | {author_cell} |",
+                    )
 
                 table_lines.append(f"{indent}")
                 return table_lines
 
             # Create table for main dependencies
             if packages_by_source.get("main"):
-                lines.extend(create_table(packages_by_source["main"], "Main Dependencies"))
+                lines.extend(
+                    create_table(packages_by_source["main"], "Main Dependencies"),
+                )
 
             # Create tables for each group
             for group in groups:
@@ -284,7 +302,10 @@ class SbomPlugin(BasePlugin[SbomPluginConfig]):
         main_package_names: set[str] = direct_deps.get("main", set())
 
         # Helper function to get packages from licensecheck and filter to direct deps
-        def get_filtered_packages(direct_dep_names: set[str], cmd: list[str]) -> list[dict[str, str | list[str]]]:
+        def get_filtered_packages(
+            direct_dep_names: set[str],
+            cmd: list[str],
+        ) -> list[dict[str, str | list[str]]]:
             """Get packages from licensecheck and filter to only direct dependencies."""
             try:
                 result = subprocess.run(
@@ -303,12 +324,18 @@ class SbomPlugin(BasePlugin[SbomPluginConfig]):
                         all_packages_map[name.lower()] = {
                             "name": name,
                             "version": pkg.get("version", ""),
-                            "licenses": pkg.get("license", "").split(";;") if pkg.get("license") else [],
+                            "licenses": pkg.get("license", "").split(";;")
+                            if pkg.get("license")
+                            else [],
                             "author": pkg.get("author", ""),
                             "homePage": pkg.get("homePage", ""),
                         }
                 # Filter to only direct dependencies
-                return [all_packages_map[dep_name] for dep_name in direct_dep_names if dep_name in all_packages_map]
+                return [
+                    all_packages_map[dep_name]
+                    for dep_name in direct_dep_names
+                    if dep_name in all_packages_map
+                ]
             except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
                 log.warning(f"Failed to get packages: {e}")
                 return []
@@ -352,7 +379,9 @@ class SbomPlugin(BasePlugin[SbomPluginConfig]):
                 group_packages = get_filtered_packages(group_direct_deps, cmd_group)
                 # Filter out packages that are also in main
                 group_packages_filtered = [
-                    pkg for pkg in group_packages if str(pkg.get("name", "")).lower() not in main_package_names
+                    pkg
+                    for pkg in group_packages
+                    if str(pkg.get("name", "")).lower() not in main_package_names
                 ]
                 if group_packages_filtered:
                     packages_by_source[group] = group_packages_filtered

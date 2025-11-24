@@ -105,7 +105,9 @@ class BaseCog(commands.Cog):
 
         except Exception as e:
             # Log but don't crash - cog can still load without usage strings
-            logger.debug(f"Failed to setup command usage for {self.__class__.__name__}: {e}")
+            logger.debug(
+                f"Failed to setup command usage for {self.__class__.__name__}: {e}",
+            )
 
     def _generate_usage(self, command: commands.Command[Any, ..., Any]) -> str:
         """
@@ -267,7 +269,9 @@ class BaseCog(commands.Cog):
         --------
         >>> def __init__(self, bot: Tux):
         ...     super().__init__(bot)
-        ...     if self.unload_if_missing_config(not CONFIG.GITHUB_TOKEN, "GITHUB_TOKEN"):
+        ...     if self.unload_if_missing_config(
+        ...         not CONFIG.GITHUB_TOKEN, "GITHUB_TOKEN"
+        ...     ):
         ...         return  # Exit early, cog will be partially loaded but won't register commands
         ...     self.github_client = GitHubClient()
 
@@ -286,11 +290,14 @@ class BaseCog(commands.Cog):
                 (
                     f.frame.f_locals["self"].__class__.__module__
                     for f in inspect.stack()
-                    if "self" in f.frame.f_locals and isinstance(f.frame.f_locals["self"], commands.Cog)
+                    if "self" in f.frame.f_locals
+                    and isinstance(f.frame.f_locals["self"], commands.Cog)
                 ),
                 "UnknownModule",
             )
-            logger.warning(f"{config_name} is not configured. {cog_module} will be unloaded.")
+            logger.warning(
+                f"{config_name} is not configured. {cog_module} will be unloaded.",
+            )
 
             # Schedule async unload in background to avoid blocking initialization
             self._unload_task = asyncio.create_task(self._unload_self(cog_module))
@@ -313,6 +320,8 @@ class BaseCog(commands.Cog):
         """
         try:
             await self.bot.unload_extension(extension_name)
-            logger.info(f"{self.__class__.__name__} unloaded due to missing configuration")
+            logger.info(
+                f"{self.__class__.__name__} unloaded due to missing configuration",
+            )
         except Exception as e:
             logger.error(f"Failed to unload {self.__class__.__name__}: {e}")

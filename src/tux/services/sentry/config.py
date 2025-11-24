@@ -119,7 +119,10 @@ async def flush_async(flush_timeout: float = 10.0) -> None:
 
     try:
         # Run the blocking flush operation in a thread pool
-        await asyncio.get_event_loop().run_in_executor(None, lambda: sentry_sdk.flush(timeout=flush_timeout))
+        await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: sentry_sdk.flush(timeout=flush_timeout),
+        )
         logger.success("Sentry events flushed successfully.")
     except TimeoutError:
         logger.warning(f"Sentry flush timed out after {flush_timeout}s")

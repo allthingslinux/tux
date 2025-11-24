@@ -10,8 +10,13 @@ from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field
-from pydantic_settings_export.generators import AbstractGenerator  # type: ignore[import-untyped]
-from pydantic_settings_export.models import FieldInfoModel, SettingsInfoModel  # type: ignore[import-untyped]
+from pydantic_settings_export.generators import (
+    AbstractGenerator,  # type: ignore[import-untyped]
+)
+from pydantic_settings_export.models import (  # type: ignore[import-untyped]
+    FieldInfoModel,
+    SettingsInfoModel,
+)
 
 from .base import camel_to_snake
 
@@ -63,7 +68,11 @@ class JsonGenerator(AbstractGenerator):  # type: ignore[type-arg]
             config[section_name] = child_config
 
         # Convert to JSON with indentation
-        return json.dumps(config, indent=self.generator_config.indent, ensure_ascii=False)  # type: ignore[attr-defined]
+        return json.dumps(
+            config,
+            indent=self.generator_config.indent,
+            ensure_ascii=False,
+        )  # type: ignore[attr-defined]
 
     def _parse_value(self, field: FieldInfoModel) -> Any:
         """Parse field value to appropriate Python type.
@@ -102,7 +111,8 @@ class JsonGenerator(AbstractGenerator):  # type: ignore[type-arg]
             while value and iterations < max_iterations:
                 stripped = False
                 if len(value) >= 2 and (
-                    (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'"))
+                    (value.startswith('"') and value.endswith('"'))
+                    or (value.startswith("'") and value.endswith("'"))
                 ):
                     value = value[1:-1]
                     stripped = True

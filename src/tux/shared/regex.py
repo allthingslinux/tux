@@ -21,10 +21,15 @@ DISCORD_ROLE_MENTION_RE = re.compile(r"<@&(\d{15,20})>$")
 
 MARKDOWN_EMOJI_RE = re.compile(r"<?:.*:([0-9]{18})?>?", re.IGNORECASE)
 
-MULTILINE_CODEBLOCK_RE = re.compile(r"```(?P<extension>[a-z]*)\n*(?P<content>[\s\S]+)\n*```")
+MULTILINE_CODEBLOCK_RE = re.compile(
+    r"```(?P<extension>[a-z]*)\n*(?P<content>[\s\S]+)\n*```",
+)
 SINGLE_LINE_CODEBLOCK_RE = re.compile(r"^`(?P<content>[\s\S]+)`$")
 
-DISCORD_INVITE_RE = re.compile(r"(?:https?://)?discord(?:app)?\.(?:com/invite|gg)/[a-zA-Z0-9]+/?", flags=re.IGNORECASE)
+DISCORD_INVITE_RE = re.compile(
+    r"(?:https?://)?discord(?:app)?\.(?:com/invite|gg)/[a-zA-Z0-9]+/?",
+    flags=re.IGNORECASE,
+)
 
 DISCORD_FILE_RE = re.compile(
     r"(https://|http://)?(cdn\.|media\.)discord(app)?\.(com|net)/(attachments|avatars|icons|banners|splashes)/[0-9]{17,22}/([0-9]{17,22}/(?P<filename>.{1,256})|(?P<hash>.{32}))\.(?P<mime>[0-9a-zA-Z]{2,4})?",

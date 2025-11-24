@@ -111,7 +111,9 @@ class Timeout(ModerationCogBase):
             reason=flags.reason,
             silent=flags.silent,
             dm_action=f"timed out for {flags.duration}",
-            actions=[(lambda: member.timeout(duration, reason=flags.reason), type(None))],
+            actions=[
+                (lambda: member.timeout(duration, reason=flags.reason), type(None)),
+            ],
             duration=int(duration.total_seconds()),
         )
 

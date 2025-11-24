@@ -33,7 +33,10 @@ class FlagRemover(BaseCog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+    async def on_raw_reaction_add(
+        self,
+        payload: discord.RawReactionActionEvent,
+    ) -> None:
         """Handle reaction add events to remove banned flag emojis.
 
         Parameters
@@ -56,7 +59,11 @@ class FlagRemover(BaseCog):
             return
 
         channel = self.bot.get_channel(payload.channel_id)
-        if channel is None or channel.id != CHANNEL_ID or not isinstance(channel, discord.TextChannel):
+        if (
+            channel is None
+            or channel.id != CHANNEL_ID
+            or not isinstance(channel, discord.TextChannel)
+        ):
             return
 
         message = await channel.fetch_message(payload.message_id)

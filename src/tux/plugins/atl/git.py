@@ -103,7 +103,12 @@ class Git(BaseCog):
     )
     @commands.guild_only()
     @requires_command_permission()
-    async def create_issue(self, ctx: commands.Context[Tux], title: str, body: str) -> None:
+    async def create_issue(
+        self,
+        ctx: commands.Context[Tux],
+        title: str,
+        body: str,
+    ) -> None:
         """
         Create an issue.
 
@@ -128,7 +133,11 @@ class Git(BaseCog):
                 title="Issue Created",
                 description="The issue has been created successfully.",
             )
-            embed.add_field(name="Issue Number", value=created_issue.number, inline=False)
+            embed.add_field(
+                name="Issue Number",
+                value=created_issue.number,
+                inline=False,
+            )
             embed.add_field(name="Title", value=title, inline=False)
             embed.add_field(name="Body", value=issue_body, inline=False)
 
@@ -170,7 +179,11 @@ class Git(BaseCog):
             )
             embed.add_field(name="State", value=issue.state, inline=False)
             embed.add_field(name="Number", value=issue.number, inline=False)
-            embed.add_field(name="User", value=issue.user.login if issue.user else "Unknown", inline=False)
+            embed.add_field(
+                name="User",
+                value=issue.user.login if issue.user else "Unknown",
+                inline=False,
+            )
             embed.add_field(name="Created At", value=issue.created_at, inline=False)
             embed.add_field(name="Updated At", value=issue.updated_at, inline=False)
 

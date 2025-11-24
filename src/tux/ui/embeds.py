@@ -116,19 +116,41 @@ class EmbedCreator:
             embed: discord.Embed = discord.Embed(title=title, description=description)
 
             type_settings: dict[EmbedType, tuple[int, str, str]] = {
-                EmbedType.DEFAULT: (EMBED_COLORS["DEFAULT"], EMBED_ICONS["DEFAULT"], "Default"),
+                EmbedType.DEFAULT: (
+                    EMBED_COLORS["DEFAULT"],
+                    EMBED_ICONS["DEFAULT"],
+                    "Default",
+                ),
                 EmbedType.INFO: (EMBED_COLORS["INFO"], EMBED_ICONS["INFO"], "Info"),
                 EmbedType.ERROR: (EMBED_COLORS["ERROR"], EMBED_ICONS["ERROR"], "Error"),
-                EmbedType.WARNING: (EMBED_COLORS["WARNING"], EMBED_ICONS["DEFAULT"], "Warning"),
-                EmbedType.SUCCESS: (EMBED_COLORS["SUCCESS"], EMBED_ICONS["SUCCESS"], "Success"),
+                EmbedType.WARNING: (
+                    EMBED_COLORS["WARNING"],
+                    EMBED_ICONS["DEFAULT"],
+                    "Warning",
+                ),
+                EmbedType.SUCCESS: (
+                    EMBED_COLORS["SUCCESS"],
+                    EMBED_ICONS["SUCCESS"],
+                    "Success",
+                ),
                 EmbedType.POLL: (EMBED_COLORS["POLL"], EMBED_ICONS["POLL"], "Poll"),
                 EmbedType.CASE: (EMBED_COLORS["CASE"], EMBED_ICONS["CASE"], "Case"),
-                EmbedType.ACTIVE_CASE: (EMBED_COLORS["CASE"], EMBED_ICONS["ACTIVE_CASE"], "Active Case"),
-                EmbedType.INACTIVE_CASE: (EMBED_COLORS["CASE"], EMBED_ICONS["INACTIVE_CASE"], "Inactive Case"),
+                EmbedType.ACTIVE_CASE: (
+                    EMBED_COLORS["CASE"],
+                    EMBED_ICONS["ACTIVE_CASE"],
+                    "Active Case",
+                ),
+                EmbedType.INACTIVE_CASE: (
+                    EMBED_COLORS["CASE"],
+                    EMBED_ICONS["INACTIVE_CASE"],
+                    "Inactive Case",
+                ),
                 EmbedType.NOTE: (EMBED_COLORS["NOTE"], EMBED_ICONS["NOTE"], "Note"),
             }
 
-            embed.color = type_settings[embed_type][0] if custom_color is None else custom_color
+            embed.color = (
+                type_settings[embed_type][0] if custom_color is None else custom_color
+            )
             # Ensure color is a discord.Colour object
             if isinstance(embed.color, int):
                 embed.color = discord.Colour(embed.color)  # type: ignore
@@ -143,9 +165,16 @@ class EmbedCreator:
                 )
 
             if custom_footer_text:
-                embed.set_footer(text=custom_footer_text, icon_url=custom_footer_icon_url)
+                embed.set_footer(
+                    text=custom_footer_text,
+                    icon_url=custom_footer_icon_url,
+                )
             else:
-                footer: tuple[str, str | None] = EmbedCreator.get_footer(bot, user_name, user_display_avatar)
+                footer: tuple[str, str | None] = EmbedCreator.get_footer(
+                    bot,
+                    user_name,
+                    user_display_avatar,
+                )
                 embed.set_footer(text=footer[0], icon_url=footer[1])
 
             if image_url:
@@ -188,7 +217,9 @@ class EmbedCreator:
         """
         try:
             text: str = (
-                f"{user_name}@discord $" if user_name else f"{CONFIG.BOT_INFO.BOT_NAME.lower()}@discord $"
+                f"{user_name}@discord $"
+                if user_name
+                else f"{CONFIG.BOT_INFO.BOT_NAME.lower()}@discord $"
             )  # TODO: Make this configurable with the new config system.
             text += f" {round(bot.latency * 1000)}ms" if bot else ""
 

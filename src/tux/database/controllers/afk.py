@@ -38,7 +38,9 @@ class AfkController(BaseController[AFK]):
         AFK | None
             The AFK record if found, None otherwise.
         """
-        return await self.find_one(filters=(AFK.member_id == member_id) & (AFK.guild_id == guild_id))
+        return await self.find_one(
+            filters=(AFK.member_id == member_id) & (AFK.guild_id == guild_id),
+        )
 
     async def set_member_afk(
         self,
@@ -96,7 +98,11 @@ class AfkController(BaseController[AFK]):
             True if removed successfully, False otherwise.
         """
         existing = await self.get_afk_by_member(member_id, guild_id)
-        return await self.delete_by_id((existing.member_id, existing.guild_id)) if existing else False
+        return (
+            await self.delete_by_id((existing.member_id, existing.guild_id))
+            if existing
+            else False
+        )
 
     async def get_all_afk_members(self, guild_id: int) -> list[AFK]:
         """
@@ -185,7 +191,15 @@ class AfkController(BaseController[AFK]):
         AFK
             The AFK record (created or updated).
         """
-        return await self.set_member_afk(member_id, nickname, reason, guild_id, is_perm, until, enforced)
+        return await self.set_member_afk(
+            member_id,
+            nickname,
+            reason,
+            guild_id,
+            is_perm,
+            until,
+            enforced,
+        )
 
     async def find_many(self, **filters: Any) -> list[AFK]:
         """

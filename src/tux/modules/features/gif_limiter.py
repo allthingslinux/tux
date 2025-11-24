@@ -39,7 +39,9 @@ class GifLimiter(BaseCog):
         self.recent_gif_age: int = CONFIG.GIF_LIMITER.RECENT_GIF_AGE
 
         # Max number of GIFs sent recently in a channel
-        self.channelwide_gif_limits: dict[int, int] = CONFIG.GIF_LIMITER.GIF_LIMITS_CHANNEL
+        self.channelwide_gif_limits: dict[int, int] = (
+            CONFIG.GIF_LIMITER.GIF_LIMITS_CHANNEL
+        )
         # Max number of GIFs sent recently by a user to be able to post one in specified channels
         self.user_gif_limits: dict[int, int] = CONFIG.GIF_LIMITER.GIF_LIMITS_USER
 
@@ -93,12 +95,16 @@ class GifLimiter(BaseCog):
 
             if (
                 channel in self.channelwide_gif_limits
-                and len(self.recent_gifs_by_channel[channel]) >= self.channelwide_gif_limits[channel]
+                and len(self.recent_gifs_by_channel[channel])
+                >= self.channelwide_gif_limits[channel]
             ):
                 await self._delete_message(message, "for channel")
                 return
 
-            if channel in self.user_gif_limits and len(self.recent_gifs_by_user[user]) >= self.user_gif_limits[channel]:
+            if (
+                channel in self.user_gif_limits
+                and len(self.recent_gifs_by_user[user]) >= self.user_gif_limits[channel]
+            ):
                 await self._delete_message(message, "for user")
                 return
 
@@ -119,7 +125,10 @@ class GifLimiter(BaseCog):
             The reason for the deletion.
         """
         await message.delete()
-        await message.channel.send(f"-# GIF ratelimit exceeded {epilogue}", delete_after=3)
+        await message.channel.send(
+            f"-# GIF ratelimit exceeded {epilogue}",
+            delete_after=3,
+        )
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -152,7 +161,9 @@ class GifLimiter(BaseCog):
                     t for t in timestamps if current_time - t < self.recent_gif_age
                 ]
             for user_id, timestamps in list(self.recent_gifs_by_user.items()):
-                if filtered_timestamps := [t for t in timestamps if current_time - t < self.recent_gif_age]:
+                if filtered_timestamps := [
+                    t for t in timestamps if current_time - t < self.recent_gif_age
+                ]:
                     self.recent_gifs_by_user[user_id] = filtered_timestamps
                 else:
                     del self.recent_gifs_by_user[user_id]

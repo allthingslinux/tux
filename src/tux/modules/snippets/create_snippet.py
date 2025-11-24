@@ -35,7 +35,13 @@ class CreateSnippet(SnippetsBaseCog):
         aliases=["cs"],
     )
     @commands.guild_only()
-    async def create_snippet(self, ctx: commands.Context[Tux], name: str, *, content: str) -> None:
+    async def create_snippet(
+        self,
+        ctx: commands.Context[Tux],
+        name: str,
+        *,
+        content: str,
+    ) -> None:
         """Create a new snippet or an alias.
 
         If the provided content exactly matches the name of an existing snippet,
@@ -66,9 +72,15 @@ class CreateSnippet(SnippetsBaseCog):
 
         # Check if a snippet with this name already exists
         try:
-            existing_snippet = await self.db.snippet.get_snippet_by_name_and_guild_id(name, guild_id)
+            existing_snippet = await self.db.snippet.get_snippet_by_name_and_guild_id(
+                name,
+                guild_id,
+            )
             if existing_snippet is not None:
-                await self.send_snippet_error(ctx, description="Snippet with this name already exists.")
+                await self.send_snippet_error(
+                    ctx,
+                    description="Snippet with this name already exists.",
+                )
                 return
         except Exception as e:
             logger.error(f"Failed to check existing snippet: {e}")
@@ -76,7 +88,10 @@ class CreateSnippet(SnippetsBaseCog):
             return
 
         # Validate snippet name format and length
-        if len(name) > SNIPPET_MAX_NAME_LENGTH or not re.match(SNIPPET_ALLOWED_CHARS_REGEX, name):
+        if len(name) > SNIPPET_MAX_NAME_LENGTH or not re.match(
+            SNIPPET_ALLOWED_CHARS_REGEX,
+            name,
+        ):
             await self.send_snippet_error(
                 ctx,
                 description=f"Snippet name must be alphanumeric (allows dashes only) and less than {SNIPPET_MAX_NAME_LENGTH} characters.",
@@ -85,9 +100,11 @@ class CreateSnippet(SnippetsBaseCog):
 
         # Check if content matches another snippet name to automatically create an alias
         try:
-            existing_snippet_for_alias = await self.db.snippet.get_snippet_by_name_and_guild_id(
-                content,
-                guild_id,
+            existing_snippet_for_alias = (
+                await self.db.snippet.get_snippet_by_name_and_guild_id(
+                    content,
+                    guild_id,
+                )
             )
 
             if existing_snippet_for_alias:
@@ -102,7 +119,9 @@ class CreateSnippet(SnippetsBaseCog):
                     ephemeral=True,
                 )
 
-                logger.info(f"{ctx.author} created snippet '{name}' as an alias to '{content}'.")
+                logger.info(
+                    f"{ctx.author} created snippet '{name}' as an alias to '{content}'.",
+                )
                 return
 
             # Create the new snippet

@@ -44,13 +44,15 @@ class EditRankModal(discord.ui.Modal):
             default=current_name,
         )
 
-        self.rank_description: discord.ui.TextInput[discord.ui.Modal] = discord.ui.TextInput(
-            label="Description",
-            placeholder="Describe this rank's purpose and responsibilities",
-            required=False,
-            max_length=500,
-            style=discord.TextStyle.paragraph,
-            default=current_description or "",
+        self.rank_description: discord.ui.TextInput[discord.ui.Modal] = (
+            discord.ui.TextInput(
+                label="Description",
+                placeholder="Describe this rank's purpose and responsibilities",
+                required=False,
+                max_length=500,
+                style=discord.TextStyle.paragraph,
+                default=current_description or "",
+            )
         )
 
         # Add the inputs to the modal
@@ -61,15 +63,27 @@ class EditRankModal(discord.ui.Modal):
         """Handle modal submission."""
         try:
             # Check if rank exists
-            existing = await self.bot.db.permission_ranks.get_permission_rank(self.guild.id, self.rank_value)
+            existing = await self.bot.db.permission_ranks.get_permission_rank(
+                self.guild.id,
+                self.rank_value,
+            )
             if not existing:
-                await interaction.response.send_message(f"❌ Rank {self.rank_value} does not exist.", ephemeral=True)
+                await interaction.response.send_message(
+                    f"❌ Rank {self.rank_value} does not exist.",
+                    ephemeral=True,
+                )
                 return
 
             # Check if name already exists (but allow keeping the same name)
-            all_ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(self.guild.id)
+            all_ranks = (
+                await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+                    self.guild.id,
+                )
+            )
             if any(
-                rank.name.lower() == self.rank_name.value.lower() and rank.rank != self.rank_value for rank in all_ranks
+                rank.name.lower() == self.rank_name.value.lower()
+                and rank.rank != self.rank_value
+                for rank in all_ranks
             ):
                 await interaction.response.send_message(
                     f"❌ A rank with the name **{self.rank_name.value}** already exists.",
@@ -87,7 +101,10 @@ class EditRankModal(discord.ui.Modal):
             )
 
             if not updated:
-                await interaction.response.send_message(f"❌ Failed to update rank {self.rank_value}.", ephemeral=True)
+                await interaction.response.send_message(
+                    f"❌ Failed to update rank {self.rank_value}.",
+                    ephemeral=True,
+                )
                 return
 
             await interaction.response.send_message(
@@ -108,7 +125,10 @@ class EditRankModal(discord.ui.Modal):
             logger.error(f"Error updating rank: {e}", exc_info=True)
             try:
                 if interaction.response.is_done():
-                    await interaction.followup.send(f"❌ Error updating rank: {e}", ephemeral=True)
+                    await interaction.followup.send(
+                        f"❌ Error updating rank: {e}",
+                        ephemeral=True,
+                    )
                 else:
                     await interaction.response.send_message(
                         f"❌ Error updating rank: {e}",
@@ -187,11 +207,18 @@ class CreateRankModal(discord.ui.Modal):
             try:
                 rank_value = int(self.rank_number.component.values[0])  # type: ignore[reportUnknownMemberType]
             except (ValueError, IndexError):
-                await interaction.response.send_message("❌ Invalid rank selection.", ephemeral=True)
+                await interaction.response.send_message(
+                    "❌ Invalid rank selection.",
+                    ephemeral=True,
+                )
                 return
 
             # Double-check availability (in case of race conditions or UI inconsistencies)
-            existing_ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(self.guild.id)
+            existing_ranks = (
+                await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+                    self.guild.id,
+                )
+            )
             existing_rank_values = {rank.rank for rank in existing_ranks}
 
             # Allow creating ranks 0-7 if they're missing, or ranks 8-10
@@ -208,8 +235,14 @@ class CreateRankModal(discord.ui.Modal):
                 return
 
             # Check if name already exists
-            all_ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(self.guild.id)
-            if any(rank.name.lower() == self.rank_name.value.lower() for rank in all_ranks):
+            all_ranks = (
+                await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+                    self.guild.id,
+                )
+            )
+            if any(
+                rank.name.lower() == self.rank_name.value.lower() for rank in all_ranks
+            ):
                 await interaction.response.send_message(
                     f"❌ A rank with the name **{self.rank_name.value}** already exists.",
                     ephemeral=True,
@@ -243,7 +276,10 @@ class CreateRankModal(discord.ui.Modal):
             logger.error(f"Error creating rank: {e}", exc_info=True)
             try:
                 if interaction.response.is_done():
-                    await interaction.followup.send(f"❌ Error creating rank: {e}", ephemeral=True)
+                    await interaction.followup.send(
+                        f"❌ Error creating rank: {e}",
+                        ephemeral=True,
+                    )
                 else:
                     await interaction.response.send_message(
                         f"❌ Error creating rank: {e}",

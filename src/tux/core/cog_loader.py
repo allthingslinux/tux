@@ -114,7 +114,11 @@ class CogLoader(commands.Cog):
             return False
 
         # Basic file validation: must be a .py file, not private (_), and exist
-        if filepath.suffix != ".py" or cog_name.startswith("_") or not await aiofiles.os.path.isfile(filepath):
+        if (
+            filepath.suffix != ".py"
+            or cog_name.startswith("_")
+            or not await aiofiles.os.path.isfile(filepath)
+        ):
             return False
 
         # Advanced validation: check if file contains a valid extension setup function
@@ -145,7 +149,9 @@ class CogLoader(commands.Cog):
 
             # Check for extension setup function
             return any(
-                isinstance(node, ast.AsyncFunctionDef) and node.name == "setup" and node.args.args
+                isinstance(node, ast.AsyncFunctionDef)
+                and node.name == "setup"
+                and node.args.args
                 for node in ast.walk(tree)
             )
 
@@ -181,7 +187,9 @@ class CogLoader(commands.Cog):
             if isinstance(current_exception, TuxConfigurationError):
                 return True
             # Follow both __cause__ (explicit) and __context__ (implicit) chains
-            current_exception = current_exception.__cause__ or current_exception.__context__
+            current_exception = (
+                current_exception.__cause__ or current_exception.__context__
+            )
 
         return False
 
@@ -202,9 +210,15 @@ class CogLoader(commands.Cog):
         users receive clear guidance on how to enable the cog.
         """
         module_name = str(path)
-        set_span_attributes({"cog.status": "skipped", "cog.skip_reason": "configuration"})
-        logger.warning(f"Skipping cog {module_name} due to missing configuration: {error}")
-        logger.info("To enable this cog, configure the required settings in your .env file")
+        set_span_attributes(
+            {"cog.status": "skipped", "cog.skip_reason": "configuration"},
+        )
+        logger.warning(
+            f"Skipping cog {module_name} due to missing configuration: {error}",
+        )
+        logger.info(
+            "To enable this cog, configure the required settings in your .env file",
+        )
 
     # ---------- Module Path Resolution ----------
 
@@ -349,9 +363,18 @@ class CogLoader(commands.Cog):
 
             # Real error: Capture for Sentry and raise
             set_span_attributes({"cog.status": "failed"})
-            capture_span_exception(e, traceback=traceback.format_exc(), module=str(path))
-            error_msg = f"Failed to load cog {path}. Error: {e}\n{traceback.format_exc()}"
-            logger.opt(exception=True).error(f"Failed to load cog {path}", module=str(path))
+            capture_span_exception(
+                e,
+                traceback=traceback.format_exc(),
+                module=str(path),
+            )
+            error_msg = (
+                f"Failed to load cog {path}. Error: {e}\n{traceback.format_exc()}"
+            )
+            logger.opt(exception=True).error(
+                f"Failed to load cog {path}",
+                module=str(path),
+            )
             raise TuxCogLoadError(error_msg) from e
 
     # ---------- Priority & Grouping ----------
@@ -437,7 +460,9 @@ class CogLoader(commands.Cog):
             },
         )
 
-        logger.info(f"Loaded {success_count} cogs from {cogs[0].parent.name} cog group in {end_time - start_time:.2f}s")
+        logger.info(
+            f"Loaded {success_count} cogs from {cogs[0].parent.name} cog group in {end_time - start_time:.2f}s",
+        )
 
         # Log any failures that occurred (excluding config errors)
         for result, cog in zip(results, cogs, strict=False):
@@ -446,7 +471,10 @@ class CogLoader(commands.Cog):
 
     # ---------- Directory Processing ----------
 
-    async def _discover_and_prioritize_cogs(self, directory: Path) -> list[tuple[int, Path]]:
+    async def _discover_and_prioritize_cogs(
+        self,
+        directory: Path,
+    ) -> list[tuple[int, Path]]:
         """
         Discover eligible cogs in a directory and assign priorities.
 
@@ -659,7 +687,10 @@ class CogLoader(commands.Cog):
         set_span_attributes({"cog.folder": folder_name})
 
         # Set descriptive name for Sentry transaction
-        with start_span("cog.load_folder_name", f"Load Cogs: {folder_name}") as name_span:
+        with start_span(
+            "cog.load_folder_name",
+            f"Load Cogs: {folder_name}",
+        ) as name_span:
             safe_set_name(name_span, f"Load Cogs: {folder_name}")
 
         start_time = time.perf_counter()
@@ -693,13 +724,19 @@ class CogLoader(commands.Cog):
                 # Count cogs that were successfully loaded from this folder
                 folder_module_prefix = folder_name.replace("/", ".")
                 folder_cogs = [k for k in self.load_times if folder_module_prefix in k]
-                logger.info(f"Loaded {len(folder_cogs)} cogs from {folder_name} in {load_time * 1000:.0f}ms")
+                logger.info(
+                    f"Loaded {len(folder_cogs)} cogs from {folder_name} in {load_time * 1000:.0f}ms",
+                )
 
                 # Detect and warn about slow-loading cogs (performance monitoring)
                 slow_threshold = 1.0  # seconds
-                if slow_cogs := {k: v for k, v in self.load_times.items() if v > slow_threshold}:
+                if slow_cogs := {
+                    k: v for k, v in self.load_times.items() if v > slow_threshold
+                }:
                     set_span_attributes({"slow_cogs": slow_cogs})
-                    logger.warning(f"Slow loading cogs (>{slow_threshold * 1000:.0f}ms): {slow_cogs}")
+                    logger.warning(
+                        f"Slow loading cogs (>{slow_threshold * 1000:.0f}ms): {slow_cogs}",
+                    )
 
         except Exception as e:
             # Capture error for Sentry and re-raise
@@ -709,7 +746,11 @@ class CogLoader(commands.Cog):
             raise TuxCogLoadError(msg) from e
 
     @classmethod
-    @transaction("cog.setup", name="CogLoader Setup", description="Initialize CogLoader and load all cogs")
+    @transaction(
+        "cog.setup",
+        name="CogLoader Setup",
+        description="Initialize CogLoader and load all cogs",
+    )
     async def setup(cls, bot: commands.Bot) -> None:
         """
         Initialize the cog loader and load all bot cogs in priority order.
@@ -763,7 +804,12 @@ class CogLoader(commands.Cog):
             total_time = time.perf_counter() - start_time
 
             # Record total loading time for monitoring
-            set_span_attributes({"total_load_time_s": total_time, "total_load_time_ms": total_time * 1000})
+            set_span_attributes(
+                {
+                    "total_load_time_s": total_time,
+                    "total_load_time_ms": total_time * 1000,
+                },
+            )
 
             # Register the CogLoader itself as a cog (for maintenance commands)
             with enhanced_span("cog.register_loader", "Register CogLoader cog"):

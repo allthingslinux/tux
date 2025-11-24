@@ -53,7 +53,9 @@ async def initialize_default_ranks(db: DatabaseCoordinator, guild_id: int) -> No
     # Check if ranks already exist (idempotent check)
     logger.debug(f"Checking existing ranks for guild {guild_id}")
     try:
-        existing_ranks = await db.permission_ranks.get_permission_ranks_by_guild(guild_id)
+        existing_ranks = await db.permission_ranks.get_permission_ranks_by_guild(
+            guild_id,
+        )
         logger.debug(f"Found {len(existing_ranks)} existing ranks")
         if existing_ranks:
             logger.info(f"Guild {guild_id} already has ranks, skipping initialization")

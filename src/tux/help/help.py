@@ -52,7 +52,10 @@ class TuxHelp(commands.HelpCommand):
         navigation = HelpNavigation(self.context, data, renderer)
         return data, renderer, navigation
 
-    async def send_bot_help(self, mapping: Mapping[commands.Cog | None, list[commands.Command[Any, ..., Any]]]) -> None:
+    async def send_bot_help(
+        self,
+        mapping: Mapping[commands.Cog | None, list[commands.Command[Any, ..., Any]]],
+    ) -> None:
         """Send the main help menu."""
         data, renderer, navigation = await self._setup_components()
 
@@ -94,7 +97,9 @@ class TuxHelp(commands.HelpCommand):
         navigation.current_command = group.name
 
         # Filter subcommands based on permissions
-        filtered_subcommands = [cmd for cmd in group.commands if await data.can_run_command(cmd)]
+        filtered_subcommands = [
+            cmd for cmd in group.commands if await data.can_run_command(cmd)
+        ]
 
         # For large command groups or JSK, use pagination
         if group.name in {"jsk", "jishaku"} or len(filtered_subcommands) > 15:

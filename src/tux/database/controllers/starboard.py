@@ -40,7 +40,11 @@ class StarboardController(BaseController[Starboard]):
         """
         return await self.find_one(filters=Starboard.id == guild_id)
 
-    async def get_or_create_starboard(self, guild_id: int, **defaults: Any) -> Starboard:
+    async def get_or_create_starboard(
+        self,
+        guild_id: int,
+        **defaults: Any,
+    ) -> Starboard:
         """
         Get starboard configuration, or create it with defaults if it doesn't exist.
 
@@ -103,7 +107,11 @@ class StarboardController(BaseController[Starboard]):
         return await self.count()
 
     # Additional methods that module files expect
-    async def create_or_update_starboard(self, guild_id: int, **kwargs: Any) -> Starboard:
+    async def create_or_update_starboard(
+        self,
+        guild_id: int,
+        **kwargs: Any,
+    ) -> Starboard:
         """
         Create or update starboard configuration for a guild.
 
@@ -170,7 +178,11 @@ class StarboardMessageController(BaseController[StarboardMessage]):
         """
         return await self.get_by_id(message_id)
 
-    async def get_message_by_original(self, original_message_id: int, guild_id: int) -> StarboardMessage | None:
+    async def get_message_by_original(
+        self,
+        original_message_id: int,
+        guild_id: int,
+    ) -> StarboardMessage | None:
         """
         Get a starboard message by its original message ID and guild.
 
@@ -180,10 +192,15 @@ class StarboardMessageController(BaseController[StarboardMessage]):
             The starboard message if found, None otherwise.
         """
         return await self.find_one(
-            filters=(StarboardMessage.id == original_message_id) & (StarboardMessage.message_guild_id == guild_id),
+            filters=(StarboardMessage.id == original_message_id)
+            & (StarboardMessage.message_guild_id == guild_id),
         )
 
-    async def get_messages_by_guild(self, guild_id: int, limit: int | None = None) -> list[StarboardMessage]:
+    async def get_messages_by_guild(
+        self,
+        guild_id: int,
+        limit: int | None = None,
+    ) -> list[StarboardMessage]:
         """
         Get all starboard messages in a guild.
 
@@ -192,7 +209,9 @@ class StarboardMessageController(BaseController[StarboardMessage]):
         list[StarboardMessage]
             List of starboard messages sorted by star count (limited if specified).
         """
-        messages = await self.find_all(filters=StarboardMessage.message_guild_id == guild_id)
+        messages = await self.find_all(
+            filters=StarboardMessage.message_guild_id == guild_id,
+        )
         # Sort by star count descending and limit
         sorted_messages = sorted(messages, key=lambda x: x.star_count, reverse=True)
         return sorted_messages[:limit] if limit else sorted_messages
@@ -223,7 +242,11 @@ class StarboardMessageController(BaseController[StarboardMessage]):
             **kwargs,
         )
 
-    async def update_star_count(self, message_id: int, new_star_count: int) -> StarboardMessage | None:
+    async def update_star_count(
+        self,
+        message_id: int,
+        new_star_count: int,
+    ) -> StarboardMessage | None:
         """
         Update the star count for a starboard message.
 
@@ -245,7 +268,11 @@ class StarboardMessageController(BaseController[StarboardMessage]):
         """
         return await self.delete_by_id(message_id)
 
-    async def get_top_messages(self, guild_id: int, limit: int = 10) -> list[StarboardMessage]:
+    async def get_top_messages(
+        self,
+        guild_id: int,
+        limit: int = 10,
+    ) -> list[StarboardMessage]:
         """
         Get top starboard messages by star count in a guild.
 
@@ -254,7 +281,9 @@ class StarboardMessageController(BaseController[StarboardMessage]):
         list[StarboardMessage]
             List of top starboard messages sorted by star count.
         """
-        messages = await self.find_all(filters=StarboardMessage.message_guild_id == guild_id)
+        messages = await self.find_all(
+            filters=StarboardMessage.message_guild_id == guild_id,
+        )
         # Sort by star count descending and limit
         sorted_messages = sorted(messages, key=lambda x: x.star_count, reverse=True)
         return sorted_messages[:limit]
@@ -279,10 +308,15 @@ class StarboardMessageController(BaseController[StarboardMessage]):
         list[StarboardMessage]
             List of all starboard messages in the channel.
         """
-        return await self.find_all(filters=StarboardMessage.message_channel_id == channel_id)
+        return await self.find_all(
+            filters=StarboardMessage.message_channel_id == channel_id,
+        )
 
     # Additional methods that module files expect
-    async def get_starboard_message_by_id(self, message_id: int) -> StarboardMessage | None:
+    async def get_starboard_message_by_id(
+        self,
+        message_id: int,
+    ) -> StarboardMessage | None:
         """
         Get a starboard message by its ID.
 
@@ -293,7 +327,10 @@ class StarboardMessageController(BaseController[StarboardMessage]):
         """
         return await self.get_message_by_id(message_id)
 
-    async def create_or_update_starboard_message(self, **kwargs: Any) -> StarboardMessage:
+    async def create_or_update_starboard_message(
+        self,
+        **kwargs: Any,
+    ) -> StarboardMessage:
         """
         Create or update a starboard message.
 
@@ -304,7 +341,10 @@ class StarboardMessageController(BaseController[StarboardMessage]):
         """
         # Check if message already exists
         if "id" in kwargs and "message_guild_id" in kwargs:
-            existing = await self.get_message_by_original(kwargs["id"], kwargs["message_guild_id"])
+            existing = await self.get_message_by_original(
+                kwargs["id"],
+                kwargs["message_guild_id"],
+            )
             if existing:
                 # Update existing
                 for key, value in kwargs.items():

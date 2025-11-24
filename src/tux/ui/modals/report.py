@@ -84,9 +84,13 @@ class ReportModal(discord.ui.Modal):
         )
 
         try:
-            report_log_channel_id = await self.config.get_report_log_id(interaction.guild.id)
+            report_log_channel_id = await self.config.get_report_log_id(
+                interaction.guild.id,
+            )
         except Exception as e:
-            logger.error(f"Failed to get report log channel for guild {interaction.guild.id}. {e}")
+            logger.error(
+                f"Failed to get report log channel for guild {interaction.guild.id}. {e}",
+            )
             await interaction.response.send_message(
                 "Failed to submit your report. Please try again later.",
                 ephemeral=True,
@@ -103,8 +107,13 @@ class ReportModal(discord.ui.Modal):
 
         # Get the report log channel object
         report_log_channel = interaction.guild.get_channel(report_log_channel_id)
-        if not report_log_channel or not isinstance(report_log_channel, discord.TextChannel):
-            logger.error(f"Failed to get report log channel for guild {interaction.guild.id}")
+        if not report_log_channel or not isinstance(
+            report_log_channel,
+            discord.TextChannel,
+        ):
+            logger.error(
+                f"Failed to get report log channel for guild {interaction.guild.id}",
+            )
             await interaction.response.send_message(
                 "Failed to submit your report. Please try again later.",
                 ephemeral=True,

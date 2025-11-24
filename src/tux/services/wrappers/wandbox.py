@@ -20,7 +20,11 @@ from tux.shared.exceptions import (
 url = "https://wandbox.org/api/compile.json"
 
 
-async def getoutput(code: str, compiler: str, options: str | None) -> dict[str, Any] | None:
+async def getoutput(
+    code: str,
+    compiler: str,
+    options: str | None,
+) -> dict[str, Any] | None:
     """
     Compile and execute code using a specified compiler and return the output.
 

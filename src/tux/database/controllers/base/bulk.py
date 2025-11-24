@@ -64,7 +64,11 @@ class BulkOperationsController[ModelT]:
             updated_count = 0
 
             for record_id, values in updates:
-                stmt = update(self.model).where(self.model.id == record_id).values(**values)  # type: ignore[attr-defined]
+                stmt = (
+                    update(self.model)
+                    .where(self.model.id == record_id)
+                    .values(**values)
+                )  # type: ignore[attr-defined]
                 await session.execute(stmt)
                 # In SQLAlchemy 2.0+, rowcount is not available. Count affected rows differently
                 updated_count += 1  # Assume each update affects 1 row if successful
@@ -131,7 +135,11 @@ class BulkOperationsController[ModelT]:
             result = await session.execute(stmt)
             await session.commit()
             # In SQLAlchemy 2.0+, we can get rowcount from the result
-            return getattr(result, "rowcount", 1)  # fallback to 1 if rowcount not available
+            return getattr(
+                result,
+                "rowcount",
+                1,
+            )  # fallback to 1 if rowcount not available
 
     async def bulk_upsert_with_conflict_resolution(
         self,

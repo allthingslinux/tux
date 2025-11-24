@@ -86,7 +86,11 @@ class FileConfigSource(PydanticBaseSettingsSource, ABC):
             If file parsing fails
         """
 
-    def get_field_value(self, field: FieldInfo, field_name: str) -> tuple[Any, str, bool]:
+    def get_field_value(
+        self,
+        field: FieldInfo,
+        field_name: str,
+    ) -> tuple[Any, str, bool]:
         """Get field value from configuration data.
 
         Handles nested fields using double underscore delimiter.
@@ -168,7 +172,11 @@ class FileConfigSource(PydanticBaseSettingsSource, ABC):
 class TomlConfigSource(FileConfigSource):
     """Load configuration from a TOML file."""
 
-    def __init__(self, settings_cls: type, config_file: Path = Path("config.toml")) -> None:
+    def __init__(
+        self,
+        settings_cls: type,
+        config_file: Path = Path("config.toml"),
+    ) -> None:
         """Initialize TOML config source.
 
         Parameters
@@ -200,7 +208,11 @@ class TomlConfigSource(FileConfigSource):
 class YamlConfigSource(FileConfigSource):
     """Load configuration from a YAML file."""
 
-    def __init__(self, settings_cls: type, config_file: Path = Path("config.yaml")) -> None:
+    def __init__(
+        self,
+        settings_cls: type,
+        config_file: Path = Path("config.yaml"),
+    ) -> None:
         """Initialize YAML config source.
 
         Parameters
@@ -232,7 +244,11 @@ class YamlConfigSource(FileConfigSource):
 class JsonConfigSource(FileConfigSource):
     """Load configuration from a JSON file."""
 
-    def __init__(self, settings_cls: type, config_file: Path = Path("config.json")) -> None:
+    def __init__(
+        self,
+        settings_cls: type,
+        config_file: Path = Path("config.json"),
+    ) -> None:
         """Initialize JSON config source.
 
         Parameters

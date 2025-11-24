@@ -46,7 +46,9 @@ class ActivityHandler(commands.Cog):
         self._current_index = 0
 
     @staticmethod
-    def build_activity_list() -> list[discord.Activity | discord.Streaming | discord.Game]:
+    def build_activity_list() -> list[
+        discord.Activity | discord.Streaming | discord.Game
+    ]:
         """Build activity list from config or return default.
 
         Returns
@@ -69,10 +71,17 @@ class ActivityHandler(commands.Cog):
         for data in activity_data:
             activity_type_str = data.get("type", "").lower()
             if activity_type_str == "streaming":
-                activities.append(discord.Streaming(name=str(data["name"]), url=str(data["url"])))
+                activities.append(
+                    discord.Streaming(name=str(data["name"]), url=str(data["url"])),
+                )
             else:
-                activity_type = ACTIVITY_TYPE_MAP.get(activity_type_str, discord.ActivityType.playing)
-                activities.append(discord.Activity(type=activity_type, name=data["name"]))
+                activity_type = ACTIVITY_TYPE_MAP.get(
+                    activity_type_str,
+                    discord.ActivityType.playing,
+                )
+                activities.append(
+                    discord.Activity(type=activity_type, name=data["name"]),
+                )
 
         return activities or [discord.Game(name="with Linux commands")]
 

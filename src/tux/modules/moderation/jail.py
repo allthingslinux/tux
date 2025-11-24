@@ -53,7 +53,10 @@ class Jail(ModerationCogBase):
         jail_role_id = await self.db.guild_config.get_jail_role_id(guild.id)
         return None if jail_role_id is None else guild.get_role(jail_role_id)
 
-    async def get_jail_channel(self, guild: discord.Guild) -> discord.TextChannel | None:
+    async def get_jail_channel(
+        self,
+        guild: discord.Guild,
+    ) -> discord.TextChannel | None:
         """
         Get the jail channel for the guild.
 
@@ -63,7 +66,9 @@ class Jail(ModerationCogBase):
             The jail channel if found, None otherwise.
         """
         jail_channel_id = await self.db.guild_config.get_jail_channel_id(guild.id)
-        channel = guild.get_channel(jail_channel_id) if jail_channel_id is not None else None
+        channel = (
+            guild.get_channel(jail_channel_id) if jail_channel_id is not None else None
+        )
         return channel if isinstance(channel, discord.TextChannel) else None
 
     @commands.hybrid_command(
@@ -149,7 +154,9 @@ class Jail(ModerationCogBase):
                     try:
                         await member.remove_roles(role, reason=flags.reason)
                     except Exception as role_e:
-                        logger.error(f"Failed to remove role {role} from {member}: {role_e}")
+                        logger.error(
+                            f"Failed to remove role {role} from {member}: {role_e}",
+                        )
                         # Continue with other roles even if one fails
 
     @staticmethod

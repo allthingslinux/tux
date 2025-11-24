@@ -56,7 +56,9 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         self.base_dir = base_dir
         self.event_loop = event_loop
         self.hash_tracker = FileHashTracker()
-        logger.info(f"Created CogWatcher for base_dir: {base_dir} (exists: {base_dir.exists()})")
+        logger.info(
+            f"Created CogWatcher for base_dir: {base_dir} (exists: {base_dir.exists()})",
+        )
 
     def should_process_file(self, file_path: Path) -> bool:
         """
@@ -68,16 +70,24 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             True if file should be processed, False otherwise.
         """
         # Check file patterns
-        if not any(fnmatch.fnmatch(file_path.name, pattern) for pattern in self.config.file_patterns):
+        if not any(
+            fnmatch.fnmatch(file_path.name, pattern)
+            for pattern in self.config.file_patterns
+        ):
             return False
 
         # Check ignore patterns
         path_str = str(file_path)
-        return not any(fnmatch.fnmatch(path_str, pattern) for pattern in self.config.ignore_patterns)
+        return not any(
+            fnmatch.fnmatch(path_str, pattern)
+            for pattern in self.config.ignore_patterns
+        )
 
     def on_modified(self, event: watchdog.events.FileSystemEvent) -> None:
         """Handle file modification events."""
-        logger.info(f"WATCHDOG EVENT: {event.event_type} for {event.src_path} (is_directory: {event.is_directory})")
+        logger.info(
+            f"WATCHDOG EVENT: {event.event_type} for {event.src_path} (is_directory: {event.is_directory})",
+        )
         if event.is_directory:
             return
 
@@ -121,7 +131,9 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
                         try:
                             self.reload_callback(extension)
                         except Exception as e:
-                            logger.error(f"Error in reload callback for {extension}: {e}")
+                            logger.error(
+                                f"Error in reload callback for {extension}: {e}",
+                            )
 
                     asyncio.run_coroutine_threadsafe(async_callback(), self.event_loop)
                 except Exception as e:
@@ -154,7 +166,11 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
 class FileWatcher:
     """Manages file system watching for hot reload."""
 
-    def __init__(self, config: HotReloadConfig, reload_callback: Callable[[str], None]) -> None:
+    def __init__(
+        self,
+        config: HotReloadConfig,
+        reload_callback: Callable[[str], None],
+    ) -> None:
         """
         Initialize the file watcher.
 
@@ -186,7 +202,9 @@ class FileWatcher:
         try:
             current_dir = Path.cwd()
             logger.info(f"Current working directory: {current_dir}")
-            logger.info(f"Hot reload config watch directories: {self.config.watch_directories}")
+            logger.info(
+                f"Hot reload config watch directories: {self.config.watch_directories}",
+            )
 
             self.observer = watchdog.observers.Observer()
 
@@ -205,7 +223,12 @@ class FileWatcher:
                 except RuntimeError:
                     current_loop = None
 
-                watcher = CogWatcher(self.config, self.reload_callback, abs_watch_dir, current_loop)
+                watcher = CogWatcher(
+                    self.config,
+                    self.reload_callback,
+                    abs_watch_dir,
+                    current_loop,
+                )
                 self.watchers.append(watcher)
 
                 self.observer.schedule(watcher, str(abs_watch_dir), recursive=True)

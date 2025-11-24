@@ -34,7 +34,12 @@ class ListSnippets(SnippetsBaseCog):
         aliases=["ls"],
     )
     @commands.guild_only()
-    async def list_snippets(self, ctx: commands.Context[Tux], *, search_query: str | None = None) -> None:
+    async def list_snippets(
+        self,
+        ctx: commands.Context[Tux],
+        *,
+        search_query: str | None = None,
+    ) -> None:
         """List snippets, optionally filtering by a search query.
 
         Displays snippets in a paginated embed, sorted by usage count (descending).
@@ -53,7 +58,9 @@ class ListSnippets(SnippetsBaseCog):
         # Sorting by creation date first might be slightly inefficient if we immediately resort by uses.
         # Consider fetching sorted by uses if the DB supports it efficiently, or fetching unsorted.
 
-        all_snippets: list[Snippet] = await self.db.snippet.get_all_snippets_by_guild_id(ctx.guild.id)
+        all_snippets: list[
+            Snippet
+        ] = await self.db.snippet.get_all_snippets_by_guild_id(ctx.guild.id)
 
         # Sort by usage count (most used first)
         all_snippets.sort(key=lambda s: s.uses, reverse=True)
@@ -66,13 +73,16 @@ class ListSnippets(SnippetsBaseCog):
             filtered_snippets = [
                 snippet
                 for snippet in all_snippets
-                if query in (snippet.snippet_name or "").lower() or query in (snippet.snippet_content or "").lower()
+                if query in (snippet.snippet_name or "").lower()
+                or query in (snippet.snippet_content or "").lower()
             ]
 
         if not filtered_snippets:
             await self.send_snippet_error(
                 ctx,
-                description="No snippets found matching your query." if search_query else "No snippets found.",
+                description="No snippets found matching your query."
+                if search_query
+                else "No snippets found.",
             )
             return
 

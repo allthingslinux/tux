@@ -33,7 +33,11 @@ class ModerationCoordinator:
     """
 
     # Actions that remove users from the server, requiring DM to be sent first
-    REMOVAL_ACTIONS: ClassVar[set[DBCaseType]] = {DBCaseType.BAN, DBCaseType.KICK, DBCaseType.TEMPBAN}
+    REMOVAL_ACTIONS: ClassVar[set[DBCaseType]] = {
+        DBCaseType.BAN,
+        DBCaseType.KICK,
+        DBCaseType.TEMPBAN,
+    }
 
     def __init__(
         self,
@@ -65,7 +69,8 @@ class ModerationCoordinator:
         reason: str,
         silent: bool = False,
         dm_action: str | None = None,
-        actions: Sequence[tuple[Callable[..., Coroutine[Any, Any, Any]], type[Any]]] | None = None,
+        actions: Sequence[tuple[Callable[..., Coroutine[Any, Any, Any]], type[Any]]]
+        | None = None,
         duration: int | None = None,
         expires_at: datetime | None = None,
         **extra_case_data: Any,
@@ -117,7 +122,10 @@ class ModerationCoordinator:
 
         if not ctx.guild:
             logger.warning("Moderation action attempted outside of guild context")
-            await self._communication.send_error_response(ctx, "This command must be used in a server")
+            await self._communication.send_error_response(
+                ctx,
+                "This command must be used in a server",
+            )
             return None
 
         # Prepare DM action description
@@ -128,7 +136,14 @@ class ModerationCoordinator:
         dm_sent = False
         try:
             logger.debug(f"Handling DM timing for {case_type.value}")
-            dm_sent = await self._handle_dm_timing(ctx, case_type, user, reason, action_desc, silent)
+            dm_sent = await self._handle_dm_timing(
+                ctx,
+                case_type,
+                user,
+                reason,
+                action_desc,
+                silent,
+            )
             logger.debug(f"DM sent status (pre-action): {dm_sent}")
         except Exception as e:
             # DM failed, but continue with the workflow
@@ -137,12 +152,19 @@ class ModerationCoordinator:
 
         # Execute Discord actions
         if actions:
-            logger.debug(f"Executing {len(actions)} Discord actions for {case_type.value}")
+            logger.debug(
+                f"Executing {len(actions)} Discord actions for {case_type.value}",
+            )
             try:
                 await self._execute_actions(ctx, case_type, user, actions)
-                logger.info(f"Successfully executed Discord actions for {case_type.value}")
+                logger.info(
+                    f"Successfully executed Discord actions for {case_type.value}",
+                )
             except Exception as e:
-                logger.error(f"Failed to execute Discord actions for {case_type.value}: {e}", exc_info=True)
+                logger.error(
+                    f"Failed to execute Discord actions for {case_type.value}: {e}",
+                    exc_info=True,
+                )
 
         # Create database case
         case = None
@@ -150,12 +172,16 @@ class ModerationCoordinator:
         try:
             # Calculate case_expires_at from duration if needed
             # Duration is in seconds, convert to datetime
-            logger.debug(f"Duration/expires_at conversion: duration={duration}, expires_at={expires_at}")
+            logger.debug(
+                f"Duration/expires_at conversion: duration={duration}, expires_at={expires_at}",
+            )
 
             case_expires_at = expires_at
             if duration is not None and expires_at is None:
                 case_expires_at = datetime.now(UTC) + timedelta(seconds=duration)
-                logger.info(f"Converted duration {duration}s → expires_at {case_expires_at}")
+                logger.info(
+                    f"Converted duration {duration}s → expires_at {case_expires_at}",
+                )
             elif expires_at is not None:
                 logger.info(f"Using provided expires_at: {expires_at}")
             else:
@@ -178,7 +204,9 @@ class ModerationCoordinator:
                 reason=reason,
                 **case_kwargs,  # All optional Case fields (expires_at, user_roles, metadata, etc.)
             )
-            logger.info(f"Successfully created case #{case.case_number} (ID: {case.id}) for {case_type.value}")
+            logger.info(
+                f"Successfully created case #{case.case_number} (ID: {case.id}) for {case_type.value}",
+            )
 
         except Exception as e:
             # Database failed, but continue with response
@@ -192,7 +220,12 @@ class ModerationCoordinator:
         if case_type not in self.REMOVAL_ACTIONS and not silent:
             try:
                 logger.debug(f"Sending post-action DM for {case_type.value}")
-                dm_sent = await self._handle_post_action_dm(ctx, user, reason, action_desc)
+                dm_sent = await self._handle_post_action_dm(
+                    ctx,
+                    user,
+                    reason,
+                    action_desc,
+                )
                 logger.debug(f"DM sent status (post-action): {dm_sent}")
             except Exception as e:
                 # DM failed, but continue
@@ -200,22 +233,35 @@ class ModerationCoordinator:
                 dm_sent = False
 
         # Send response embed to moderator
-        logger.debug(f"Sending response embed, case={'None' if case is None else case.id}, dm_sent={dm_sent}")
+        logger.debug(
+            f"Sending response embed, case={'None' if case is None else case.id}, dm_sent={dm_sent}",
+        )
         await self._send_response_embed(ctx, case, user, dm_sent)
 
         # Send response embed to mod log channel and update case
         if case is not None:
-            logger.debug(f"Sending response embed to mod log for case #{case.case_number}")
+            logger.debug(
+                f"Sending response embed to mod log for case #{case.case_number}",
+            )
             mod_log_message = await self._send_mod_log_embed(ctx, case, user, dm_sent)
             if mod_log_message:
                 try:
                     if case.id is not None:
-                        await self._case_service.update_mod_log_message_id(case.id, mod_log_message.id)
-                        logger.info(f"Updated case #{case.case_number} with mod log message ID {mod_log_message.id}")
+                        await self._case_service.update_mod_log_message_id(
+                            case.id,
+                            mod_log_message.id,
+                        )
+                        logger.info(
+                            f"Updated case #{case.case_number} with mod log message ID {mod_log_message.id}",
+                        )
                     else:
-                        logger.error(f"Cannot update mod log message ID: case.id is None for case #{case.case_number}")
+                        logger.error(
+                            f"Cannot update mod log message ID: case.id is None for case #{case.case_number}",
+                        )
                 except Exception as e:
-                    logger.error(f"Failed to update mod log message ID for case #{case.case_number}: {e}")
+                    logger.error(
+                        f"Failed to update mod log message ID for case #{case.case_number}: {e}",
+                    )
 
         logger.info(f"Completed moderation action {case_type.value} on user {user.id}")
         return case
@@ -238,7 +284,13 @@ class ModerationCoordinator:
         """
         if case_type in self.REMOVAL_ACTIONS:
             # Send DM BEFORE action for removal actions
-            return await self._communication.send_dm(ctx, silent, user, reason, action_desc)
+            return await self._communication.send_dm(
+                ctx,
+                silent,
+                user,
+                reason,
+                action_desc,
+            )
         # Send DM AFTER action for non-removal actions (handled later)
         return False
 
@@ -268,13 +320,20 @@ class ModerationCoordinator:
 
         for idx, (action, _expected_type) in enumerate(actions, 1):
             operation_type = self._execution.get_operation_type(case_type)
-            logger.debug(f"Executing action {idx}/{len(actions)} for {case_type.value} (operation: {operation_type})")
+            logger.debug(
+                f"Executing action {idx}/{len(actions)} for {case_type.value} (operation: {operation_type})",
+            )
             try:
-                result = await self._execution.execute_with_retry(operation_type, action)
+                result = await self._execution.execute_with_retry(
+                    operation_type,
+                    action,
+                )
                 results.append(result)
                 logger.debug(f"Action {idx}/{len(actions)} completed successfully")
             except Exception as e:
-                logger.error(f"Action {idx}/{len(actions)} failed for {case_type.value}: {e}")
+                logger.error(
+                    f"Action {idx}/{len(actions)} failed for {case_type.value}: {e}",
+                )
                 raise
 
         return results
@@ -294,10 +353,14 @@ class ModerationCoordinator:
             True if DM was sent, False otherwise
         """
         try:
-            dm_task = asyncio.create_task(self._communication.send_dm(ctx, False, user, reason, action_desc))
+            dm_task = asyncio.create_task(
+                self._communication.send_dm(ctx, False, user, reason, action_desc),
+            )
             result = await asyncio.wait_for(dm_task, timeout=15.0)
         except TimeoutError:
-            logger.warning(f"Post-action DM to user {user.id} timed out after 3 seconds")
+            logger.warning(
+                f"Post-action DM to user {user.id} timed out after 3 seconds",
+            )
             return False
         except Exception as e:
             logger.warning(f"Failed to send post-action DM to user {user.id}: {e}")
@@ -314,7 +377,9 @@ class ModerationCoordinator:
         dm_sent: bool,
     ) -> None:
         """Send the response embed for the moderation action."""
-        logger.debug(f"Preparing response embed, case={'present' if case else 'None'}, dm_sent={dm_sent}")
+        logger.debug(
+            f"Preparing response embed, case={'present' if case else 'None'}, dm_sent={dm_sent}",
+        )
 
         # Helper function to get mention safely (handles both real and mock objects)
         def get_mention(obj: Any) -> str:  # type: ignore[reportUnusedFunction]
@@ -342,10 +407,16 @@ class ModerationCoordinator:
             fields = [
                 ("Moderator", f"{ctx.author.name}\n`{ctx.author.id}`", True),
                 ("Target", f"{user.name}\n`{user.id}`", True),
-                ("Status", "⚠️ Case creation failed - action may have been applied", False),
+                (
+                    "Status",
+                    "⚠️ Case creation failed - action may have been applied",
+                    False,
+                ),
             ]
         else:
-            logger.debug(f"Sending response embed for case #{case.case_number} (ID: {case.id})")
+            logger.debug(
+                f"Sending response embed for case #{case.case_number} (ID: {case.id})",
+            )
             title = f"Case #{case.case_number} ({case.case_type.value if case.case_type else 'Unknown'})"
             fields = [
                 ("Moderator", f"{ctx.author.name}\n`{ctx.author.id}`", True),
@@ -391,7 +462,9 @@ class ModerationCoordinator:
         ]
 
         if case.case_expires_at:
-            fields.append(("Expires", f"<t:{int(case.case_expires_at.timestamp())}:R>", True))
+            fields.append(
+                ("Expires", f"<t:{int(case.case_expires_at.timestamp())}:R>", True),
+            )
 
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)

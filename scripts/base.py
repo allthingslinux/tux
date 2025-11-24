@@ -82,7 +82,12 @@ class BaseCLI:
         commands to the CLI application. The base implementation does nothing.
         """
 
-    def create_subcommand_group(self, name: str, help_text: str, rich_help_panel: str | None = None) -> Typer:
+    def create_subcommand_group(
+        self,
+        name: str,
+        help_text: str,
+        rich_help_panel: str | None = None,
+    ) -> Typer:
         """Create a new subcommand group.
 
         Creates a Typer application instance configured for use as a subcommand
@@ -135,7 +140,12 @@ class BaseCLI:
         # Always use help_text from command registry as single source of truth
         target_app.command(name=name, help=help_text)(func)
 
-    def add_subcommand_group(self, sub_app: Typer, name: str, rich_help_panel: str | None = None) -> None:
+    def add_subcommand_group(
+        self,
+        sub_app: Typer,
+        name: str,
+        rich_help_panel: str | None = None,
+    ) -> None:
         """Add a subcommand group to the main application.
 
         Registers a Typer subcommand group with the main CLI application.
@@ -172,7 +182,13 @@ class BaseCLI:
         try:
             # Explicitly pass environment variables to ensure they're available
             # This is especially important for uv run which may not inherit all env vars
-            result = subprocess.run(command, check=True, capture_output=True, text=True, env=os.environ.copy())
+            result = subprocess.run(
+                command,
+                check=True,
+                capture_output=True,
+                text=True,
+                env=os.environ.copy(),
+            )
             if result.stdout:
                 self.console.print(result.stdout)
         except subprocess.CalledProcessError as e:

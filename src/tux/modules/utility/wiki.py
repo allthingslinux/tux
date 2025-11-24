@@ -30,7 +30,11 @@ class Wiki(BaseCog):
         self.arch_wiki_api_url = "https://wiki.archlinux.org/api.php"
         self.atl_wiki_api_url = "https://atl.wiki/api.php"
 
-    def create_embed(self, title: tuple[str, str], ctx: commands.Context[Tux]) -> discord.Embed:
+    def create_embed(
+        self,
+        title: tuple[str, str],
+        ctx: commands.Context[Tux],
+    ) -> discord.Embed:
         """
         Create a Discord embed message based on the search result.
 
@@ -83,7 +87,12 @@ class Wiki(BaseCog):
             The title and URL of the first search result.
         """
         search_term = search_term.capitalize()
-        params: dict[str, str] = {"action": "query", "format": "json", "list": "search", "srsearch": search_term}
+        params: dict[str, str] = {
+            "action": "query",
+            "format": "json",
+            "list": "search",
+            "srsearch": search_term,
+        }
 
         try:
             # Send a GET request to the wiki API

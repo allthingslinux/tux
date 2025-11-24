@@ -32,15 +32,27 @@ class HelpCommandProtocol(Protocol):
     subcommand_pages: list[list[commands.Command[Any, Any, Any]]]
 
     # Navigation handlers
-    async def on_category_select(self, interaction: discord.Interaction, category: str) -> None:
+    async def on_category_select(
+        self,
+        interaction: discord.Interaction,
+        category: str,
+    ) -> None:
         """Handle category selection from dropdown menu."""
         ...
 
-    async def on_command_select(self, interaction: discord.Interaction, command_name: str) -> None:
+    async def on_command_select(
+        self,
+        interaction: discord.Interaction,
+        command_name: str,
+    ) -> None:
         """Handle command selection from dropdown menu."""
         ...
 
-    async def on_subcommand_select(self, interaction: discord.Interaction, subcommand_name: str) -> None:
+    async def on_subcommand_select(
+        self,
+        interaction: discord.Interaction,
+        subcommand_name: str,
+    ) -> None:
         """Handle subcommand selection from dropdown menu."""
         ...
 
@@ -90,7 +102,10 @@ class BaseHelpView(discord.ui.View):
             True if the interaction user is the author, False otherwise.
         """
         if interaction.user != self.author:
-            await interaction.response.send_message("You can't interact with others help menus!", ephemeral=True)
+            await interaction.response.send_message(
+                "You can't interact with others help menus!",
+                ephemeral=True,
+            )
             return False
         return True
 
@@ -98,7 +113,12 @@ class BaseHelpView(discord.ui.View):
 class BaseSelectMenu(discord.ui.Select[BaseHelpView]):
     """Base class for help selection menus."""
 
-    def __init__(self, help_command: HelpCommandProtocol, options: list[discord.SelectOption], placeholder: str):
+    def __init__(
+        self,
+        help_command: HelpCommandProtocol,
+        options: list[discord.SelectOption],
+        placeholder: str,
+    ):
         """Initialize the base select menu.
 
         Parameters
@@ -119,7 +139,11 @@ class BaseSelectMenu(discord.ui.Select[BaseHelpView]):
         self.help_command = help_command
 
     @abc.abstractmethod
-    async def handle_select(self, interaction: discord.Interaction, selected_value: str) -> None:
+    async def handle_select(
+        self,
+        interaction: discord.Interaction,
+        selected_value: str,
+    ) -> None:
         """Handle a selection from this menu."""
 
     async def callback(self, interaction: discord.Interaction) -> None:
@@ -183,7 +207,11 @@ class BaseButton(discord.ui.Button[BaseHelpView]):
 class CategorySelectMenu(BaseSelectMenu):
     """Select menu for choosing a command category."""
 
-    async def handle_select(self, interaction: discord.Interaction, selected_value: str) -> None:
+    async def handle_select(
+        self,
+        interaction: discord.Interaction,
+        selected_value: str,
+    ) -> None:
         """Handle when a category is selected."""
         await self.help_command.on_category_select(interaction, selected_value)
 
@@ -191,7 +219,11 @@ class CategorySelectMenu(BaseSelectMenu):
 class CommandSelectMenu(BaseSelectMenu):
     """Select menu for choosing a command within a category."""
 
-    async def handle_select(self, interaction: discord.Interaction, selected_value: str) -> None:
+    async def handle_select(
+        self,
+        interaction: discord.Interaction,
+        selected_value: str,
+    ) -> None:
         """Handle when a command is selected."""
         await self.help_command.on_command_select(interaction, selected_value)
 
@@ -199,7 +231,11 @@ class CommandSelectMenu(BaseSelectMenu):
 class SubcommandSelectMenu(BaseSelectMenu):
     """Select menu for choosing a subcommand within a command group."""
 
-    async def handle_select(self, interaction: discord.Interaction, selected_value: str) -> None:
+    async def handle_select(
+        self,
+        interaction: discord.Interaction,
+        selected_value: str,
+    ) -> None:
         """Handle when a subcommand is selected."""
         await self.help_command.on_subcommand_select(interaction, selected_value)
 

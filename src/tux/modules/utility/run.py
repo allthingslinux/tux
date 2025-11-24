@@ -162,7 +162,12 @@ class CodeDispatch(ABC):
         """
         self.compiler_map = compiler_map
 
-    async def run(self, language: str, code: str, options: str | None = None) -> str | None:
+    async def run(
+        self,
+        language: str,
+        code: str,
+        options: str | None = None,
+    ) -> str | None:
         """
         Execute code using the appropriate compiler.
 
@@ -186,7 +191,12 @@ class CodeDispatch(ABC):
         return await self._execute(compiler, code, options)
 
     @abstractmethod
-    async def _execute(self, compiler: str, code: str, options: str | None) -> str | None:
+    async def _execute(
+        self,
+        compiler: str,
+        code: str,
+        options: str | None,
+    ) -> str | None:
         """
         Execute code with the specified compiler.
 
@@ -209,7 +219,12 @@ class CodeDispatch(ABC):
 class GodboltService(CodeDispatch):
     """Code execution service using Godbolt compiler explorer."""
 
-    async def _execute(self, compiler: str, code: str, options: str | None) -> str | None:
+    async def _execute(
+        self,
+        compiler: str,
+        code: str,
+        options: str | None,
+    ) -> str | None:
         """
         Execute code using Godbolt service.
 
@@ -235,14 +250,21 @@ class GodboltService(CodeDispatch):
         # Remove header lines (first 5 lines)
         lines = output.split("\n")
         result = "\n".join(lines[5:])
-        logger.debug(f"Godbolt execution completed (output length: {len(result)} chars)")
+        logger.debug(
+            f"Godbolt execution completed (output length: {len(result)} chars)",
+        )
         return result
 
 
 class WandboxService(CodeDispatch):
     """Code execution service using Wandbox online compiler."""
 
-    async def _execute(self, compiler: str, code: str, options: str | None) -> str | None:
+    async def _execute(
+        self,
+        compiler: str,
+        code: str,
+        options: str | None,
+    ) -> str | None:
         """
         Execute code using Wandbox service.
 
@@ -273,7 +295,9 @@ class WandboxService(CodeDispatch):
         output_parts: list[str] = []
 
         # Handle compiler errors (skip for Nim due to verbose debug messages)
-        if (compiler_error := result.get("compiler_error")) and compiler != self.compiler_map.get("nim"):
+        if (
+            compiler_error := result.get("compiler_error")
+        ) and compiler != self.compiler_map.get("nim"):
             output_parts.append(str(compiler_error))
 
         if program_error := result.get("program_error"):
@@ -404,14 +428,21 @@ class Run(BaseCog):
             if interaction.message:
                 await interaction.message.delete()
 
-        button = discord.ui.Button[discord.ui.View](style=discord.ButtonStyle.red, label="✖ Close")
+        button = discord.ui.Button[discord.ui.View](
+            style=discord.ButtonStyle.red,
+            label="✖ Close",
+        )
         button.callback = close_callback
 
         view = discord.ui.View()
         view.add_item(button)
         return view
 
-    async def _extract_code_from_message(self, ctx: commands.Context[Tux], code: str | None) -> str | None:
+    async def _extract_code_from_message(
+        self,
+        ctx: commands.Context[Tux],
+        code: str | None,
+    ) -> str | None:
         """
         Extract code from the command or referenced message.
 
@@ -438,7 +469,9 @@ class Run(BaseCog):
         # Check for replied message
         if ctx.message.reference and ctx.message.reference.message_id:
             with suppress(discord.NotFound):
-                referenced_message = await ctx.fetch_message(ctx.message.reference.message_id)
+                referenced_message = await ctx.fetch_message(
+                    ctx.message.reference.message_id,
+                )
                 if "```" in referenced_message.content:
                     return referenced_message.content.split("```", 1)[1]
 
@@ -487,26 +520,41 @@ class Run(BaseCog):
         # Determine service to use
         service = self._determine_service(language)
         if not service:
-            logger.warning(f"Unsupported language '{language}' requested by {ctx.author.name} ({ctx.author.id})")
+            logger.warning(
+                f"Unsupported language '{language}' requested by {ctx.author.name} ({ctx.author.id})",
+            )
             raise TuxUnsupportedLanguageError(language, SUPPORTED_LANGUAGES)
 
-        logger.info(f"🔨 Code execution request: {language} via {service} from {ctx.author.name} ({ctx.author.id})")
+        logger.info(
+            f"🔨 Code execution request: {language} via {service} from {ctx.author.name} ({ctx.author.id})",
+        )
 
         # Execute the code
-        logger.debug(f"Executing {language} code (length: {len(source_code)} chars) via {service}")
+        logger.debug(
+            f"Executing {language} code (length: {len(source_code)} chars) via {service}",
+        )
         output = await self.services[service].run(language, source_code)
 
         if output is None:
-            logger.warning(f"Code execution failed (no output) for {language} from {ctx.author.id}")
+            logger.warning(
+                f"Code execution failed (no output) for {language} from {ctx.author.id}",
+            )
             raise TuxCompilationError
 
         # Create and send result embed
         cleaned_output = _remove_ansi(output)
-        result_embed = await self._create_result_embed(ctx, cleaned_output, language, service)
+        result_embed = await self._create_result_embed(
+            ctx,
+            cleaned_output,
+            language,
+            service,
+        )
         view = self._create_close_button_view()
 
         await ctx.send(embed=result_embed, view=view)
-        logger.info(f"Code execution successful: {language} for {ctx.author.name} ({ctx.author.id})")
+        logger.info(
+            f"Code execution successful: {language} for {ctx.author.name} ({ctx.author.id})",
+        )
 
     @commands.command(name="languages", aliases=["langs", "lang"])
     async def languages(self, ctx: commands.Context[Tux]) -> None:

@@ -23,10 +23,18 @@ class XkcdButtons(discord.ui.View):
         """
         super().__init__()
         self.add_item(
-            discord.ui.Button(style=discord.ButtonStyle.link, label="Explainxkcd", url=explain_url),
+            discord.ui.Button(
+                style=discord.ButtonStyle.link,
+                label="Explainxkcd",
+                url=explain_url,
+            ),
         )
         self.add_item(
-            discord.ui.Button(style=discord.ButtonStyle.link, label="Webpage", url=webpage_url),
+            discord.ui.Button(
+                style=discord.ButtonStyle.link,
+                label="Webpage",
+                url=webpage_url,
+            ),
         )
 
 
@@ -43,5 +51,9 @@ class GithubButton(discord.ui.View):
         """
         super().__init__()
         self.add_item(
-            discord.ui.Button(style=discord.ButtonStyle.link, label="View on Github", url=url),
+            discord.ui.Button(
+                style=discord.ButtonStyle.link,
+                label="View on Github",
+                url=url,
+            ),
         )

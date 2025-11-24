@@ -15,7 +15,9 @@ from tux.ui.embeds import EmbedCreator, EmbedType
 # Configuration
 
 SUPPORT_FORUM_ID = 1172312653797007461  # support forum to monitor
-SUPPORT_ROLE_ID = 1274823545087590533  # who to ping when a new support thread is created
+SUPPORT_ROLE_ID = (
+    1274823545087590533  # who to ping when a new support thread is created
+)
 PING_CHANNEL_ID = 1172245377395728467  # where to send the notification
 
 # -- DO NOT CHANGE ANYTHING BELOW THIS LINE --

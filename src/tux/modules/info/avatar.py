@@ -76,7 +76,10 @@ class Avatar(BaseCog):
             else:
                 # For DMs or other contexts where author is not a Member
                 logger.debug(f"Avatar command used in DM by {ctx.author.id}")
-                await ctx.send("This command can only be used in servers.", ephemeral=True)
+                await ctx.send(
+                    "This command can only be used in servers.",
+                    ephemeral=True,
+                )
                 return
 
         guild_avatar = member.guild_avatar.url if member.guild_avatar else None
@@ -86,13 +89,23 @@ class Avatar(BaseCog):
             f"Avatar request for {member.name} ({member.id}) - Guild: {guild_avatar is not None}, Global: {global_avatar is not None}",
         )
 
-        files = [await self.create_avatar_file(avatar) for avatar in [guild_avatar, global_avatar] if avatar]
+        files = [
+            await self.create_avatar_file(avatar)
+            for avatar in [guild_avatar, global_avatar]
+            if avatar
+        ]
 
         if files:
             await ctx.send(files=files)
-            logger.info(f"Avatar sent for {member.name} ({member.id}) - {len(files)} file(s)")
+            logger.info(
+                f"Avatar sent for {member.name} ({member.id}) - {len(files)} file(s)",
+            )
         else:
-            message = f"{member.display_name} has no avatar." if member != ctx.author else "You have no avatar."
+            message = (
+                f"{member.display_name} has no avatar."
+                if member != ctx.author
+                else "You have no avatar."
+            )
             logger.debug(f"No avatar available for {member.id}")
 
             await ctx.send(content=message, ephemeral=True)
@@ -129,11 +142,15 @@ class Avatar(BaseCog):
             image_file = BytesIO(image_data)
             image_file.seek(0)
 
-            logger.debug(f"Avatar fetched successfully, size: {len(image_data)} bytes, type: {content_type}")
+            logger.debug(
+                f"Avatar fetched successfully, size: {len(image_data)} bytes, type: {content_type}",
+            )
             return discord.File(image_file, filename=f"avatar{extension}")
 
         except Exception as e:
-            logger.error(f"Failed to fetch avatar from {url[:50]}...: {type(e).__name__}: {e}")
+            logger.error(
+                f"Failed to fetch avatar from {url[:50]}...: {type(e).__name__}: {e}",
+            )
             msg = f"Failed to fetch avatar from {url}"
             raise RuntimeError(msg) from e
 

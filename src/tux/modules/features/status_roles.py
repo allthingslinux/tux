@@ -36,7 +36,9 @@ class StatusRoles(BaseCog):
         ):
             return
 
-        logger.info(f"StatusRoles cog initialized with {len(CONFIG.STATUS_ROLES.MAPPINGS)} mappings")
+        logger.info(
+            f"StatusRoles cog initialized with {len(CONFIG.STATUS_ROLES.MAPPINGS)} mappings",
+        )
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -49,16 +51,24 @@ class StatusRoles(BaseCog):
     @commands.Cog.listener()
     async def on_presence_update(self, before: discord.Member, after: discord.Member):
         """Event triggered when a user's presence changes."""
-        logger.trace(f"Presence update for {after.display_name}: {before.status} -> {after.status}")
+        logger.trace(
+            f"Presence update for {after.display_name}: {before.status} -> {after.status}",
+        )
         # Only process if the custom status changed
         before_status = self.get_custom_status(before)
         after_status = self.get_custom_status(after)
 
         if before_status != after_status or self.has_activity_changed(before, after):
-            logger.trace(f"Status change detected for {after.display_name}: '{before_status}' -> '{after_status}'")
+            logger.trace(
+                f"Status change detected for {after.display_name}: '{before_status}' -> '{after_status}'",
+            )
             await self.check_and_update_roles(after)
 
-    def has_activity_changed(self, before: discord.Member, after: discord.Member) -> bool:
+    def has_activity_changed(
+        self,
+        before: discord.Member,
+        after: discord.Member,
+    ) -> bool:
         """
         Check if there was a relevant change in activities.
 
@@ -68,10 +78,14 @@ class StatusRoles(BaseCog):
             True if custom activity status changed, False otherwise.
         """
         before_has_custom = (
-            any(isinstance(a, discord.CustomActivity) for a in before.activities) if before.activities else False
+            any(isinstance(a, discord.CustomActivity) for a in before.activities)
+            if before.activities
+            else False
         )
         after_has_custom = (
-            any(isinstance(a, discord.CustomActivity) for a in after.activities) if after.activities else False
+            any(isinstance(a, discord.CustomActivity) for a in after.activities)
+            if after.activities
+            else False
         )
         return before_has_custom != after_has_custom
 
@@ -115,7 +129,9 @@ class StatusRoles(BaseCog):
 
             role = member.guild.get_role(role_id)
             if not role:
-                logger.warning(f"Role {role_id} configured in status roles not found in guild {member.guild.name}")
+                logger.warning(
+                    f"Role {role_id} configured in status roles not found in guild {member.guild.name}",
+                )
                 continue
 
             try:
@@ -132,11 +148,15 @@ class StatusRoles(BaseCog):
 
                 elif not matches and has_role:
                     # Remove role if status doesn't match and member has the role
-                    logger.info(f"Removing role {role.name} from {member.display_name} (status no longer matches)")
+                    logger.info(
+                        f"Removing role {role.name} from {member.display_name} (status no longer matches)",
+                    )
                     await member.remove_roles(role)
 
             except re.error:
-                logger.exception(f"Invalid regex pattern '{pattern}' in STATUS_ROLES config")
+                logger.exception(
+                    f"Invalid regex pattern '{pattern}' in STATUS_ROLES config",
+                )
             except discord.Forbidden:
                 logger.exception(
                     f"Bot lacks permission to modify roles for {member.display_name} in {member.guild.name}",

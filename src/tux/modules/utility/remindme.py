@@ -55,7 +55,10 @@ class RemindMe(BaseCog):
             except discord.Forbidden:
                 channel = self.bot.get_channel(reminder.reminder_channel_id)
 
-                if isinstance(channel, discord.TextChannel | discord.Thread | discord.VoiceChannel):
+                if isinstance(
+                    channel,
+                    discord.TextChannel | discord.Thread | discord.VoiceChannel,
+                ):
                     with contextlib.suppress(discord.Forbidden):
                         await channel.send(
                             content=f"{user.mention} Failed to DM you, sending in channel",
@@ -107,7 +110,11 @@ class RemindMe(BaseCog):
                 await self.send_reminder(reminder)
                 continue
 
-            self.bot.loop.call_later(seconds, asyncio.create_task, self.send_reminder(reminder))
+            self.bot.loop.call_later(
+                seconds,
+                asyncio.create_task,
+                self.send_reminder(reminder),
+            )
 
     @commands.hybrid_command(
         name="remindme",
@@ -152,7 +159,9 @@ class RemindMe(BaseCog):
             )
             return
 
-        expires_at = datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=seconds)
+        expires_at = datetime.datetime.now(datetime.UTC) + datetime.timedelta(
+            seconds=seconds,
+        )
 
         try:
             reminder_obj = await self.db.reminder.insert_reminder(
@@ -163,7 +172,11 @@ class RemindMe(BaseCog):
                 guild_id=ctx.guild.id if ctx.guild else 0,
             )
 
-            self.bot.loop.call_later(seconds, asyncio.create_task, self.send_reminder(reminder_obj))
+            self.bot.loop.call_later(
+                seconds,
+                asyncio.create_task,
+                self.send_reminder(reminder_obj),
+            )
 
             embed = EmbedCreator.create_embed(
                 bot=self.bot,

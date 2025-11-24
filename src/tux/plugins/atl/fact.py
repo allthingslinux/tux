@@ -88,7 +88,9 @@ class Fact(BaseCog):
         try:
             data = tomllib.loads(facts_path.read_text(encoding="utf-8"))
             self.facts_data = data.get("facts", {})
-            logger.info(f"Loaded the following fact categories from facts.toml: {list(self.facts_data.keys())}")
+            logger.info(
+                f"Loaded the following fact categories from facts.toml: {list(self.facts_data.keys())}",
+            )
         except FileNotFoundError:
             logger.warning(f"Facts file not found at {facts_path}")
             self.facts_data = {}
@@ -120,7 +122,11 @@ class Fact(BaseCog):
                 (
                     k
                     for k, data in self.facts_data.items()
-                    if _substitute_placeholders(self.bot, data.get("name", k.title())).lower() == ft
+                    if _substitute_placeholders(
+                        self.bot,
+                        data.get("name", k.title()),
+                    ).lower()
+                    == ft
                 ),
                 None,
             )
@@ -139,7 +145,11 @@ class Fact(BaseCog):
             fact = _substitute_placeholders(self.bot, fact_raw or "No fact available.")
         else:
             lst = cfg.get("facts", [])
-            fact = _substitute_placeholders(self.bot, random.choice(lst)) if lst else "No facts available."
+            fact = (
+                _substitute_placeholders(self.bot, random.choice(lst))
+                if lst
+                else "No facts available."
+            )
         return fact, disp
 
     async def fact_type_autocomplete(
@@ -162,7 +172,10 @@ class Fact(BaseCog):
             List of autocomplete choices.
         """
         choices = [app_commands.Choice(name="Random", value="random")] + [
-            app_commands.Choice(name=_substitute_placeholders(self.bot, data.get("name", key.title())), value=key)
+            app_commands.Choice(
+                name=_substitute_placeholders(self.bot, data.get("name", key.title())),
+                value=key,
+            )
             for key, data in self.facts_data.items()
         ]
         if current:

@@ -27,7 +27,10 @@ class ModerationServiceFactory:
     """
 
     @staticmethod
-    def create_coordinator(bot: "Tux", case_controller: "CaseController") -> ModerationCoordinator:
+    def create_coordinator(
+        bot: "Tux",
+        case_controller: "CaseController",
+    ) -> ModerationCoordinator:
         """Create a ModerationCoordinator with all required services.
 
         Parameters
@@ -44,7 +47,9 @@ class ModerationServiceFactory:
 
         Examples
         --------
-        >>> coordinator = ModerationServiceFactory.create_coordinator(self.bot, self.db.case)
+        >>> coordinator = ModerationServiceFactory.create_coordinator(
+        ...     self.bot, self.db.case
+        ... )
         """
         case_service = CaseService(case_controller)
         communication_service = CommunicationService(bot)

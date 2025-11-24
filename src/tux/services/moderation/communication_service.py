@@ -71,9 +71,13 @@ class CommunicationService:
         try:
             embed = self._create_dm_embed(dm_action, reason, ctx.author)
             await user.send(embed=embed)
-            logger.info(f"Moderation DM sent to {user} ({user.id}) - Action: {dm_action}")
+            logger.info(
+                f"Moderation DM sent to {user} ({user.id}) - Action: {dm_action}",
+            )
         except discord.Forbidden:
-            logger.warning(f"Failed to DM {user} ({user.id}) - DMs disabled or bot blocked")
+            logger.warning(
+                f"Failed to DM {user} ({user.id}) - DMs disabled or bot blocked",
+            )
             return False
         except Exception as e:
             logger.error(f"Unexpected error sending DM to {user} ({user.id}): {e}")
@@ -110,7 +114,9 @@ class CommunicationService:
                 await ctx.reply(message, mention_author=False)
             logger.debug(f"Error response sent: {message[:50]}...")
         except discord.HTTPException as e:
-            logger.warning(f"Failed to send error response, retrying without reply: {e}")
+            logger.warning(
+                f"Failed to send error response, retrying without reply: {e}",
+            )
             # If sending fails, try to send without reply
             with contextlib.suppress(discord.HTTPException):
                 if isinstance(ctx, discord.Interaction):
@@ -250,18 +256,24 @@ class CommunicationService:
             # Get audit log channel ID from guild config
             audit_log_id = await self.bot.db.guild_config.get_audit_log_id(ctx.guild.id)
             if not audit_log_id:
-                logger.debug(f"No audit log channel configured for guild {ctx.guild.id}")
+                logger.debug(
+                    f"No audit log channel configured for guild {ctx.guild.id}",
+                )
                 return None
 
             # Get the audit log channel
             channel = ctx.guild.get_channel(audit_log_id)
             if not channel:
-                logger.warning(f"Audit log channel {audit_log_id} not found in guild {ctx.guild.id}")
+                logger.warning(
+                    f"Audit log channel {audit_log_id} not found in guild {ctx.guild.id}",
+                )
                 return None
 
             # Check if we can send messages to the channel
             if not isinstance(channel, discord.TextChannel):
-                logger.warning(f"Audit log channel {audit_log_id} is not a text channel")
+                logger.warning(
+                    f"Audit log channel {audit_log_id} is not a text channel",
+                )
                 return None
 
             audit_channel = channel
@@ -279,14 +291,18 @@ class CommunicationService:
                 )
                 return None
             except discord.HTTPException as e:
-                logger.error(f"Failed to send audit log embed to channel {audit_log_id or 'unknown'}: {e}")
+                logger.error(
+                    f"Failed to send audit log embed to channel {audit_log_id or 'unknown'}: {e}",
+                )
                 return None
             except Exception as e:
                 logger.error(f"Unexpected error sending audit log embed: {e}")
                 return None
             else:
                 # Successfully sent the message
-                logger.info(f"Audit log embed sent to #{audit_channel.name} ({audit_channel.id}) in {ctx.guild.name}")
+                logger.info(
+                    f"Audit log embed sent to #{audit_channel.name} ({audit_channel.id}) in {ctx.guild.name}",
+                )
                 return audit_message
 
     async def send_mod_log_embed(  # noqa: PLR0911
@@ -326,7 +342,9 @@ class CommunicationService:
             # Get the mod log channel
             channel = ctx.guild.get_channel(mod_log_id)
             if not channel:
-                logger.warning(f"Mod log channel {mod_log_id} not found in guild {ctx.guild.id}")
+                logger.warning(
+                    f"Mod log channel {mod_log_id} not found in guild {ctx.guild.id}",
+                )
                 return None
 
             # Check if we can send messages to the channel
@@ -349,14 +367,18 @@ class CommunicationService:
                 )
                 return None
             except discord.HTTPException as e:
-                logger.error(f"Failed to send mod log embed to channel {mod_log_id or 'unknown'}: {e}")
+                logger.error(
+                    f"Failed to send mod log embed to channel {mod_log_id or 'unknown'}: {e}",
+                )
                 return None
             except Exception as e:
                 logger.error(f"Unexpected error sending mod log embed: {e}")
                 return None
             else:
                 # Successfully sent the message
-                logger.info(f"Mod log embed sent to #{mod_channel.name} ({mod_channel.id}) in {ctx.guild.name}")
+                logger.info(
+                    f"Mod log embed sent to #{mod_channel.name} ({mod_channel.id}) in {ctx.guild.name}",
+                )
                 return mod_message
 
     def _create_dm_embed(

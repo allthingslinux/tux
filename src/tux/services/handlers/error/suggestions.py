@@ -37,8 +37,12 @@ class CommandSuggester:
 
         # Use stricter limits for short commands
         is_short = len(command_name) <= SHORT_CMD_LEN_THRESHOLD
-        max_suggestions = SHORT_CMD_MAX_SUGGESTIONS if is_short else DEFAULT_MAX_SUGGESTIONS
-        max_distance = SHORT_CMD_MAX_DISTANCE if is_short else DEFAULT_MAX_DISTANCE_THRESHOLD
+        max_suggestions = (
+            SHORT_CMD_MAX_SUGGESTIONS if is_short else DEFAULT_MAX_SUGGESTIONS
+        )
+        max_distance = (
+            SHORT_CMD_MAX_DISTANCE if is_short else DEFAULT_MAX_DISTANCE_THRESHOLD
+        )
 
         # Find similar commands
         command_distances: dict[str, int] = {}
@@ -61,7 +65,9 @@ class CommandSuggester:
                 distance = Levenshtein.distance(command_name.lower(), name.lower())
                 if distance < min_dist:
                     min_dist = distance
-                    best_name = cmd.qualified_name  # Always use qualified name for suggestions
+                    best_name = (
+                        cmd.qualified_name
+                    )  # Always use qualified name for suggestions
 
             # Store if within threshold
             if min_dist <= max_distance:

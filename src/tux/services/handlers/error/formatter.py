@@ -39,7 +39,11 @@ class ErrorFormatter:
         )
 
         # Add command usage if available and configured
-        if config.include_usage and isinstance(source, commands.Context) and (usage := self._get_command_usage(source)):
+        if (
+            config.include_usage
+            and isinstance(source, commands.Context)
+            and (usage := self._get_command_usage(source))
+        ):
             embed.add_field(name="Usage", value=f"`{usage}`", inline=False)
 
         return embed

@@ -15,12 +15,12 @@ indent_size = 4
 # Python files
 [*.py]
 indent_size = 4
-max_line_length = 120
+max_line_length = 88
 
 # Python stub files
 [*.pyi]
 indent_size = 4
-max_line_length = 120
+max_line_length = 88
 
 # Configuration files (YAML, TOML, JSON)
 [*.{yaml,yml}]

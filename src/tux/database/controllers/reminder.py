@@ -40,7 +40,11 @@ class ReminderController(BaseController[Reminder]):
         """
         return await self.get_by_id(reminder_id)
 
-    async def get_reminders_by_user(self, user_id: int, guild_id: int) -> list[Reminder]:
+    async def get_reminders_by_user(
+        self,
+        user_id: int,
+        guild_id: int,
+    ) -> list[Reminder]:
         """
         Get all reminders for a specific user in a guild.
 
@@ -49,7 +53,10 @@ class ReminderController(BaseController[Reminder]):
         list[Reminder]
             List of all reminders for the user in the guild.
         """
-        return await self.find_all(filters=(Reminder.reminder_user_id == user_id) & (Reminder.guild_id == guild_id))
+        return await self.find_all(
+            filters=(Reminder.reminder_user_id == user_id)
+            & (Reminder.guild_id == guild_id),
+        )
 
     async def get_reminders_by_guild(self, guild_id: int) -> list[Reminder]:
         """
@@ -119,7 +126,9 @@ class ReminderController(BaseController[Reminder]):
         list[Reminder]
             List of all expired reminders.
         """
-        return await self.find_all(filters=Reminder.reminder_expires_at <= datetime.now(UTC))
+        return await self.find_all(
+            filters=Reminder.reminder_expires_at <= datetime.now(UTC),
+        )
 
     async def get_active_reminders(self, guild_id: int) -> list[Reminder]:
         """
@@ -131,7 +140,8 @@ class ReminderController(BaseController[Reminder]):
             List of active reminders.
         """
         return await self.find_all(
-            filters=(Reminder.guild_id == guild_id) & (Reminder.reminder_expires_at > datetime.now(UTC)),
+            filters=(Reminder.guild_id == guild_id)
+            & (Reminder.reminder_expires_at > datetime.now(UTC)),
         )
 
     async def get_reminders_by_channel(self, channel_id: int) -> list[Reminder]:
@@ -154,7 +164,10 @@ class ReminderController(BaseController[Reminder]):
         int
             The count of reminders for the user.
         """
-        return await self.count(filters=(Reminder.reminder_user_id == user_id) & (Reminder.guild_id == guild_id))
+        return await self.count(
+            filters=(Reminder.reminder_user_id == user_id)
+            & (Reminder.guild_id == guild_id),
+        )
 
     async def get_reminder_count_by_guild(self, guild_id: int) -> int:
         """

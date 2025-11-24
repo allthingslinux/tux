@@ -19,12 +19,16 @@ from urllib.request import Request, urlopen
 
 # Configuration constants following 12-factor app principles
 CACHE_DIR: Path = Path(os.getenv("TLDR_CACHE_DIR", ".cache/tldr"))
-MAX_CACHE_AGE_HOURS: int = int(os.getenv("TLDR_CACHE_AGE_HOURS", "168"))  # 7 days default
+MAX_CACHE_AGE_HOURS: int = int(
+    os.getenv("TLDR_CACHE_AGE_HOURS", "168"),
+)  # 7 days default
 REQUEST_TIMEOUT_SECONDS: int = int(os.getenv("TLDR_REQUEST_TIMEOUT", "10"))
 
 # TLDR API endpoints
 PAGES_SOURCE_URL = "https://raw.githubusercontent.com/tldr-pages/tldr/main/pages"
-ARCHIVE_URL_TEMPLATE = "https://github.com/tldr-pages/tldr/releases/latest/download/tldr-pages{suffix}.zip"
+ARCHIVE_URL_TEMPLATE = (
+    "https://github.com/tldr-pages/tldr/releases/latest/download/tldr-pages{suffix}.zip"
+)
 
 # Platform mappings following TLDR spec
 PLATFORM_MAPPINGS = {
@@ -117,7 +121,11 @@ class TldrClient:
             True if cached file exists and is within MAX_CACHE_AGE_HOURS.
         """
         try:
-            cache_file_path = TldrClient.get_cache_file_path(command, platform, language)
+            cache_file_path = TldrClient.get_cache_file_path(
+                command,
+                platform,
+                language,
+            )
             if not cache_file_path.exists():
                 return False
             last_modified = cache_file_path.stat().st_mtime
@@ -153,7 +161,12 @@ class TldrClient:
         return None
 
     @staticmethod
-    def store_page_to_cache(page: str, command: str, platform: str, language: str) -> None:
+    def store_page_to_cache(
+        page: str,
+        command: str,
+        platform: str,
+        language: str,
+    ) -> None:
         """
         Store a TLDR page to local cache.
 
@@ -169,7 +182,11 @@ class TldrClient:
             Language code.
         """
         with contextlib.suppress(OSError):
-            cache_file_path = TldrClient.get_cache_file_path(command, platform, language)
+            cache_file_path = TldrClient.get_cache_file_path(
+                command,
+                platform,
+                language,
+            )
             cache_file_path.parent.mkdir(parents=True, exist_ok=True)
             cache_file_path.write_text(page, encoding="utf-8")
 
@@ -291,7 +308,11 @@ class TldrClient:
             for platform in platforms_to_try:
                 # Check cache first
                 if TldrClient.have_recent_cache(command, platform, language) and (
-                    cache_content := TldrClient.load_page_from_cache(command, platform, language)
+                    cache_content := TldrClient.load_page_from_cache(
+                        command,
+                        platform,
+                        language,
+                    )
                 ):
                     return (cache_content, platform)
 
@@ -303,7 +324,12 @@ class TldrClient:
                     req = Request(url, headers={"User-Agent": "tldr-python-client"})
                     with urlopen(req, timeout=REQUEST_TIMEOUT_SECONDS) as resp:
                         page_content = resp.read().decode("utf-8")
-                        TldrClient.store_page_to_cache(page_content, command, platform, language)
+                        TldrClient.store_page_to_cache(
+                            page_content,
+                            command,
+                            platform,
+                            language,
+                        )
                         return (page_content, platform)
                 except (HTTPError, URLError):
                     continue  # Try next platform/language combination
@@ -311,7 +337,10 @@ class TldrClient:
         return None
 
     @staticmethod
-    def list_tldr_commands(language: str = "en", platform_filter: str | None = "linux") -> list[str]:
+    def list_tldr_commands(
+        language: str = "en",
+        platform_filter: str | None = "linux",
+    ) -> list[str]:
         """
         List available TLDR commands for a given language and platform filter.
 
@@ -330,7 +359,11 @@ class TldrClient:
         commands_set: set[str] = set()
 
         normalized_lang_for_dir = "en" if language.startswith("en") else language
-        pages_dir_name = f"pages.{normalized_lang_for_dir}" if normalized_lang_for_dir != "en" else "pages"
+        pages_dir_name = (
+            f"pages.{normalized_lang_for_dir}"
+            if normalized_lang_for_dir != "en"
+            else "pages"
+        )
 
         # Handle platform filtering logic
         if platform_filter is None:
@@ -360,7 +393,9 @@ class TldrClient:
                     continue
 
                 # Collect all .md files
-                found_in_platform: set[str] = {file.stem for file in path.iterdir() if file.suffix == ".md"}
+                found_in_platform: set[str] = {
+                    file.stem for file in path.iterdir() if file.suffix == ".md"
+                }
                 commands_set.update(found_in_platform)
             except OSError:
                 continue
@@ -576,7 +611,13 @@ class TldrClient:
             i += 1
 
         # Process description lines
-        description_lines, i = TldrClient._process_description_lines(lines, i, show_short, show_long, show_both)
+        description_lines, i = TldrClient._process_description_lines(
+            lines,
+            i,
+            show_short,
+            show_long,
+            show_both,
+        )
         if description_lines:
             formatted.append("> " + "\n> ".join(description_lines))
 
@@ -586,7 +627,13 @@ class TldrClient:
             i += 1
 
         # Process command examples and descriptions
-        command_formatted, _ = TldrClient._process_command_examples(lines, i, show_short, show_long, show_both)
+        command_formatted, _ = TldrClient._process_command_examples(
+            lines,
+            i,
+            show_short,
+            show_long,
+            show_both,
+        )
         formatted.extend(command_formatted)
 
         return "\n".join(formatted)
@@ -635,7 +682,13 @@ class TldrClient:
         url = ARCHIVE_URL_TEMPLATE.format(suffix=suffix)
 
         try:
-            req = Request(url, headers={"User-Agent": "tldr-python-client", "Accept": "application/zip"})
+            req = Request(
+                url,
+                headers={
+                    "User-Agent": "tldr-python-client",
+                    "Accept": "application/zip",
+                },
+            )
 
             with urlopen(req, timeout=30) as resp:
                 content = resp.read()
@@ -674,7 +727,9 @@ class TldrClient:
 
         except HTTPError as e:
             if e.code == 404:
-                return f"Failed to update cache for '{language}': Archive not found (404)"
+                return (
+                    f"Failed to update cache for '{language}': Archive not found (404)"
+                )
             return f"Failed to update cache for '{language}': {e}"
         except zipfile.BadZipFile:
             return f"Failed to update cache for '{language}': Invalid zip file"

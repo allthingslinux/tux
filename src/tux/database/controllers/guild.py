@@ -103,7 +103,11 @@ class GuildController(BaseController[Guild]):
 
         return await self.with_session(_op)
 
-    async def update_guild_config(self, guild_id: int, data: dict[str, Any]) -> GuildConfig:
+    async def update_guild_config(
+        self,
+        guild_id: int,
+        data: dict[str, Any],
+    ) -> GuildConfig:
         """
         Update guild configuration.
 

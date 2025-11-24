@@ -82,7 +82,9 @@ class EncodeDecode(BaseCog):
             The data to send.
         """
         if len(data) > 2000:
-            logger.debug(f"Encode/decode output too long ({len(data)} chars) for {ctx.author.id}")
+            logger.debug(
+                f"Encode/decode output too long ({len(data)} chars) for {ctx.author.id}",
+            )
             await ctx.reply(
                 content="The string ended up being too long. Please use this [site](https://www.base64encode.org/) instead.",
                 allowed_mentions=allowed_mentions,
@@ -97,7 +99,11 @@ class EncodeDecode(BaseCog):
             suppress_embeds=True,
         )
 
-    @commands.hybrid_command(name="encode", aliases=["ec"], description="Encode a message")
+    @commands.hybrid_command(
+        name="encode",
+        aliases=["ec"],
+        description="Encode a message",
+    )
     @app_commands.describe(encoding="Which format to use")
     @app_commands.describe(text="Text to encode")
     @app_commands.choices(encoding=SUPPORTED_FORMATS)
@@ -123,7 +129,9 @@ class EncodeDecode(BaseCog):
         encoding = encoding.lower()
         btext = text.encode(encoding="utf-8")
 
-        logger.debug(f"Encoding request: {encoding} from {ctx.author.name} ({ctx.author.id}), text length: {len(text)}")
+        logger.debug(
+            f"Encoding request: {encoding} from {ctx.author.name} ({ctx.author.id}), text length: {len(text)}",
+        )
 
         try:
             if encoding == "base16":
@@ -135,7 +143,9 @@ class EncodeDecode(BaseCog):
             elif encoding == "base85":
                 data = base64.b85encode(btext)
             else:
-                logger.warning(f"Invalid encoding '{encoding}' requested by {ctx.author.id}")
+                logger.warning(
+                    f"Invalid encoding '{encoding}' requested by {ctx.author.id}",
+                )
                 await ctx.reply(
                     content=f"Invalid encoding {', '.join(wrap_strings('`', SUPPORTED_FORMATS_MESSAGE))} are supported.",
                     allowed_mentions=allowed_mentions,
@@ -153,7 +163,11 @@ class EncodeDecode(BaseCog):
                 ephemeral=True,
             )
 
-    @commands.hybrid_command(name="decode", aliases=["dc"], description="Decode a message")
+    @commands.hybrid_command(
+        name="decode",
+        aliases=["dc"],
+        description="Decode a message",
+    )
     @app_commands.describe(encoding="Which format to use")
     @app_commands.describe(text="Text to decode")
     @app_commands.choices(encoding=SUPPORTED_FORMATS)
@@ -179,7 +193,9 @@ class EncodeDecode(BaseCog):
         encoding = encoding.lower()
         btext = text.encode(encoding="utf-8")
 
-        logger.debug(f"Decoding request: {encoding} from {ctx.author.name} ({ctx.author.id}), text length: {len(text)}")
+        logger.debug(
+            f"Decoding request: {encoding} from {ctx.author.name} ({ctx.author.id}), text length: {len(text)}",
+        )
 
         try:
             if encoding == "base16":
@@ -191,7 +207,9 @@ class EncodeDecode(BaseCog):
             elif encoding == "base85":
                 data = base64.b85decode(btext)
             else:
-                logger.warning(f"Invalid decoding format '{encoding}' requested by {ctx.author.id}")
+                logger.warning(
+                    f"Invalid decoding format '{encoding}' requested by {ctx.author.id}",
+                )
                 await ctx.reply(
                     content=f"Invalid encoding {', '.join(wrap_strings('`', SUPPORTED_FORMATS_MESSAGE))} are supported.",
                     allowed_mentions=allowed_mentions,
@@ -209,14 +227,18 @@ class EncodeDecode(BaseCog):
             )
             return
         except UnicodeDecodeError as e:
-            logger.warning(f"Invalid UTF-8 output after {encoding} decode from {ctx.author.id}: {e}")
+            logger.warning(
+                f"Invalid UTF-8 output after {encoding} decode from {ctx.author.id}: {e}",
+            )
             await ctx.reply(
                 content="The message was decoded, but the output is not valid UTF-8.",
                 allowed_mentions=allowed_mentions,
                 ephemeral=True,
             )
         except Exception as e:
-            logger.error(f"Unexpected decoding error ({encoding}): {type(e).__name__}: {e}")
+            logger.error(
+                f"Unexpected decoding error ({encoding}): {type(e).__name__}: {e}",
+            )
             await ctx.reply(
                 content=f"Unknown exception: {type(e)}: {e}",
                 allowed_mentions=allowed_mentions,

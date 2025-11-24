@@ -66,14 +66,18 @@ class ToggleSnippetLock(SnippetsBaseCog):
         try:
             status = await self.db.snippet.toggle_snippet_lock_by_id(snippet.id)
         except Exception as e:
-            logger.error(f"Failed to toggle lock for snippet '{name}' (ID: {snippet.id}): {e}")
+            logger.error(
+                f"Failed to toggle lock for snippet '{name}' (ID: {snippet.id}): {e}",
+            )
             await self.send_snippet_error(
                 ctx,
                 "An error occurred while trying to toggle the snippet lock. Please try again later.",
             )
             return
         else:  # Proceed only if try block succeeded
-            if status is None:  # Should not happen if try succeeded, but added for safety/linter
+            if (
+                status is None
+            ):  # Should not happen if try succeeded, but added for safety/linter
                 logger.error(
                     f"Toggle lock for snippet '{name}' (ID: {snippet.id}) succeeded but returned None status.",
                 )
@@ -102,9 +106,14 @@ class ToggleSnippetLock(SnippetsBaseCog):
                     f"Snippets might be locked/unlocked by moderators for various reasons, often related to server utility or content stability. "
                     f"If you believe this was done in error, please contact the server staff."
                 )
-                with contextlib.suppress(discord.Forbidden, discord.HTTPException):  # Catch potential DM errors
+                with contextlib.suppress(
+                    discord.Forbidden,
+                    discord.HTTPException,
+                ):  # Catch potential DM errors
                     await author.send(dm_message)
-                    logger.debug(f"Sent lock status DM to snippet author {author} for snippet '{name}'.")
+                    logger.debug(
+                        f"Sent lock status DM to snippet author {author} for snippet '{name}'.",
+                    )
 
 
 async def setup(bot: Tux) -> None:

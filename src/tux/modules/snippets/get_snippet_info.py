@@ -57,10 +57,15 @@ class SnippetInfo(SnippetsBaseCog):
 
         # Attempt to resolve author, default to showing ID if not found
         author = self.bot.get_user(snippet.snippet_user_id)
-        author_display = author.mention if author else f"<@!{snippet.snippet_user_id}> (Not found)"
+        author_display = (
+            author.mention if author else f"<@!{snippet.snippet_user_id}> (Not found)"
+        )
 
         # Attempt to get aliases if any
-        aliases = [alias.snippet_name for alias in (await self.db.snippet.get_all_aliases(ctx.guild.id))]
+        aliases = [
+            alias.snippet_name
+            for alias in (await self.db.snippet.get_all_aliases(ctx.guild.id))
+        ]
 
         # Determine content field details
         content_field_name = "Alias Target" if snippet.alias else "Content Preview"
@@ -73,14 +78,29 @@ class SnippetInfo(SnippetsBaseCog):
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
             title="Snippet Information",
-            message_timestamp=datetime.fromtimestamp(0, UTC),  # Snippet model doesn't have created_at
+            message_timestamp=datetime.fromtimestamp(
+                0,
+                UTC,
+            ),  # Snippet model doesn't have created_at
         )
 
         embed.add_field(name="Name", value=snippet.snippet_name, inline=True)
-        embed.add_field(name="Aliases", value=", ".join(f"`{alias}`" for alias in aliases), inline=True)
+        embed.add_field(
+            name="Aliases",
+            value=", ".join(f"`{alias}`" for alias in aliases),
+            inline=True,
+        )
         embed.add_field(name="Author", value=author_display, inline=True)
-        embed.add_field(name="Uses", value=str(snippet.uses), inline=True)  # Ensure string
-        embed.add_field(name="Locked", value="Yes" if snippet.locked else "No", inline=True)
+        embed.add_field(
+            name="Uses",
+            value=str(snippet.uses),
+            inline=True,
+        )  # Ensure string
+        embed.add_field(
+            name="Locked",
+            value="Yes" if snippet.locked else "No",
+            inline=True,
+        )
 
         embed.add_field(
             name=content_field_name,

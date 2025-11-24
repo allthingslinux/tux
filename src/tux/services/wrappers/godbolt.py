@@ -121,7 +121,10 @@ async def checkresponse(res: httpx.Response) -> str | None:
         raise TuxAPIConnectionError(service_name="Godbolt", original_error=e) from e
     except httpx.HTTPStatusError as e:
         if e.response.status_code == HTTP_NOT_FOUND:
-            raise TuxAPIResourceNotFoundError(service_name="Godbolt", resource_identifier=str(e.request.url)) from e
+            raise TuxAPIResourceNotFoundError(
+                service_name="Godbolt",
+                resource_identifier=str(e.request.url),
+            ) from e
         raise TuxAPIRequestError(
             service_name="Godbolt",
             status_code=e.response.status_code,
@@ -161,7 +164,10 @@ async def sendresponse(url: str) -> str | None:
         raise TuxAPIConnectionError(service_name="Godbolt", original_error=e) from e
     except httpx.HTTPStatusError as e:
         if e.response.status_code == HTTP_NOT_FOUND:
-            raise TuxAPIResourceNotFoundError(service_name="Godbolt", resource_identifier=url) from e
+            raise TuxAPIResourceNotFoundError(
+                service_name="Godbolt",
+                resource_identifier=url,
+            ) from e
         raise TuxAPIRequestError(
             service_name="Godbolt",
             status_code=e.response.status_code,
@@ -215,7 +221,11 @@ async def getspecificcompiler(lang: str) -> str | None:
     return await sendresponse(url_comp)
 
 
-async def getoutput(code: str, lang: str, compileroptions: str | None = None) -> str | None:
+async def getoutput(
+    code: str,
+    lang: str,
+    compileroptions: str | None = None,
+) -> str | None:
     """
     Send a POST request to the Godbolt API to get the output of the given code.
 
@@ -280,7 +290,10 @@ async def getoutput(code: str, lang: str, compileroptions: str | None = None) ->
         raise TuxAPIConnectionError(service_name="Godbolt", original_error=e) from e
     except httpx.HTTPStatusError as e:
         if e.response.status_code == HTTP_NOT_FOUND:
-            raise TuxAPIResourceNotFoundError(service_name="Godbolt", resource_identifier=lang) from e
+            raise TuxAPIResourceNotFoundError(
+                service_name="Godbolt",
+                resource_identifier=lang,
+            ) from e
         raise TuxAPIRequestError(
             service_name="Godbolt",
             status_code=e.response.status_code,
@@ -290,7 +303,11 @@ async def getoutput(code: str, lang: str, compileroptions: str | None = None) ->
         return uri.text if uri.status_code == 200 else None
 
 
-async def generateasm(code: str, lang: str, compileroptions: str | None = None) -> str | None:
+async def generateasm(
+    code: str,
+    lang: str,
+    compileroptions: str | None = None,
+) -> str | None:
     """
     Generate assembly code from the given code.
 
@@ -355,7 +372,10 @@ async def generateasm(code: str, lang: str, compileroptions: str | None = None) 
         raise TuxAPIConnectionError(service_name="Godbolt", original_error=e) from e
     except httpx.HTTPStatusError as e:
         if e.response.status_code == HTTP_NOT_FOUND:
-            raise TuxAPIResourceNotFoundError(service_name="Godbolt", resource_identifier=lang) from e
+            raise TuxAPIResourceNotFoundError(
+                service_name="Godbolt",
+                resource_identifier=lang,
+            ) from e
         raise TuxAPIRequestError(
             service_name="Godbolt",
             status_code=e.response.status_code,

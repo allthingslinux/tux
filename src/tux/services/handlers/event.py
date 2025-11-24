@@ -30,7 +30,9 @@ class EventHandler(BaseCog):
         # Wait for bot setup to complete before registering guilds
         # This ensures database and other services are ready
         if self.bot.setup_task and not self.bot.setup_task.done():
-            logger.info("Waiting for bot setup to complete before registering guilds...")
+            logger.info(
+                "Waiting for bot setup to complete before registering guilds...",
+            )
             try:
                 await self.bot.setup_task
                 logger.info("Bot setup completed, now registering guilds...")
@@ -51,17 +53,25 @@ class EventHandler(BaseCog):
                 result, created = await self.db.guild.get_or_create(id=guild.id)
                 if created:
                     registered_count += 1
-                    logger.info(f"Successfully registered guild {guild.id} ({guild.name}) - id {result.id}")
+                    logger.info(
+                        f"Successfully registered guild {guild.id} ({guild.name}) - id {result.id}",
+                    )
                 else:
                     skipped_count += 1
-                    logger.debug(f"Guild {guild.id} ({guild.name}) already exists - skipped")
+                    logger.debug(
+                        f"Guild {guild.id} ({guild.name}) already exists - skipped",
+                    )
             except Exception as e:
                 # This shouldn't happen with get_or_create, but log if it does
                 skipped_count += 1
-                logger.error(f"Unexpected error registering guild {guild.id} ({guild.name}): {e}")
+                logger.error(
+                    f"Unexpected error registering guild {guild.id} ({guild.name}): {e}",
+                )
                 logger.debug(f"Guild registration error details: {e}", exc_info=True)
 
-        logger.info(f"Registered {registered_count} guilds, skipped {skipped_count} existing guilds in database")
+        logger.info(
+            f"Registered {registered_count} guilds, skipped {skipped_count} existing guilds in database",
+        )
         self._guilds_registered = True
 
     @commands.Cog.listener()
@@ -71,7 +81,9 @@ class EventHandler(BaseCog):
         if created:
             logger.info(f"New guild joined: {guild.id} ({guild.name})")
         else:
-            logger.warning(f"Guild join event fired for existing guild: {guild.id} ({guild.name})")
+            logger.warning(
+                f"Guild join event fired for existing guild: {guild.id} ({guild.name})",
+            )
 
         # Initialize basic guild data (permissions only)
         await self.bot.db.guild_config.update_onboarding_stage(guild.id, "not_started")
@@ -102,12 +114,16 @@ class EventHandler(BaseCog):
         # Get jail role for this guild
         jail_role_id = await self.db.guild_config.get_jail_role_id(channel.guild.id)
         if not jail_role_id:
-            logger.debug(f"No jail role configured for guild {channel.guild.id}, skipping channel setup")
+            logger.debug(
+                f"No jail role configured for guild {channel.guild.id}, skipping channel setup",
+            )
             return
 
         jail_role = channel.guild.get_role(jail_role_id)
         if not jail_role:
-            logger.warning(f"Jail role {jail_role_id} not found in guild {channel.guild.id}")
+            logger.warning(
+                f"Jail role {jail_role_id} not found in guild {channel.guild.id}",
+            )
             return
 
         # Set permissions to deny view for jail role
@@ -119,9 +135,13 @@ class EventHandler(BaseCog):
                 send_messages=False,
                 reason="Auto-deny jail role on new channel",
             )
-            logger.info(f"Blocked jail role from new channel: {channel.name} in {channel.guild.name}")
+            logger.info(
+                f"Blocked jail role from new channel: {channel.name} in {channel.guild.name}",
+            )
         except discord.Forbidden:
-            logger.warning(f"Missing permissions to set jail role permissions in {channel.name}")
+            logger.warning(
+                f"Missing permissions to set jail role permissions in {channel.name}",
+            )
         except Exception as e:
             logger.error(f"Failed to set jail role permissions on {channel.name}: {e}")
 

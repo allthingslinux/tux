@@ -97,7 +97,11 @@ def get_interaction_context(source: ContextOrInteraction) -> dict[str, Any]:
         `command_name`, `guild_id`, `command_type`, etc.
     """
     # Safely get the user/author attribute; fall back to None
-    user = getattr(source, "user", None) if isinstance(source, Interaction) else getattr(source, "author", None)
+    user = (
+        getattr(source, "user", None)
+        if isinstance(source, Interaction)
+        else getattr(source, "author", None)
+    )
 
     # Base context is common to both types
     context: dict[str, Any] = {
@@ -107,7 +111,11 @@ def get_interaction_context(source: ContextOrInteraction) -> dict[str, Any]:
     }
 
     # Delegate to helper functions for type-specific details
-    details = _get_interaction_details(source) if isinstance(source, Interaction) else _get_context_details(source)
+    details = (
+        _get_interaction_details(source)
+        if isinstance(source, Interaction)
+        else _get_context_details(source)
+    )
     context |= details
 
     return context

@@ -62,7 +62,12 @@ class TempVc(BaseCog):
 
         # When user leaves any voice channel
         elif before.channel:
-            await self._handle_user_leave(before.channel, after.channel, temp_channel_id, temp_category_id)
+            await self._handle_user_leave(
+                before.channel,
+                after.channel,
+                temp_channel_id,
+                temp_category_id,
+            )
 
     async def _handle_user_join(
         self,
@@ -111,7 +116,10 @@ class TempVc(BaseCog):
             The ID of the category holding temporary voice channels.
         """
         # Get the category of the temporary channels
-        category = discord.utils.get(before_channel.guild.categories, id=temp_category_id)
+        category = discord.utils.get(
+            before_channel.guild.categories,
+            id=temp_category_id,
+        )
 
         # Check if the channel is a temporary channel
         if (

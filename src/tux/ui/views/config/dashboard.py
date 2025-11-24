@@ -63,7 +63,11 @@ class ConfigDashboard(discord.ui.LayoutView):
         """Button to open the Permission Ranks configuration mode."""
 
         def __init__(self) -> None:
-            super().__init__(label="Open", style=discord.ButtonStyle.primary, custom_id="btn_ranks")
+            super().__init__(
+                label="Open",
+                style=discord.ButtonStyle.primary,
+                custom_id="btn_ranks",
+            )
 
         async def callback(self, interaction: discord.Interaction) -> None:
             """Handle button click to switch to ranks mode."""
@@ -77,7 +81,11 @@ class ConfigDashboard(discord.ui.LayoutView):
         """Button to open the Role Assignments configuration mode."""
 
         def __init__(self) -> None:
-            super().__init__(label="Open", style=discord.ButtonStyle.primary, custom_id="btn_roles")
+            super().__init__(
+                label="Open",
+                style=discord.ButtonStyle.primary,
+                custom_id="btn_roles",
+            )
 
         async def callback(self, interaction: discord.Interaction) -> None:
             """Handle button click to switch to roles mode."""
@@ -91,7 +99,11 @@ class ConfigDashboard(discord.ui.LayoutView):
         """Button to open the Command Permissions configuration mode."""
 
         def __init__(self) -> None:
-            super().__init__(label="Open", style=discord.ButtonStyle.primary, custom_id="btn_commands")
+            super().__init__(
+                label="Open",
+                style=discord.ButtonStyle.primary,
+                custom_id="btn_commands",
+            )
 
         async def callback(self, interaction: discord.Interaction) -> None:
             """Handle button click to switch to commands mode."""
@@ -105,7 +117,11 @@ class ConfigDashboard(discord.ui.LayoutView):
         """Button to open the Log Channels configuration mode."""
 
         def __init__(self) -> None:
-            super().__init__(label="Open", style=discord.ButtonStyle.primary, custom_id="btn_logs")
+            super().__init__(
+                label="Open",
+                style=discord.ButtonStyle.primary,
+                custom_id="btn_logs",
+            )
 
         async def callback(self, interaction: discord.Interaction) -> None:
             """Handle button click to switch to logs mode."""
@@ -119,7 +135,11 @@ class ConfigDashboard(discord.ui.LayoutView):
         """Button to reset all configuration to defaults."""
 
         def __init__(self) -> None:
-            super().__init__(label="Reset", style=discord.ButtonStyle.danger, custom_id="btn_reset")
+            super().__init__(
+                label="Reset",
+                style=discord.ButtonStyle.danger,
+                custom_id="btn_reset",
+            )
 
         async def callback(self, interaction: discord.Interaction) -> None:
             """Handle button click to reset configuration."""
@@ -156,11 +176,16 @@ class ConfigDashboard(discord.ui.LayoutView):
         current_page = getattr(self, page_attr, 0)
         return f"{mode}_page_{current_page}"
 
-    def _build_pagination_footer(self, mode: str) -> discord.ui.TextDisplay[discord.ui.LayoutView]:
+    def _build_pagination_footer(
+        self,
+        mode: str,
+    ) -> discord.ui.TextDisplay[discord.ui.LayoutView]:
         """Build pagination footer showing current page info."""
         current_page = getattr(self, f"{mode}_current_page", 0)
         total_pages = getattr(self, f"{mode}_total_pages", 1)
-        return discord.ui.TextDisplay[discord.ui.LayoutView](f"*Page {current_page + 1} of {total_pages}*")
+        return discord.ui.TextDisplay[discord.ui.LayoutView](
+            f"*Page {current_page + 1} of {total_pages}*",
+        )
 
     def _build_pagination_info_footer(
         self,
@@ -194,7 +219,12 @@ class ConfigDashboard(discord.ui.LayoutView):
 
         current_page = getattr(self, f"{mode}_current_page", 0)
         total_pages = getattr(self, f"{mode}_total_pages", 1)
-        return PaginationHelper.build_navigation(mode, current_page, total_pages, handler)
+        return PaginationHelper.build_navigation(
+            mode,
+            current_page,
+            total_pages,
+            handler,
+        )
 
     async def _handle_page_change(
         self,
@@ -219,11 +249,18 @@ class ConfigDashboard(discord.ui.LayoutView):
         else:
             self._built_modes.clear()
 
-    def get_cached_mode(self, mode: str) -> discord.ui.Container[discord.ui.LayoutView] | None:
+    def get_cached_mode(
+        self,
+        mode: str,
+    ) -> discord.ui.Container[discord.ui.LayoutView] | None:
         """Get cached container for a mode if available."""
         return self._built_modes.get(mode)
 
-    def cache_mode(self, mode: str, container: discord.ui.Container[discord.ui.LayoutView]) -> None:
+    def cache_mode(
+        self,
+        mode: str,
+        container: discord.ui.Container[discord.ui.LayoutView],
+    ) -> None:
         """Cache a built container for a mode."""
         self._built_modes[mode] = container
 
@@ -249,7 +286,9 @@ class ConfigDashboard(discord.ui.LayoutView):
     def _build_overview_mode(self) -> None:
         """Build the overview/dashboard mode with a creative card-based layout."""
         # Create a container for the dashboard content (embed-like appearance)
-        container = discord.ui.Container[discord.ui.LayoutView](accent_color=CONFIG_COLOR_BLURPLE)
+        container = discord.ui.Container[discord.ui.LayoutView](
+            accent_color=CONFIG_COLOR_BLURPLE,
+        )
 
         # Header
         header = discord.ui.TextDisplay[discord.ui.LayoutView](
@@ -337,10 +376,14 @@ class ConfigDashboard(discord.ui.LayoutView):
             self.clear_items()
 
             # Create a container for the ranks content
-            container = discord.ui.Container[discord.ui.LayoutView](accent_color=CONFIG_COLOR_YELLOW)
+            container = discord.ui.Container[discord.ui.LayoutView](
+                accent_color=CONFIG_COLOR_YELLOW,
+            )
 
             # Get ranks
-            ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(self.guild.id)
+            ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+                self.guild.id,
+            )
 
             if not ranks:
                 # No ranks configured
@@ -408,7 +451,9 @@ class ConfigDashboard(discord.ui.LayoutView):
                 for rank_idx, rank in enumerate(page_ranks):
                     # Rank info display
                     rank_content = f"### Rank {rank.rank}: {rank.name}\n*{rank.description or 'No description'}*"
-                    rank_display = discord.ui.TextDisplay[discord.ui.LayoutView](rank_content)
+                    rank_display = discord.ui.TextDisplay[discord.ui.LayoutView](
+                        rank_content,
+                    )
                     container.add_item(rank_display)
 
                     # Edit and Delete buttons for this rank
@@ -419,7 +464,12 @@ class ConfigDashboard(discord.ui.LayoutView):
                         style=discord.ButtonStyle.primary,
                         custom_id=f"edit_rank_{rank.rank}",
                     )
-                    edit_rank_btn.callback = create_edit_rank_callback(self, rank.rank, rank.name, rank.description)
+                    edit_rank_btn.callback = create_edit_rank_callback(
+                        self,
+                        rank.rank,
+                        rank.name,
+                        rank.description,
+                    )
                     rank_actions_row.add_item(edit_rank_btn)
 
                     delete_rank_btn = discord.ui.Button[discord.ui.LayoutView](
@@ -427,7 +477,11 @@ class ConfigDashboard(discord.ui.LayoutView):
                         style=discord.ButtonStyle.danger,
                         custom_id=f"delete_rank_{rank.rank}",
                     )
-                    delete_rank_btn.callback = create_delete_rank_callback(self, rank.rank, rank.name)
+                    delete_rank_btn.callback = create_delete_rank_callback(
+                        self,
+                        rank.rank,
+                        rank.name,
+                    )
                     rank_actions_row.add_item(delete_rank_btn)
                     container.add_item(rank_actions_row)
 
@@ -440,7 +494,10 @@ class ConfigDashboard(discord.ui.LayoutView):
 
                 # Add navigation if we have multiple pages
                 if self.ranks_total_pages > 1:
-                    nav_container = self._build_pagination_navigation("ranks", self.build_ranks_mode)
+                    nav_container = self._build_pagination_navigation(
+                        "ranks",
+                        self.build_ranks_mode,
+                    )
                     container.add_item(nav_container)
 
                 # Add pagination info footer
@@ -455,7 +512,13 @@ class ConfigDashboard(discord.ui.LayoutView):
                     )
                 else:
                     container.add_item(
-                        self._build_pagination_info_footer("ranks", start_idx, end_idx, total_ranks, "ranks"),
+                        self._build_pagination_info_footer(
+                            "ranks",
+                            start_idx,
+                            end_idx,
+                            total_ranks,
+                            "ranks",
+                        ),
                     )
 
             # Back button
@@ -468,20 +531,31 @@ class ConfigDashboard(discord.ui.LayoutView):
 
         except Exception as e:
             logger.error(f"Error building ranks mode: {e}")
-            error_container = create_error_container(f"Error loading ranks configuration: {e}", self)
+            error_container = create_error_container(
+                f"Error loading ranks configuration: {e}",
+                self,
+            )
             self.add_item(error_container)
 
-    def _group_assignments_by_rank(self, ranks: list[Any], assignments: list[Any]) -> dict[int, list[dict[str, Any]]]:
+    def _group_assignments_by_rank(
+        self,
+        ranks: list[Any],
+        assignments: list[Any],
+    ) -> dict[int, list[dict[str, Any]]]:
         """Group role assignments by rank value."""
         assignments_by_rank: dict[int, list[dict[str, Any]]] = {}
         rank_id_to_value = {r.id: r.rank for r in ranks}
 
         for assignment in assignments:
             rank_value = rank_id_to_value.get(assignment.permission_rank_id)
-            if rank_value is not None and (role := self.guild.get_role(assignment.role_id)):
+            if rank_value is not None and (
+                role := self.guild.get_role(assignment.role_id)
+            ):
                 if rank_value not in assignments_by_rank:
                     assignments_by_rank[rank_value] = []
-                assignments_by_rank[rank_value].append({"role": role, "assignment": assignment})
+                assignments_by_rank[rank_value].append(
+                    {"role": role, "assignment": assignment},
+                )
 
         return assignments_by_rank
 
@@ -507,7 +581,10 @@ class ConfigDashboard(discord.ui.LayoutView):
             role_list = [f"• {item['role'].mention}" for item in rank_assignments[:5]]
             if len(rank_assignments) > 5:
                 role_list.append(f"*... and {len(rank_assignments) - 5} more*")
-            status_content = f"**Status:** {len(rank_assignments)} role(s) assigned\n" + "\n".join(role_list)
+            status_content = (
+                f"**Status:** {len(rank_assignments)} role(s) assigned\n"
+                + "\n".join(role_list)
+            )
         else:
             status_content = "**Status:** No roles assigned"
 
@@ -523,11 +600,13 @@ class ConfigDashboard(discord.ui.LayoutView):
             logger.error(f"Rank {rank.rank} has no database ID, skipping role selector")
             return None
 
-        role_select: discord.ui.RoleSelect[discord.ui.LayoutView] = discord.ui.RoleSelect[discord.ui.LayoutView](
-            placeholder=f"Update roles for Rank {rank.rank}",
-            min_values=0,
-            max_values=25,
-            custom_id=f"update_roles_{rank.rank}",
+        role_select: discord.ui.RoleSelect[discord.ui.LayoutView] = (
+            discord.ui.RoleSelect[discord.ui.LayoutView](
+                placeholder=f"Update roles for Rank {rank.rank}",
+                min_values=0,
+                max_values=25,
+                custom_id=f"update_roles_{rank.rank}",
+            )
         )
 
         if rank_assignments:
@@ -550,11 +629,19 @@ class ConfigDashboard(discord.ui.LayoutView):
             self.clear_items()
 
             # Create a container for the roles content
-            container = discord.ui.Container[discord.ui.LayoutView](accent_color=CONFIG_COLOR_GREEN)
+            container = discord.ui.Container[discord.ui.LayoutView](
+                accent_color=CONFIG_COLOR_GREEN,
+            )
 
             # Get ranks and assignments
-            ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(self.guild.id)
-            assignments = await self.bot.db.permission_assignments.get_assignments_by_guild(self.guild.id)
+            ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+                self.guild.id,
+            )
+            assignments = (
+                await self.bot.db.permission_assignments.get_assignments_by_guild(
+                    self.guild.id,
+                )
+            )
 
             # Group assignments by rank value
             assignments_by_rank = self._group_assignments_by_rank(ranks, assignments)
@@ -593,7 +680,10 @@ class ConfigDashboard(discord.ui.LayoutView):
                     rank_assignments = assignments_by_rank.get(rank.rank, [])
 
                     # Build rank display
-                    rank_display = self._build_rank_assignment_display(rank, rank_assignments)
+                    rank_display = self._build_rank_assignment_display(
+                        rank,
+                        rank_assignments,
+                    )
                     container.add_item(rank_display)
 
                     if role_select := self._build_role_selector(rank, rank_assignments):
@@ -614,12 +704,21 @@ class ConfigDashboard(discord.ui.LayoutView):
 
                 # Add navigation if we have multiple pages
                 if self.roles_total_pages > 1:
-                    nav_container = self._build_pagination_navigation("roles", self.build_roles_mode)
+                    nav_container = self._build_pagination_navigation(
+                        "roles",
+                        self.build_roles_mode,
+                    )
                     container.add_item(nav_container)
 
                 # Add pagination info footer
                 container.add_item(
-                    self._build_pagination_info_footer("roles", start_idx, end_idx, total_ranks, "ranks"),
+                    self._build_pagination_info_footer(
+                        "roles",
+                        start_idx,
+                        end_idx,
+                        total_ranks,
+                        "ranks",
+                    ),
                 )
 
             # Back button
@@ -632,12 +731,17 @@ class ConfigDashboard(discord.ui.LayoutView):
 
         except Exception as e:
             logger.error(f"Error building roles mode: {e}")
-            error_container = create_error_container(f"Error loading role configuration: {e}", self)
+            error_container = create_error_container(
+                f"Error loading role configuration: {e}",
+                self,
+            )
             self.add_item(error_container)
 
     async def _validate_rank_for_assignment(self, rank_id: int) -> int | None:
         """Validate rank exists and return its database ID."""
-        ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(self.guild.id)
+        ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+            self.guild.id,
+        )
         rank_obj = next((r for r in ranks if r.rank == rank_id), None)
         return rank_obj.id if rank_obj and rank_obj.id is not None else None
 
@@ -648,7 +752,9 @@ class ConfigDashboard(discord.ui.LayoutView):
     ) -> tuple[discord.ui.LayoutView, discord.ui.Container[discord.ui.LayoutView]]:
         """Build the initial role assignment view."""
         assign_view = discord.ui.LayoutView(timeout=300)
-        assign_container = discord.ui.Container[discord.ui.LayoutView](accent_color=CONFIG_COLOR_GREEN)
+        assign_container = discord.ui.Container[discord.ui.LayoutView](
+            accent_color=CONFIG_COLOR_GREEN,
+        )
 
         header = discord.ui.TextDisplay[discord.ui.LayoutView](
             f"# + Assign Roles to Rank {rank_id}\n\n"
@@ -656,7 +762,9 @@ class ConfigDashboard(discord.ui.LayoutView):
         )
         assign_container.add_item(header)
 
-        placeholder = discord.ui.TextDisplay[discord.ui.LayoutView]("*No roles selected yet*")
+        placeholder = discord.ui.TextDisplay[discord.ui.LayoutView](
+            "*No roles selected yet*",
+        )
         assign_container.add_item(placeholder)
 
         selector_row = discord.ui.ActionRow[discord.ui.LayoutView]()
@@ -712,7 +820,9 @@ class ConfigDashboard(discord.ui.LayoutView):
 
             assign_container.add_item(actions_row)
         else:
-            placeholder = discord.ui.TextDisplay[discord.ui.LayoutView]("*No roles selected yet*")
+            placeholder = discord.ui.TextDisplay[discord.ui.LayoutView](
+                "*No roles selected yet*",
+            )
             assign_container.add_item(placeholder)
 
         selector_row = discord.ui.ActionRow[discord.ui.LayoutView]()
@@ -754,21 +864,31 @@ class ConfigDashboard(discord.ui.LayoutView):
             logger.debug(f"Found rank {rank_id} with database ID {rank_db_id}")
 
             # Create role selector
-            role_select: discord.ui.RoleSelect[discord.ui.LayoutView] = discord.ui.RoleSelect[discord.ui.LayoutView](
-                placeholder=f"Select role(s) to assign to Rank {rank_id}",
-                min_values=1,
-                max_values=5,
-                custom_id=f"direct_assign_select_{rank_id}",
+            role_select: discord.ui.RoleSelect[discord.ui.LayoutView] = (
+                discord.ui.RoleSelect[discord.ui.LayoutView](
+                    placeholder=f"Select role(s) to assign to Rank {rank_id}",
+                    min_values=1,
+                    max_values=5,
+                    custom_id=f"direct_assign_select_{rank_id}",
+                )
             )
 
             # Track selected roles (mutable list for sharing between callbacks)
             selected_roles: list[discord.Role] = []
 
             # Build view
-            assign_view, assign_container = self._build_role_assignment_view(rank_id, role_select)
+            assign_view, assign_container = self._build_role_assignment_view(
+                rank_id,
+                role_select,
+            )
 
             # Create callbacks
-            confirm_callback = create_confirm_assignment_callback(self, rank_id, rank_db_id, selected_roles)
+            confirm_callback = create_confirm_assignment_callback(
+                self,
+                rank_id,
+                rank_db_id,
+                selected_roles,
+            )
             cancel_callback = create_cancel_assignment_callback()
             role_select_callback = create_role_selection_callback(
                 self,
@@ -787,9 +907,16 @@ class ConfigDashboard(discord.ui.LayoutView):
         except Exception as e:
             await handle_callback_error(interaction, e, "handling assign role", "")
 
-    async def _handle_confirm_assign_role(self, interaction: discord.Interaction) -> None:
+    async def _handle_confirm_assign_role(
+        self,
+        interaction: discord.Interaction,
+    ) -> None:
         """Handle confirming role assignment."""
-        if not await validate_author(interaction, self.author, "❌ You are not authorized to modify role assignments."):
+        if not await validate_author(
+            interaction,
+            self.author,
+            "❌ You are not authorized to modify role assignments.",
+        ):
             return
 
         if not await validate_interaction_data(interaction):
@@ -809,7 +936,11 @@ class ConfigDashboard(discord.ui.LayoutView):
 
     async def _handle_remove_role(self, interaction: discord.Interaction) -> None:
         """Handle removing roles from a rank."""
-        if not await validate_author(interaction, self.author, "❌ You are not authorized to modify role assignments."):
+        if not await validate_author(
+            interaction,
+            self.author,
+            "❌ You are not authorized to modify role assignments.",
+        ):
             return
 
         if not await validate_interaction_data(interaction):
@@ -822,7 +953,9 @@ class ConfigDashboard(discord.ui.LayoutView):
         rank_id = int(custom_id.split("_")[-1])
 
         # Get the PermissionRank object to get its database ID
-        ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(self.guild.id)
+        ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+            self.guild.id,
+        )
         rank_obj = next((r for r in ranks if r.rank == rank_id), None)
         if not rank_obj:
             await interaction.response.send_message(
@@ -836,8 +969,14 @@ class ConfigDashboard(discord.ui.LayoutView):
 
         # Get current assignments for this rank
         try:
-            assignments = await self.bot.db.permission_assignments.get_assignments_by_guild(self.guild.id)
-            rank_assignments = [a for a in assignments if a.permission_rank_id == rank_db_id]
+            assignments = (
+                await self.bot.db.permission_assignments.get_assignments_by_guild(
+                    self.guild.id,
+                )
+            )
+            rank_assignments = [
+                a for a in assignments if a.permission_rank_id == rank_db_id
+            ]
 
             if not rank_assignments:
                 await interaction.response.send_message(
@@ -849,7 +988,9 @@ class ConfigDashboard(discord.ui.LayoutView):
             # Create removal interface
             remove_view = discord.ui.LayoutView(timeout=300)
 
-            remove_container = discord.ui.Container[discord.ui.LayoutView](accent_color=CONFIG_COLOR_RED)
+            remove_container = discord.ui.Container[discord.ui.LayoutView](
+                accent_color=CONFIG_COLOR_RED,
+            )
 
             header = discord.ui.TextDisplay[discord.ui.LayoutView](
                 f"# - Remove Roles from Rank {rank_id}\n\n"
@@ -858,16 +999,20 @@ class ConfigDashboard(discord.ui.LayoutView):
             remove_container.add_item(header)
 
             # Create role select with current assignments
-            role_select: discord.ui.RoleSelect[discord.ui.LayoutView] = discord.ui.RoleSelect[discord.ui.LayoutView](
-                placeholder=f"Select role(s) to remove from Rank {rank_id}",
-                min_values=1,
-                max_values=len(rank_assignments),
-                custom_id=f"role_remove_select_{rank_id}",
+            role_select: discord.ui.RoleSelect[discord.ui.LayoutView] = (
+                discord.ui.RoleSelect[discord.ui.LayoutView](
+                    placeholder=f"Select role(s) to remove from Rank {rank_id}",
+                    min_values=1,
+                    max_values=len(rank_assignments),
+                    custom_id=f"role_remove_select_{rank_id}",
+                )
             )
 
             # Pre-select current assignments
             current_roles: list[discord.Role] = [
-                role for assignment in rank_assignments if (role := self.guild.get_role(assignment.role_id))
+                role
+                for assignment in rank_assignments
+                if (role := self.guild.get_role(assignment.role_id))
             ]
 
             if current_roles:
@@ -905,7 +1050,11 @@ class ConfigDashboard(discord.ui.LayoutView):
         except Exception as e:
             await handle_callback_error(interaction, e, "loading assignments", "")
 
-    def _find_role_select_from_message(self, message: discord.Message, custom_id: str) -> list[discord.Role] | None:
+    def _find_role_select_from_message(
+        self,
+        message: discord.Message,
+        custom_id: str,
+    ) -> list[discord.Role] | None:
         """Find a RoleSelect component from a message and return its selected values."""
         if not hasattr(message, "components"):
             return None
@@ -913,13 +1062,23 @@ class ConfigDashboard(discord.ui.LayoutView):
         for action_row in message.components:
             if hasattr(action_row, "children"):
                 for component in action_row.children:  # type: ignore[attr-defined]
-                    if isinstance(component, discord.ui.RoleSelect) and component.custom_id == custom_id:
+                    if (
+                        isinstance(component, discord.ui.RoleSelect)
+                        and component.custom_id == custom_id
+                    ):
                         return list(component.values)
         return None
 
-    async def _handle_confirm_remove_role(self, interaction: discord.Interaction) -> None:
+    async def _handle_confirm_remove_role(
+        self,
+        interaction: discord.Interaction,
+    ) -> None:
         """Handle confirming role removal."""
-        if not await validate_author(interaction, self.author, "❌ You are not authorized to modify role assignments."):
+        if not await validate_author(
+            interaction,
+            self.author,
+            "❌ You are not authorized to modify role assignments.",
+        ):
             return
 
         if not await validate_interaction_data(interaction):
@@ -932,7 +1091,9 @@ class ConfigDashboard(discord.ui.LayoutView):
         rank_id = int(custom_id.split("_")[-1])
 
         # Validate rank exists
-        ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(self.guild.id)
+        ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+            self.guild.id,
+        )
         rank_obj = next((r for r in ranks if r.rank == rank_id), None)
         if not rank_obj or rank_obj.id is None:
             await interaction.response.send_message(
@@ -943,12 +1104,21 @@ class ConfigDashboard(discord.ui.LayoutView):
 
         # Find selected roles from message
         if not interaction.message:
-            await interaction.response.send_message("❌ Unable to find role selector", ephemeral=True)
+            await interaction.response.send_message(
+                "❌ Unable to find role selector",
+                ephemeral=True,
+            )
             return
 
-        selected_roles = self._find_role_select_from_message(interaction.message, f"role_remove_select_{rank_id}")
+        selected_roles = self._find_role_select_from_message(
+            interaction.message,
+            f"role_remove_select_{rank_id}",
+        )
         if not selected_roles:
-            await interaction.response.send_message("❌ No roles selected", ephemeral=True)
+            await interaction.response.send_message(
+                "❌ No roles selected",
+                ephemeral=True,
+            )
             return
 
         # Remove roles from rank
@@ -986,7 +1156,10 @@ class ConfigDashboard(discord.ui.LayoutView):
 
     async def _handle_cancel_assign(self, interaction: discord.Interaction) -> None:
         """Handle canceling role assignment/removal."""
-        await interaction.response.send_message("❌ Operation cancelled", ephemeral=True)
+        await interaction.response.send_message(
+            "❌ Operation cancelled",
+            ephemeral=True,
+        )
 
     def _build_command_display(
         self,
@@ -999,7 +1172,11 @@ class ConfigDashboard(discord.ui.LayoutView):
         command = self.bot.get_command(cmd_name)
         command_description = command.short_doc if command else None
 
-        cmd_content = f"### ✅ `{cmd_name}`" if is_assigned and rank_value is not None else f"### ⚠️ `{cmd_name}`"
+        cmd_content = (
+            f"### ✅ `{cmd_name}`"
+            if is_assigned and rank_value is not None
+            else f"### ⚠️ `{cmd_name}`"
+        )
 
         if command_description:
             cmd_content += f"\n*{command_description}*"
@@ -1031,7 +1208,11 @@ class ConfigDashboard(discord.ui.LayoutView):
     ) -> discord.ui.Select[discord.ui.LayoutView]:
         """Build a rank selector for a command."""
         options: list[discord.SelectOption] = [
-            discord.SelectOption(label="Unassign (Disable)", value="unassign", description="Remove rank requirement"),
+            discord.SelectOption(
+                label="Unassign (Disable)",
+                value="unassign",
+                description="Remove rank requirement",
+            ),
         ]
 
         for rank in sorted(ranks, key=lambda x: x.rank):
@@ -1068,17 +1249,25 @@ class ConfigDashboard(discord.ui.LayoutView):
             self.clear_items()
 
             # Create a container for the commands content
-            container = discord.ui.Container[discord.ui.LayoutView](accent_color=CONFIG_COLOR_YELLOW)
+            container = discord.ui.Container[discord.ui.LayoutView](
+                accent_color=CONFIG_COLOR_YELLOW,
+            )
 
             # Get all moderation commands
             moderation_commands = get_moderation_commands(self.bot)
 
             # Get existing command permissions
-            existing_permissions = await self.bot.db.command_permissions.get_all_command_permissions(self.guild.id)
+            existing_permissions = (
+                await self.bot.db.command_permissions.get_all_command_permissions(
+                    self.guild.id,
+                )
+            )
             permission_map = {perm.command_name: perm for perm in existing_permissions}
 
             # Get ranks for display
-            ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(self.guild.id)
+            ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+                self.guild.id,
+            )
             rank_map = {r.rank: r for r in ranks}
 
             # Build list of all commands with their assignment status
@@ -1086,7 +1275,9 @@ class ConfigDashboard(discord.ui.LayoutView):
             all_commands: list[tuple[str, int | None, bool]] = []
             for cmd_name in sorted(moderation_commands):
                 if cmd_name in permission_map:
-                    all_commands.append((cmd_name, permission_map[cmd_name].required_rank, True))
+                    all_commands.append(
+                        (cmd_name, permission_map[cmd_name].required_rank, True),
+                    )
                 else:
                     all_commands.append((cmd_name, None, False))
 
@@ -1116,19 +1307,35 @@ class ConfigDashboard(discord.ui.LayoutView):
             container.add_item(discord.ui.Separator())
 
             # Display commands
-            for cmd_idx, (cmd_name, rank_value, is_assigned) in enumerate(page_commands):
+            for cmd_idx, (cmd_name, rank_value, is_assigned) in enumerate(
+                page_commands,
+            ):
                 # Build command display
-                cmd_display = self._build_command_display(cmd_name, rank_value, is_assigned, rank_map)
+                cmd_display = self._build_command_display(
+                    cmd_name,
+                    rank_value,
+                    is_assigned,
+                    rank_map,
+                )
                 container.add_item(cmd_display)
 
                 # Build rank selector
-                rank_select = self._build_command_rank_selector(cmd_name, rank_value, is_assigned, ranks)
+                rank_select = self._build_command_rank_selector(
+                    cmd_name,
+                    rank_value,
+                    is_assigned,
+                    ranks,
+                )
                 selector_row = discord.ui.ActionRow[discord.ui.LayoutView]()
                 selector_row.add_item(rank_select)
                 container.add_item(selector_row)
 
                 # Build status display
-                status_display = self._build_command_status_display(rank_value, is_assigned, rank_map)
+                status_display = self._build_command_status_display(
+                    rank_value,
+                    is_assigned,
+                    rank_map,
+                )
                 container.add_item(status_display)
 
                 # Separator between commands
@@ -1140,12 +1347,21 @@ class ConfigDashboard(discord.ui.LayoutView):
 
             # Add navigation if we have multiple pages
             if self.commands_total_pages > 1:
-                nav_container = self._build_pagination_navigation("commands", self.build_commands_mode)
+                nav_container = self._build_pagination_navigation(
+                    "commands",
+                    self.build_commands_mode,
+                )
                 container.add_item(nav_container)
 
                 # Add pagination info footer
                 container.add_item(
-                    self._build_pagination_info_footer("commands", start_idx, end_idx, total_commands, "commands"),
+                    self._build_pagination_info_footer(
+                        "commands",
+                        start_idx,
+                        end_idx,
+                        total_commands,
+                        "commands",
+                    ),
                 )
 
             # Back button
@@ -1158,7 +1374,10 @@ class ConfigDashboard(discord.ui.LayoutView):
 
         except Exception as e:
             logger.error(f"Error building commands mode: {e}")
-            error_container = create_error_container(f"Error loading command configuration: {e}", self)
+            error_container = create_error_container(
+                f"Error loading command configuration: {e}",
+                self,
+            )
             self.add_item(error_container)
 
     def _build_log_option_display(
@@ -1268,7 +1487,9 @@ class ConfigDashboard(discord.ui.LayoutView):
             total_logs = len(log_options)
 
             # Get current config to show selected channels
-            config = await self.bot.db.guild_config.get_config_by_guild_id(self.guild.id)
+            config = await self.bot.db.guild_config.get_config_by_guild_id(
+                self.guild.id,
+            )
 
             # Calculate pagination info
             start_idx, end_idx, total_pages, _ = PaginationHelper.setup_pagination(
@@ -1283,7 +1504,9 @@ class ConfigDashboard(discord.ui.LayoutView):
             self.logs_total_pages = total_pages
 
             # Create container
-            container = discord.ui.Container[discord.ui.LayoutView](accent_color=CONFIG_COLOR_BLURPLE)
+            container = discord.ui.Container[discord.ui.LayoutView](
+                accent_color=CONFIG_COLOR_BLURPLE,
+            )
 
             # Page header
             page_header = discord.ui.TextDisplay[discord.ui.LayoutView](
@@ -1310,7 +1533,10 @@ class ConfigDashboard(discord.ui.LayoutView):
                 container.add_item(log_display)
 
                 # Build channel selector
-                channel_select = self._build_log_channel_selector(option, current_channel)
+                channel_select = self._build_log_channel_selector(
+                    option,
+                    current_channel,
+                )
                 selector_row = discord.ui.ActionRow[discord.ui.LayoutView]()
                 selector_row.add_item(channel_select)
                 container.add_item(selector_row)
@@ -1328,11 +1554,22 @@ class ConfigDashboard(discord.ui.LayoutView):
 
             # Add navigation if we have multiple pages
             if self.logs_total_pages > 1:
-                nav_container = self._build_pagination_navigation("logs", self.build_logs_mode)
+                nav_container = self._build_pagination_navigation(
+                    "logs",
+                    self.build_logs_mode,
+                )
                 container.add_item(nav_container)
 
                 # Add pagination info footer
-                container.add_item(self._build_pagination_info_footer("logs", start_idx, end_idx, total_logs, "logs"))
+                container.add_item(
+                    self._build_pagination_info_footer(
+                        "logs",
+                        start_idx,
+                        end_idx,
+                        total_logs,
+                        "logs",
+                    ),
+                )
 
             # Back button
             add_back_button_to_container(container, self)
@@ -1344,16 +1581,23 @@ class ConfigDashboard(discord.ui.LayoutView):
 
         except Exception as e:
             logger.error(f"Error building logs mode: {e}")
-            error_container = create_error_container(f"Error loading log configuration: {e}", self)
+            error_container = create_error_container(
+                f"Error loading log configuration: {e}",
+                self,
+            )
             self.add_item(error_container)
 
-    def find_channel_select_component(self, custom_id: str) -> discord.ui.ChannelSelect[discord.ui.LayoutView] | None:
+    def find_channel_select_component(
+        self,
+        custom_id: str,
+    ) -> discord.ui.ChannelSelect[discord.ui.LayoutView] | None:
         """Find a ChannelSelect component by custom_id."""
         return next(
             (
                 item
                 for item in self.walk_children()
-                if isinstance(item, discord.ui.ChannelSelect) and item.custom_id == custom_id
+                if isinstance(item, discord.ui.ChannelSelect)
+                and item.custom_id == custom_id
             ),
             None,
         )
@@ -1374,7 +1618,11 @@ class ConfigDashboard(discord.ui.LayoutView):
         if interaction.data:
             values = interaction.data.get("values", [])
             if values:
-                resolved_data = interaction.data.get("resolved", {}).get("channels", {}).get(values[0])
+                resolved_data = (
+                    interaction.data.get("resolved", {})
+                    .get("channels", {})
+                    .get(values[0])
+                )
                 if resolved_data:
                     channel = self.guild.get_channel(int(resolved_data["id"]))
                     if isinstance(channel, discord.TextChannel):
@@ -1391,7 +1639,9 @@ class ConfigDashboard(discord.ui.LayoutView):
     ) -> None:
         """Update channel config and rebuild logs mode."""
         channel = self.guild.get_channel(channel_id) if channel_id else None
-        self.selected_channels[option_key] = channel if isinstance(channel, discord.TextChannel) else None
+        self.selected_channels[option_key] = (
+            channel if isinstance(channel, discord.TextChannel) else None
+        )
         await self._save_channel_config(option_key, channel_id)
 
         await interaction.response.defer()
@@ -1401,9 +1651,16 @@ class ConfigDashboard(discord.ui.LayoutView):
         self.current_mode = "logs"
         await self.build_logs_mode()
         if interaction.message:
-            await interaction.followup.edit_message(message_id=interaction.message.id, view=self)
+            await interaction.followup.edit_message(
+                message_id=interaction.message.id,
+                view=self,
+            )
 
-    async def _save_channel_config(self, option_key: str, channel_id: int | None) -> None:
+    async def _save_channel_config(
+        self,
+        option_key: str,
+        channel_id: int | None,
+    ) -> None:
         """Save channel configuration to database."""
         try:
             # Map option key to database field
@@ -1419,7 +1676,9 @@ class ConfigDashboard(discord.ui.LayoutView):
             if field_name := field_mapping.get(option_key):
                 updates = {field_name: channel_id}
                 await self.bot.db.guild_config.update_config(self.guild.id, **updates)
-                logger.info(f"Saved {option_key} for guild {self.guild.id}: {channel_id}")
+                logger.info(
+                    f"Saved {option_key} for guild {self.guild.id}: {channel_id}",
+                )
         except Exception as e:
             logger.error(f"Failed to save {option_key}: {e}")
 
@@ -1462,11 +1721,19 @@ class ConfigDashboard(discord.ui.LayoutView):
 
     async def _handle_create_rank(self, interaction: discord.Interaction) -> None:
         """Handle create rank button click - opens modal."""
-        if not await validate_author(interaction, self.author, "❌ You are not authorized to create ranks."):
+        if not await validate_author(
+            interaction,
+            self.author,
+            "❌ You are not authorized to create ranks.",
+        ):
             return
 
         # Determine available ranks for creation
-        existing_ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(self.guild.id)
+        existing_ranks = (
+            await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+                self.guild.id,
+            )
+        )
         existing_rank_values = {rank.rank for rank in existing_ranks}
 
         # Allow creating ranks 0-7 if they're missing, or ranks 8-10
@@ -1479,24 +1746,37 @@ class ConfigDashboard(discord.ui.LayoutView):
         modal = CreateRankModal(self.bot, self.guild, self, available_ranks)
         await interaction.response.send_modal(modal)
 
-    async def _handle_init_default_ranks(self, interaction: discord.Interaction) -> None:  # noqa: PLR0915
+    async def _handle_init_default_ranks(
+        self,
+        interaction: discord.Interaction,
+    ) -> None:
         """Handle init default ranks button click - creates default ranks 0-7."""
-        if not await validate_author(interaction, self.author, "❌ You are not authorized to initialize ranks."):
+        if not await validate_author(
+            interaction,
+            self.author,
+            "❌ You are not authorized to initialize ranks.",
+        ):
             return
 
         try:
-            logger.info(f"Starting default rank initialization for guild {self.guild.id}")
+            logger.info(
+                f"Starting default rank initialization for guild {self.guild.id}",
+            )
 
             # Ensure guild is registered in database first
             logger.debug(f"Ensuring guild {self.guild.id} is registered in database")
             guild_record = await self.bot.db.guild.get_by_id(self.guild.id)
             if not guild_record:
-                logger.info(f"Guild {self.guild.id} not found in database, registering it")
+                logger.info(
+                    f"Guild {self.guild.id} not found in database, registering it",
+                )
                 try:
                     await self.bot.db.guild.insert_guild_by_id(self.guild.id)
                     logger.info(f"Successfully registered guild {self.guild.id}")
                 except Exception as reg_error:
-                    logger.error(f"Failed to register guild {self.guild.id}: {reg_error}")
+                    logger.error(
+                        f"Failed to register guild {self.guild.id}: {reg_error}",
+                    )
                     await interaction.response.send_message(
                         "❌ **Guild Registration Failed**\n\n"
                         "Unable to register this guild in the database. Please try again later or contact support.",
@@ -1506,11 +1786,19 @@ class ConfigDashboard(discord.ui.LayoutView):
 
             # Check if ranks already exist
             logger.debug(f"Checking existing ranks for guild {self.guild.id}")
-            existing_ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(self.guild.id)
-            logger.debug(f"Found {len(existing_ranks)} existing ranks for guild {self.guild.id}")
+            existing_ranks = (
+                await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+                    self.guild.id,
+                )
+            )
+            logger.debug(
+                f"Found {len(existing_ranks)} existing ranks for guild {self.guild.id}",
+            )
 
             if existing_ranks:
-                logger.info(f"Guild {self.guild.id} already has ranks, skipping initialization")
+                logger.info(
+                    f"Guild {self.guild.id} already has ranks, skipping initialization",
+                )
                 await interaction.response.send_message(
                     "⚠️ Permission ranks already exist!\n\n"
                     f"This guild already has {len(existing_ranks)} permission ranks configured.\n\n"
@@ -1525,7 +1813,9 @@ class ConfigDashboard(discord.ui.LayoutView):
                 permission_system = get_permission_system()
                 logger.debug("Got permission system instance, calling initialize_guild")
                 await permission_system.initialize_guild(self.guild.id)
-                logger.info(f"Successfully initialized ranks via permission system for guild {self.guild.id}")
+                logger.info(
+                    f"Successfully initialized ranks via permission system for guild {self.guild.id}",
+                )
             except Exception as ps_error:
                 # If permission system fails, log the specific error
                 logger.error(
@@ -1534,14 +1824,19 @@ class ConfigDashboard(discord.ui.LayoutView):
                 )
                 logger.error(f"Permission system error repr: {ps_error!r}")
                 # Try direct database approach as fallback
-                logger.info(f"Falling back to direct database rank creation for guild {self.guild.id}")
+                logger.info(
+                    f"Falling back to direct database rank creation for guild {self.guild.id}",
+                )
                 await initialize_default_ranks(self.bot.db, self.guild.id)
-                logger.info(f"Successfully initialized ranks via direct database for guild {self.guild.id}")
+                logger.info(
+                    f"Successfully initialized ranks via direct database for guild {self.guild.id}",
+                )
 
             # Generate success message from the default ranks
             rank_lines: list[str] = []
             rank_lines.extend(
-                f"• **Rank {rank_num}**: {rank_data['name']}" for rank_num, rank_data in sorted(DEFAULT_RANKS.items())
+                f"• **Rank {rank_num}**: {rank_data['name']}"
+                for rank_num, rank_data in sorted(DEFAULT_RANKS.items())
             )
             await interaction.response.send_message(
                 "✅ **Default permission ranks initialized!**\n\n"
@@ -1571,7 +1866,11 @@ class ConfigDashboard(discord.ui.LayoutView):
             # Create safe error message
             error_parts = [f"❌ Failed to initialize ranks: {type(e).__name__}"]
             error_str = str(e).strip()
-            if error_str and error_str != str(type(e).__name__) and len(error_str) < 100:
+            if (
+                error_str
+                and error_str != str(type(e).__name__)
+                and len(error_str) < 100
+            ):
                 error_parts.append(f"({error_str})")
 
             error_msg = " ".join(error_parts)
@@ -1614,7 +1913,10 @@ class ConfigDashboard(discord.ui.LayoutView):
         custom_id = interaction.data.get("custom_id", "")  # type: ignore[index]
 
         if custom_id == "btn_reset":
-            await interaction.response.send_message("🔄 Reset functionality coming soon...", ephemeral=True)
+            await interaction.response.send_message(
+                "🔄 Reset functionality coming soon...",
+                ephemeral=True,
+            )
 
     async def on_timeout(self) -> None:
         """Handle dashboard timeout."""

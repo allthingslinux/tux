@@ -42,8 +42,13 @@ class LevelsService(BaseCog):
 
         self.xp_cooldown = CONFIG.XP_CONFIG.XP_COOLDOWN
         self.levels_exponent = CONFIG.XP_CONFIG.LEVELS_EXPONENT
-        self.xp_roles = {role["level"]: role["role_id"] for role in CONFIG.XP_CONFIG.XP_ROLES}
-        self.xp_multipliers = {role["role_id"]: role["multiplier"] for role in CONFIG.XP_CONFIG.XP_MULTIPLIERS}
+        self.xp_roles = {
+            role["level"]: role["role_id"] for role in CONFIG.XP_CONFIG.XP_ROLES
+        }
+        self.xp_multipliers = {
+            role["role_id"]: role["multiplier"]
+            for role in CONFIG.XP_CONFIG.XP_MULTIPLIERS
+        }
         self.max_level = max(item["level"] for item in CONFIG.XP_CONFIG.XP_ROLES)
         self.enable_xp_cap = CONFIG.XP_CONFIG.ENABLE_XP_CAP
 
@@ -57,7 +62,11 @@ class LevelsService(BaseCog):
         message : discord.Message
             The message object.
         """
-        if message.author.bot or message.guild is None or message.channel.id in CONFIG.XP_CONFIG.XP_BLACKLIST_CHANNELS:
+        if (
+            message.author.bot
+            or message.guild is None
+            or message.channel.id in CONFIG.XP_CONFIG.XP_BLACKLIST_CHANNELS
+        ):
             return
 
         prefixes = await get_prefix(self.bot, message)
@@ -70,7 +79,11 @@ class LevelsService(BaseCog):
 
         await self.process_xp_gain(member, message.guild)
 
-    async def process_xp_gain(self, member: discord.Member, guild: discord.Guild) -> None:
+    async def process_xp_gain(
+        self,
+        member: discord.Member,
+        guild: discord.Guild,
+    ) -> None:
         """
         Process XP gain for a member.
 
@@ -86,11 +99,17 @@ class LevelsService(BaseCog):
         if is_blacklisted:
             return
 
-        last_message_time = await self.db.levels.get_last_message_time(member.id, guild.id)
+        last_message_time = await self.db.levels.get_last_message_time(
+            member.id,
+            guild.id,
+        )
         if last_message_time and self.is_on_cooldown(last_message_time):
             return
 
-        current_xp, current_level = await self.db.levels.get_xp_and_level(member.id, guild.id)
+        current_xp, current_level = await self.db.levels.get_xp_and_level(
+            member.id,
+            guild.id,
+        )
 
         xp_increment = self.calculate_xp_increment(member)
         new_xp = current_xp + xp_increment
@@ -105,7 +124,9 @@ class LevelsService(BaseCog):
         )
 
         if new_level > current_level:
-            logger.debug(f"User {member.name} leveled up from {current_level} to {new_level} in guild {guild.name}")
+            logger.debug(
+                f"User {member.name} leveled up from {current_level} to {new_level} in guild {guild.name}",
+            )
             await self.handle_level_up(member, guild, new_level)
 
     def is_on_cooldown(self, last_message_time: datetime.datetime) -> bool:
@@ -122,11 +143,19 @@ class LevelsService(BaseCog):
         bool
             True if the member is on cooldown, False otherwise.
         """
-        return (datetime.datetime.fromtimestamp(time.time(), tz=datetime.UTC) - last_message_time) < datetime.timedelta(
+        return (
+            datetime.datetime.fromtimestamp(time.time(), tz=datetime.UTC)
+            - last_message_time
+        ) < datetime.timedelta(
             seconds=self.xp_cooldown,
         )
 
-    async def handle_level_up(self, member: discord.Member, guild: discord.Guild, new_level: int) -> None:
+    async def handle_level_up(
+        self,
+        member: discord.Member,
+        guild: discord.Guild,
+        new_level: int,
+    ) -> None:
         """
         Handle the level up process for a member.
 
@@ -142,7 +171,12 @@ class LevelsService(BaseCog):
         await self.update_roles(member, guild, new_level)
         # we can add more to this like level announcements etc. That's why I keep this function in between.
 
-    async def update_roles(self, member: discord.Member, guild: discord.Guild, new_level: int) -> None:
+    async def update_roles(
+        self,
+        member: discord.Member,
+        guild: discord.Guild,
+        new_level: int,
+    ) -> None:
         """
         Update the roles of a member based on their new level.
 
@@ -155,19 +189,33 @@ class LevelsService(BaseCog):
         new_level : int
             The new level of the member.
         """
-        roles_to_assign = [guild.get_role(rid) for lvl, rid in sorted(self.xp_roles.items()) if new_level >= lvl]
+        roles_to_assign = [
+            guild.get_role(rid)
+            for lvl, rid in sorted(self.xp_roles.items())
+            if new_level >= lvl
+        ]
         highest_role = roles_to_assign[-1] if roles_to_assign else None
 
         if highest_role:
             await self.try_assign_role(member, highest_role)
 
-        roles_to_remove = [r for r in member.roles if r.id in self.xp_roles.values() and r != highest_role]
+        roles_to_remove = [
+            r
+            for r in member.roles
+            if r.id in self.xp_roles.values() and r != highest_role
+        ]
 
         await member.remove_roles(*roles_to_remove)
 
         if highest_role or roles_to_remove:
-            assigned_text = f"Assigned {highest_role.name}" if highest_role else "No role assigned"
-            removed_text = f", Removed: {', '.join(r.name for r in roles_to_remove)}" if roles_to_remove else ""
+            assigned_text = (
+                f"Assigned {highest_role.name}" if highest_role else "No role assigned"
+            )
+            removed_text = (
+                f", Removed: {', '.join(r.name for r in roles_to_remove)}"
+                if roles_to_remove
+                else ""
+            )
             logger.debug(f"Updated roles for {member}: {assigned_text}{removed_text}")
 
     @staticmethod
@@ -217,7 +265,10 @@ class LevelsService(BaseCog):
         float
             The XP increment.
         """
-        return max((self.xp_multipliers.get(role.id, 1) for role in member.roles), default=1)
+        return max(
+            (self.xp_multipliers.get(role.id, 1) for role in member.roles),
+            default=1,
+        )
 
     def calculate_level(self, xp: float) -> int:
         """

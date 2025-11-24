@@ -97,7 +97,11 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         return await self.count()
 
-    async def find_configs_by_field(self, field_name: str, field_value: Any) -> list[GuildConfig]:
+    async def find_configs_by_field(
+        self,
+        field_name: str,
+        field_value: Any,
+    ) -> list[GuildConfig]:
         """
         Find configurations by a specific field value.
 
@@ -106,9 +110,16 @@ class GuildConfigController(BaseController[GuildConfig]):
         list[GuildConfig]
             List of configurations with matching field value.
         """
-        return await self.find_all(filters=getattr(GuildConfig, field_name) == field_value)
+        return await self.find_all(
+            filters=getattr(GuildConfig, field_name) == field_value,
+        )
 
-    async def update_config_field(self, guild_id: int, field_name: str, field_value: Any) -> GuildConfig | None:
+    async def update_config_field(
+        self,
+        guild_id: int,
+        field_name: str,
+        field_value: Any,
+    ) -> GuildConfig | None:
         """
         Update a specific field in guild configuration.
 
@@ -120,7 +131,11 @@ class GuildConfigController(BaseController[GuildConfig]):
         return await self.update_by_id(guild_id, **{field_name: field_value})
 
     # Onboarding-specific methods
-    async def update_onboarding_stage(self, guild_id: int, stage: str) -> GuildConfig | None:
+    async def update_onboarding_stage(
+        self,
+        guild_id: int,
+        stage: str,
+    ) -> GuildConfig | None:
         """
         Update the onboarding stage for a guild.
 
@@ -140,7 +155,11 @@ class GuildConfigController(BaseController[GuildConfig]):
         GuildConfig | None
             The updated configuration, or None if not found.
         """
-        return await self.update_by_id(guild_id, onboarding_completed=True, onboarding_stage="completed")
+        return await self.update_by_id(
+            guild_id,
+            onboarding_completed=True,
+            onboarding_stage="completed",
+        )
 
     async def reset_onboarding(self, guild_id: int) -> GuildConfig | None:
         """
@@ -151,7 +170,11 @@ class GuildConfigController(BaseController[GuildConfig]):
         GuildConfig | None
             The updated configuration, or None if not found.
         """
-        return await self.update_by_id(guild_id, onboarding_completed=False, onboarding_stage="not_started")
+        return await self.update_by_id(
+            guild_id,
+            onboarding_completed=False,
+            onboarding_stage="not_started",
+        )
 
     async def get_onboarding_status(self, guild_id: int) -> tuple[bool, str | None]:
         """
@@ -167,7 +190,12 @@ class GuildConfigController(BaseController[GuildConfig]):
             return config.onboarding_completed, config.onboarding_stage
         return False, None
 
-    async def update_channel_field(self, guild_id: int, channel_field: str, channel_id: int) -> GuildConfig | None:
+    async def update_channel_field(
+        self,
+        guild_id: int,
+        channel_field: str,
+        channel_id: int,
+    ) -> GuildConfig | None:
         """
         Update a channel field in guild configuration.
 
@@ -273,7 +301,11 @@ class GuildConfigController(BaseController[GuildConfig]):
         return await self.get_config_field(guild_id, "jail_channel_id")
 
     # Channel update methods for UI compatibility
-    async def update_private_log_id(self, guild_id: int, channel_id: int) -> GuildConfig | None:
+    async def update_private_log_id(
+        self,
+        guild_id: int,
+        channel_id: int,
+    ) -> GuildConfig | None:
         """
         Update private log channel ID.
 
@@ -284,7 +316,11 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         return await self.update_channel_field(guild_id, "private_log_id", channel_id)
 
-    async def update_report_log_id(self, guild_id: int, channel_id: int) -> GuildConfig | None:
+    async def update_report_log_id(
+        self,
+        guild_id: int,
+        channel_id: int,
+    ) -> GuildConfig | None:
         """
         Update report log channel ID.
 
@@ -295,7 +331,11 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         return await self.update_channel_field(guild_id, "report_log_id", channel_id)
 
-    async def update_dev_log_id(self, guild_id: int, channel_id: int) -> GuildConfig | None:
+    async def update_dev_log_id(
+        self,
+        guild_id: int,
+        channel_id: int,
+    ) -> GuildConfig | None:
         """
         Update dev log channel ID.
 
@@ -306,7 +346,11 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         return await self.update_channel_field(guild_id, "dev_log_id", channel_id)
 
-    async def update_mod_log_id(self, guild_id: int, channel_id: int) -> GuildConfig | None:
+    async def update_mod_log_id(
+        self,
+        guild_id: int,
+        channel_id: int,
+    ) -> GuildConfig | None:
         """
         Update mod log channel ID.
 
@@ -317,7 +361,11 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         return await self.update_channel_field(guild_id, "mod_log_id", channel_id)
 
-    async def update_audit_log_id(self, guild_id: int, channel_id: int) -> GuildConfig | None:
+    async def update_audit_log_id(
+        self,
+        guild_id: int,
+        channel_id: int,
+    ) -> GuildConfig | None:
         """
         Update audit log channel ID.
 
@@ -328,7 +376,11 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         return await self.update_channel_field(guild_id, "audit_log_id", channel_id)
 
-    async def update_join_log_id(self, guild_id: int, channel_id: int) -> GuildConfig | None:
+    async def update_join_log_id(
+        self,
+        guild_id: int,
+        channel_id: int,
+    ) -> GuildConfig | None:
         """
         Update join log channel ID.
 
@@ -339,7 +391,11 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         return await self.update_channel_field(guild_id, "join_log_id", channel_id)
 
-    async def update_jail_channel_id(self, guild_id: int, channel_id: int) -> GuildConfig | None:
+    async def update_jail_channel_id(
+        self,
+        guild_id: int,
+        channel_id: int,
+    ) -> GuildConfig | None:
         """
         Update jail channel ID.
 
@@ -350,7 +406,11 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         return await self.update_channel_field(guild_id, "jail_channel_id", channel_id)
 
-    async def update_starboard_channel_id(self, guild_id: int, channel_id: int) -> GuildConfig | None:
+    async def update_starboard_channel_id(
+        self,
+        guild_id: int,
+        channel_id: int,
+    ) -> GuildConfig | None:
         """
         Update starboard channel ID.
 
@@ -359,9 +419,17 @@ class GuildConfigController(BaseController[GuildConfig]):
         GuildConfig | None
             The updated configuration, or None if not found.
         """
-        return await self.update_channel_field(guild_id, "starboard_channel_id", channel_id)
+        return await self.update_channel_field(
+            guild_id,
+            "starboard_channel_id",
+            channel_id,
+        )
 
-    async def update_general_channel_id(self, guild_id: int, channel_id: int) -> GuildConfig | None:
+    async def update_general_channel_id(
+        self,
+        guild_id: int,
+        channel_id: int,
+    ) -> GuildConfig | None:
         """
         Update general channel ID.
 
@@ -370,7 +438,11 @@ class GuildConfigController(BaseController[GuildConfig]):
         GuildConfig | None
             The updated configuration, or None if not found.
         """
-        return await self.update_channel_field(guild_id, "general_channel_id", channel_id)
+        return await self.update_channel_field(
+            guild_id,
+            "general_channel_id",
+            channel_id,
+        )
 
     async def get_starboard_channel_id(self, guild_id: int) -> int | None:
         """
@@ -460,7 +532,11 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         return await self.get_config_field(guild_id, "dev_log_id")
 
-    async def update_guild_prefix(self, guild_id: int, prefix: str) -> GuildConfig | None:
+    async def update_guild_prefix(
+        self,
+        guild_id: int,
+        prefix: str,
+    ) -> GuildConfig | None:
         """
         Update guild prefix.
 
@@ -482,7 +558,11 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         return await self.update_config(guild_id, prefix=None)
 
-    async def get_log_channel(self, guild_id: int, log_type: str | None = None) -> int | None:
+    async def get_log_channel(
+        self,
+        guild_id: int,
+        log_type: str | None = None,
+    ) -> int | None:
         """
         Get log channel ID for a guild based on log type.
 

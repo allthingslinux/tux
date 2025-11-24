@@ -51,7 +51,9 @@ class PermissionRankController(BaseController[PermissionRank]):
         PermissionRank
             The newly created permission rank.
         """
-        logger.debug(f"Creating permission rank: guild_id={guild_id}, rank={rank}, name={name}")
+        logger.debug(
+            f"Creating permission rank: guild_id={guild_id}, rank={rank}, name={name}",
+        )
         try:
             result = await self.create(
                 guild_id=guild_id,
@@ -60,13 +62,20 @@ class PermissionRankController(BaseController[PermissionRank]):
                 description=description,
             )
         except Exception:
-            logger.exception(f"Error creating permission rank {rank} for guild {guild_id}")
+            logger.exception(
+                f"Error creating permission rank {rank} for guild {guild_id}",
+            )
             raise
         else:
-            logger.debug(f"Successfully created permission rank {rank} for guild {guild_id}")
+            logger.debug(
+                f"Successfully created permission rank {rank} for guild {guild_id}",
+            )
             return result
 
-    async def get_permission_ranks_by_guild(self, guild_id: int) -> list[PermissionRank]:
+    async def get_permission_ranks_by_guild(
+        self,
+        guild_id: int,
+    ) -> list[PermissionRank]:
         """
         Get all permission ranks for a guild.
 
@@ -80,7 +89,11 @@ class PermissionRankController(BaseController[PermissionRank]):
             order_by=PermissionRank.rank,
         )
 
-    async def get_permission_rank(self, guild_id: int, rank: int) -> PermissionRank | None:
+    async def get_permission_rank(
+        self,
+        guild_id: int,
+        rank: int,
+    ) -> PermissionRank | None:
         """
         Get a specific permission rank.
 
@@ -90,7 +103,8 @@ class PermissionRankController(BaseController[PermissionRank]):
             The permission rank if found, None otherwise.
         """
         return await self.find_one(
-            filters=(PermissionRank.guild_id == guild_id) & (PermissionRank.rank == rank),
+            filters=(PermissionRank.guild_id == guild_id)
+            & (PermissionRank.rank == rank),
         )
 
     async def update_permission_rank(
@@ -110,7 +124,8 @@ class PermissionRankController(BaseController[PermissionRank]):
         """
         # Find the record first
         record = await self.find_one(
-            filters=(PermissionRank.guild_id == guild_id) & (PermissionRank.rank == rank),
+            filters=(PermissionRank.guild_id == guild_id)
+            & (PermissionRank.rank == rank),
         )
         if not record:
             return None
@@ -135,7 +150,8 @@ class PermissionRankController(BaseController[PermissionRank]):
             True if deleted successfully, False otherwise.
         """
         deleted_count = await self.delete_where(
-            filters=(PermissionRank.guild_id == guild_id) & (PermissionRank.rank == rank),
+            filters=(PermissionRank.guild_id == guild_id)
+            & (PermissionRank.rank == rank),
         )
         return deleted_count > 0
 
@@ -173,7 +189,10 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
             role_id=role_id,
         )
 
-    async def get_assignments_by_guild(self, guild_id: int) -> list[PermissionAssignment]:
+    async def get_assignments_by_guild(
+        self,
+        guild_id: int,
+    ) -> list[PermissionAssignment]:
         """
         Get all permission assignments for a guild.
 
@@ -194,11 +213,17 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
             True if removed successfully, False otherwise.
         """
         deleted_count = await self.delete_where(
-            filters=(PermissionAssignment.guild_id == guild_id) & (PermissionAssignment.role_id == role_id),
+            filters=(PermissionAssignment.guild_id == guild_id)
+            & (PermissionAssignment.role_id == role_id),
         )
         return deleted_count > 0
 
-    async def get_user_permission_rank(self, guild_id: int, user_id: int, user_roles: list[int]) -> int:
+    async def get_user_permission_rank(
+        self,
+        guild_id: int,
+        user_id: int,
+        user_roles: list[int],
+    ) -> int:
         """
         Get the highest permission rank a user has based on their roles.
 
@@ -227,7 +252,9 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
         # Get the permission levels for the user's roles
         # We need to query the permission level IDs
         permission_rank_ids = {
-            assignment.permission_rank_id for assignment in assignments if assignment.role_id in user_assigned_roles
+            assignment.permission_rank_id
+            for assignment in assignments
+            if assignment.role_id in user_assigned_roles
         }
 
         if not permission_rank_ids:
@@ -264,7 +291,9 @@ class PermissionCommandController(BaseController[PermissionCommand]):
         command_name: str,
         required_rank: int,
         description: str | None = None,
-    ) -> PermissionCommand:  # sourcery skip: hoist-similar-statement-from-if, hoist-statement-from-if
+    ) -> (
+        PermissionCommand
+    ):  # sourcery skip: hoist-similar-statement-from-if, hoist-statement-from-if
         """
         Set the permission rank required for a command.
 
@@ -282,7 +311,11 @@ class PermissionCommandController(BaseController[PermissionCommand]):
         )
         return result[0]  # upsert returns (record, created)
 
-    async def get_command_permission(self, guild_id: int, command_name: str) -> PermissionCommand | None:
+    async def get_command_permission(
+        self,
+        guild_id: int,
+        command_name: str,
+    ) -> PermissionCommand | None:
         """
         Get the permission requirement for a specific command.
 
@@ -292,10 +325,14 @@ class PermissionCommandController(BaseController[PermissionCommand]):
             The command permission record if found, None otherwise.
         """
         return await self.find_one(
-            filters=(PermissionCommand.guild_id == guild_id) & (PermissionCommand.command_name == command_name),
+            filters=(PermissionCommand.guild_id == guild_id)
+            & (PermissionCommand.command_name == command_name),
         )
 
-    async def get_all_command_permissions(self, guild_id: int) -> list[PermissionCommand]:
+    async def get_all_command_permissions(
+        self,
+        guild_id: int,
+    ) -> list[PermissionCommand]:
         """
         Get all command permissions for a guild.
 

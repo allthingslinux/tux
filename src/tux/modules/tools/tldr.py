@@ -58,30 +58,52 @@ class Tldr(BaseCog):
 
             # Normalize detected language before adding to set
             normalized_default_lang = self.default_language
-            if normalized_default_lang.startswith("en") and normalized_default_lang != "en":
-                normalized_default_lang = "en"  # Treat en_US, en_GB as 'en' for tldr pages
+            if (
+                normalized_default_lang.startswith("en")
+                and normalized_default_lang != "en"
+            ):
+                normalized_default_lang = (
+                    "en"  # Treat en_US, en_GB as 'en' for tldr pages
+                )
 
             languages_to_check = {normalized_default_lang, "en"}
 
             for lang_code in languages_to_check:
                 if TldrClient.cache_needs_update(lang_code):
-                    logger.info(f"TLDR Cog: Cache for '{lang_code}' is older than 168 hours, updating...")
+                    logger.info(
+                        f"TLDR Cog: Cache for '{lang_code}' is older than 168 hours, updating...",
+                    )
                     try:
                         # Use asyncio.to_thread for cleaner async execution
-                        result_msg = await asyncio.to_thread(TldrClient.update_tldr_cache, lang_code)
+                        result_msg = await asyncio.to_thread(
+                            TldrClient.update_tldr_cache,
+                            lang_code,
+                        )
                         if "Failed" in result_msg:
-                            logger.error(f"TLDR Cog: Cache update for '{lang_code}' - {result_msg}")
+                            logger.error(
+                                f"TLDR Cog: Cache update for '{lang_code}' - {result_msg}",
+                            )
                         else:
-                            logger.debug(f"TLDR Cog: Cache update for '{lang_code}' - {result_msg}")
+                            logger.debug(
+                                f"TLDR Cog: Cache update for '{lang_code}' - {result_msg}",
+                            )
                     except Exception as e:
-                        logger.error(f"TLDR Cog: Exception during cache update for '{lang_code}': {e}", exc_info=True)
+                        logger.error(
+                            f"TLDR Cog: Exception during cache update for '{lang_code}': {e}",
+                            exc_info=True,
+                        )
                 else:
-                    logger.debug(f"TLDR Cog: Cache for '{lang_code}' is recent, skipping update.")
+                    logger.debug(
+                        f"TLDR Cog: Cache for '{lang_code}' is recent, skipping update.",
+                    )
 
             self._cache_checked = True
             logger.debug("TLDR Cog: Cache check completed.")
         except Exception as e:
-            logger.error(f"TLDR Cog: Critical error during cache initialization: {e}", exc_info=True)
+            logger.error(
+                f"TLDR Cog: Critical error during cache initialization: {e}",
+                exc_info=True,
+            )
 
     def detect_bot_language(self) -> str:
         """
@@ -124,10 +146,14 @@ class Tldr(BaseCog):
 
         # Filter commands based on current input
         if not current:
-            filtered_commands = [app_commands.Choice(name=cmd, value=cmd) for cmd in commands_to_show]
+            filtered_commands = [
+                app_commands.Choice(name=cmd, value=cmd) for cmd in commands_to_show
+            ]
         else:
             filtered_commands = [
-                app_commands.Choice(name=cmd, value=cmd) for cmd in commands_to_show if current.lower() in cmd.lower()
+                app_commands.Choice(name=cmd, value=cmd)
+                for cmd in commands_to_show
+                if current.lower() in cmd.lower()
             ]
 
         return filtered_commands[:25]
@@ -165,9 +191,25 @@ class Tldr(BaseCog):
         list[app_commands.Choice[str]]
             List of language choices for autocomplete.
         """
-        common_languages = ["en", "es", "fr", "de", "pt", "zh", "ja", "ko", "ru", "it", "nl", "pl", "tr"]
+        common_languages = [
+            "en",
+            "es",
+            "fr",
+            "de",
+            "pt",
+            "zh",
+            "ja",
+            "ko",
+            "ru",
+            "it",
+            "nl",
+            "pl",
+            "tr",
+        ]
         choices = [
-            app_commands.Choice(name=lang, value=lang) for lang in common_languages if current.lower() in lang.lower()
+            app_commands.Choice(name=lang, value=lang)
+            for lang in common_languages
+            if current.lower() in lang.lower()
         ]
         return choices[:25]
 
@@ -261,10 +303,21 @@ class Tldr(BaseCog):
         chosen_language = language or self.default_language
         languages_to_try = TldrClient.get_language_priority(chosen_language)
 
-        if result := TldrClient.fetch_tldr_page(command_norm, languages_to_try, platform):
+        if result := TldrClient.fetch_tldr_page(
+            command_norm,
+            languages_to_try,
+            platform,
+        ):
             page_content, found_platform = result
-            description = TldrClient.format_tldr_for_discord(page_content, show_short, show_long, show_both)
-            embed_title = f"TLDR for {command_norm} ({found_platform}/{chosen_language})"
+            description = TldrClient.format_tldr_for_discord(
+                page_content,
+                show_short,
+                show_long,
+                show_both,
+            )
+            embed_title = (
+                f"TLDR for {command_norm} ({found_platform}/{chosen_language})"
+            )
 
             # Add warning if page found on different platform than requested/detected
             expected_platform = platform or TldrClient.detect_platform()
@@ -277,12 +330,21 @@ class Tldr(BaseCog):
             embed_title = f"TLDR for {command_norm}"
         pages = TldrClient.split_long_text(description)
         if not pages:
-            await interaction.response.send_message("Could not render TLDR page.", ephemeral=True)
+            await interaction.response.send_message(
+                "Could not render TLDR page.",
+                ephemeral=True,
+            )
             return
 
-        view = TldrPaginatorView(pages, embed_title, interaction.user, self.bot) if len(pages) > 1 else None
+        view = (
+            TldrPaginatorView(pages, embed_title, interaction.user, self.bot)
+            if len(pages) > 1
+            else None
+        )
 
-        final_embed_title = f"{embed_title} (Page 1/{len(pages)})" if len(pages) > 1 else embed_title
+        final_embed_title = (
+            f"{embed_title} (Page 1/{len(pages)})" if len(pages) > 1 else embed_title
+        )
 
         embed = EmbedCreator.create_embed(
             bot=self.bot,
@@ -314,10 +376,21 @@ class Tldr(BaseCog):
         chosen_language = language or self.default_language
         languages_to_try = TldrClient.get_language_priority(chosen_language)
 
-        if result := TldrClient.fetch_tldr_page(command_norm, languages_to_try, platform):
+        if result := TldrClient.fetch_tldr_page(
+            command_norm,
+            languages_to_try,
+            platform,
+        ):
             page_content, found_platform = result
-            description = TldrClient.format_tldr_for_discord(page_content, show_short, show_long, show_both)
-            embed_title = f"TLDR for {command_norm} ({found_platform}/{chosen_language})"
+            description = TldrClient.format_tldr_for_discord(
+                page_content,
+                show_short,
+                show_long,
+                show_both,
+            )
+            embed_title = (
+                f"TLDR for {command_norm} ({found_platform}/{chosen_language})"
+            )
 
             # Add warning if page found on different platform than requested/detected
             expected_platform = platform or TldrClient.detect_platform()
@@ -333,9 +406,15 @@ class Tldr(BaseCog):
             await ctx.send("Could not render TLDR page.")
             return
 
-        view = TldrPaginatorView(pages, embed_title, ctx.author, self.bot) if len(pages) > 1 else None
+        view = (
+            TldrPaginatorView(pages, embed_title, ctx.author, self.bot)
+            if len(pages) > 1
+            else None
+        )
 
-        final_embed_title = f"{embed_title} (Page 1/{len(pages)})" if len(pages) > 1 else embed_title
+        final_embed_title = (
+            f"{embed_title} (Page 1/{len(pages)})" if len(pages) > 1 else embed_title
+        )
 
         embed = EmbedCreator.create_embed(
             bot=self.bot,

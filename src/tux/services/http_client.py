@@ -21,7 +21,9 @@ Usage Examples
 >>> data = response.json()
 >>>
 >>> # POST request with JSON
->>> response = await http_client.post("https://api.example.com/submit", json={"key": "value"})
+>>> response = await http_client.post(
+...     "https://api.example.com/submit", json={"key": "value"}
+... )
 >>>
 >>> # Custom timeout
 >>> response = await http_client.get("https://slow-api.example.com", timeout=60.0)
@@ -181,7 +183,9 @@ class HTTPClient:
 
         Examples
         --------
-        >>> response = await http_client.get("https://api.github.com/repos/allthingslinux/tux")
+        >>> response = await http_client.get(
+        ...     "https://api.github.com/repos/allthingslinux/tux"
+        ... )
         >>> data = response.json()
         """
         client = await self.get_client()
@@ -207,7 +211,9 @@ class HTTPClient:
 
         Examples
         --------
-        >>> response = await http_client.post("https://api.example.com/submit", json={"message": "hello"})
+        >>> response = await http_client.post(
+        ...     "https://api.example.com/submit", json={"message": "hello"}
+        ... )
         """
         client = await self.get_client()
         response = await client.post(url, **kwargs)
@@ -273,7 +279,9 @@ class HTTPClient:
 
         Examples
         --------
-        >>> response = await http_client.request("PATCH", "https://api.example.com/update")
+        >>> response = await http_client.request(
+        ...     "PATCH", "https://api.example.com/update"
+        ... )
         """
         client = await self.get_client()
         response = await client.request(method, url, **kwargs)

@@ -56,7 +56,10 @@ class VersionManager:
         current = Path(__file__).parent
         while current != current.parent:
             # Look for common project indicators
-            if any((current / indicator).exists() for indicator in ["pyproject.toml", "setup.py", "VERSION", ".git"]):
+            if any(
+                (current / indicator).exists()
+                for indicator in ["pyproject.toml", "setup.py", "VERSION", ".git"]
+            ):
                 return current
             current = current.parent
 
@@ -255,7 +258,10 @@ class VersionManager:
             msg = f"Invalid version strings: {e}"
             raise ValueError(msg) from e
 
-    def get_version_info(self, version: str | None = None) -> dict[str, str | int | None]:
+    def get_version_info(
+        self,
+        version: str | None = None,
+    ) -> dict[str, str | int | None]:
         """Get detailed information about a semantic version.
 
         Parameters
@@ -399,7 +405,11 @@ class VersionManager:
             msg = f"Invalid constraint '{constraint}': {e}"
             raise ValueError(msg) from e
 
-    def generate_build_metadata(self, git_sha: str | None = None, build_date: str | None = None) -> str:
+    def generate_build_metadata(
+        self,
+        git_sha: str | None = None,
+        build_date: str | None = None,
+    ) -> str:
         """Generate build metadata string from git SHA and build date.
 
         Parameters
@@ -566,7 +576,10 @@ def satisfies_constraint(version: str, constraint: str) -> bool:
     return _version_manager.satisfies_constraint(version, constraint)
 
 
-def generate_build_metadata(git_sha: str | None = None, build_date: str | None = None) -> str:
+def generate_build_metadata(
+    git_sha: str | None = None,
+    build_date: str | None = None,
+) -> str:
     """Generate build metadata string from git SHA and build date.
 
     Parameters

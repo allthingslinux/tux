@@ -111,7 +111,10 @@ def extract_permissions_details(error: Exception, **kwargs: Any) -> dict[str, An
     return {"permissions": format_list(perms)}
 
 
-def extract_bad_flag_argument_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
+def extract_bad_flag_argument_details(
+    error: Exception,
+    **kwargs: Any,
+) -> dict[str, Any]:
     """
     Extract flag argument details.
 
@@ -154,7 +157,11 @@ def extract_bad_flag_argument_details(error: Exception, **kwargs: Any) -> dict[s
                 usage_str = f"\nUsage: `{source.command.qualified_name} {source.command.signature}`"
 
             # For slash commands
-            elif hasattr(source, "command") and source.command and hasattr(source.command, "qualified_name"):
+            elif (
+                hasattr(source, "command")
+                and source.command
+                and hasattr(source.command, "qualified_name")
+            ):
                 usage_str = f"\nUsage: `/{source.command.qualified_name}`"
 
     result["usage"] = usage_str
@@ -203,7 +210,11 @@ def extract_missing_flag_details(error: Exception, **kwargs: Any) -> dict[str, A
                 usage_str = f"\nUsage: `{source.command.qualified_name} {source.command.signature}`"
 
             # For slash commands
-            elif hasattr(source, "command") and source.command and hasattr(source.command, "qualified_name"):
+            elif (
+                hasattr(source, "command")
+                and source.command
+                and hasattr(source.command, "qualified_name")
+            ):
                 usage_str = f"\nUsage: `/{source.command.qualified_name}`"
 
     result["usage"] = usage_str
@@ -282,14 +293,21 @@ def extract_missing_argument_details(error: Exception, **kwargs: Any) -> dict[st
                 usage_str = f"\nUsage: `{source.command.qualified_name} {source.command.signature}`"
 
             # For slash commands
-            elif hasattr(source, "command") and source.command and hasattr(source.command, "qualified_name"):
+            elif (
+                hasattr(source, "command")
+                and source.command
+                and hasattr(source.command, "qualified_name")
+            ):
                 usage_str = f"\nUsage: `/{source.command.qualified_name}`"
 
     result["usage"] = usage_str
     return result
 
 
-def extract_bad_union_argument_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
+def extract_bad_union_argument_details(
+    error: Exception,
+    **kwargs: Any,
+) -> dict[str, Any]:
     """
     Extract bad union argument details.
 
@@ -332,7 +350,9 @@ def extract_bad_union_argument_details(error: Exception, **kwargs: Any) -> dict[
         except Exception:
             expected_types.append("unknown")
 
-    expected_types_str = " or ".join(expected_types) if expected_types else "unknown type"
+    expected_types_str = (
+        " or ".join(expected_types) if expected_types else "unknown type"
+    )
 
     result = {"argument": argument, "expected_types": expected_types_str}
 
@@ -358,14 +378,21 @@ def extract_bad_union_argument_details(error: Exception, **kwargs: Any) -> dict[
                 usage_str = f"\nUsage: `{source.command.qualified_name} {source.command.signature}`"
 
             # For slash commands
-            elif hasattr(source, "command") and source.command and hasattr(source.command, "qualified_name"):
+            elif (
+                hasattr(source, "command")
+                and source.command
+                and hasattr(source.command, "qualified_name")
+            ):
                 usage_str = f"\nUsage: `/{source.command.qualified_name}`"
 
     result["usage"] = usage_str
     return result
 
 
-def extract_permission_denied_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
+def extract_permission_denied_details(
+    error: Exception,
+    **kwargs: Any,
+) -> dict[str, Any]:
     """
     Extract permission denied error details.
 
@@ -390,7 +417,12 @@ def extract_permission_denied_details(error: Exception, **kwargs: Any) -> dict[s
         # Try to get prefix from context (check cache synchronously)
         prefix = "$"  # Default fallback
         ctx = kwargs.get("ctx")
-        if ctx and hasattr(ctx, "bot") and hasattr(ctx.bot, "prefix_manager") and ctx.guild:
+        if (
+            ctx
+            and hasattr(ctx, "bot")
+            and hasattr(ctx.bot, "prefix_manager")
+            and ctx.guild
+        ):
             with contextlib.suppress(Exception):
                 # Access the cache directly (synchronous)
                 prefix_manager = ctx.bot.prefix_manager

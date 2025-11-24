@@ -13,7 +13,10 @@ from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
-from tux.shared.constants import EIGHT_BALL_QUESTION_LENGTH_LIMIT, EIGHT_BALL_RESPONSE_WRAP_WIDTH
+from tux.shared.constants import (
+    EIGHT_BALL_QUESTION_LENGTH_LIMIT,
+    EIGHT_BALL_RESPONSE_WRAP_WIDTH,
+)
 from tux.shared.functions import truncate
 from tux.ui.embeds import EmbedCreator
 
@@ -68,7 +71,9 @@ class Random(BaseCog):
             The context object for the command.
         """
         await ctx.send(
-            content="You got heads!" if random.choice([True, False]) else "You got tails!",
+            content="You got heads!"
+            if random.choice([True, False])
+            else "You got tails!",
         )
 
     @random.command(
@@ -126,7 +131,11 @@ class Random(BaseCog):
             "fuck off",
         ]
         choice = random.choice(
-            [random.choice(yes_responses), random.choice(no_responses), random.choice(unsure_responses)],
+            [
+                random.choice(yes_responses),
+                random.choice(no_responses),
+                random.choice(unsure_responses),
+            ],
         )
 
         width = min(EIGHT_BALL_RESPONSE_WRAP_WIDTH, len(choice))
@@ -135,9 +144,15 @@ class Random(BaseCog):
         if len(chunks) > 1:
             chunks = [chunk.ljust(width) for chunk in chunks]
 
-        formatted_choice = f"  {'_' * width}\n< {' >\n< '.join(chunks)} >\n  {'-' * width}"
+        formatted_choice = (
+            f"  {'_' * width}\n< {' >\n< '.join(chunks)} >\n  {'-' * width}"
+        )
 
-        shortened_question = shorten(question, width=EIGHT_BALL_QUESTION_LENGTH_LIMIT, placeholder="...")
+        shortened_question = shorten(
+            question,
+            width=EIGHT_BALL_QUESTION_LENGTH_LIMIT,
+            placeholder="...",
+        )
 
         response = f'Response to "{shortened_question}":\n{formatted_choice}'
 
@@ -180,7 +195,10 @@ class Random(BaseCog):
             The number of sides on the dice, by default 6.
         """
         if sides < 2:
-            await ctx.send(content="The dice must have at least 2 sides.", ephemeral=True)
+            await ctx.send(
+                content="The dice must have at least 2 sides.",
+                ephemeral=True,
+            )
             return
 
         embed = EmbedCreator.create_embed(
@@ -235,7 +253,9 @@ class Random(BaseCog):
             )
             return
 
-        await ctx.send(content=f"Your random number is: {random.randint(minimum_int, maximum_int)}")
+        await ctx.send(
+            content=f"Your random number is: {random.randint(minimum_int, maximum_int)}",
+        )
 
 
 async def setup(bot: Tux) -> None:

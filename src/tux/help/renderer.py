@@ -28,7 +28,11 @@ class HelpRenderer:
         """
         self.prefix = prefix
 
-    def create_base_embed(self, title: str, description: str | None = None) -> discord.Embed:
+    def create_base_embed(
+        self,
+        title: str,
+        description: str | None = None,
+    ) -> discord.Embed:
         """
         Create base embed with consistent styling.
 
@@ -60,7 +64,10 @@ class HelpRenderer:
             return ""
 
         for param_annotation in type_hints.values():
-            if not isinstance(param_annotation, type) or not issubclass(param_annotation, commands.FlagConverter):
+            if not isinstance(param_annotation, type) or not issubclass(
+                param_annotation,
+                commands.FlagConverter,
+            ):
                 continue
 
             for flag in param_annotation.__commands_flags__.values():
@@ -105,26 +112,41 @@ class HelpRenderer:
         formatted_signature = signature.replace("[", "<").replace("]", ">")
         return f"{command.qualified_name} {formatted_signature}"
 
-    async def add_command_help_fields(self, embed: discord.Embed, command: commands.Command[Any, Any, Any]) -> None:
+    async def add_command_help_fields(
+        self,
+        embed: discord.Embed,
+        command: commands.Command[Any, Any, Any],
+    ) -> None:
         """Add help fields for a command to embed."""
         embed.add_field(
             name="Aliases",
-            value=(f"`{', '.join(command.aliases)}`" if command.aliases else "No aliases"),
+            value=(
+                f"`{', '.join(command.aliases)}`" if command.aliases else "No aliases"
+            ),
             inline=False,
         )
         usage = command.usage or self.generate_default_usage(command)
         embed.add_field(name="Usage", value=f"`{self.prefix}{usage}`", inline=False)
 
-    def add_command_field(self, embed: discord.Embed, command: commands.Command[Any, Any, Any]) -> None:
+    def add_command_field(
+        self,
+        embed: discord.Embed,
+        command: commands.Command[Any, Any, Any],
+    ) -> None:
         """Add a single command field to embed."""
-        command_aliases = ", ".join(command.aliases) if command.aliases else "No aliases"
+        command_aliases = (
+            ", ".join(command.aliases) if command.aliases else "No aliases"
+        )
         embed.add_field(
             name=f"{self.prefix}{command.qualified_name} ({command_aliases})",
             value=f"> {command.short_doc or 'No documentation summary'}",
             inline=False,
         )
 
-    async def create_main_embed(self, categories: dict[str, dict[str, str]]) -> discord.Embed:
+    async def create_main_embed(
+        self,
+        categories: dict[str, dict[str, str]],
+    ) -> discord.Embed:
         """
         Create main help embed.
 
@@ -175,7 +197,11 @@ class HelpRenderer:
             inline=True,
         )
 
-        bot_name_display = "Tux" if CONFIG.BOT_INFO.BOT_NAME == "Tux" else f"{CONFIG.BOT_INFO.BOT_NAME} (Tux)"
+        bot_name_display = (
+            "Tux"
+            if CONFIG.BOT_INFO.BOT_NAME == "Tux"
+            else f"{CONFIG.BOT_INFO.BOT_NAME} (Tux)"
+        )
         owner_info = (
             f"Bot Owner: <@{CONFIG.USER_IDS.BOT_OWNER_ID}>"
             if not CONFIG.BOT_INFO.HIDE_BOT_OWNER and CONFIG.USER_IDS.BOT_OWNER_ID
@@ -184,11 +210,16 @@ class HelpRenderer:
 
         embed.add_field(
             name="Bot Instance",
-            value=f"-# Running {bot_name_display} v `{get_version()}`" + (f"\n-# {owner_info}" if owner_info else ""),
+            value=f"-# Running {bot_name_display} v `{get_version()}`"
+            + (f"\n-# {owner_info}" if owner_info else ""),
             inline=False,
         )
 
-    async def create_category_embed(self, category: str, commands_dict: dict[str, str]) -> discord.Embed:
+    async def create_category_embed(
+        self,
+        category: str,
+        commands_dict: dict[str, str],
+    ) -> discord.Embed:
         """
         Create category-specific embed.
 
@@ -202,12 +233,18 @@ class HelpRenderer:
         embed.set_footer(text="Select a command from the dropdown to see details.")
 
         sorted_commands = sorted(commands_dict.items())
-        description = "\n".join(f"**`{self.prefix}{cmd}`** | {command_list}" for cmd, command_list in sorted_commands)
+        description = "\n".join(
+            f"**`{self.prefix}{cmd}`** | {command_list}"
+            for cmd, command_list in sorted_commands
+        )
         embed.description = description
 
         return embed
 
-    async def create_command_embed(self, command: commands.Command[Any, Any, Any]) -> discord.Embed:
+    async def create_command_embed(
+        self,
+        command: commands.Command[Any, Any, Any],
+    ) -> discord.Embed:
         """
         Create command-specific embed.
 
@@ -226,7 +263,11 @@ class HelpRenderer:
 
         # Add flag details if present
         if flag_details := self.format_flag_details(command):
-            embed.add_field(name="Flags", value=f"```\n{flag_details}\n```", inline=False)
+            embed.add_field(
+                name="Flags",
+                value=f"```\n{flag_details}\n```",
+                inline=False,
+            )
 
         # Add subcommands section if this is a group
         if isinstance(command, commands.Group) and command.commands:
@@ -235,7 +276,11 @@ class HelpRenderer:
             # Skip subcommands field for large command groups like jishaku that use pagination
             is_large_group = command.name in {"jsk", "jishaku"} or len(sorted_cmds) > 15
             if not is_large_group:
-                if nested_groups := [cmd for cmd in sorted_cmds if isinstance(cmd, commands.Group) and cmd.commands]:
+                if nested_groups := [
+                    cmd
+                    for cmd in sorted_cmds
+                    if isinstance(cmd, commands.Group) and cmd.commands
+                ]:
                     nested_groups_text = "\n".join(
                         f"• `{g.name}` - {truncate_description(g.short_doc or 'No description')} ({len(g.commands)} subcommands)"
                         for g in nested_groups
@@ -292,11 +337,18 @@ class HelpRenderer:
         await self.add_command_help_fields(embed, subcommand)
 
         if flag_details := self.format_flag_details(subcommand):
-            embed.add_field(name="Flags", value=f"```\n{flag_details}\n```", inline=False)
+            embed.add_field(
+                name="Flags",
+                value=f"```\n{flag_details}\n```",
+                inline=False,
+            )
 
         return embed
 
-    def create_category_options(self, categories: dict[str, dict[str, str]]) -> list[discord.SelectOption]:
+    def create_category_options(
+        self,
+        categories: dict[str, dict[str, str]],
+    ) -> list[discord.SelectOption]:
         """
         Create select options for categories.
 
@@ -355,11 +407,18 @@ class HelpRenderer:
             command = command_mapping.get(cmd_name)
             description = command.short_doc if command else "No description"
             truncated_desc = truncate_description(description)
-            options.append(SelectOption(label=cmd_name, value=cmd_name, description=truncated_desc))
+            options.append(
+                SelectOption(
+                    label=cmd_name, value=cmd_name, description=truncated_desc
+                ),
+            )
 
         return sorted(options, key=lambda o: o.label)
 
-    def create_subcommand_options(self, subcommands: list[commands.Command[Any, Any, Any]]) -> list[SelectOption]:
+    def create_subcommand_options(
+        self,
+        subcommands: list[commands.Command[Any, Any, Any]],
+    ) -> list[SelectOption]:
         """
         Create select options for subcommands.
 
@@ -380,7 +439,9 @@ class HelpRenderer:
                 SelectOption(
                     label=subcmd.name,
                     value=subcmd.name,
-                    description=truncate_description(subcmd.short_doc or "No description"),
+                    description=truncate_description(
+                        subcmd.short_doc or "No description",
+                    ),
                 )
                 for subcmd in sorted(subcommands, key=lambda x: x.name)
             ]
@@ -393,7 +454,11 @@ class HelpRenderer:
             if subcmd := discord.utils.get(subcommands, name=subcmd_name):
                 description = truncate_description(subcmd.short_doc or "No description")
                 subcommand_options.append(
-                    SelectOption(label=subcmd.name, value=subcmd.name, description=description),
+                    SelectOption(
+                        label=subcmd.name,
+                        value=subcmd.name,
+                        description=description,
+                    ),
                 )
 
         # Add an option to suggest using jsk help

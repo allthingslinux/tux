@@ -35,7 +35,11 @@ class PaginationHelper:
             setattr(dashboard, attr_name, 0)
 
     @staticmethod
-    def calculate_pagination(total_items: int, items_per_page: int, current_page: int) -> tuple[int, int, int, int]:
+    def calculate_pagination(
+        total_items: int,
+        items_per_page: int,
+        current_page: int,
+    ) -> tuple[int, int, int, int]:
         """
         Calculate pagination indices and total pages.
 
@@ -53,7 +57,9 @@ class PaginationHelper:
         tuple[int, int, int, int]
             Tuple of (start_idx, end_idx, total_pages, validated_current_page)
         """
-        total_pages = (total_items + items_per_page - 1) // items_per_page  # Ceiling division
+        total_pages = (
+            total_items + items_per_page - 1
+        ) // items_per_page  # Ceiling division
 
         # Ensure current page is valid
         if current_page >= total_pages:
@@ -94,10 +100,12 @@ class PaginationHelper:
         PaginationHelper.initialize_page_attr(dashboard, current_page_attr)
         current_page = getattr(dashboard, current_page_attr, 0)
 
-        start_idx, end_idx, total_pages, validated_page = PaginationHelper.calculate_pagination(
-            total_items,
-            items_per_page,
-            current_page,
+        start_idx, end_idx, total_pages, validated_page = (
+            PaginationHelper.calculate_pagination(
+                total_items,
+                items_per_page,
+                current_page,
+            )
         )
 
         # Update validated page back to dashboard
@@ -210,7 +218,10 @@ class PaginationHelper:
             return
 
         if not interaction.data:
-            await interaction.response.send_message("❌ Invalid interaction data", ephemeral=True)
+            await interaction.response.send_message(
+                "❌ Invalid interaction data",
+                ephemeral=True,
+            )
             return
 
         custom_id = interaction.data.get("custom_id", "")
@@ -223,7 +234,11 @@ class PaginationHelper:
         elif custom_id == f"{mode_prefix}_nav_prev":
             setattr(dashboard, current_page_attr, max(0, current_page - 1))
         elif custom_id == f"{mode_prefix}_nav_next":
-            setattr(dashboard, current_page_attr, min(total_pages - 1, current_page + 1))
+            setattr(
+                dashboard,
+                current_page_attr,
+                min(total_pages - 1, current_page + 1),
+            )
         elif custom_id == f"{mode_prefix}_nav_last":
             setattr(dashboard, current_page_attr, total_pages - 1)
 

@@ -58,7 +58,10 @@ class DockerCLI(BaseCLI):
 
     def __init__(self) -> None:
         """Initialize Docker CLI with command registry and setup."""
-        super().__init__(name="docker", description="Docker CLI - A unified interface for all Docker operations")
+        super().__init__(
+            name="docker",
+            description="Docker CLI - A unified interface for all Docker operations",
+        )
         self._docker_client = None
         self._setup_command_registry()
         self._setup_commands()
@@ -203,7 +206,11 @@ class DockerCLI(BaseCLI):
             self.rich.print_error(f"Command not found: {command[0]}")
             raise
 
-    def _safe_run(self, cmd: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+    def _safe_run(
+        self,
+        cmd: list[str],
+        **kwargs: Any,
+    ) -> subprocess.CompletedProcess[str]:
         """Safely run a command with error handling.
 
         Returns
@@ -222,7 +229,9 @@ class DockerCLI(BaseCLI):
             self.rich.print_error(f"Command failed: {' '.join(cmd)}")
             raise
 
-    def _check_docker(self) -> bool:  # sourcery skip: class-extract-method, extract-duplicate-method
+    def _check_docker(
+        self,
+    ) -> bool:  # sourcery skip: class-extract-method, extract-duplicate-method
         """Check if Docker is available and running.
 
         Returns
@@ -245,13 +254,19 @@ class DockerCLI(BaseCLI):
                 self.rich.print_error(f"Docker daemon not accessible at {docker_host}")
                 self.rich.print_info("Try:")
                 self.rich.print_info("   - Start Docker: systemctl --user start docker")
-                self.rich.print_info("   - Or use system Docker: sudo systemctl start docker")
+                self.rich.print_info(
+                    "   - Or use system Docker: sudo systemctl start docker",
+                )
             else:
                 self.rich.print_error("Docker daemon not running or accessible")
                 self.rich.print_info("Try:")
                 self.rich.print_info("   - Start Docker: systemctl --user start docker")
-                self.rich.print_info("   - Or use system Docker: sudo systemctl start docker")
-                self.rich.print_info("   - Or set DOCKER_HOST: export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/docker.sock")
+                self.rich.print_info(
+                    "   - Or use system Docker: sudo systemctl start docker",
+                )
+                self.rich.print_info(
+                    "   - Or set DOCKER_HOST: export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/docker.sock",
+                )
             return False
 
         else:
@@ -285,7 +300,12 @@ class DockerCLI(BaseCLI):
         try:
             if resource_type == "images":
                 result = subprocess.run(
-                    [self._get_docker_cmd(), "images", "--format", "{{.Repository}}:{{.Tag}}"],
+                    [
+                        self._get_docker_cmd(),
+                        "images",
+                        "--format",
+                        "{{.Repository}}:{{.Tag}}",
+                    ],
                     capture_output=True,
                     text=True,
                     check=True,
@@ -315,7 +335,11 @@ class DockerCLI(BaseCLI):
                 return []
 
             stdout_content = result.stdout or ""
-            resources: list[str] = [line.strip() for line in stdout_content.strip().split("\n") if line.strip()]
+            resources: list[str] = [
+                line.strip()
+                for line in stdout_content.strip().split("\n")
+                if line.strip()
+            ]
 
             # Filter by safe patterns
             safe_resources: list[str] = []
@@ -353,7 +377,9 @@ class DockerCLI(BaseCLI):
                 subprocess.run([*remove_cmd, name], capture_output=True, check=True)
                 self.rich.print_success(f"Removed {resource_singular}: {name}")
             except Exception as e:
-                self.rich.print_warning(f"Failed to remove {resource_singular} {name}: {e}")
+                self.rich.print_warning(
+                    f"Failed to remove {resource_singular} {name}: {e}",
+                )
 
     def _cleanup_dangling_resources(self) -> None:
         """Clean up dangling Docker resources."""
@@ -362,13 +388,24 @@ class DockerCLI(BaseCLI):
         try:
             # Remove dangling images
             result = subprocess.run(
-                [self._get_docker_cmd(), "images", "--filter", "dangling=true", "--format", "{{.ID}}"],
+                [
+                    self._get_docker_cmd(),
+                    "images",
+                    "--filter",
+                    "dangling=true",
+                    "--format",
+                    "{{.ID}}",
+                ],
                 capture_output=True,
                 text=True,
                 check=True,
             )
             stdout_content = result.stdout or ""
-            if dangling_ids := [line.strip() for line in stdout_content.strip().split("\n") if line.strip()]:
+            if dangling_ids := [
+                line.strip()
+                for line in stdout_content.strip().split("\n")
+                if line.strip()
+            ]:
                 subprocess.run(
                     [self._get_docker_cmd(), "rmi", "-f", *dangling_ids],
                     capture_output=True,
@@ -399,8 +436,14 @@ class DockerCLI(BaseCLI):
 
     def build(
         self,
-        no_cache: Annotated[bool, Option("--no-cache", help="Build without using cache")] = False,
-        target: Annotated[str | None, Option("--target", help="Build target stage")] = None,
+        no_cache: Annotated[
+            bool,
+            Option("--no-cache", help="Build without using cache"),
+        ] = False,
+        target: Annotated[
+            str | None,
+            Option("--target", help="Build target stage"),
+        ] = None,
     ) -> None:
         """Build Docker images."""
         self.rich.print_section("Building Docker Images", "blue")
@@ -419,11 +462,23 @@ class DockerCLI(BaseCLI):
 
     def up(  # noqa: PLR0912
         self,
-        detach: Annotated[bool, Option("-d", "--detach", help="Run in detached mode")] = False,
-        build: Annotated[bool, Option("--build", help="Build images before starting")] = False,
+        detach: Annotated[
+            bool,
+            Option("-d", "--detach", help="Run in detached mode"),
+        ] = False,
+        build: Annotated[
+            bool,
+            Option("--build", help="Build images before starting"),
+        ] = False,
         watch: Annotated[bool, Option("--watch", help="Watch for changes")] = False,
-        production: Annotated[bool, Option("--production", help="Enable production mode features")] = False,
-        monitor: Annotated[bool, Option("--monitor", help="Enable monitoring and auto-cleanup")] = False,
+        production: Annotated[
+            bool,
+            Option("--production", help="Enable production mode features"),
+        ] = False,
+        monitor: Annotated[
+            bool,
+            Option("--monitor", help="Enable monitoring and auto-cleanup"),
+        ] = False,
         max_restart_attempts: Annotated[
             int,
             Option("--max-restart-attempts", help="Maximum restart attempts"),
@@ -432,7 +487,10 @@ class DockerCLI(BaseCLI):
             int,
             Option("--restart-delay", help="Delay between restart attempts (seconds)"),
         ] = 5,
-        services: Annotated[list[str] | None, Argument(help="Services to start")] = None,
+        services: Annotated[
+            list[str] | None,
+            Argument(help="Services to start"),
+        ] = None,
     ) -> None:  # sourcery skip: extract-duplicate-method, low-code-quality
         """Start Docker services with smart orchestration."""
         self.rich.print_section("Starting Docker Services", "blue")
@@ -548,7 +606,9 @@ class DockerCLI(BaseCLI):
 
                     # Check for configuration errors
                     if self._has_configuration_error(bot_container):
-                        self.rich.print_error("Bot has configuration issues (likely missing/invalid token)")
+                        self.rich.print_error(
+                            "Bot has configuration issues (likely missing/invalid token)",
+                        )
                         self.rich.print_info("Recent logs:")
                         self._show_container_logs(bot_container, tail=20)
                         self.rich.print_error(
@@ -557,10 +617,14 @@ class DockerCLI(BaseCLI):
                         break
 
                     if restart_attempts >= max_restart_attempts:
-                        self.rich.print_error("Maximum restart attempts reached. Shutting down all services.")
+                        self.rich.print_error(
+                            "Maximum restart attempts reached. Shutting down all services.",
+                        )
                         break
 
-                    self.rich.print_info(f"Restarting services in {restart_delay} seconds...")
+                    self.rich.print_info(
+                        f"Restarting services in {restart_delay} seconds...",
+                    )
                     time.sleep(restart_delay)
 
                     try:
@@ -583,8 +647,14 @@ class DockerCLI(BaseCLI):
 
     def down(
         self,
-        volumes: Annotated[bool, Option("-v", "--volumes", help="Remove volumes")] = False,
-        remove_orphans: Annotated[bool, Option("--remove-orphans", help="Remove orphaned containers")] = False,
+        volumes: Annotated[
+            bool,
+            Option("-v", "--volumes", help="Remove volumes"),
+        ] = False,
+        remove_orphans: Annotated[
+            bool,
+            Option("--remove-orphans", help="Remove orphaned containers"),
+        ] = False,
         services: Annotated[list[str] | None, Argument(help="Services to stop")] = None,
     ) -> None:
         """Stop Docker services."""
@@ -607,9 +677,18 @@ class DockerCLI(BaseCLI):
 
     def logs(
         self,
-        follow: Annotated[bool, Option("-f", "--follow", help="Follow log output")] = False,
-        tail: Annotated[int | None, Option("-n", "--tail", help="Number of lines to show")] = None,
-        services: Annotated[list[str] | None, Argument(help="Services to show logs for")] = None,
+        follow: Annotated[
+            bool,
+            Option("-f", "--follow", help="Follow log output"),
+        ] = False,
+        tail: Annotated[
+            int | None,
+            Option("-n", "--tail", help="Number of lines to show"),
+        ] = None,
+        services: Annotated[
+            list[str] | None,
+            Argument(help="Services to show logs for"),
+        ] = None,
     ) -> None:
         """Show Docker service logs."""
         self.rich.print_section("Docker Service Logs", "blue")
@@ -638,7 +717,10 @@ class DockerCLI(BaseCLI):
     def exec(
         self,
         service: Annotated[str, Argument(help="Service name")],
-        command: Annotated[list[str] | None, Argument(help="Command to execute")] = None,
+        command: Annotated[
+            list[str] | None,
+            Argument(help="Command to execute"),
+        ] = None,
     ) -> None:
         """Execute command in container."""
         self.rich.print_section("Executing Command in Container", "blue")
@@ -793,9 +875,15 @@ class DockerCLI(BaseCLI):
 
     def cleanup(
         self,
-        volumes: Annotated[bool, Option("--volumes", help="Include volumes in cleanup")] = False,
+        volumes: Annotated[
+            bool,
+            Option("--volumes", help="Include volumes in cleanup"),
+        ] = False,
         force: Annotated[bool, Option("--force", help="Skip confirmation")] = False,
-        dry_run: Annotated[bool, Option("--dry-run", help="Show what would be cleaned without doing it")] = False,
+        dry_run: Annotated[
+            bool,
+            Option("--dry-run", help="Show what would be cleaned without doing it"),
+        ] = False,
     ) -> None:
         """Clean up Docker resources."""
         self.rich.print_section("Docker Cleanup", "blue")
@@ -816,7 +904,9 @@ class DockerCLI(BaseCLI):
         tux_networks = self._get_tux_resources("networks")
 
         # Filter out special networks
-        tux_networks = [net for net in tux_networks if net not in ["bridge", "host", "none"]]
+        tux_networks = [
+            net for net in tux_networks if net not in ["bridge", "host", "none"]
+        ]
 
         # Display what will be cleaned
         def log_resource_list(resource_type: str, resources: list[str]) -> None:

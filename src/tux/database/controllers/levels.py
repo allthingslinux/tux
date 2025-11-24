@@ -29,7 +29,11 @@ class LevelsController(BaseController[Levels]):
         super().__init__(Levels, db)
 
     # Simple, clean methods that use BaseController's CRUD operations
-    async def get_levels_by_member(self, member_id: int, guild_id: int) -> Levels | None:
+    async def get_levels_by_member(
+        self,
+        member_id: int,
+        guild_id: int,
+    ) -> Levels | None:
         """
         Get levels for a specific member in a guild.
 
@@ -38,7 +42,9 @@ class LevelsController(BaseController[Levels]):
         Levels | None
             The levels record if found, None otherwise.
         """
-        return await self.find_one(filters=(Levels.member_id == member_id) & (Levels.guild_id == guild_id))
+        return await self.find_one(
+            filters=(Levels.member_id == member_id) & (Levels.guild_id == guild_id),
+        )
 
     async def get_or_create_levels(self, member_id: int, guild_id: int) -> Levels:
         """
@@ -75,7 +81,12 @@ class LevelsController(BaseController[Levels]):
         new_level = int(new_xp**0.5)  # Simple level calculation
 
         return (
-            await self.update_by_id(levels.member_id, xp=new_xp, level=new_level, last_message=datetime.now(UTC))
+            await self.update_by_id(
+                levels.member_id,
+                xp=new_xp,
+                level=new_level,
+                last_message=datetime.now(UTC),
+            )
             or levels
         )
 
@@ -92,7 +103,13 @@ class LevelsController(BaseController[Levels]):
         new_level = int(xp**0.5)
 
         return (
-            await self.update_by_id(levels.member_id, xp=xp, level=new_level, last_message=datetime.now(UTC)) or levels
+            await self.update_by_id(
+                levels.member_id,
+                xp=xp,
+                level=new_level,
+                last_message=datetime.now(UTC),
+            )
+            or levels
         )
 
     async def set_level(self, member_id: int, guild_id: int, level: int) -> Levels:
@@ -107,7 +124,15 @@ class LevelsController(BaseController[Levels]):
         levels = await self.get_or_create_levels(member_id, guild_id)
         xp = level**2  # Reverse level calculation
 
-        return await self.update_by_id(levels.member_id, xp=xp, level=level, last_message=datetime.now(UTC)) or levels
+        return (
+            await self.update_by_id(
+                levels.member_id,
+                xp=xp,
+                level=level,
+                last_message=datetime.now(UTC),
+            )
+            or levels
+        )
 
     async def blacklist_member(self, member_id: int, guild_id: int) -> Levels:
         """
@@ -276,7 +301,11 @@ class LevelsController(BaseController[Levels]):
         levels = await self.get_or_create_levels(member_id, guild_id)
         return levels.last_message
 
-    async def get_xp_and_level(self, member_id: int, guild_id: int) -> tuple[float, int]:
+    async def get_xp_and_level(
+        self,
+        member_id: int,
+        guild_id: int,
+    ) -> tuple[float, int]:
         """
         Get both XP and level for a member.
 
@@ -303,7 +332,9 @@ class LevelsController(BaseController[Levels]):
 
         # Count members with higher XP
         higher_count = await self.count(
-            filters=(Levels.guild_id == guild_id) & (not Levels.blacklisted) & (Levels.xp > levels.xp),
+            filters=(Levels.guild_id == guild_id)
+            & (not Levels.blacklisted)
+            & (Levels.xp > levels.xp),
         )
         return higher_count + 1
 
@@ -317,7 +348,9 @@ class LevelsController(BaseController[Levels]):
             Dictionary containing total_members, blacklisted_count, and active_members.
         """
         total_members = await self.count(filters=Levels.guild_id == guild_id)
-        blacklisted_count = await self.count(filters=(Levels.guild_id == guild_id) & (Levels.blacklisted))
+        blacklisted_count = await self.count(
+            filters=(Levels.guild_id == guild_id) & (Levels.blacklisted),
+        )
         active_members = total_members - blacklisted_count
 
         return {

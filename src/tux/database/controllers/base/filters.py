@@ -5,7 +5,10 @@ from typing import Any
 from sqlalchemy import BinaryExpression, and_
 
 
-def build_filters_for_model(filters: dict[str, Any] | Any, model: type[Any]) -> BinaryExpression[bool] | Any | None:
+def build_filters_for_model(
+    filters: dict[str, Any] | Any,
+    model: type[Any],
+) -> BinaryExpression[bool] | Any | None:
     """
     Build filter expressions from various input types for a specific model.
 

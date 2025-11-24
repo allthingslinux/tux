@@ -83,7 +83,10 @@ def paginate_items(items: list[Any], page_size: int) -> list[list[Any]]:
 
 def create_cog_category_mapping(
     mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
-) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, commands.Command[Any, Any, Any]]]]:
+) -> tuple[
+    dict[str, dict[str, str]],
+    dict[str, dict[str, commands.Command[Any, Any, Any]]],
+]:
     """
     Create a mapping of command categories and commands.
 
@@ -110,7 +113,9 @@ def create_cog_category_mapping(
             for command in cog_commands:
                 # Format command aliases for category display
                 cmd_aliases = (
-                    ", ".join(f"`{alias}`" for alias in command.aliases) if command.aliases else "`No aliases`"
+                    ", ".join(f"`{alias}`" for alias in command.aliases)
+                    if command.aliases
+                    else "`No aliases`"
                 )
                 command_categories[cog_group][command.name] = cmd_aliases
                 command_mapping[cog_group][command.name] = command
@@ -149,7 +154,11 @@ def get_cog_groups() -> list[str]:
         A list of module group names.
     """
     modules_dir = Path(__file__).parent.parent / "modules"
-    return [d.name for d in modules_dir.iterdir() if d.is_dir() and not d.name.startswith("_")]
+    return [
+        d.name
+        for d in modules_dir.iterdir()
+        if d.is_dir() and not d.name.startswith("_")
+    ]
 
 
 def is_large_command_group(command: commands.Group[Any, Any, Any]) -> bool:

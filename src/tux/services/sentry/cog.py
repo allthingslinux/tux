@@ -5,7 +5,12 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.bot import Tux
-from tux.services.sentry import set_command_context, set_user_context, track_command_end, track_command_start
+from tux.services.sentry import (
+    set_command_context,
+    set_user_context,
+    track_command_end,
+    track_command_start,
+)
 
 
 class SentryHandler(commands.Cog):

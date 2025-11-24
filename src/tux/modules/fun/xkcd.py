@@ -41,7 +41,11 @@ class Xkcd(BaseCog):
         aliases=["xk"],
     )
     @commands.guild_only()
-    async def xkcd(self, ctx: commands.Context[Tux], comic_id: int | None = None) -> None:
+    async def xkcd(
+        self,
+        ctx: commands.Context[Tux],
+        comic_id: int | None = None,
+    ) -> None:
         """
         Xkcd related commands.
 
@@ -147,7 +151,9 @@ class Xkcd(BaseCog):
                 bot=self.bot,
                 embed_type=EmbedCreator.INFO,
                 title="",
-                description=f"\n\n> {comic.description.strip()}" if comic.description else "",
+                description=f"\n\n> {comic.description.strip()}"
+                if comic.description
+                else "",
                 custom_author_text=f"xkcd {comic.id} - {comic.title}",
                 image_url=comic.image_url,
             )

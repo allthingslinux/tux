@@ -221,7 +221,11 @@ class Unjail(ModerationCogBase):
 
             # Add roles back to member after sending the response
             if case.case_user_roles:
-                success, restored_roles = await self.restore_roles(member, case.case_user_roles, flags.reason)
+                success, restored_roles = await self.restore_roles(
+                    member,
+                    case.case_user_roles,
+                    flags.reason,
+                )
                 if success and restored_roles:
                     logger.info(f"Restored {len(restored_roles)} roles to {member}")
 
@@ -244,7 +248,9 @@ class Unjail(ModerationCogBase):
 
                         if missing_roles:
                             missing_str = ", ".join(missing_roles)
-                            logger.warning(f"Failed to restore roles for {member}: {missing_str}")
+                            logger.warning(
+                                f"Failed to restore roles for {member}: {missing_str}",
+                            )
                             # Optionally notify moderator/user if roles failed to restore
                             # Example: await ctx.send(f"Note: Some roles couldn't be restored: {missing_str}", ephemeral=True)
 

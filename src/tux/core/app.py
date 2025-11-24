@@ -167,7 +167,11 @@ class TuxApp:
             capture_exception_safe(e)
             raise
 
-    def _handle_signal_shutdown(self, loop: asyncio.AbstractEventLoop, signum: int) -> None:
+    def _handle_signal_shutdown(
+        self,
+        loop: asyncio.AbstractEventLoop,
+        signum: int,
+    ) -> None:
         """
         Handle shutdown signal with different behavior based on bot state.
 
@@ -364,7 +368,9 @@ class TuxApp:
         except Exception as e:
             # Unexpected error during startup - log and report to Sentry
             logger.critical(f"Bot failed to start: {type(e).__name__}")
-            logger.info("Check your configuration and ensure all services are properly set up")
+            logger.info(
+                "Check your configuration and ensure all services are properly set up",
+            )
             capture_exception_safe(e)
             exit_code = 1
         else:
@@ -401,7 +407,9 @@ class TuxApp:
             )
             owner_ids.update(CONFIG.USER_IDS.SYSADMINS)
         else:
-            logger.warning("Eval is disabled for sysadmins; see .env file for more info.")
+            logger.warning(
+                "Eval is disabled for sysadmins; see .env file for more info.",
+            )
 
         return owner_ids
 
@@ -545,7 +553,9 @@ class TuxApp:
         # This ensures error reports aren't lost during shutdown
         await SentryManager.flush_async()
 
-        logger.info(f"Shutdown complete (user_requested={self._user_requested_shutdown})")
+        logger.info(
+            f"Shutdown complete (user_requested={self._user_requested_shutdown})",
+        )
         if self._user_requested_shutdown:
             logger.info("Exiting with code 130 (user requested shutdown)")
             return 130

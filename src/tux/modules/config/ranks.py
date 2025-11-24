@@ -39,7 +39,11 @@ class RankManager(BaseConfigManager):
 
         try:
             # Check if ranks already exist
-            existing_ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(ctx.guild.id)
+            existing_ranks = (
+                await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+                    ctx.guild.id,
+                )
+            )
             if existing_ranks:
                 embed = self.create_warning_embed(
                     "⚠️ Permission Ranks Already Exist",
@@ -58,7 +62,8 @@ class RankManager(BaseConfigManager):
 
             # Generate rank list from the default ranks
             rank_lines = [
-                f"• **Rank {rank_num}**: {rank_data['name']}" for rank_num, rank_data in sorted(DEFAULT_RANKS.items())
+                f"• **Rank {rank_num}**: {rank_data['name']}"
+                for rank_num, rank_data in sorted(DEFAULT_RANKS.items())
             ]
 
             embed = self.create_success_embed(

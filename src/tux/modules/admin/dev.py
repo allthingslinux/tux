@@ -205,7 +205,9 @@ class Dev(BaseCog):
 
                 embed = discord.Embed(
                     title="Emoji Synchronization Results",
-                    color=discord.Color.green() if created_count > 0 else discord.Color.blue(),
+                    color=discord.Color.green()
+                    if created_count > 0
+                    else discord.Color.blue(),
                 )
 
                 embed.add_field(
@@ -315,7 +317,11 @@ class Dev(BaseCog):
             bool
                 True if the message is a valid 'yes' or 'no' response from the command author.
             """
-            return m.author == ctx.author and m.channel == ctx.channel and m.content.lower() in ["yes", "no"]
+            return (
+                m.author == ctx.author
+                and m.channel == ctx.channel
+                and m.content.lower() in ["yes", "no"]
+            )
 
         try:
             response = await self.bot.wait_for("message", check=check, timeout=30.0)
@@ -390,7 +396,9 @@ class Dev(BaseCog):
         try:
             # Check if emoji manager is initialized by examining the cache
             if len(self.bot.emoji_manager.cache) == 0:
-                await ctx.send("Emoji manager cache is empty. It might not be initialized yet.")
+                await ctx.send(
+                    "Emoji manager cache is empty. It might not be initialized yet.",
+                )
                 return
 
             # Get all emojis and sort them by name
@@ -443,9 +451,13 @@ class Dev(BaseCog):
 
                     # Create copyable reference format
                     is_animated = getattr(emoji, "animated", False)
-                    emoji_ref = f"<{'a' if is_animated else ''}:{emoji_name}:{emoji_id}>"
+                    emoji_ref = (
+                        f"<{'a' if is_animated else ''}:{emoji_name}:{emoji_id}>"
+                    )
 
-                    embed.description += f"{emoji_display}\u2003\u2003\u2003`{emoji_ref}`\n"
+                    embed.description += (
+                        f"{emoji_display}\u2003\u2003\u2003`{emoji_ref}`\n"
+                    )
 
                 menu.add_page(embed)
 
@@ -543,7 +555,10 @@ class Dev(BaseCog):
         resolved_cog = self._resolve_cog_path(cog)
         try:
             await self.bot.unload_extension(resolved_cog)
-            await ctx.send(f"✅ Cog `{resolved_cog}` unloaded successfully.", ephemeral=True)
+            await ctx.send(
+                f"✅ Cog `{resolved_cog}` unloaded successfully.",
+                ephemeral=True,
+            )
             logger.info(f"Cog {resolved_cog} unloaded by {ctx.author}")
         except commands.ExtensionNotLoaded:
             await ctx.send(f"❌ Cog `{resolved_cog}` is not loaded.")
@@ -575,7 +590,10 @@ class Dev(BaseCog):
         resolved_cog = self._resolve_cog_path(cog)
         try:
             await self.bot.reload_extension(resolved_cog)
-            await ctx.send(f"✅ Cog `{resolved_cog}` reloaded successfully.", ephemeral=True)
+            await ctx.send(
+                f"✅ Cog `{resolved_cog}` reloaded successfully.",
+                ephemeral=True,
+            )
             logger.info(f"Cog {resolved_cog} reloaded by {ctx.author}")
         except commands.ExtensionNotLoaded:
             await ctx.send(f"❌ Cog `{resolved_cog}` is not loaded.")

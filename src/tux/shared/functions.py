@@ -164,7 +164,9 @@ def convert_to_seconds(time_str: str) -> int:
         elif char in time_units:
             # If the unit is known, update total_seconds
             if current_value == 0:
-                return 0  # No number specified for the unit, thus treat as invalid input
+                return (
+                    0  # No number specified for the unit, thus treat as invalid input
+                )
             total_seconds += current_value * time_units[char]
             current_value = 0  # Reset for next number-unit pair
         else:
@@ -283,7 +285,9 @@ def generate_usage(
     parameters: dict[str, commands.Parameter] = command.clean_params
 
     flag_prefix = getattr(flag_converter, "__commands_flag_prefix__", "-")
-    flags: dict[str, commands.Flag] = flag_converter.get_flags() if flag_converter else {}
+    flags: dict[str, commands.Flag] = (
+        flag_converter.get_flags() if flag_converter else {}
+    )
 
     # Handle regular parameters first
     for param_name, param in parameters.items():

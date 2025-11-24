@@ -43,7 +43,10 @@ class TtyRoles(BaseCog):
         user_count = member.guild.member_count
         role_name = self._compute_role_name(user_count)
 
-        role = discord.utils.get(member.guild.roles, name=role_name) or await self.try_create_role(member, role_name)
+        role = discord.utils.get(
+            member.guild.roles,
+            name=role_name,
+        ) or await self.try_create_role(member, role_name)
 
         if role:
             await self.try_assign_role(member, role)
@@ -73,7 +76,10 @@ class TtyRoles(BaseCog):
         return f"{self.base_role_name}{2**exponent}"
 
     @staticmethod
-    async def try_create_role(member: discord.Member, role_name: str) -> discord.Role | None:
+    async def try_create_role(
+        member: discord.Member,
+        role_name: str,
+    ) -> discord.Role | None:
         """
         Create a role in the guild.
 
@@ -110,13 +116,17 @@ class TtyRoles(BaseCog):
             The role to assign.
         """
         try:
-            await discord.utils.sleep_until(datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=5))
+            await discord.utils.sleep_until(
+                datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=5),
+            )
             await member.add_roles(role)
 
         except discord.NotFound as error:
             # check if the member left the server
             if member.guild.get_member(member.id) is None:
-                logger.info(f"Member {member} left or got kicked by the server before the role could be assigned.")
+                logger.info(
+                    f"Member {member} left or got kicked by the server before the role could be assigned.",
+                )
                 return
             logger.error(f"Failed to assign role {role.name} to {member}: {error}")
 

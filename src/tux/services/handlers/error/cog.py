@@ -10,7 +10,12 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.bot import Tux
-from tux.services.sentry import capture_exception_safe, set_command_context, set_user_context, track_command_end
+from tux.services.sentry import (
+    capture_exception_safe,
+    set_command_context,
+    set_user_context,
+    track_command_end,
+)
 
 from .config import ERROR_CONFIG_MAP, ErrorHandlerConfig
 from .extractors import unwrap_error
@@ -67,7 +72,11 @@ class ErrorHandler(commands.Cog):
 
         logger.debug("Error handler reloaded with fresh modules")
 
-    async def _handle_error(self, source: commands.Context[Tux] | discord.Interaction, error: Exception) -> None:
+    async def _handle_error(
+        self,
+        source: commands.Context[Tux] | discord.Interaction,
+        error: Exception,
+    ) -> None:
         """Handle errors for commands and interactions."""
         # Unwrap nested errors
         root_error = unwrap_error(error)
@@ -91,7 +100,11 @@ class ErrorHandler(commands.Cog):
         if config.send_to_sentry:
             capture_exception_safe(root_error)
 
-    def _set_sentry_context(self, source: commands.Context[Tux] | discord.Interaction, error: Exception) -> None:
+    def _set_sentry_context(
+        self,
+        source: commands.Context[Tux] | discord.Interaction,
+        error: Exception,
+    ) -> None:
         """Set enhanced Sentry context for error reporting."""
         # Set command context (includes Discord info, performance data, etc.)
         set_command_context(source)
@@ -136,7 +149,9 @@ class ErrorHandler(commands.Cog):
 
         if config.send_to_sentry:
             # Include traceback for errors going to Sentry
-            tb = "".join(traceback.format_exception(type(error), error, error.__traceback__))
+            tb = "".join(
+                traceback.format_exception(type(error), error, error.__traceback__),
+            )
             log_func(f"Error: {error}\nTraceback:\n{tb}")
         else:
             log_func(f"Error (not sent to Sentry): {error}")
@@ -162,7 +177,11 @@ class ErrorHandler(commands.Cog):
             logger.warning(f"Failed to send error response: {e}")
 
     @commands.Cog.listener("on_command_error")
-    async def on_command_error(self, ctx: commands.Context[Tux], error: commands.CommandError) -> None:
+    async def on_command_error(
+        self,
+        ctx: commands.Context[Tux],
+        error: commands.CommandError,
+    ) -> None:
         """Handle prefix command errors."""
         # Handle CommandNotFound with suggestions
         if isinstance(error, commands.CommandNotFound):
