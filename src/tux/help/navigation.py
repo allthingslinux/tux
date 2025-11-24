@@ -251,8 +251,8 @@ class HelpNavigation:
         view.add_item(
             CommandSelectMenu(self, options, f"Select a command from {category}"),
         )
-        view.add_item(BackButton(self))
         view.add_item(CloseButton())
+        view.add_item(BackButton(self))
         return view
 
     async def create_command_view(self) -> HelpView:
@@ -266,8 +266,8 @@ class HelpNavigation:
         """
         view = HelpView(self)
 
-        # Add back button first
-        view.add_item(BackButton(self))
+        # Add close button first
+        view.add_item(CloseButton())
 
         # If this is a command group, handle navigation
         if (
@@ -338,8 +338,8 @@ class HelpNavigation:
                     )
                     view.add_item(subcommand_select)
 
-        # Add close button last
-        view.add_item(CloseButton())
+        # Add back button last
+        view.add_item(BackButton(self))
 
         return view
 
@@ -360,8 +360,8 @@ class HelpNavigation:
             if self.current_subcommand_page < len(self.subcommand_pages) - 1:
                 view.add_item(NextButton(self))
 
-        view.add_item(BackButton(self))
         view.add_item(CloseButton())
+        view.add_item(BackButton(self))
         return view
 
     async def handle_category_select(
