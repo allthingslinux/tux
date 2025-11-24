@@ -33,11 +33,11 @@ repos:
         exclude: docker-compose.*\.yml$
         args: [-c=.yamllint.yml]
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.8
+    rev: v1.7.9
     hooks:
       - id: actionlint
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.45.0
+    rev: v0.46.0
     hooks:
       - id: markdownlint
   - repo: https://github.com/asottile/add-trailing-comma
@@ -45,21 +45,21 @@ repos:
     hooks:
       - id: add-trailing-comma
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.5
+    rev: v0.14.6
     hooks:
       - id: ruff-check
         args: [--fix]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.5
+    rev: v0.14.6
     hooks:
       - id: ruff-format
   - repo: https://github.com/jsh9/pydoclint
-    rev: 0.8.1
+    rev: 0.8.2
     hooks:
       - id: pydoclint
         args: [--config=pyproject.toml]
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.29.0
+    rev: v8.29.1
     hooks:
       - id: gitleaks
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook

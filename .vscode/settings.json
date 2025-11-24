@@ -47,6 +47,10 @@
   "git.pruneOnFetch": true,
   "git.showProgress": true,
   "git.fetchOnPull": true,
+  "gitlens.advanced.blame.customArguments": [
+    "--ignore-revs-file",
+    ".git-blame-ignore-revs"
+  ],
   "[markdown]": {
     "files.trimTrailingWhitespace": false,
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
@@ -68,7 +72,7 @@
   "yaml.format.enable": false,
   "yaml.format.singleQuote": true,
   "yaml.format.bracketSpacing": true,
-  "yaml.format.printWidth": 80,
+  "yaml.format.printWidth": 88,
   "yaml.validate": true,
   "yaml.hover": true,
   "yaml.completion": true,
@@ -96,9 +100,6 @@
     "tag:yaml.org,2002:python/object/apply:pymdownx.slugs.slugify mapping"
   ],
   "markdown.validate.enabled": true,
-  "editor.rulers": [
-    120
-  ],
   "editor.wordWrap": "off",
   "editor.tabSize": 4,
   "editor.detectIndentation": false,
