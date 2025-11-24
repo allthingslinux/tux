@@ -54,6 +54,7 @@ dependencies = [
     "typer>=0.17.3",
     "semver>=3.0.4",
     "tomli-w>=1.0.0",
+    "tomlkit>=0.13.3",
 ]
 
 [project.urls]
@@ -78,7 +79,7 @@ dev = [
     "yamlfix>=1.18.0",
     "pydoclint>=0.7.3",
     "docstr-coverage>=2.3.2",
-    "pydantic-settings-export[regions]==1.0.3",
+    "pydantic-settings-export[email,regions,toml] @ git+https://github.com/jag-k/pydantic-settings-export.git@73a558a329541954a583001a88151cd8c2355fa0",
 ]
 test = [
     "pytest>=8.4.2",
@@ -492,15 +493,16 @@ enabled = true
 paths = ["docs/content/reference/env.md"]
 enabled = true
 table_only = false
-file_prefix = "# ENV Reference"
+file_prefix = "# ENV Reference\n\n"
 to_upper_case = true
 region = "config"
 
-# Custom generators for TOML, YAML, and JSON (stored in config/ directory)
-[[tool.pydantic_settings_export.generators."tux.shared.config.generators:TomlGenerator"]]
+# Built-in TOML generator (from pydantic-settings-export)
+[[tool.pydantic_settings_export.generators.toml]]
 paths = ["config/config.toml.example"]
-include_comments = true
 enabled = true
+
+# Custom generators for YAML and JSON (stored in config/ directory)
 
 [[tool.pydantic_settings_export.generators."tux.shared.config.generators:YamlGenerator"]]
 paths = ["config/config.yaml.example"]

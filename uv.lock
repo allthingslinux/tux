@@ -701,6 +701,15 @@ wheels = [
 ]
 
 [[package]]
+name = "dnspython"
+version = "2.8.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/8c/8b/57666417c0f90f08bcafa776861060426765fdb422eb10212086fb811d26/dnspython-2.8.0.tar.gz", hash = "sha256:181d3c6996452cb1189c4046c61599b84a5a86e099562ffde77d26984ff26d0f", size = 368251, upload-time = "2025-09-07T18:58:00.022Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ba/5a/18ad964b0086c6e62e2e7500f7edc89e3faa45033c71c1893d34eed2b2de/dnspython-2.8.0-py3-none-any.whl", hash = "sha256:01d9bbc4a2d76bf0db7c1f729812ded6d912bd318d3b1cf81d30c0f845dbf3af", size = 331094, upload-time = "2025-09-07T18:57:58.071Z" },
+]
+
+[[package]]
 name = "docker"
 version = "7.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -769,6 +778,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/88/3a/a61d9a1f319a186b05d14df17daea42fcddea63c213bcd61a929fb3a6796/editorconfig-0.17.1.tar.gz", hash = "sha256:23c08b00e8e08cc3adcddb825251c497478df1dada6aefeb01e626ad37303745", size = 14695, upload-time = "2025-06-09T08:21:37.097Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/96/fd/a40c621ff207f3ce8e484aa0fc8ba4eb6e3ecf52e15b42ba764b457a9550/editorconfig-0.17.1-py3-none-any.whl", hash = "sha256:1eda9c2c0db8c16dbd50111b710572a5e6de934e39772de1959d41f64fc17c82", size = 16360, upload-time = "2025-06-09T08:21:35.654Z" },
+]
+
+[[package]]
+name = "email-validator"
+version = "2.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dnspython" },
+    { name = "idna" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f5/22/900cb125c76b7aaa450ce02fd727f452243f2e91a61af068b40adba60ea9/email_validator-2.3.0.tar.gz", hash = "sha256:9fc05c37f2f6cf439ff414f8fc46d917929974a82244c20eb10231ba60c54426", size = 51238, upload-time = "2025-08-26T13:09:06.831Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/de/15/545e2b6cf2e3be84bc1ed85613edd75b8aea69807a71c26f4ca6a9258e82/email_validator-2.3.0-py3-none-any.whl", hash = "sha256:80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4", size = 35604, upload-time = "2025-08-26T13:09:05.858Z" },
 ]
 
 [[package]]
@@ -2234,20 +2256,22 @@ wheels = [
 
 [[package]]
 name = "pydantic-settings-export"
-version = "1.0.3"
-source = { registry = "https://pypi.org/simple" }
+version = "1.0.4.dev3+g73a558a32"
+source = { git = "https://github.com/jag-k/pydantic-settings-export.git?rev=73a558a329541954a583001a88151cd8c2355fa0#73a558a329541954a583001a88151cd8c2355fa0" }
 dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/96/33/0ad930d57956ab8dae646e02544793aabb80d9d66dbad319f4cc20833225/pydantic_settings_export-1.0.3.tar.gz", hash = "sha256:8b4f0b5daab0113fdfe9018b5684b7fb6be6157275604f2f22cd8cdd7d7b8f7b", size = 87452, upload-time = "2025-08-19T16:33:13.3Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/65/e3/fb2d94d5bfaee29b6514dcbc4b6c7aef70e3b4c8ae9eb768ababdc68355c/pydantic_settings_export-1.0.3-py3-none-any.whl", hash = "sha256:86c804d837c26ca2d786080b27036818c816b0963e01ea8f473727aa98b84c07", size = 29330, upload-time = "2025-08-19T16:33:11.954Z" },
-]
 
 [package.optional-dependencies]
+email = [
+    { name = "email-validator" },
+]
 regions = [
     { name = "text-region-parser" },
+]
+toml = [
+    { name = "tomlkit" },
 ]
 
 [[package]]
@@ -3061,6 +3085,15 @@ wheels = [
 ]
 
 [[package]]
+name = "tomlkit"
+version = "0.13.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/cc/18/0bbf3884e9eaa38819ebe46a7bd25dcd56b67434402b66a58c4b8e552575/tomlkit-0.13.3.tar.gz", hash = "sha256:430cf247ee57df2b94ee3fbe588e71d362a941ebb545dec29b53961d61add2a1", size = 185207, upload-time = "2025-06-05T07:13:44.947Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bd/75/8539d011f6be8e29f339c42e633aae3cb73bffa95dd0f9adec09b9c58e85/tomlkit-0.13.3-py3-none-any.whl", hash = "sha256:c89c649d79ee40629a9fda55f8ace8c6a1b42deb912b2a8fd8d942ddadb606b0", size = 38901, upload-time = "2025-06-05T07:13:43.546Z" },
+]
+
+[[package]]
 name = "tqdm"
 version = "4.67.1"
 source = { registry = "https://pypi.org/simple" }
@@ -3117,6 +3150,7 @@ dependencies = [
     { name = "sqlalchemy" },
     { name = "sqlmodel" },
     { name = "tomli-w" },
+    { name = "tomlkit" },
     { name = "typer" },
     { name = "watchdog" },
 ]
@@ -3126,7 +3160,7 @@ dev = [
     { name = "basedpyright" },
     { name = "docstr-coverage" },
     { name = "pre-commit" },
-    { name = "pydantic-settings-export", extra = ["regions"] },
+    { name = "pydantic-settings-export", extra = ["email", "regions", "toml"] },
     { name = "pydoclint" },
     { name = "ruff" },
     { name = "yamlfix" },
@@ -3239,6 +3273,7 @@ requires-dist = [
     { name = "sqlalchemy", specifier = ">=2.0.14" },
     { name = "sqlmodel", specifier = ">=0.0.24" },
     { name = "tomli-w", specifier = ">=1.0.0" },
+    { name = "tomlkit", specifier = ">=0.13.3" },
     { name = "typer", specifier = ">=0.17.3" },
     { name = "watchdog", specifier = ">=6.0.0" },
 ]
@@ -3248,7 +3283,7 @@ dev = [
     { name = "basedpyright", specifier = "==1.29.5" },
     { name = "docstr-coverage", specifier = ">=2.3.2" },
     { name = "pre-commit", specifier = ">=4.3.0" },
-    { name = "pydantic-settings-export", extras = ["regions"], specifier = "==1.0.3" },
+    { name = "pydantic-settings-export", extras = ["email", "regions", "toml"], git = "https://github.com/jag-k/pydantic-settings-export.git?rev=73a558a329541954a583001a88151cd8c2355fa0" },
     { name = "pydoclint", specifier = ">=0.7.3" },
     { name = "ruff", specifier = ">=0.12.4" },
     { name = "yamlfix", specifier = ">=1.18.0" },
