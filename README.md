@@ -150,6 +150,12 @@ Modular plugin architecture for extending functionality without modifying core c
    uv run pre-commit install
    ```
 
+   Configure git to ignore formatting commits in blame:
+
+   ```bash
+   git config blame.ignoreRevsFile .git-blame-ignore-revs
+   ```
+
 3. **Configure your environment:**
 
    ```bash
