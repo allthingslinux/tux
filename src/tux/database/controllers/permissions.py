@@ -17,6 +17,7 @@ from tux.database.models.models import (
     PermissionCommand,
     PermissionRank,
 )
+from tux.services.sentry import capture_exception_safe
 
 if TYPE_CHECKING:
     from tux.database.service import DatabaseService
@@ -61,9 +62,18 @@ class PermissionRankController(BaseController[PermissionRank]):
                 name=name,
                 description=description,
             )
-        except Exception:
-            logger.exception(
-                f"Error creating permission rank {rank} for guild {guild_id}",
+        except Exception as e:
+            logger.error(
+                f"Error creating permission rank {rank} for guild {guild_id}: {e}",
+            )
+
+            capture_exception_safe(
+                e,
+                extra_context={
+                    "operation": "create_permission_rank",
+                    "guild_id": str(guild_id),
+                    "rank": str(rank),
+                },
             )
             raise
         else:
