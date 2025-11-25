@@ -52,7 +52,12 @@ class BotSetupOrchestrator:
 
         # Database setup (includes migrations)
         if not await self.database_setup.safe_setup():
-            msg = "Database setup failed"
+            # The underlying error is already logged and captured by safe_setup()
+            # This error provides context that database setup failed at the orchestrator level
+            msg = (
+                "Database setup failed. Check logs and Sentry for the underlying connection error. "
+                "Common causes: database not running, incorrect connection string, or network issues."
+            )
             raise TuxDatabaseConnectionError(msg)
         set_setup_phase_tag(span, "database", "finished")
 

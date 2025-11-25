@@ -44,7 +44,8 @@ class BaseSetupService(ABC):
                 self.logger.info(f"Setting up {self.name}...")
                 await self.setup()
                 self.logger.info(f"{self.name.title()} setup completed")
-                span.set_tag(f"{self.name}.setup", "success")
+                span.set_data("setup.status", "success")
+                span.set_data("setup.service", self.name)
             except KeyboardInterrupt:
                 # Re-raise KeyboardInterrupt to allow signal handling
                 self.logger.info(
@@ -58,8 +59,10 @@ class BaseSetupService(ABC):
                     # Use error() instead of exception() to avoid duplicate tracebacks
                     # Sentry already captures full exception details
                     self.logger.error(f"{self.name.title()} setup failed: {e}")  # noqa: TRY400
-                span.set_tag(f"{self.name}.setup", "failed")
-                span.set_data("error", str(e))
+                span.set_data("setup.status", "failed")
+                span.set_data("setup.service", self.name)
+                span.set_data("setup.error", str(e))
+                span.set_data("setup.error_type", type(e).__name__)
                 capture_exception_safe(e)
                 return False
             else:
