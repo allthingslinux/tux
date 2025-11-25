@@ -98,6 +98,13 @@ uv run docs build           # Build site
 uv run docs deploy          # Deploy to GitHub Pages
 ```
 
+**Configuration:**
+
+```bash
+uv run config generate      # Generate configuration example files
+uv run config validate      # Validate the current configuration
+```
+
 ## Development Workflow
 
 1. **Setup:** `uv sync` → configure `.env` & `config.toml`

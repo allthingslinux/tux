@@ -55,10 +55,7 @@
     "files.trimTrailingWhitespace": false,
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
   },
-  "markdownlint.config": {
-    "extends": ".markdownlint.yaml"
-  },
-  "markdownlint.run": "onType",
+  "markdownlint.configFile": ".markdownlint.yaml",
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
