@@ -23,14 +23,12 @@ import aiofiles.os
 from discord.ext import commands
 from loguru import logger
 
+from tux.services.sentry import capture_exception_safe
+from tux.services.sentry.metrics import record_cog_metric
 from tux.services.sentry.tracing import (
     capture_span_exception,
-    enhanced_span,
-    safe_set_name,
     set_span_attributes,
     span,
-    start_span,
-    transaction,
 )
 from tux.shared.config import CONFIG
 from tux.shared.constants import COG_PRIORITIES, MILLISECONDS_PER_SECOND
@@ -658,7 +656,6 @@ class CogLoader(commands.Cog):
             msg = "Failed to load cogs"
             raise TuxCogLoadError(msg) from e
 
-    @transaction("cog.load_folder", description="Loading all cogs from folder")
     async def load_cogs_from_folder(self, folder_name: str) -> None:
         """
         Load cogs from a named folder relative to the tux package with timing.
@@ -683,41 +680,29 @@ class CogLoader(commands.Cog):
         Skips gracefully if the folder doesn't exist (useful for optional
         plugin directories). Logs warnings for cogs that take >1s to load.
         """
-        # Tag Sentry transaction with folder metadata
-        set_span_attributes({"cog.folder": folder_name})
-
-        # Set descriptive name for Sentry transaction
-        with start_span(
-            "cog.load_folder_name",
-            f"Load Cogs: {folder_name}",
-        ) as name_span:
-            safe_set_name(name_span, f"Load Cogs: {folder_name}")
-
         start_time = time.perf_counter()
 
         # Resolve folder path relative to tux package
         cog_path: Path = Path(__file__).parent.parent / folder_name
 
-        set_span_attributes({"full_path": str(cog_path)})
-
         # Skip if folder doesn't exist (e.g., optional plugins directory)
         if not await aiofiles.os.path.exists(cog_path):
             logger.info(f"Folder {folder_name} does not exist, skipping")
-            set_span_attributes({"folder_exists": False})
             return
 
         try:
             # Load all cogs from this folder
+            # Note: Errors in cog initialization are captured separately,
+            # not attributed to the loader
             await self.load_cogs(path=cog_path)
             load_time = time.perf_counter() - start_time
 
-            # Record timing metrics for telemetry
-            set_span_attributes(
-                {
-                    "load_time_s": load_time,
-                    "load_time_ms": load_time * 1000,
-                    "folder_exists": True,
-                },
+            # Record metrics for folder loading
+            record_cog_metric(
+                cog_name=f"folder:{folder_name}",
+                operation="load_folder",
+                duration_ms=load_time * 1000,
+                success=True,
             )
 
             if load_time:
@@ -733,24 +718,39 @@ class CogLoader(commands.Cog):
                 if slow_cogs := {
                     k: v for k, v in self.load_times.items() if v > slow_threshold
                 }:
-                    set_span_attributes({"slow_cogs": slow_cogs})
                     logger.warning(
                         f"Slow loading cogs (>{slow_threshold * 1000:.0f}ms): {slow_cogs}",
                     )
 
         except Exception as e:
-            # Capture error for Sentry and re-raise
-            capture_span_exception(e, folder=folder_name, operation="load_folder")
+            # Record failure metric
+            load_time = time.perf_counter() - start_time
+
+            record_cog_metric(
+                cog_name=f"folder:{folder_name}",
+                operation="load_folder",
+                duration_ms=load_time * 1000,
+                success=False,
+                error_type=type(e).__name__,
+            )
+
+            # Capture exception separately (not as part of a transaction)
+            capture_exception_safe(
+                e,
+                extra_context={
+                    "cog_loader": {
+                        "folder": folder_name,
+                        "operation": "load_folder",
+                        "path": str(cog_path),
+                    },
+                },
+            )
+
             logger.error(f"Failed to load cogs from folder {folder_name}: {e}")
             msg = "Failed to load cogs from folder"
             raise TuxCogLoadError(msg) from e
 
     @classmethod
-    @transaction(
-        "cog.setup",
-        name="CogLoader Setup",
-        description="Initialize CogLoader and load all cogs",
-    )
     async def setup(cls, bot: commands.Bot) -> None:
         """
         Initialize the cog loader and load all bot cogs in priority order.
@@ -779,47 +779,60 @@ class CogLoader(commands.Cog):
         - Registers the CogLoader itself as a cog
         - Provides comprehensive telemetry via Sentry
         """
-        # Tag Sentry transaction with bot metadata
-        set_span_attributes({"bot.id": bot.user.id if bot.user else "unknown"})
-
         start_time = time.perf_counter()
         cog_loader = cls(bot)
 
         try:
             # Load handlers first (highest priority - event handlers, error handlers)
             # These need to be ready before any commands are registered
-            with enhanced_span("cog.load_handlers", "Load handlers"):
-                await cog_loader.load_cogs_from_folder(folder_name="services/handlers")
+            await cog_loader.load_cogs_from_folder(folder_name="services/handlers")
 
             # Load modules (normal priority - bot commands and features)
             # These are the main bot functionality
-            with enhanced_span("cog.load_modules", "Load modules"):
-                await cog_loader.load_cogs_from_folder(folder_name="modules")
+            await cog_loader.load_cogs_from_folder(folder_name="modules")
 
             # Load plugins (lowest priority - user extensions)
             # Optional folder for self-hosters to add custom cogs
-            with enhanced_span("cog.load_plugins", "Load plugins"):
-                await cog_loader.load_cogs_from_folder(folder_name="plugins")
+            await cog_loader.load_cogs_from_folder(folder_name="plugins")
 
             total_time = time.perf_counter() - start_time
 
-            # Record total loading time for monitoring
-            set_span_attributes(
-                {
-                    "total_load_time_s": total_time,
-                    "total_load_time_ms": total_time * 1000,
-                },
+            # Record metrics for setup (not a transaction - this is background setup)
+            record_cog_metric(
+                cog_name="CogLoader",
+                operation="setup",
+                duration_ms=total_time * 1000,
+                success=True,
             )
 
             # Register the CogLoader itself as a cog (for maintenance commands)
-            with enhanced_span("cog.register_loader", "Register CogLoader cog"):
-                await bot.add_cog(cog_loader)
+            await bot.add_cog(cog_loader)
 
             logger.info(f"Total cog loading time: {total_time * 1000:.0f}ms")
 
         except Exception as e:
-            # Critical error during cog loading - capture and re-raise
-            capture_span_exception(e, operation="cog_setup")
+            # Critical error during cog loading - record metric and capture exception
+            total_time = time.perf_counter() - start_time
+
+            record_cog_metric(
+                cog_name="CogLoader",
+                operation="setup",
+                duration_ms=total_time * 1000,
+                success=False,
+                error_type=type(e).__name__,
+            )
+
+            # Capture exception separately (not as part of a transaction)
+            capture_exception_safe(
+                e,
+                extra_context={
+                    "cog_loader": {
+                        "operation": "setup",
+                        "bot_id": bot.user.id if bot.user else "unknown",
+                    },
+                },
+            )
+
             logger.error(f"Failed to set up cog loader: {e}")
             msg = "Failed to initialize cog loader"
             raise TuxCogLoadError(msg) from e
