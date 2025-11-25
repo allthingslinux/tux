@@ -5,10 +5,17 @@ from __future__ import annotations
 import inspect
 from typing import Any
 
+import httpx
 import sentry_sdk
 from loguru import logger
 
-from tux.shared.exceptions import TuxError
+from tux.shared.exceptions import (
+    TuxAPIConnectionError,
+    TuxAPIPermissionError,
+    TuxAPIRequestError,
+    TuxAPIResourceNotFoundError,
+    TuxError,
+)
 
 from .config import is_initialized
 
@@ -164,3 +171,77 @@ def capture_api_error(
 
         scope.set_context("api_error", api_context)
         sentry_sdk.capture_exception(error)
+
+
+def convert_httpx_error(
+    error: Exception,
+    service_name: str,
+    endpoint: str,
+    *,
+    not_found_resource: str | None = None,
+) -> None:
+    """
+    Convert HTTPX error to TuxAPI exception and report to Sentry.
+
+    This function eliminates the duplicated error handling logic that's
+    currently repeated 20+ times across API wrappers (github.py, wandbox.py, etc.).
+
+    Parameters
+    ----------
+    error : Exception
+        The HTTPX error to convert.
+    service_name : str
+        Name of the API service (e.g., "GitHub", "Wikipedia", "Wandbox").
+    endpoint : str
+        API endpoint identifier (e.g., "repos.get", "issues.create").
+    not_found_resource : str | None, optional
+        Resource identifier for 404 errors (e.g., "Issue #123", "repo/name").
+        If not provided, defaults to "resource".
+
+    Raises
+    ------
+    TuxAPIResourceNotFoundError
+        For 404 errors (resource not found).
+    TuxAPIPermissionError
+        For 403 errors (permission denied).
+    TuxAPIRequestError
+        For other HTTP status errors (4xx, 5xx).
+    TuxAPIConnectionError
+        For connection/request errors (network issues, timeouts).
+    """
+    logger.error(f"API error in {endpoint} ({service_name}): {error}")
+
+    if isinstance(error, httpx.HTTPStatusError):
+        status_code = error.response.status_code
+
+        # Handle 404 Not Found
+        if status_code == 404:
+            resource = not_found_resource or "resource"
+            raise TuxAPIResourceNotFoundError(
+                service_name=service_name,
+                resource_identifier=resource,
+            ) from error
+
+        # Handle 403 Forbidden
+        if status_code == 403:
+            raise TuxAPIPermissionError(service_name=service_name) from error
+
+        # Handle other status errors - use existing capture_api_error()
+        capture_api_error(error, endpoint=endpoint, status_code=status_code)
+        raise TuxAPIRequestError(
+            service_name=service_name,
+            status_code=status_code,
+            reason=error.response.text,
+        ) from error
+
+    # Handle connection/request errors
+    if isinstance(error, httpx.RequestError):
+        capture_api_error(error, endpoint=endpoint)
+        raise TuxAPIConnectionError(
+            service_name=service_name,
+            original_error=error,
+        ) from error
+
+    # Handle other unexpected errors
+    capture_api_error(error, endpoint=endpoint)
+    raise error

@@ -1,23 +1,31 @@
-from typing import Any
 """Unit tests for Sentry service functions."""
 
-import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, patch
+
 import discord
-from discord.ext import commands
+import httpx
+import pytest
 
 from tux.services.sentry import (
+    capture_database_error,
     capture_exception_safe,
     capture_tux_exception,
-    capture_database_error,
+    convert_httpx_error,
     set_command_context,
-    set_user_context,
     set_context,
     set_tag,
-    track_command_start,
+    set_user_context,
     track_command_end,
+    track_command_start,
 )
-from tux.shared.exceptions import TuxError, TuxDatabaseError
+from tux.shared.exceptions import (
+    TuxAPIConnectionError,
+    TuxAPIPermissionError,
+    TuxAPIRequestError,
+    TuxAPIResourceNotFoundError,
+    TuxDatabaseError,
+    TuxError,
+)
 
 
 class TestSentryCaptureFunctions:
@@ -69,6 +77,96 @@ class TestSentryCaptureFunctions:
         capture_database_error(error, operation="test_query", query="SELECT * FROM test")
 
         mock_sentry_sdk.capture_exception.assert_called_once_with(error)
+
+    @patch("tux.services.sentry.utils.is_initialized")
+    @patch("tux.services.sentry.utils.capture_api_error")
+    def test_convert_httpx_error_404(self, mock_capture_api_error, mock_is_initialized) -> None:
+        """Test convert_httpx_error with 404 error."""
+        mock_is_initialized.return_value = True
+
+        # Mock HTTPStatusError with 404
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        error = httpx.HTTPStatusError("Not Found", request=MagicMock(), response=mock_response)
+
+        with pytest.raises(TuxAPIResourceNotFoundError) as exc_info:
+            convert_httpx_error(
+                error,
+                service_name="GitHub",
+                endpoint="repos.get",
+                not_found_resource="test/repo",
+            )
+
+        assert exc_info.value.service_name == "GitHub"
+        assert exc_info.value.resource_identifier == "test/repo"
+        # Should not call capture_api_error for 404 (user error)
+        mock_capture_api_error.assert_not_called()
+
+    @patch("tux.services.sentry.utils.is_initialized")
+    @patch("tux.services.sentry.utils.capture_api_error")
+    def test_convert_httpx_error_403(self, mock_capture_api_error, mock_is_initialized) -> None:
+        """Test convert_httpx_error with 403 error."""
+        mock_is_initialized.return_value = True
+
+        # Mock HTTPStatusError with 403
+        mock_response = MagicMock()
+        mock_response.status_code = 403
+        error = httpx.HTTPStatusError("Forbidden", request=MagicMock(), response=mock_response)
+
+        with pytest.raises(TuxAPIPermissionError) as exc_info:
+            convert_httpx_error(
+                error,
+                service_name="GitHub",
+                endpoint="repos.get",
+            )
+
+        assert exc_info.value.service_name == "GitHub"
+        # Should not call capture_api_error for 403 (user error)
+        mock_capture_api_error.assert_not_called()
+
+    @patch("tux.services.sentry.utils.is_initialized")
+    @patch("tux.services.sentry.utils.capture_api_error")
+    def test_convert_httpx_error_500(self, mock_capture_api_error, mock_is_initialized) -> None:
+        """Test convert_httpx_error with 500 error."""
+        mock_is_initialized.return_value = True
+
+        # Mock HTTPStatusError with 500
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_response.text = "Internal Server Error"
+        error = httpx.HTTPStatusError("Server Error", request=MagicMock(), response=mock_response)
+
+        with pytest.raises(TuxAPIRequestError) as exc_info:
+            convert_httpx_error(
+                error,
+                service_name="GitHub",
+                endpoint="repos.get",
+            )
+
+        assert exc_info.value.service_name == "GitHub"
+        assert exc_info.value.status_code == 500
+        # Should call capture_api_error for system errors
+        mock_capture_api_error.assert_called_once_with(error, endpoint="repos.get", status_code=500)
+
+    @patch("tux.services.sentry.utils.is_initialized")
+    @patch("tux.services.sentry.utils.capture_api_error")
+    def test_convert_httpx_error_connection_error(self, mock_capture_api_error, mock_is_initialized) -> None:
+        """Test convert_httpx_error with connection error."""
+        mock_is_initialized.return_value = True
+
+        error = httpx.RequestError("Connection failed", request=MagicMock())
+
+        with pytest.raises(TuxAPIConnectionError) as exc_info:
+            convert_httpx_error(
+                error,
+                service_name="GitHub",
+                endpoint="repos.get",
+            )
+
+        assert exc_info.value.service_name == "GitHub"
+        assert exc_info.value.original_error == error
+        # Should call capture_api_error for connection errors
+        mock_capture_api_error.assert_called_once_with(error, endpoint="repos.get")
 
 
 class TestSentryContextFunctions:

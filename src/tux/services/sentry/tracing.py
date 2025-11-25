@@ -277,7 +277,6 @@ def create_instrumentation_wrapper[**P, R](
 def transaction(
     op: str,
     name: str | None = None,
-    description: str | None = None,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """
     Wrap a function with a Sentry transaction.
@@ -292,8 +291,6 @@ def transaction(
         The operation name for the transaction (e.g., 'db.query').
     name : Optional[str]
         The name for the transaction. Defaults to the function's qualified name.
-    description : Optional[str]
-        A description of what the transaction is doing.
 
     Returns
     -------
@@ -320,7 +317,6 @@ def transaction(
             return func
 
         transaction_name = name or f"{func.__module__}.{func.__qualname__}"
-        transaction_description = description or f"Executing {func.__qualname__}"
 
         def context_factory() -> Any:
             """
@@ -334,7 +330,6 @@ def transaction(
             return sentry_sdk.start_transaction(
                 op=op,
                 name=transaction_name,
-                description=transaction_description,
             )
 
         return create_instrumentation_wrapper(
@@ -388,7 +383,7 @@ def span(
         if not sentry_sdk.is_initialized():
             return func
 
-        span_description = description or f"Executing {func.__qualname__}"
+        span_name = description or f"Executing {func.__qualname__}"
 
         def context_factory() -> Any:
             """
@@ -399,7 +394,8 @@ def span(
             Any
                 Sentry span context manager.
             """
-            return sentry_sdk.start_span(op=op, description=span_description)
+            # Note: description parameter is deprecated, use name instead
+            return sentry_sdk.start_span(op=op, name=span_name)
 
         return create_instrumentation_wrapper(
             func,
@@ -455,7 +451,6 @@ def start_span(op: str, name: str = "") -> Generator[DummySpan | Any]:
 def start_transaction(
     op: str,
     name: str,
-    description: str = "",
 ) -> Generator[DummyTransaction | Any]:
     """
     Context manager for creating a Sentry transaction for a block of code.
@@ -470,8 +465,6 @@ def start_transaction(
         The operation name for the transaction.
     name : str
         The name for the transaction.
-    description : str
-        A description of what the transaction is doing.
 
     Yields
     ------
@@ -491,7 +484,6 @@ def start_transaction(
         with sentry_sdk.start_transaction(
             op=op,
             name=name,
-            description=description,
         ) as transaction:
             try:
                 yield transaction
@@ -549,20 +541,22 @@ def finish_transaction_on_error() -> None:
 
 def set_span_attributes(attributes: dict[str, Any]) -> None:
     """
-    Set multiple tags and data attributes on the current active Sentry span.
+    Set multiple data attributes on the current active Sentry span.
 
     This helper function simplifies attaching context to a span by accepting a
-    dictionary of attributes. Keys are automatically treated as tags.
+    dictionary of attributes. Uses `set_data()` for span attributes (visible in
+    trace explorer), not `set_tag()` (which is for filtering).
 
     Parameters
     ----------
     attributes : dict[str, Any]
         A dictionary where keys are the attribute names and values are the
-        attribute values to set on the span.
+        attribute values to set on the span. Values can be string, number,
+        boolean, or arrays of these types.
     """
     if sentry_sdk.is_initialized() and (span := sentry_sdk.get_current_span()):
         for key, value in attributes.items():
-            span.set_tag(key, value)
+            span.set_data(key, value)
 
 
 def set_setup_phase_tag(span: Any, phase: str, status: str = "starting") -> None:
@@ -643,10 +637,10 @@ def enhanced_span(
         return
 
     with start_span(op, name) as span:
-        # Set initial data if provided
+        # Set initial data if provided (use set_data for span attributes)
         if initial_data:
             for key, value in initial_data.items():
-                span.set_tag(key, value)
+                span.set_data(key, value)
 
         try:
             yield span

@@ -14,6 +14,8 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.services.sentry import capture_exception_safe
+
 # --- Configuration Constants ---
 
 DEFAULT_EMOJI_ASSETS_PATH = Path(__file__).parents[3] / "assets" / "emojis"
@@ -84,8 +86,15 @@ def _read_emoji_file(file_path: Path) -> bytes | None:
         return None
 
     except Exception as e:
-        logger.exception(
+        logger.error(
             f"An unexpected error occurred reading file '{file_path}': {e}",
+        )
+        capture_exception_safe(
+            e,
+            extra_context={
+                "operation": "read_local_file",
+                "file_path": str(file_path),
+            },
         )
         return None
 
@@ -188,15 +197,29 @@ class EmojiManager:
                 logger.error(f"Failed to fetch application emojis during init: {e}")
                 self._initialized = False
                 return False
-            except discord.DiscordException:
-                logger.exception(
+            except discord.DiscordException as e:
+                logger.error(
                     "Unexpected Discord error during emoji cache initialization.",
+                )
+                capture_exception_safe(
+                    e,
+                    extra_context={
+                        "operation": "emoji_cache_initialization",
+                        "error_type": "DiscordException",
+                    },
                 )
                 self._initialized = False
                 return False
-            except Exception:
-                logger.exception(
+            except Exception as e:
+                logger.error(
                     "Unexpected non-Discord error during emoji cache initialization.",
+                )
+                capture_exception_safe(
+                    e,
+                    extra_context={
+                        "operation": "emoji_cache_initialization",
+                        "error_type": "non-Discord",
+                    },
                 )
                 self._initialized = False
                 return False
@@ -268,8 +291,15 @@ class EmojiManager:
         except ValueError as e:
             logger.error(f"Invalid value for creating emoji '{name}': {e}")
         except Exception as e:
-            logger.exception(
+            logger.error(
                 f"An unexpected error occurred creating emoji '{name}': {e}",
+            )
+            capture_exception_safe(
+                e,
+                extra_context={
+                    "operation": "create_emoji",
+                    "emoji_name": name,
+                },
             )
 
         return None
@@ -425,8 +455,15 @@ class EmojiManager:
         except discord.HTTPException as e:
             logger.error(f"Failed to delete application emoji '{name}': {e}")
         except Exception as e:
-            logger.exception(
+            logger.error(
                 f"An unexpected error occurred deleting emoji '{name}': {e}",
+            )
+            capture_exception_safe(
+                e,
+                extra_context={
+                    "operation": "delete_emoji",
+                    "emoji_name": name,
+                },
             )
 
         finally:

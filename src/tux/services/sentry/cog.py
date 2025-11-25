@@ -51,7 +51,7 @@ class SentryHandler(commands.Cog):
             set_command_context(interaction)
             set_user_context(interaction.user)
 
-            # Track completion
+            # Track completion (command_type will be determined in track_command_end)
             track_command_end(interaction.command.qualified_name, success=True)
 
     async def cog_load(self) -> None:

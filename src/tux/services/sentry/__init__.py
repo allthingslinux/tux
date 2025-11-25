@@ -60,12 +60,21 @@ ContextOrInteraction = commands.Context[commands.Bot] | Interaction
 # Set initial user to None
 sentry_sdk.set_user(None)
 
+from .metrics import (
+    record_api_metric,
+    record_cache_metric,
+    record_cog_metric,
+    record_command_metric,
+    record_database_metric,
+    record_task_metric,
+)
 from .utils import (
     capture_api_error,
     capture_cog_error,
     capture_database_error,
     capture_exception_safe,
     capture_tux_exception,
+    convert_httpx_error,
 )
 
 __all__ = [
@@ -97,11 +106,19 @@ __all__ = [
     "capture_exception_safe",
     "capture_span_exception",
     "capture_tux_exception",
+    "convert_httpx_error",
     # Instrumentation and tracking
     "instrument_bot_commands",
     "safe_set_name",
     "track_command_end",
     "track_command_start",
+    # Metrics functions
+    "record_api_metric",
+    "record_cache_metric",
+    "record_cog_metric",
+    "record_command_metric",
+    "record_database_metric",
+    "record_task_metric",
 ]
 
 
@@ -284,7 +301,7 @@ class SentryManager:
         """
         return get_current_span()
 
-    def start_transaction(self, op: str, name: str, description: str = "") -> Any:
+    def start_transaction(self, op: str, name: str) -> Any:
         """
         Start a new Sentry transaction.
 
@@ -294,17 +311,15 @@ class SentryManager:
             The operation type.
         name : str
             The transaction name.
-        description : str, optional
-            A description of the transaction.
 
         Returns
         -------
         Any
             The started transaction object.
         """
-        return start_transaction(op, name, description)
+        return start_transaction(op, name)
 
-    def start_span(self, op: str, description: str = "") -> Any:
+    def start_span(self, op: str, name: str = "") -> Any:
         """
         Start a new Sentry span.
 
@@ -312,15 +327,15 @@ class SentryManager:
         ----------
         op : str
             The operation name for the span.
-        description : str, optional
-            A description of the span.
+        name : str, optional
+            The name of the span.
 
         Returns
         -------
         Any
             The started span object.
         """
-        return start_span(op, description)
+        return start_span(op, name)
 
     def add_breadcrumb(
         self,

@@ -88,10 +88,23 @@ def report_signal(signum: int, _frame: FrameType | None) -> None:
             signal.SIGINT.value: "SIGINT",
         }.get(signum, f"SIGNAL_{signum}")
 
-        sentry_sdk.capture_message(
-            f"Received {signal_name}, initiating graceful shutdown",
-            level="info",
+        # Add more context to the message to avoid "(No error message)" in Sentry
+        message = (
+            f"Received {signal_name}, initiating graceful shutdown. "
+            f"This is a normal shutdown signal, not an error."
         )
+
+        scope.set_context(
+            "signal_details",
+            {
+                "signal_number": signum,
+                "signal_name": signal_name,
+                "shutdown_type": "graceful",
+                "is_error": False,
+            },
+        )
+
+        sentry_sdk.capture_message(message, level="info")
 
         logger.info(f"Signal {signal_name} reported to Sentry")
 

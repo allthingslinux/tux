@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from loguru import logger
 
 from tux.core.permission_system import DEFAULT_RANKS
+from tux.services.sentry import capture_exception_safe
 
 if TYPE_CHECKING:
     from tux.database.controllers import DatabaseCoordinator
@@ -60,8 +61,15 @@ async def initialize_default_ranks(db: DatabaseCoordinator, guild_id: int) -> No
         if existing_ranks:
             logger.info(f"Guild {guild_id} already has ranks, skipping initialization")
             return
-    except Exception:
-        logger.exception(f"Error checking existing ranks for guild {guild_id}")
+    except Exception as e:
+        logger.error(f"Error checking existing ranks for guild {guild_id}: {e}")
+        capture_exception_safe(
+            e,
+            extra_context={
+                "operation": "check_existing_ranks",
+                "guild_id": str(guild_id),
+            },
+        )
         raise
 
     # Create the default ranks
@@ -75,9 +83,18 @@ async def initialize_default_ranks(db: DatabaseCoordinator, guild_id: int) -> No
                 name=data["name"],
                 description=data["description"],
             )
-        except Exception:
-            logger.exception(f"Error creating rank {rank} for guild {guild_id}")
+        except Exception as e:
+            logger.error(f"Error creating rank {rank} for guild {guild_id}: {e}")
             logger.error(f"Rank data: {data}")
+            capture_exception_safe(
+                e,
+                extra_context={
+                    "operation": "create_permission_rank",
+                    "guild_id": str(guild_id),
+                    "rank": str(rank),
+                    "rank_name": data.get("name"),
+                },
+            )
             raise
         else:
             logger.debug(f"Successfully created rank {rank} for guild {guild_id}")

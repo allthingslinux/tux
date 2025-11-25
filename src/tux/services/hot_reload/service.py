@@ -153,7 +153,8 @@ class HotReload(commands.Cog):
         self._reload_stats["total_reloads"] += 1
 
         try:
-            with sentry_sdk.configure_scope() as scope:
+            # Use push_scope for isolated scope to avoid polluting current scope
+            with sentry_sdk.push_scope() as scope:
                 scope.set_tag("extension", extension)
                 scope.set_tag("reload_type", "hot_reload")
 

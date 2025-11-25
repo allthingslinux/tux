@@ -22,25 +22,55 @@ _command_start_times: dict[str, float] = {}
 
 
 def set_user_context(user: discord.User | discord.Member) -> None:
-    # sourcery skip: extract-method
-    """Set user context for Sentry events."""
+    """
+    Set user context for Sentry events using Discord user information.
+
+    This function identifies users in Sentry using their Discord user ID as the
+    primary identifier. This enables user-based filtering, grouping, and analytics
+    in Sentry, allowing you to see which users encountered errors.
+
+    Parameters
+    ----------
+    user : discord.User | discord.Member
+        The Discord user to set as context. Must have an `id` attribute.
+
+    Notes
+    -----
+    The user ID (Discord snowflake) is used as Sentry's user identifier, enabling:
+    - User-based error grouping and filtering
+    - User impact analysis (how many users affected)
+    - User-specific error tracking
+    - User analytics in Sentry Insights
+
+    Additional Discord-specific data is included as custom user attributes:
+    - Username and display name for better identification
+    - Guild information (if member)
+    - Permissions and roles (if member)
+    - Bot/system flags
+    """
     if not is_initialized():
         return
 
+    # Primary identifier: Discord user ID (required by Sentry)
     user_data = {
-        "id": str(user.id),
-        "username": user.name,
-        "display_name": user.display_name,
-        "bot": user.bot,
-        "system": getattr(user, "system", False),
+        "id": str(user.id),  # Discord user ID - used as unique identifier in Sentry
+        "username": user.name,  # Discord username
+        "display_name": user.display_name,  # Display name (nickname or username)
+        "bot": user.bot,  # Whether user is a bot
+        "system": getattr(user, "system", False),  # Whether user is a system user
     }
 
+    # Additional Discord-specific context (if member with guild)
     if isinstance(user, discord.Member) and user.guild:
-        user_data["guild_id"] = str(user.guild.id)
-        user_data["guild_name"] = user.guild.name
-        user_data["guild_member_count"] = str(user.guild.member_count)
-        user_data["guild_permissions"] = str(user.guild_permissions.value)
-        user_data["top_role"] = user.top_role.name if user.top_role else None
+        user_data.update(
+            {
+                "guild_id": str(user.guild.id),
+                "guild_name": user.guild.name,
+                "guild_member_count": str(user.guild.member_count),
+                "guild_permissions": str(user.guild_permissions.value),
+                "top_role": user.top_role.name if user.top_role else None,
+            },
+        )
         if user.joined_at:
             user_data["joined_at"] = user.joined_at.isoformat()
 
@@ -86,9 +116,11 @@ def track_command_end(
     if not is_initialized():
         return
 
+    execution_time_ms = 0.0
     if start_time := _command_start_times.pop(command_name, None):
         execution_time = time.perf_counter() - start_time
-        set_tag("command.execution_time_ms", round(execution_time * 1000, 2))
+        execution_time_ms = round(execution_time * 1000, 2)
+        set_tag("command.execution_time_ms", execution_time_ms)
 
     set_tag("command.success", success)
     if error:
@@ -101,6 +133,19 @@ def track_command_end(
                 "error_module": getattr(type(error), "__module__", "unknown"),
             },
         )
+
+    # Record metrics for command execution
+    # Note: command_type detection would require passing context, defaulting to "unknown"
+    # This can be enhanced later by modifying track_command_end signature
+    from .metrics import record_command_metric  # noqa: PLC0415
+
+    record_command_metric(
+        command_name=command_name,
+        execution_time_ms=execution_time_ms,
+        success=success,
+        error_type=type(error).__name__ if error else None,
+        command_type="unknown",  # Could be enhanced to detect prefix/slash from context
+    )
 
 
 def _set_command_context_from_ctx(ctx: commands.Context[commands.Bot]) -> None:
