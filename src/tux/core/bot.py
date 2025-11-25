@@ -18,6 +18,7 @@ from discord.ext import commands
 from loguru import logger
 from rich.console import Console
 
+from tux.core.setup.orchestrator import BotSetupOrchestrator
 from tux.core.task_monitor import TaskMonitor
 from tux.database.controllers import DatabaseCoordinator
 from tux.database.service import DatabaseService
@@ -161,11 +162,6 @@ class Tux(commands.Bot):
         """
         try:
             with start_span("bot.setup", "Bot setup process") as span:
-                # Lazy import to avoid circular imports
-                from tux.core.setup.orchestrator import (
-                    BotSetupOrchestrator,
-                )
-
                 orchestrator = BotSetupOrchestrator(self)
                 await orchestrator.setup(span)
 
@@ -405,20 +401,20 @@ class Tux(commands.Bot):
                 return
 
             self.is_shutting_down = True
-            transaction.set_tag("shutdown_initiated", True)
+            transaction.set_data("shutdown.initiated", True)
             logger.info("Shutting down bot...")
 
             # Phase 1: Handle setup task if still running
             await self._handle_setup_task()
-            transaction.set_tag("setup_task_handled", True)
+            transaction.set_data("shutdown.setup_task_handled", True)
 
             # Phase 2: Clean up background tasks (task monitor)
             await self._cleanup_tasks()
-            transaction.set_tag("tasks_cleaned", True)
+            transaction.set_data("shutdown.tasks_cleaned", True)
 
             # Phase 3: Close external connections (Discord, DB, HTTP)
             await self._close_connections()
-            transaction.set_tag("connections_closed", True)
+            transaction.set_data("shutdown.connections_closed", True)
 
             logger.info("Bot shutdown complete")
 
@@ -482,12 +478,13 @@ class Tux(commands.Bot):
                 logger.debug("Closing Discord connections")
                 await self.close()  # discord.py's close method
                 logger.debug("Discord connections closed")
-                span.set_tag("discord_closed", True)
+                span.set_data("connections.discord_closed", True)
 
             except Exception as e:
                 logger.error(f"Error during Discord shutdown: {e}")
-                span.set_tag("discord_closed", False)
-                span.set_data("discord_error", str(e))
+                span.set_data("connections.discord_closed", False)
+                span.set_data("connections.discord_error", str(e))
+                span.set_data("connections.discord_error_type", type(e).__name__)
                 capture_exception_safe(e)
 
             # Close database connection pool
@@ -495,12 +492,13 @@ class Tux(commands.Bot):
                 logger.debug("Closing database connections")
                 await self.db_service.disconnect()
                 logger.debug("Database connections closed")
-                span.set_tag("db_closed", True)
+                span.set_data("connections.db_closed", True)
 
             except Exception as e:
                 logger.error(f"Error during database disconnection: {e}")
-                span.set_tag("db_closed", False)
-                span.set_data("db_error", str(e))
+                span.set_data("connections.db_closed", False)
+                span.set_data("connections.db_error", str(e))
+                span.set_data("connections.db_error_type", type(e).__name__)
                 capture_exception_safe(e)
 
             # Close HTTP client session and connection pool
@@ -508,12 +506,13 @@ class Tux(commands.Bot):
                 logger.debug("Closing HTTP client connections")
                 await http_client.close()
                 logger.debug("HTTP client connections closed")
-                span.set_tag("http_closed", True)
+                span.set_data("connections.http_closed", True)
 
             except Exception as e:
                 logger.error(f"Error during HTTP client shutdown: {e}")
-                span.set_tag("http_closed", False)
-                span.set_data("http_error", str(e))
+                span.set_data("connections.http_closed", False)
+                span.set_data("connections.http_error", str(e))
+                span.set_data("connections.http_error_type", type(e).__name__)
                 capture_exception_safe(e)
 
     async def _log_startup_banner(self) -> None:
