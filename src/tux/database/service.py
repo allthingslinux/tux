@@ -13,6 +13,7 @@ Key Principles:
 from __future__ import annotations
 
 import asyncio
+import time
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from typing import Any, TypeVar
@@ -30,6 +31,8 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlmodel import SQLModel
 
+from tux.services.sentry import capture_database_error
+from tux.services.sentry.metrics import record_database_metric
 from tux.shared.config import CONFIG
 
 T = TypeVar("T")
@@ -136,7 +139,17 @@ class DatabaseService:
             async with self._engine.begin() as conn:
                 await conn.execute(text("SELECT 1"))
         except Exception as e:
-            logger.error(f"Database connectivity test failed: {e}")
+            logger.error(f"Database connectivity test failed: {e}", exc_info=True)
+            # Capture exception with database context for Sentry
+            # Note: self._engine is guaranteed to be not None here due to check above
+            with sentry_sdk.push_scope() as scope:
+                # Use tag for filtering (operation type)
+                scope.set_tag("database.operation", "test_connection")
+
+                capture_database_error(
+                    e,
+                    operation="test_connection",
+                )
             raise
 
     @property
@@ -277,20 +290,38 @@ class DatabaseService:
         RuntimeError
             If the retry loop completes unexpectedly without return or exception.
         """
+        start_time = time.perf_counter()
+        retry_count = 0
+        operation_name = span_desc.split(":")[0] if ":" in span_desc else "query"
+
         for attempt in range(max_retries):
             try:
                 if sentry_sdk.is_initialized():
                     with sentry_sdk.start_span(
                         op="db.query",
-                        description=span_desc,
+                        name=span_desc,
                     ) as span:
-                        span.set_tag("db.service", "DatabaseService")
-                        span.set_tag("attempt", attempt + 1)
+                        # Use set_data() for span attributes (context in trace view)
+                        span.set_data("db.service", "DatabaseService")
+                        span.set_data("db.operation", operation_name)
+                        span.set_data("db.attempt", attempt + 1)
+                        span.set_data("db.retry_count", retry_count)
 
                         async with self.session() as sess:
                             result = await operation(sess)
 
+                            duration_ms = (time.perf_counter() - start_time) * 1000
+                            span.set_data("db.duration_ms", duration_ms)
                             span.set_status("ok")
+
+                            # Record metrics for aggregation (separate from span data)
+                            record_database_metric(
+                                operation=operation_name,
+                                duration_ms=duration_ms,
+                                retry_count=retry_count,
+                                success=True,
+                            )
+
                             return result
                 else:
                     async with self.session() as sess:
@@ -301,6 +332,7 @@ class DatabaseService:
                 TimeoutError,
                 sqlalchemy.exc.OperationalError,
             ) as e:
+                retry_count += 1
                 if attempt == max_retries - 1:
                     logger.error(
                         f"Database operation failed after {max_retries} attempts: {type(e).__name__}",
@@ -308,6 +340,18 @@ class DatabaseService:
                     logger.info(
                         "Check your database connection and consider restarting PostgreSQL",
                     )
+
+                    # Record failed database metric
+                    duration_ms = (time.perf_counter() - start_time) * 1000
+
+                    record_database_metric(
+                        operation=operation_name,
+                        duration_ms=duration_ms,
+                        retry_count=retry_count,
+                        success=False,
+                        error_type=type(e).__name__,
+                    )
+
                     raise
 
                 wait_time = backoff_factor * (2**attempt)
@@ -318,6 +362,18 @@ class DatabaseService:
             except Exception as e:
                 logger.error(f"{span_desc}: {type(e).__name__}")
                 logger.info("Check your database configuration and network connection")
+
+                # Record failed database metric
+                duration_ms = (time.perf_counter() - start_time) * 1000
+
+                record_database_metric(
+                    operation=operation_name,
+                    duration_ms=duration_ms,
+                    retry_count=retry_count,
+                    success=False,
+                    error_type=type(e).__name__,
+                )
+
                 raise
 
         # This should never be reached
