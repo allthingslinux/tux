@@ -284,6 +284,8 @@ class LevelsService(BaseCog):
         int
             The calculated level.
         """
+        # Ensure XP is non-negative to prevent complex number errors
+        xp = max(0.0, xp)
         return int((xp / 500) ** (1 / self.levels_exponent) * 5)
 
     # *NOTE* Do not move this function to utils.py, as this results in a circular import.

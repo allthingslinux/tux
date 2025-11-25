@@ -8,7 +8,6 @@ reaction-based voting, poll banning checks, and result tracking.
 import discord
 from discord import app_commands
 from discord.ext import commands
-from loguru import logger
 
 from tux.core.bot import Tux
 from tux.core.converters import get_channel_safe
@@ -57,10 +56,16 @@ class Poll(ModerationCogBase):
                 None,
             )
         else:
-            # Unicode emoji: match by full emoji string
+            # Unicode emoji: try multiple matching strategies
             reaction = discord.utils.get(message.reactions, emoji=str(payload.emoji))
+            if reaction is None and hasattr(payload.emoji, "name"):
+                # Fallback: try matching by emoji name if available
+                reaction = discord.utils.get(
+                    message.reactions,
+                    emoji=payload.emoji.name,
+                )
         if reaction is None:
-            logger.error(f"Reaction with emoji {payload.emoji} not found.")
+            # Don't log as error for non-poll reactions, just silently ignore
             return
 
         # Block any reactions that are not numbers for the poll
