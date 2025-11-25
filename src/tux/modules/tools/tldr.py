@@ -17,6 +17,7 @@ from loguru import logger
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.core.flags import TldrFlags
+from tux.services.sentry import capture_exception_safe
 from tux.services.wrappers.tldr import SUPPORTED_PLATFORMS, TldrClient
 from tux.shared.functions import generate_usage
 from tux.ui.embeds import EmbedCreator
@@ -91,6 +92,17 @@ class Tldr(BaseCog):
                         logger.error(
                             f"TLDR Cog: Exception during cache update for '{lang_code}': {e}",
                             exc_info=True,
+                        )
+                        # Capture exception with context for Sentry
+                        capture_exception_safe(
+                            e,
+                            extra_context={
+                                "tldr_cache_update": {
+                                    "language": lang_code,
+                                    "operation": "cache_update",
+                                    "cache_needs_update": True,
+                                },
+                            },
                         )
                 else:
                     logger.debug(

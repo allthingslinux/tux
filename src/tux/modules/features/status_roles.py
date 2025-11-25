@@ -13,6 +13,7 @@ from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
+from tux.services.sentry import capture_exception_safe
 from tux.shared.config import CONFIG
 
 
@@ -154,15 +155,28 @@ class StatusRoles(BaseCog):
                     await member.remove_roles(role)
 
             except re.error:
-                logger.exception(
+                # Configuration error - don't send to Sentry
+                logger.warning(
                     f"Invalid regex pattern '{pattern}' in STATUS_ROLES config",
                 )
             except discord.Forbidden:
-                logger.exception(
+                # User error (permission denied) - don't send to Sentry
+                logger.warning(
                     f"Bot lacks permission to modify roles for {member.display_name} in {member.guild.name}",
                 )
-            except Exception:
-                logger.exception(f"Error updating roles for {member.display_name}")
+            except Exception as e:
+                # Unexpected error - send to Sentry
+                logger.error(f"Error updating roles for {member.display_name}: {e}")
+
+                capture_exception_safe(
+                    e,
+                    extra_context={
+                        "operation": "update_status_roles",
+                        "member_id": str(member.id),
+                        "guild_id": str(member.guild.id),
+                        "pattern": pattern,
+                    },
+                )
 
 
 async def setup(bot: Tux) -> None:

@@ -513,7 +513,9 @@ class Cases(ModerationCogBase):
             logger.warning(f"Could not find user with ID {user_id}")
             return MockUser(user_id)
         except Exception as e:
-            logger.exception(f"Error resolving user with ID {user_id}: {e}")
+            # Graceful fallback - don't use exception() level for expected fallback behavior
+            logger.warning(f"Error resolving user with ID {user_id}: {e}")
+            # Don't send to Sentry - this is expected fallback behavior
             return MockUser(user_id)
 
     async def _resolve_moderator(self, moderator_id: int) -> discord.User | MockUser:

@@ -12,6 +12,7 @@ from loguru import logger
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.services.http_client import http_client
+from tux.services.sentry import capture_api_error
 from tux.ui.embeds import EmbedCreator
 
 
@@ -116,6 +117,8 @@ class Wiki(BaseCog):
                     return title, url
         except Exception as e:
             logger.error(f"Wiki API request failed: {e}")
+
+            capture_api_error(e, endpoint="wiki_api")
             return "error", "error"
 
         return "error", "error"

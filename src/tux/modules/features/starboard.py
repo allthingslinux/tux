@@ -15,6 +15,7 @@ from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.core.checks import requires_command_permission
 from tux.core.converters import get_channel_safe
+from tux.services.sentry import capture_exception_safe
 from tux.ui.embeds import EmbedCreator, EmbedType
 
 
@@ -191,6 +192,13 @@ class Starboard(BaseCog):
 
         except Exception as e:
             logger.error(f"Error configuring starboard: {e}")
+            capture_exception_safe(
+                e,
+                extra_context={
+                    "operation": "configure_starboard",
+                    "guild_id": str(ctx.guild.id) if ctx.guild else None,
+                },
+            )
             await ctx.send(f"An error occurred while configuring the starboard: {e}")
 
     @starboard.command(
@@ -236,6 +244,13 @@ class Starboard(BaseCog):
 
         except Exception as e:
             logger.error(f"Error removing starboard configuration: {e}")
+            capture_exception_safe(
+                e,
+                extra_context={
+                    "operation": "remove_starboard_config",
+                    "guild_id": str(ctx.guild.id) if ctx.guild else None,
+                },
+            )
             await ctx.send(
                 f"An error occurred while removing the starboard configuration: {e}",
             )
@@ -279,6 +294,15 @@ class Starboard(BaseCog):
 
         except Exception as e:
             logger.error(f"Error while fetching starboard message: {e}")
+            capture_exception_safe(
+                e,
+                extra_context={
+                    "operation": "get_existing_starboard_message",
+                    "original_message_id": str(original_message.id)
+                    if original_message
+                    else None,
+                },
+            )
 
         return None
 
@@ -357,6 +381,15 @@ class Starboard(BaseCog):
 
         except Exception as e:
             logger.error(f"Error while creating or updating starboard message: {e}")
+            capture_exception_safe(
+                e,
+                extra_context={
+                    "operation": "create_or_update_starboard_message",
+                    "channel_id": str(starboard_channel.id)
+                    if starboard_channel
+                    else None,
+                },
+            )
 
     async def handle_starboard_reaction(
         self,
@@ -415,6 +448,14 @@ class Starboard(BaseCog):
 
         except Exception as e:
             logger.error(f"Unexpected error in handle_starboard_reaction: {e}")
+            capture_exception_safe(
+                e,
+                extra_context={
+                    "operation": "handle_starboard_reaction",
+                    "guild_id": str(payload.guild_id) if payload.guild_id else None,
+                    "message_id": str(payload.message_id),
+                },
+            )
 
     async def handle_reaction_clear(
         self,
@@ -462,6 +503,14 @@ class Starboard(BaseCog):
 
         except Exception as e:
             logger.error(f"Error in handle_reaction_clear: {e}")
+            capture_exception_safe(
+                e,
+                extra_context={
+                    "operation": "handle_reaction_clear",
+                    "guild_id": str(payload.guild_id) if payload.guild_id else None,
+                    "message_id": str(payload.message_id),
+                },
+            )
 
 
 async def setup(bot: Tux) -> None:
