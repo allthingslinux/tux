@@ -288,5 +288,5 @@ uv run tux ping
 - **Source Code**: `src/tux/core/bot.py`
 - **Setup Orchestrator**: See lifecycle documentation
 - **Database Coordinator**: See database documentation
-- **Sentry Integration**: See `sentry.md` for details
+- **Sentry Integration**: See `../../best-practices/sentry/index.md` for details
 - **Task Monitor**: `src/tux/core/task_monitor.py`

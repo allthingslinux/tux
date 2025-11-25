@@ -18,10 +18,31 @@ The Sentry integration consists of several components working together:
 - **Configuration** - DSN setup, environment detection, and SDK initialization
 - **Context Management** - User, command, and custom context enrichment
 - **Tracing** - Performance monitoring with transactions and spans
+- **Metrics** - Performance metrics collection and aggregation
 - **Event Handlers** - Filtering and processing before sending to Sentry
 - **Specialized Utilities** - Domain-specific error capture functions
 
 ## Architecture
+
+### Scope and Client Pattern
+
+The Sentry SDK uses a **Scope and Client** pattern for managing state and context:
+
+**Scope:**
+
+- Holds contextual data (tags, extra data, user info, breadcrumbs)
+- Thread-local storage for isolation
+- Contains a reference to the Client
+- Manages event data before sending
+
+**Client:**
+
+- Handles event processing and serialization
+- Manages transport and delivery to Sentry servers
+- Applies sampling and filtering
+- Single instance per application
+
+In Tux, we interact with scopes through `SentryManager` and specialized capture functions. The SDK automatically manages the client instance.
 
 ### Component Structure
 
@@ -31,10 +52,69 @@ src/tux/services/sentry/
 ├── config.py            # SDK initialization and configuration
 ├── context.py           # Context enrichment (users, commands)
 ├── tracing.py           # Performance monitoring decorators
+├── metrics.py           # Performance metrics collection
 ├── handlers.py          # Event filtering and sampling
 ├── utils.py             # Specialized error capture functions
 └── cog.py               # Discord event listeners for tracking
 ```
+
+### Data Flow
+
+Understanding how events flow through the Sentry SDK helps you use it effectively:
+
+**Event Capture Flow:**
+
+1. **Exception occurs** or **manual capture** called (e.g., `capture_exception()`)
+2. **Current scope** retrieved (contains tags, user, context, breadcrumbs)
+3. **Isolation scope** checked for operation-specific context
+4. **Scope data** attached to event (tags, user info, context, breadcrumbs)
+5. **Client.process_event()** processes the event
+6. **Sampling** and **filtering** applied (`before_send` handler)
+7. **Transport** sends event to Sentry servers (HTTP transport with retries)
+
+**Performance Monitoring Flow:**
+
+1. **Transaction started** with `start_transaction()` or automatic instrumentation
+2. **Spans** created for operations within transaction with `start_span()`
+3. **Timing data** collected automatically
+4. **Transaction finished** and processed
+5. **Sampling** applied (`traces_sampler` function)
+6. **Transport** sends transaction to Sentry
+
+### Integration Architecture
+
+Sentry uses an **integrations system** to automatically instrument frameworks and libraries:
+
+**Integration Lifecycle:**
+
+1. **Registration**: Integration registered during `init()` (e.g., `AsyncioIntegration()`, `LoguruIntegration()`)
+2. **Setup**: `setup_once()` called to install hooks and patches
+3. **Runtime**: Integration monitors and captures events automatically
+4. **Teardown**: Integration cleaned up on shutdown
+
+**Common Integration Patterns:**
+
+- **Monkey patching**: Replace functions/methods with instrumented versions
+- **Signal handlers**: Hook into framework signals/events
+- **Middleware**: Add middleware to web frameworks
+- **Exception handlers**: Catch and process exceptions
+
+**Tux Integrations:**
+
+- **AsyncioIntegration**: Captures asyncio task exceptions and performance
+- **LoguruIntegration**: Converts Loguru logs to Sentry breadcrumbs and events
+
+### Transport Layer
+
+The **transport layer** handles event delivery to Sentry servers:
+
+- **HttpTransport**: HTTP transport to Sentry ingestion endpoints
+- **Retry logic**: Automatic retries for transient failures
+- **Rate limiting**: Respects Sentry rate limits
+- **Queuing**: Queues events when offline or rate-limited
+- **Batching**: Efficiently batches multiple events
+
+You don't need to interact with the transport directly—it's managed automatically by the SDK.
 
 ### Initialization Flow
 
@@ -57,9 +137,10 @@ graph TD
 1. **Application Layer** - `SentryManager.setup()` called first in `TuxApp.start()`
 2. **Configuration Check** - Validates `SENTRY_DSN` environment variable
 3. **SDK Initialization** - Configures Sentry with integrations and handlers
-4. **Bot Attachment** - `SentryManager` instance attached to bot
-5. **Command Instrumentation** - Automatic tracing for all commands
-6. **Event Listeners** - `SentryHandler` cog tracks command execution
+4. **Integration Setup** - Integrations install hooks and patches
+5. **Bot Attachment** - `SentryManager` instance attached to bot
+6. **Command Instrumentation** - Automatic tracing for all commands
+7. **Event Listeners** - `SentryHandler` cog tracks command execution
 
 ## Configuration
 
@@ -161,6 +242,8 @@ sentry.set_tag("guild_id", str(guild.id))
 sentry.set_context("custom", {"operation": "bulk_update", "record_count": 100})
 ```
 
+For detailed information about scopes, tags, context, and breadcrumbs, see [Context and Data](./context-data.md).
+
 ### Performance Monitoring
 
 Sentry automatically tracks command performance, but you can add custom transactions and spans for important operations.
@@ -180,11 +263,47 @@ with start_transaction(op="task.background", name="process_daily_report") as txn
 ```python
 from tux.services.sentry import start_span
 
-with start_span(op="database.query", description="Fetch user data") as span:
+with start_span(op="database.query", name="Fetch user data") as span:
     user = await db.get_user(user_id)
 ```
 
 You can also use decorators to automatically wrap functions with transactions or spans—see the tracing decorators section below.
+
+For detailed information about metrics, see [Metrics](./metrics.md).
+
+### Metrics
+
+Sentry metrics track performance and usage patterns throughout Tux. Metrics are automatically recorded for commands, database operations, API calls, and more.
+
+**Available Metric Types:**
+
+- **Counters** - Track event occurrences (command usage, errors, cache hits/misses)
+- **Distributions** - Track measurements with percentiles (execution times, latencies)
+- **Gauges** - Track current values (cache sizes, connection pool usage)
+
+**Automatic Metrics:**
+
+- Command execution time and usage
+- Database query performance
+- API request latencies
+- Cache hit/miss rates
+- Background task execution
+
+**Manual Metrics:**
+
+You can record custom metrics for specific operations:
+
+```python
+from tux.services.sentry import record_api_metric
+
+record_api_metric(
+    endpoint="repos.get",
+    duration_ms=150,
+    success=True,
+)
+```
+
+For complete metrics documentation, see [Metrics](./metrics.md).
 
 ## Automatic Context Tracking
 
@@ -192,7 +311,23 @@ The `SentryHandler` cog automatically enriches error reports with context, so yo
 
 ### User Context
 
-When a command runs, Sentry automatically captures Discord user information including user ID, username, display name, bot flags, guild membership, permissions, roles, and join timestamps. This context appears in every error report, helping you understand who encountered the issue.
+**Tux tracks users via Discord user IDs!** When a command runs, Sentry automatically captures Discord user information including:
+
+- **User ID** - Discord user ID (used as unique identifier in Sentry)
+- **Username & Display Name** - For better identification
+- **Bot & System Flags** - Whether the user is a bot or system user
+- **Guild Information** - Guild ID, name, member count (if member)
+- **Permissions & Roles** - User's permissions and top role (if member)
+- **Join Timestamp** - When user joined guild (if member)
+
+This enables powerful user-based analytics in Sentry:
+
+- Filter errors by specific Discord users
+- See user impact analysis (how many users affected)
+- Track error rates per user
+- Group errors by user to identify problematic users
+
+All commands (prefix and slash) automatically include user context.
 
 ### Command Context
 
@@ -242,7 +377,7 @@ from tux.services.sentry import start_transaction, start_span
 with start_transaction(op="api.request", name="fetch_data") as txn:
     txn.set_tag("endpoint", "/api/users")
     
-    with start_span(op="http.request", description="GET /api/users") as span:
+    with start_span(op="http.request", name="GET /api/users") as span:
         response = await httpx.get("/api/users")
         span.set_data("status_code", response.status_code)
 ```
@@ -266,7 +401,31 @@ except Exception as e:
 
 ### API Errors
 
-Use `capture_api_error()` for HTTP request failures. It includes endpoint and status code information:
+For HTTPX errors in API wrappers, use `convert_httpx_error()` to automatically convert HTTPX exceptions to TuxAPI exceptions and report them to Sentry:
+
+```python
+from tux.services.sentry import convert_httpx_error
+
+try:
+    response = await httpx.get(endpoint)
+except Exception as e:
+    convert_httpx_error(
+        e,
+        service_name="GitHub",
+        endpoint="repos.get",
+        not_found_resource=f"{owner}/{repo}",  # Optional: for 404 errors
+    )
+```
+
+This function automatically:
+
+- Converts 404 errors to `TuxAPIResourceNotFoundError`
+- Converts 403 errors to `TuxAPIPermissionError`
+- Converts other HTTP status errors to `TuxAPIRequestError`
+- Converts connection errors to `TuxAPIConnectionError`
+- Reports all errors to Sentry with appropriate context via `capture_api_error()`
+
+For other HTTP error scenarios where you need more control, use `capture_api_error()` directly:
 
 ```python
 from tux.services.sentry import capture_api_error
@@ -369,6 +528,8 @@ The `SentryHandler` cog sets user and command context automatically for commands
 ### Performance Monitoring Best Practices
 
 Use transactions for major operations like background tasks or complex workflows. Use spans for nested operations within transactions to see which parts of your code are slow. Commands are automatically tracked, but you should add custom transactions and spans for important operations outside of commands.
+
+Use metrics for high-volume operations where you need aggregated statistics. Metrics are more efficient than transactions for tracking counts, latencies, and gauges at scale. See [Metrics](./metrics.md) for detailed information.
 
 ### Context Management
 
@@ -478,10 +639,18 @@ Filter sensitive data before capturing errors. If you need to include local vari
    await SentryManager.flush_async(timeout=5.0)
    ```
 
+## Related Documentation
+
+- [Choosing Instrumentation](./choosing-instrumentation.md) - When to use transactions/spans vs metrics
+- [Transactions and Spans](./transactions-spans.md) - How to use transactions and spans
+- [Metrics](./metrics.md) - Performance metrics
+- [Context and Data](./context-data.md) - Tags, context, scopes, users, breadcrumbs
+- [Sampling](./sampling.md) - Error and transaction sampling configuration
+
 ## Resources
 
 - **Source Code**: `src/tux/services/sentry/`
 - **Sentry SDK Docs**: <https://docs.sentry.io/platforms/python/>
 - **Configuration**: See `config.py` for initialization options
-- **Bot Integration**: See `bot.md` for lifecycle integration
-- **Application Integration**: See `app.md` for startup integration
+- **Bot Integration**: See `../../concepts/core/bot.md` for lifecycle integration
+- **Application Integration**: See `../../concepts/core/app.md` for startup integration

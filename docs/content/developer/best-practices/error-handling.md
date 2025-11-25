@@ -10,6 +10,102 @@ description: Error handling best practices for Tux development, including except
 
 Error handling is crucial for building reliable Discord bots. Users expect your bot to handle failures gracefully, provide helpful feedback, and continue operating even when things go wrong. Good error handling separates professional bots from fragile ones.
 
+## Errors vs Exceptions in Python
+
+Understanding the difference between errors and exceptions helps you handle them appropriately:
+
+**Errors** are fundamental coding mistakes that prevent a program from running altogether. Errors are commonly detected during compilation, and the code won't execute until they are fixed. Examples include syntax errors and indentation errors.
+
+**Exceptions** are a subcategory of errors that occur during program execution (runtime) when your code encounters an unexpected situation, such as trying to divide by zero or accessing a non-existent dictionary key. Unlike errors, exceptions can be caught and handled within your code.
+
+```python
+# Error: Syntax error - prevents execution
+print("Hello World"  # Missing closing parenthesis
+
+# Exception: Runtime error - can be handled
+result = 10 / 0  # Raises ZeroDivisionError - can be caught
+```
+
+In Tux, we focus on handling exceptions gracefully while preventing errors through proper code review and linting.
+
+## Common Python Exceptions
+
+Python provides built-in exception classes for different error scenarios. Understanding these helps you catch and handle them appropriately:
+
+### Type and Value Exceptions
+
+- **`TypeError`**: Raised when an operation is performed on incompatible types
+
+  ```python
+  print("10" + 5)  # Raises TypeError
+  ```
+
+- **`ValueError`**: Occurs when a function receives an argument with an unsuitable value
+
+  ```python
+  num = int("abc")  # Raises ValueError
+  ```
+
+### Data Structure Exceptions
+
+- **`KeyError`**: Raised when trying to access a non-existent dictionary key
+
+  ```python
+  data = {"name": "Alice"}
+  print(data["age"])  # Raises KeyError
+  ```
+
+- **`IndexError`**: Occurs when accessing an out-of-range index
+
+  ```python
+  numbers = [1, 2, 3]
+  print(numbers[5])  # Raises IndexError
+  ```
+
+### Mathematical Exceptions
+
+- **`ZeroDivisionError`**: Triggered when attempting to divide by zero
+
+  ```python
+  result = 10 / 0  # Raises ZeroDivisionError
+  ```
+
+- **`OverflowError`**: Triggered when the resulting value exceeds the allowed number range
+
+### File Operation Exceptions
+
+- **`FileNotFoundError`**: Raised when attempting to access a non-existent file
+
+  ```python
+  with open("missing_file.txt", "r") as file:
+      content = file.read()  # Raises FileNotFoundError
+  ```
+
+- **`IOError`**: Raised when an I/O operation fails (file operations, network operations)
+- **`PermissionError`**: Raised when trying to perform an operation without adequate permissions
+
+### Import and Module Exceptions
+
+- **`ImportError`**: Raised when importing a module fails
+- **`ModuleNotFoundError`**: Raised when a module cannot be found (subclass of `ImportError`)
+
+### Runtime Exceptions
+
+- **`RuntimeError`**: Raised when an error doesn't fall into any specific category
+- **`AttributeError`**: Raised when attribute assignment or reference fails
+- **`AssertionError`**: Raised when an `assert` statement fails
+
+### System Exceptions
+
+- **`KeyboardInterrupt`**: Raised when the user presses interrupt keys (Ctrl+C or Delete)
+- **`SystemExit`**: Raised when `sys.exit()` is called
+- **`MemoryError`**: Raised when programs run out of memory
+
+!!! note "System Exceptions"
+    `KeyboardInterrupt` and `SystemExit` inherit from `BaseException`, not `Exception`.
+    They should generally be allowed to propagate for proper program shutdown.
+    See the section on [The Critical Difference: `except:` vs `except Exception:`](#the-critical-difference-except-vs-except-exception) for more details.
+
 ## Understanding Tux's Exception System
 
 Tux uses a hierarchical exception system built on `TuxError`. This hierarchy lets you catch errors at the right level of specificity. Database errors inherit from `TuxDatabaseError`, API errors from `TuxAPIError`, and permission errors from `TuxPermissionError`.
@@ -68,7 +164,352 @@ Catch specific exceptions, not generic ones. When you catch `TuxDatabaseConnecti
 
 Handle exceptions at the right level. Catch specific exceptions where you can handle them meaningfully. Let exceptions propagate to the global handler when you can't handle them locally. Don't catch exceptions just to log them—let them propagate to handlers that can actually deal with them.
 
+### Keep Try Blocks Focused
+
+The scope of your `try` blocks directly impacts how effectively you can diagnose and fix issues. Large, encompassing `try` blocks often mask the true source of errors and make debugging significantly more challenging.
+
+#### Problem: Large try blocks
+
+```python
+# ❌ BAD: Too broad, impossible to determine which operation failed
+try:
+    user = await db.get_user(user_id)
+    profile = await process_user_data(user)
+    await send_notification(profile)
+except Exception as e:
+    logger.error(f"Operation failed: {e}")
+    # Which operation failed? Database? Processing? Notification?
+```
+
+#### Solution: Focused try blocks
+
+```python
+# ✅ GOOD: Each operation has its own error boundary
+try:
+    user = await db.get_user(user_id)
+except TuxDatabaseConnectionError as e:
+    logger.error(f"Database connection failed: {e}")
+    return None
+
+try:
+    profile = await process_user_data(user)
+except TuxValidationError as e:
+    logger.error(f"User data invalid: {e}")
+    return None
+
+try:
+    await send_notification(profile)
+except TuxAPIConnectionError as e:
+    logger.error(f"Notification delivery failed: {e}")
+    # Continue execution - notification failure shouldn't stop the command
+```
+
+**Benefits of focused try blocks:**
+
+- **Clear error source**: You immediately know which operation failed
+- **Operation-specific context**: Error messages contain relevant details
+- **Appropriate handling**: Different failures can be handled differently
+- **Easier debugging**: The error source is immediately apparent
+- **Specific recovery**: Each operation can implement its own recovery strategy
+
+**When to use focused try blocks:**
+
+- When operations have different failure modes
+- When you need different error handling for each operation
+- When you want to continue execution after some failures
+- When debugging production issues (focused blocks make diagnosis easier)
+
+The extra code is a worthwhile trade-off for the clarity and control it provides. While it might seem verbose, this pattern becomes invaluable as applications grow in complexity and when debugging production issues.
+
+### The Critical Difference: `except:` vs `except Exception:`
+
+!!! danger "Critical Distinction"
+    **Never use bare `except:`** - it catches system exceptions that should propagate.
+
+There's an important difference between `except:` and `except Exception:`:
+
+**`except:` (bare except) - Catches EVERYTHING:**
+
+- Catches all exceptions, including `KeyboardInterrupt` (Ctrl+C) and `SystemExit` (sys.exit())
+- These system exceptions should normally propagate to allow proper shutdown
+- **Avoid this pattern** unless you have a very specific reason (like a top-level error handler in a web service)
+
+**`except Exception:` - Catches user exceptions only:**
+
+- Catches exceptions that inherit from `Exception`
+- Does NOT catch `KeyboardInterrupt` or `SystemExit` (they inherit from `BaseException`)
+- **Use this** when you need to catch all user exceptions but allow system signals to propagate
+
+**Exception Hierarchy:**
+
+```python
+BaseException
+├── KeyboardInterrupt  # Ctrl+C - should propagate
+├── SystemExit         # sys.exit() - should propagate
+└── Exception          # User exceptions - can be caught
+    ├── ValueError
+    ├── TypeError
+    ├── TuxError
+    └── ... (all other exceptions)
+```
+
+**Example of the problem:**
+
+```python
+# ❌ BAD: Bare except catches KeyboardInterrupt
+try:
+    process_data()
+except:  # This catches Ctrl+C!
+    logger.error("Error occurred")
+    # User can't interrupt the program with Ctrl+C
+
+# ✅ GOOD: except Exception allows KeyboardInterrupt to propagate
+try:
+    process_data()
+except Exception as e:  # KeyboardInterrupt will propagate
+    logger.error(f"Error occurred: {e}")
+```
+
+**When to use each:**
+
+- **`except Exception:`** - Use when you need to catch all user exceptions (e.g., top-level error handlers, cleanup code)
+- **`except:` (bare)** - Only use in very specific cases like web service error handlers where you must catch everything to prevent crashes
+- **Specific exceptions** - Always prefer catching specific exception types when possible
+
+**Best practice:** Always use `except Exception:` instead of bare `except:` unless you have a compelling reason to catch system exceptions.
+
 Chain exceptions properly. When you catch an exception and raise a new one, use `raise ... from e` to preserve the chain. This shows the full error path from original cause to final error, making debugging much easier.
+
+## Exception Re-Raising Patterns
+
+Python provides several patterns for re-raising exceptions, each with different behaviors regarding traceback preservation. Understanding these patterns helps you choose the right approach for each situation.
+
+### Pattern 1: Bare `raise` (Re-raise Same Exception)
+
+**Use when:** You want to log or perform cleanup, then re-raise the same exception with its original traceback.
+
+```python
+try:
+    result = risky_operation()
+except ValueError as e:
+    logger.error(f"Validation failed: {e}")
+    raise  # Re-raises the same exception with original traceback
+```
+
+**Characteristics:**
+
+- Preserves the original exception type and traceback
+- Shows exactly where the original error occurred
+- Good default pattern for logging before re-raising
+
+**Note:** `raise e` is almost equivalent to bare `raise`, but bare `raise` is preferred as it's more explicit about preserving the traceback.
+
+### Pattern 2: Raise New Exception (Without `from`)
+
+**Use when:** You want to raise a different exception type but still preserve the original traceback context.
+
+```python
+try:
+    result = divide(x, y)
+except ZeroDivisionError:
+    raise ValueError("Division by zero is not allowed")
+```
+
+**Characteristics:**
+
+- Raises a new exception type with a custom message
+- Still includes the original exception's traceback in the output
+- The original exception is available but not explicitly chained
+
+**When to avoid:** When you need explicit exception chaining (use Pattern 4 instead).
+
+### Pattern 3: Raise New Exception `from None`
+
+**Use when:** You want to hide the original exception's traceback for security or abstraction reasons.
+
+```python
+try:
+    result = authenticate_user(email, password)
+except InvalidCredentialsError:
+    raise AuthenticationError("Invalid credentials") from None
+```
+
+**Characteristics:**
+
+- Suppresses the original exception's traceback
+- Only shows the new exception in the traceback
+- Useful for hiding implementation details or sensitive information
+
+**Security use case:** When the original exception might leak sensitive information:
+
+```python
+try:
+    user = login(email="user@example.com", password="secret")
+except InvalidPasswordFormatError:
+    # Don't expose password format details to potential attackers
+    raise AuthenticationError("Authentication failed") from None
+```
+
+**When to avoid:** When you need the original traceback for debugging (use Pattern 4 instead).
+
+### Pattern 4: Exception Chaining (`from e`) - **Recommended**
+
+**Use when:** You want to raise a new exception type while preserving the original exception as the cause.
+
+```python
+try:
+    result = divide(x, y)
+except ZeroDivisionError as e:
+    raise ValueError("Division by zero is not allowed") from e
+```
+
+**Characteristics:**
+
+- Explicitly chains the original exception as the cause
+- Shows both exceptions in the traceback
+- Allows access to original exception via `e.__cause__`
+- **Best practice** for raising new exceptions from caught ones
+
+**Example with custom exceptions:**
+
+```python
+try:
+    content = read_file(file_path)
+except FileNotFoundError as e:
+    raise TuxAPIResourceNotFoundError(
+        service_name="FileSystem",
+        resource_identifier=file_path,
+    ) from e
+```
+
+**When to use:**
+
+- Converting library exceptions to your own exception types
+- Providing more context while preserving original error
+- Debugging scenarios where you need the full error chain
+
+### Pattern Comparison
+
+| Pattern | Preserves Original Traceback | Shows Both Exceptions | Use Case |
+|---------|------------------------------|----------------------|----------|
+| Bare `raise` | ✅ Yes | N/A (same exception) | Logging before re-raising |
+| Raise new (no `from`) | ✅ Yes | ⚠️ Implicit | Changing exception type |
+| `from None` | ❌ No | ❌ No | Security/abstraction |
+| `from e` | ✅ Yes | ✅ Yes | **Best practice** |
+
+### Exception Re-Raising Best Practices
+
+1. **Use `from e` when raising a new exception** - This is the recommended pattern for preserving error context.
+
+2. **Use bare `raise` for logging** - When you just need to log and re-raise the same exception.
+
+3. **Use `from None` sparingly** - Only when you need to hide sensitive information or implementation details.
+
+4. **Avoid Pattern 2** - Prefer Pattern 4 (`from e`) over raising new exceptions without `from`, as it's more explicit and informative.
+
+5. **Don't suppress exceptions unnecessarily** - Suppressing exceptions makes debugging harder, so only use `from None` when absolutely necessary.
+
+### Using try/except/else/finally Blocks
+
+Python's exception handling supports four blocks that work together:
+
+- **`try`**: Execute code that may raise an exception
+- **`except`**: Catch and handle exceptions
+- **`else`**: Execute code only if no exception occurs (optional)
+- **`finally`**: Run code regardless of whether an exception was raised (always executes)
+
+```python
+try:
+    file = open("example.txt", "r")
+except FileNotFoundError:
+    print("File not found!")
+else:
+    # Only executes if no exception occurred
+    print("File opened successfully!")
+    content = file.read()
+    print(content)
+    file.close()
+finally:
+    # Always executes, even if exception occurred
+    print("End of file operation.")
+```
+
+Use `finally` blocks for cleanup operations that must always run, such as closing files, releasing locks, or cleaning up temporary resources.
+
+### Catching Multiple Exceptions
+
+You can catch multiple exception types by chaining `except` blocks or using a tuple:
+
+```python
+# Method 1: Tuple in single except block
+try:
+    x = int(input("Enter a number: "))
+    print(10 / x)
+except (ValueError, ZeroDivisionError) as e:
+    print(f"Error: {e}")
+
+# Method 2: Separate except blocks for different handling
+try:
+    x = int(input("Enter a number: "))
+    print(10 / x)
+except ValueError:
+    print("Invalid input! Please enter a number.")
+except ZeroDivisionError:
+    print("Cannot divide by zero!")
+```
+
+Use separate `except` blocks when you need different handling for each exception type. Use a tuple when the handling is the same.
+
+### Nested try-except Blocks
+
+Nested try-except blocks allow you to handle exceptions at different levels of code execution. This is useful when you need different error handling strategies for different parts of an operation:
+
+```python
+try:
+    # Outer try block - handles high-level errors
+    try:
+        # Inner try block - handles specific operation errors
+        file = open("data.txt", "r")
+        content = file.read()
+        file.close()
+    except FileNotFoundError:
+        # Handle file not found at the inner level
+        logger.warning("Data file not found, using defaults")
+        content = get_default_data()
+    except PermissionError:
+        # Handle permission errors at the inner level
+        logger.error("Permission denied accessing data file")
+        raise  # Re-raise to outer handler
+except Exception as e:
+    # Outer handler catches any unhandled errors
+    logger.error(f"Unexpected error in data loading: {e}")
+    capture_exception_safe(e)
+    raise
+```
+
+In this example, `FileNotFoundError` is handled gracefully at the inner level with a fallback, while `PermissionError` is re-raised to the outer handler. The outer handler catches any unexpected exceptions and logs them to Sentry.
+
+Use nested try-except blocks when:
+
+- Different parts of an operation need different error handling
+- You want to handle some errors locally and let others propagate
+- You need to perform cleanup at different levels
+
+### Using traceback for Detailed Error Information
+
+The Python `traceback` module provides detailed information about exceptions, including the full call stack:
+
+```python
+import traceback
+
+try:
+    num = int("abc")
+except ValueError as e:
+    print("An error occurred!")
+    traceback.print_exc()  # Prints full traceback information
+```
+
+In Tux, we use `traceback` in our error logging to provide complete context for debugging. The global error handler automatically includes tracebacks for errors sent to Sentry.
 
 ## Error Handling Patterns
 
@@ -90,7 +531,29 @@ Check HTTP status codes to determine appropriate handling. 404 means the resourc
 
 Use timeouts for all API calls. Don't let API calls hang indefinitely. Set reasonable timeouts based on expected response times. If an API call times out, log it and handle it appropriately—retry, use cached data, or fail gracefully.
 
-Convert HTTP exceptions to Tux exceptions. Wrap `httpx` exceptions in `TuxAPIError` subclasses to provide consistent error handling throughout your code. This lets callers handle API errors without knowing about the HTTP library.
+Convert HTTP exceptions to Tux exceptions. Use `convert_httpx_error()` to automatically convert `httpx` exceptions to `TuxAPIError` subclasses and report them to Sentry. This provides consistent error handling throughout your code and eliminates duplicated error handling logic.
+
+```python
+from tux.services.sentry import convert_httpx_error
+
+try:
+    response = await httpx.get(endpoint)
+except Exception as e:
+    convert_httpx_error(
+        e,
+        service_name="GitHub",
+        endpoint="repos.get",
+        not_found_resource=f"{owner}/{repo}",  # Optional: for 404 errors
+    )
+```
+
+The `convert_httpx_error()` function automatically:
+
+- Converts 404 errors to `TuxAPIResourceNotFoundError`
+- Converts 403 errors to `TuxAPIPermissionError`
+- Converts other HTTP status errors to `TuxAPIRequestError`
+- Converts connection errors to `TuxAPIConnectionError`
+- Reports all errors to Sentry with appropriate context
 
 ### File Operations
 
@@ -120,6 +583,58 @@ Include field names and values in validation errors. This helps users understand
 
 Validate early and fail fast. Check input validity before doing expensive operations. Don't waste resources processing invalid input. Return clear error messages explaining what's wrong and how to fix it.
 
+## Handling Exceptions in Loops
+
+When processing multiple items in a loop, handle exceptions for each iteration independently. This prevents a single failure from stopping the entire loop:
+
+```python
+users = [1, 2, 3, 4, 5]
+results = []
+
+for user_id in users:
+    try:
+        user = await db.get_user(user_id)
+        results.append(user)
+    except TuxAPIResourceNotFoundError:
+        logger.warning(f"User {user_id} not found, skipping")
+        # Continue to next iteration
+    except Exception as e:
+        logger.error(f"Unexpected error fetching user {user_id}: {e}")
+        capture_exception_safe(e)
+        # Continue to next iteration - don't let one failure stop the loop
+
+logger.info(f"Successfully processed {len(results)}/{len(users)} users")
+```
+
+**Key principles for loop exception handling:**
+
+- **Catch specific exceptions** for expected failures (like missing resources)
+- **Log and continue** for recoverable errors
+- **Track successes and failures** separately to understand overall health
+- **Don't let one failure stop the entire batch** unless it's critical
+
+For batch operations, consider collecting exceptions and processing them after the loop completes:
+
+```python
+users = [1, 2, 3, 4, 5]
+successes = []
+failures = []
+
+for user_id in users:
+    try:
+        user = await db.get_user(user_id)
+        successes.append(user)
+    except Exception as e:
+        failures.append((user_id, e))
+        logger.error(f"Failed to fetch user {user_id}: {e}")
+
+logger.info(f"Batch complete: {len(successes)} succeeded, {len(failures)} failed")
+if failures:
+    # Process failures separately
+    for user_id, error in failures:
+        capture_exception_safe(error, extra_context={"user_id": user_id})
+```
+
 ## Async Error Handling
 
 ### Task Exception Handling
@@ -138,13 +653,111 @@ When timeouts occur, cancel the operation and handle the cancellation gracefully
 
 Use `asyncio.wait_for()` for timeout handling. This automatically cancels operations that exceed their timeout. Handle `TimeoutError` appropriately—retry, use fallbacks, or fail gracefully with clear error messages.
 
+#### Example: Handling Exceptions in Async Functions
+
+```python
+import asyncio
+
+async def fetch_user_data(user_id: int):
+    """Fetch user data from an external API."""
+    try:
+        response = await httpx.get(f"https://api.example.com/users/{user_id}")
+        response.raise_for_status()
+        return response.json()
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            raise TuxAPIResourceNotFoundError(
+                service_name="ExampleAPI",
+                resource_identifier=f"user_{user_id}",
+            ) from e
+        raise TuxAPIRequestError(
+            service_name="ExampleAPI",
+            status_code=e.response.status_code,
+        ) from e
+    except httpx.RequestError as e:
+        raise TuxAPIConnectionError(
+            service_name="ExampleAPI",
+            original_error=e,
+        ) from e
+
+async def main():
+    try:
+        user_data = await fetch_user_data(123)
+        print(f"User: {user_data}")
+    except TuxAPIResourceNotFoundError:
+        logger.warning("User not found")
+    except TuxAPIConnectionError as e:
+        logger.error(f"Connection error: {e}")
+        capture_exception_safe(e)
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        capture_exception_safe(e)
+
+asyncio.run(main())
+```
+
+**Important notes for async exception handling:**
+
+- **Always await async functions** - calling without `await` returns a coroutine object, not the result
+- **Handle `asyncio.CancelledError` carefully** - don't catch it unless you're handling cancellation specifically
+- **Use `asyncio.gather()` with `return_exceptions=True`** for concurrent operations where you want all results, even if some fail
+
 ## Context Managers for Error Handling
+
+Context managers in Python shine when it comes to resource management.
+While they're commonly associated with file operations, their scope extends far beyond basic file handling.
+The real power of context managers lies in their ability to handle setup and cleanup operations automatically,
+whether your code executes successfully or raises an exception.
+
+### When to Use Context Managers
+
+Context managers are particularly crucial when dealing with:
+
+- **Database connections and transactions** - Ensure connections are closed and transactions are committed or rolled back
+- **Network sockets and API sessions** - Close connections even when errors occur
+- **Memory-intensive operations** - Release resources promptly
+- **Thread locks and semaphores** - Ensure locks are released
+- **Temporary file management** - Clean up temporary files automatically
 
 ### Database Transactions
 
 Use context managers for database transactions. They ensure transactions are committed on success and rolled back on failure. This keeps your database consistent and prevents partial updates.
 
-Create transaction context managers that handle commit and rollback automatically. If any operation in a transaction fails, roll back the entire transaction. Don't commit partial transactions—they cause data inconsistency.
+#### Example: Custom Transaction Context Manager
+
+```python
+from contextlib import contextmanager
+
+@contextmanager
+def db_transaction(db_service):
+    """Context manager for database transactions."""
+    async with db_service.session() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        # Connection automatically closed by session context manager
+```
+
+**Usage:**
+
+```python
+async def update_user_profile(user_id: int, data: dict) -> None:
+    async with db_transaction(db_service) as session:
+        user = await session.get(User, user_id)
+        if user:
+            user.profile = data
+            # Auto-committed on success, rolled back on exception
+```
+
+**Benefits:**
+
+- Automatic commit on success
+- Automatic rollback on failure
+- Connection cleanup guaranteed
+- No manual transaction management needed
 
 Log transaction outcomes appropriately. Log successful commits at debug level. Log rollbacks at warning level with error details. This helps you understand transaction patterns and identify problematic operations.
 
@@ -152,9 +765,50 @@ Log transaction outcomes appropriately. Log successful commits at debug level. L
 
 Use context managers for all resources that need cleanup—files, network connections, temporary data. Context managers ensure cleanup happens even when exceptions occur. Don't rely on manual cleanup in finally blocks—use context managers instead.
 
-Create context managers for complex resources. If you need to create temporary files, use a context manager that creates them and cleans them up automatically. If you need to acquire and release locks, use a context manager.
+#### Example: File Operations
 
-Always clean up resources, even on errors. Don't let temporary files accumulate or connections leak. Context managers handle this automatically, ensuring cleanup happens regardless of how operations complete.
+```python
+# ✅ GOOD: Context manager ensures file is closed
+with open("data.txt", "r") as file:
+    content = file.read()
+    # File automatically closed, even if an exception occurs
+
+# ❌ BAD: Manual cleanup can be forgotten
+file = open("data.txt", "r")
+try:
+    content = file.read()
+finally:
+    file.close()  # Easy to forget or miss in complex code
+```
+
+#### Example: Custom Resource Context Manager
+
+```python
+from contextlib import contextmanager
+
+@contextmanager
+def temporary_cache():
+    """Context manager for temporary cache operations."""
+    cache = {}
+    try:
+        yield cache
+    finally:
+        cache.clear()  # Always cleanup, even on exceptions
+
+# Usage
+with temporary_cache() as cache:
+    cache["key"] = "value"
+    # Cache automatically cleared when exiting
+```
+
+**Best practices:**
+
+- **Identify paired operations**: Look for operations that require setup and cleanup
+- **Reserve for resource management**: Not every operation needs a context manager
+- **Use for guaranteed cleanup**: When cleanup must happen regardless of success or failure
+- **Centralize logic**: Context managers centralize setup and cleanup logic, making code more maintainable
+
+Context managers particularly excel in production environments where resource leaks can cause significant issues. They enforce clean resource management patterns and make code more maintainable by centralizing setup and cleanup logic.
 
 ## Testing Error Conditions
 
@@ -188,6 +842,78 @@ Create exceptions only when needed. Don't create exceptions during validation—
 
 Use exception chaining efficiently. Don't create multiple exception objects unnecessarily. Chain exceptions properly to preserve context without creating redundant exception objects.
 
+## Security: Protecting Sensitive Data
+
+!!! danger "Critical Security Concern"
+    **Never log passwords, API keys, tokens, or other sensitive information in error messages or logs.**
+
+### The Problem
+
+When exceptions occur, error messages and stack traces may contain sensitive data that gets logged or sent to error monitoring services. This can expose:
+
+- Database connection strings with passwords
+- API keys in URLs or request headers
+- Authentication tokens
+- User credentials
+- Secret keys
+
+### The Solution
+
+Tux automatically sanitizes sensitive data before sending events to Sentry. Our `before_send` handler removes or masks:
+
+- Database URLs: `postgresql://user:password@host` → `postgresql://***:***@host`
+- API keys in URLs: `?api_key=xxx` → `?***`
+- Bearer tokens: `Bearer xxxxx` → `Bearer ***`
+- Authorization headers: `Authorization: xxxxx` → `Authorization: ***`
+
+### Best Practices
+
+1. **Never include secrets in error messages**: When raising exceptions, don't include sensitive data in the message string.
+
+   ```python
+   # BAD: Exposes API key in error message
+   raise ValueError(f"API call failed with key {api_key}")
+
+   # GOOD: Generic error message
+   raise ValueError("API call failed - check configuration")
+   ```
+
+2. **Sanitize before logging**: If you must log data that might contain secrets, sanitize it first.
+
+   ```python
+   # BAD: Logs full URL with API key
+   logger.error(f"Request failed: {request_url}")
+
+   # GOOD: Sanitize sensitive parts
+   sanitized_url = _sanitize_url(request_url)
+   logger.error(f"Request failed: {sanitized_url}")
+   ```
+
+3. **Use environment variables**: Store secrets in environment variables, never in code or error messages.
+
+4. **Validate error context**: Before adding context to Sentry events, ensure it doesn't contain sensitive data.
+
+### Example: Secure Error Handling
+
+```python
+import os
+import httpx
+
+api_key = os.getenv("SECRET_API_KEY")
+
+try:
+    response = httpx.get(f"https://api.example.com/data?key={api_key}")
+    response.raise_for_status()
+except httpx.HTTPError as e:
+    # BAD: This would log the API key
+    # logger.error(f"API request failed: {e}")
+    
+    # GOOD: Generic error message
+    logger.error("API request failed - check connection and configuration")
+    capture_api_error(e, endpoint="api.example.com/data")
+    # Note: Our Sentry handler automatically sanitizes any sensitive data
+```
+
 ## Anti-Patterns
 
 ### Silent Failures
@@ -212,7 +938,14 @@ Handle exceptions at the right level. Catch specific exceptions where you can ha
 
 ### Sentry Integration
 
-Tux provides specialized Sentry utilities for different error types. Use `capture_database_error()` for database failures, `capture_api_error()` for API failures, and `capture_cog_error()` for cog errors. These utilities automatically add relevant context.
+Tux provides specialized Sentry utilities for different error types:
+
+- `capture_database_error()` - For database failures
+- `convert_httpx_error()` - For HTTPX API failures (recommended for API wrappers)
+- `capture_api_error()` - For other API failures
+- `capture_cog_error()` - For cog errors
+
+These utilities automatically add relevant context.
 
 Use specialized capture functions instead of generic `capture_exception()`. They add domain-specific context automatically, making errors easier to debug. Database errors include query details, API errors include endpoint information, and cog errors include command context.
 
@@ -226,6 +959,47 @@ Set up alerts for critical errors. When database connections fail or configurati
 
 Monitor user-facing error frequency. If users see many errors, investigate why. User-facing errors indicate problems that need immediate attention. Track these separately from internal errors that don't affect users.
 
+## Why Exception Handling Matters
+
+Effective error and exception handling is essential for building robust applications. Here's why:
+
+### 1. Prevents Unexpected Program Crashes
+
+When an unhandled exception occurs, Python terminates the program immediately. By handling exceptions, you prevent crashes and provide graceful recovery mechanisms. Your bot continues operating even when individual operations fail.
+
+### 2. Provides Meaningful Feedback to Users
+
+Displaying informative error messages helps users understand what went wrong and how to correct their input or actions. Instead of showing cryptic tracebacks, users get clear, actionable messages.
+
+### 3. Simplifies Debugging and Enables Detailed Logging
+
+Exception handling allows you to log errors for later analysis, helping pinpoint the source of issues. Logging is especially useful for debugging applications running in production, where you can't interactively debug the code.
+
+### 4. Ensures Proper Cleanup of Resources
+
+Handling exceptions properly ensures that resources like open files, database connections, and network sockets are properly closed, preventing memory leaks and data corruption. Use context managers (`with` statements) to ensure cleanup happens automatically.
+
+### 5. Reduces Security Vulnerabilities
+
+Proper exception handling prevents sensitive information from being exposed in error messages. Never log passwords, API keys, tokens, or other secrets. Our Sentry integration automatically sanitizes sensitive data before sending events.
+
+## Code Quality Tools
+
+### Linting Your Code
+
+Tools like `ruff` and `basedpyright` can help detect syntax and indentation issues before execution. These work similarly to a spell checker for your code, helping you catch errors early before they cause runtime issues.
+
+Tux uses:
+
+- **`ruff`**: Fast Python linter and formatter
+- **`basedpyright`**: Static type checker with strict mode
+
+Run quality checks before committing:
+
+```bash
+uv run dev all  # Runs all quality checks including linting
+```
+
 ## Best Practices Summary
 
 ### Code Structure
@@ -236,6 +1010,8 @@ Use Tux-specific exceptions instead of generic ones. They provide better error c
 
 Chain exceptions properly with `raise ... from e`. This preserves error context and makes debugging easier. Don't lose exception chains when re-raising.
 
+Use `try/except/else/finally` blocks appropriately. Use `finally` for cleanup that must always run. Use `else` for code that should only run when no exception occurs.
+
 ### User Experience
 
 Provide helpful error messages. Users should understand what went wrong and how to fix it. Don't show technical errors to users—convert them to friendly messages.
@@ -244,15 +1020,299 @@ Handle errors gracefully. Don't crash on recoverable errors. Use fallbacks, cach
 
 Log errors aggressively with context. Include user IDs, command names, operation types, and relevant parameters. This context is essential for debugging production issues.
 
+**Strategic logging principles:**
+
+- **Log levels that mean something**: Use `DEBUG` for detailed execution flow, `INFO` for normal operations, `WARNING` for recoverable issues, `ERROR` for failures that need attention, `CRITICAL` only for failures that stop core functionality
+- **Contextual information**: Include user IDs, command names, operation types, and relevant parameters that help reconstruct the error state
+- **Stack traces when they matter**: Use `logger.exception()` or `logger.error(..., exc_info=True)` for exceptions, but only when the full traceback is needed
+- **Structured logging in production**: Use structured logging formats (JSON) for easier parsing and analysis
+- **Log rotation**: Manage log storage efficiently to prevent disk space issues
+
+#### Example: Comprehensive Error Logging
+
+```python
+from loguru import logger
+from tux.services.sentry import capture_exception_safe
+
+async def process_command(ctx, user_id: int, data: dict) -> None:
+    logger.info(f"Processing command for user {user_id}", extra={
+        "user_id": user_id,
+        "command": ctx.command.name,
+        "guild_id": ctx.guild.id if ctx.guild else None,
+    })
+    
+    try:
+        result = await risky_operation(user_id, data)
+        logger.debug(f"Operation successful for user {user_id}")
+        return result
+    except TuxValidationError as e:
+        # User error - log as warning, don't send to Sentry
+        logger.warning(f"Validation failed for user {user_id}: {e}", extra={
+            "user_id": user_id,
+            "error_type": type(e).__name__,
+            "validation_field": getattr(e, "field", None),
+        })
+        raise
+    except Exception as e:
+        # System error - log as error, send to Sentry
+        logger.error(
+            f"Operation failed for user {user_id}: {e}",
+            extra={
+                "user_id": user_id,
+                "command": ctx.command.name,
+                "error_type": type(e).__name__,
+            },
+        )
+        capture_exception_safe(e, extra_context={
+            "user_id": user_id,
+            "command": ctx.command.name,
+        })
+        raise
+```
+
+**What makes logging exceptional:**
+
+- **Tells a story**: When an exception occurs, your logs should tell a story about what led to the failure
+- **Track patterns**: Strategic logging helps track user behavior patterns, performance bottlenecks, and system health
+- **Production debugging**: In production, logs are often your only window into what happened
+- **Correlation**: Include correlation IDs or request IDs to trace operations across services
+
 ### Performance
 
 Avoid expensive operations in error paths. Error handling should be fast—don't make failures slow. Pre-compute expensive values or use lazy evaluation.
 
 Create exceptions only when needed. Don't create exceptions during validation—collect errors and create a single exception at the end. This avoids overhead for common validation failures.
 
+### Documentation
+
+Document expected exceptions in function docstrings. This helps other developers (and your future self) understand what exceptions a function can raise and how to handle them:
+
+```python
+async def fetch_user(user_id: int) -> User:
+    """
+    Fetch a user from the database.
+
+    Parameters
+    ----------
+    user_id : int
+        The ID of the user to fetch.
+
+    Returns
+    -------
+    User
+        The user object.
+
+    Raises
+    ------
+    TuxAPIResourceNotFoundError
+        If the user does not exist.
+    TuxDatabaseConnectionError
+        If the database connection fails.
+    """
+    # Implementation...
+```
+
+Clear documentation of expected exceptions:
+
+- Helps callers write appropriate error handling
+- Makes the API contract explicit
+- Reduces guesswork about what can go wrong
+- Improves code maintainability
+
+Use NumPy-style docstrings (as shown above) to document exceptions in the `Raises` section. This is the standard format used throughout Tux.
+
+## Modern Python Exception Handling Features
+
+Tux uses Python 3.13+, which includes several modern exception handling features introduced in Python 3.10 and 3.11.
+
+### Pattern Matching with `match` Statements (Python 3.10+)
+
+Python 3.10 introduced structural pattern matching with `match` statements, which can elegantly handle multiple exception types:
+
+```python
+try:
+    result = risky_operation()
+except Exception as e:
+    match e:
+        case ZeroDivisionError():
+            logger.error("Division by zero detected")
+            raise ValueError("Cannot divide by zero") from e
+        case FileNotFoundError():
+            logger.warning("File not found, using defaults")
+            result = get_default_data()
+        case TuxAPIResourceNotFoundError():
+            logger.warning(f"Resource not found: {e.resource_identifier}")
+            raise
+        case _:
+            logger.error(f"Unexpected error: {e}")
+            capture_exception_safe(e)
+            raise
+```
+
+**Benefits:**
+
+- More readable than multiple `elif isinstance()` checks
+- Exhaustiveness checking (can use `case _:` as catch-all)
+- Pattern matching on exception attributes
+
+**When to use:**
+
+- When handling multiple exception types with different logic
+- When you want more readable exception handling
+- When pattern matching on exception attributes
+
+### Exception Groups and `except*` (Python 3.11+)
+
+Python 3.11 introduced exception groups to handle multiple exceptions simultaneously, particularly useful for concurrent operations:
+
+```python
+from exceptiongroups import ExceptionGroup
+
+try:
+    # Multiple operations that might raise different exceptions
+    results = await asyncio.gather(
+        fetch_user_data(user_id),
+        fetch_guild_data(guild_id),
+        fetch_channel_data(channel_id),
+        return_exceptions=True,
+    )
+    
+    # Check for exceptions in results
+    exceptions = [r for r in results if isinstance(r, Exception)]
+    if exceptions:
+        raise ExceptionGroup("Multiple fetch errors", exceptions)
+        
+except* TuxAPIResourceNotFoundError as eg:
+    # Handle all resource not found errors
+    for error in eg.exceptions:
+        logger.warning(f"Resource not found: {error.resource_identifier}")
+        
+except* TuxAPIConnectionError as eg:
+    # Handle all connection errors
+    for error in eg.exceptions:
+        logger.error(f"Connection error: {error}")
+        capture_exception_safe(error)
+        
+except* Exception as eg:
+    # Handle any other exceptions
+    for error in eg.exceptions:
+        logger.error(f"Unexpected error: {error}")
+        capture_exception_safe(error)
+```
+
+**Benefits:**
+
+- Handle multiple exceptions of the same type together
+- Useful for concurrent operations (asyncio, threading)
+- Cleaner than checking each result individually
+
+**When to use:**
+
+- Concurrent operations where multiple exceptions might occur
+- Batch processing where you want to handle all errors together
+- When you need to process all exceptions of a specific type
+
+### Adding Notes to Exceptions (Python 3.11+)
+
+Python 3.11 added the `add_note()` method to exceptions, allowing you to add contextual information:
+
+```python
+try:
+    result = process_user_input(user_data)
+except ValueError as e:
+    e.add_note("This error occurred while processing user input")
+    e.add_note("Consider validating input before processing")
+    e.add_note(f"User ID: {user_data.get('id', 'unknown')}")
+    logger.error(f"Validation error: {e}")
+    raise
+```
+
+**Benefits:**
+
+- Add context without modifying exception message
+- Notes appear in traceback output
+- Useful for debugging and error reporting
+
+**When to use:**
+
+- When you want to add debugging context to exceptions
+- When re-raising exceptions with additional information
+- When you need to preserve original exception message but add context
+
+### Suppressing Exceptions with `contextlib.suppress`
+
+Use `contextlib.suppress` to intentionally ignore specific exceptions:
+
+```python
+from contextlib import suppress
+
+# Suppress FileNotFoundError when removing a file
+with suppress(FileNotFoundError):
+    os.remove("temp_file.txt")
+
+# Suppress multiple exception types
+with suppress(KeyError, AttributeError):
+    value = data["key"].attribute
+```
+
+**Benefits:**
+
+- Explicitly documents intent to ignore exceptions
+- More readable than empty `except` blocks
+- Type-safe exception suppression
+
+**When to use:**
+
+- Cleanup operations where exceptions are expected
+- Optional operations that shouldn't fail the program
+- When you want to explicitly document ignored exceptions
+
+!!! warning "Use Sparingly"
+    Only suppress exceptions when you're certain they're safe to ignore. Suppressing exceptions can hide bugs and make debugging difficult.
+
+**Example from Tux codebase:**
+
+```python
+from contextlib import suppress
+
+# Suppress CancelledError when cleaning up tasks
+for task in tasks:
+    if task.done():
+        with suppress(asyncio.CancelledError):
+            await task
+```
+
+## Creating Custom Exception Classes
+
+You can define custom exception classes to extend Python's `Exception` class and handle specific cases in your application:
+
+```python
+class CustomError(Exception):
+    """Custom exception for specific application errors."""
+    pass
+
+# Usage
+if some_condition:
+    raise CustomError("This is a custom exception!")
+```
+
+In Tux, we use a hierarchical exception system. All custom exceptions inherit from `TuxError`:
+
+```python
+from tux.shared.exceptions import TuxError
+
+class MyCustomError(TuxError):
+    """Custom error for my module."""
+    pass
+```
+
+This allows the global error handler to format and handle your custom exceptions appropriately.
+
 ## Resources
 
-- **Python Exception Handling**: Python's official documentation on exception handling
+- **Python Exception Handling**: [Python's official documentation](https://docs.python.org/3/tutorial/errors.html) on exception handling
+- **Python traceback Module**: [traceback documentation](https://docs.python.org/3/library/traceback.html) for detailed error information
 - **Tux Exception Hierarchy**: See `src/tux/shared/exceptions.py` for all Tux-specific exceptions
 - **Global Error Handler**: See `src/tux/services/handlers/error/cog.py` for error handling implementation
-- **Sentry Integration**: See `sentry.md` for error tracking and monitoring details
+- **Sentry Integration**: See `sentry/index.md` for error tracking and monitoring details
+- **Security Best Practices**: See our [logging best practices](logging.md) for more on protecting sensitive data

@@ -234,4 +234,4 @@ Always clean up resources during shutdown. The application layer handles bot res
 - **Source Code**: `src/tux/core/app.py`
 - **Bot Class**: See `bot.md` for Discord integration details
 - **Configuration**: See configuration documentation for setup
-- **Sentry Integration**: See `sentry.md` for error tracking details
+- **Sentry Integration**: See `../../best-practices/sentry/index.md` for error tracking details
