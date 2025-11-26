@@ -94,6 +94,11 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           enable-cache: true
+      - name: Install System Dependencies
+        run: |
+          echo "Installing system dependencies for image optimization..."
+          sudo apt-get update
+          sudo apt-get install -y pngquant
       - name: Install Dependencies
         run: |
           echo "Installing documentation dependencies..."
