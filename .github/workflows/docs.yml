@@ -61,6 +61,7 @@ jobs:
   wait:
     name: Wait for Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: needs.changes.outputs.any || github.event_name == 'workflow_dispatch'
     needs: [changes]
     steps:
@@ -69,10 +70,9 @@ jobs:
       # It will fail gracefully in act, allowing manual testing of docs build steps
       - name: Wait for Tests Workflow
         uses: lewagon/wait-on-check-action@v1.4.1
-        continue-on-error: true
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          check-name: Run All Tests
+          check-regexp: ^Run All Tests.*
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: ${{ env.WAIT_INTERVAL_SECONDS }}
           allowed-conclusions: success
