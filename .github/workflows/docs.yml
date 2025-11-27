@@ -189,6 +189,29 @@ jobs:
           deploy_args: --env preview
           message_template: 'Preview: {{repo}}@{{short_sha}} on {{branch}} by {{actor}}
             (run {{run_number}})'
+      - name: Get Preview URL
+        if: steps.preview_deploy.outcome == 'success' && steps.preview_deploy.outputs.version_id
+          && !steps.preview_deploy.outputs.deployment_url
+        id: preview_url
+        working-directory: docs
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          VERSION_ID: ${{ steps.preview_deploy.outputs.version_id }}
+        run: |
+          # Get account subdomain from wrangler
+          ACCOUNT_SUBDOMAIN=$(npx wrangler whoami 2>/dev/null | grep -oP 'subdomain:\s*\K\S+' || echo "")
+          if [ -z "$ACCOUNT_SUBDOMAIN" ]; then
+            # Fallback: try to get from account info
+            ACCOUNT_SUBDOMAIN=$(npx wrangler whoami 2>/dev/null | grep -i subdomain | head -1 | awk '{print $2}' || echo "")
+          fi
+          if [ -n "$ACCOUNT_SUBDOMAIN" ] && [ -n "$VERSION_ID" ]; then
+            PREVIEW_URL="https://${VERSION_ID}-tux-docs.${ACCOUNT_SUBDOMAIN}.workers.dev"
+            echo "preview_url=${PREVIEW_URL}" >> "$GITHUB_OUTPUT"
+            echo "Found preview URL: ${PREVIEW_URL}"
+          else
+            echo "Could not determine preview URL. Account subdomain: ${ACCOUNT_SUBDOMAIN:-not found}"
+            echo "preview_url=" >> "$GITHUB_OUTPUT"
+          fi
       - name: Find Pull Request
         if: github.event_name == 'push'
         uses: juliangruber/find-pull-request-action@v1
@@ -214,8 +237,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number || steps.find_pr.outputs.number }}
           body: |-
             ## 📚 Documentation Preview
-            ${{ steps.preview_deploy.outcome == 'success' && steps.preview_deploy.outputs.version_id && format('- Version ID: `{0}`', steps.preview_deploy.outputs.version_id) || (steps.preview_deploy.outcome == 'failure' && '❌ **Deployment failed** - Authentication error. Please check Cloudflare API token configuration.') || '- A preview version has been uploaded to Cloudflare Workers.' }}
             | Type | URL |
             |------|-----|
             | Production | [https://tux.atl.dev](https://tux.atl.dev) |
-            | Preview | ${{ steps.preview_deploy.outcome == 'success' && steps.preview_deploy.outputs.deployment_url && format('[{0}]({0})', steps.preview_deploy.outputs.deployment_url) || (steps.preview_deploy.outcome == 'failure' && '❌ Deployment failed - check workflow logs') || '[Cloudflare Workers dashboard](https://dash.cloudflare.com/)' }} |
+            | Preview | ${{ steps.preview_deploy.outcome == 'success' && (steps.preview_deploy.outputs.deployment_url || steps.preview_url.outputs.preview_url) && format('[{0}]({0})', steps.preview_deploy.outputs.deployment_url || steps.preview_url.outputs.preview_url) || (steps.preview_deploy.outcome == 'failure' && '❌ Deployment failed - check workflow logs') || '[Cloudflare Workers dashboard](https://dash.cloudflare.com/)' }} |
