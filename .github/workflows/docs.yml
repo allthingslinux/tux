@@ -61,6 +61,8 @@ jobs:
   wait:
     name: Wait for Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 15
     if: needs.changes.outputs.any || github.event_name == 'workflow_dispatch'
     needs: [changes]
@@ -178,11 +180,22 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: docs
           command: versions upload --env preview
-      - name: Comment on Pull Request
+      - name: Find Documentation Comment
+        if: github.event_name == 'pull_request' && steps.preview_deploy.outcome ==
+          'success'
+        uses: peter-evans/find-comment@v3
+        id: find_comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: github-actions[bot]
+          body-includes: '## 📚 Documentation Preview'
+      # IDEA: Add to bottom of PR description instead of comment if possible
+      - name: Create or Update Comment
         if: github.event_name == 'pull_request' && steps.preview_deploy.outcome ==
           'success'
         uses: peter-evans/create-or-update-comment@v5
         with:
+          comment-id: ${{ steps.find_comment.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |-
             ## 📚 Documentation Preview
@@ -193,3 +206,4 @@ jobs:
             > Preview URLs follow the format: `<version-id>-tux-docs.<subdomain>.workers.dev`
             ---
             *This comment will be updated on each deployment.*
+          edit-mode: replace
