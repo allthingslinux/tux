@@ -76,7 +76,7 @@ class TuxCLI(BaseCLI):
         This command starts the main Tux Discord bot with all its features.
         Use --debug to enable debug mode for development.
         """
-        self.rich.print_section("🚀 Starting Tux Bot", "blue")
+        self.rich.print_section("Starting Tux Bot", "blue")
         self.rich.rich_print("[bold blue]Starting Tux Discord bot...[/bold blue]")
 
         try:
@@ -84,13 +84,13 @@ class TuxCLI(BaseCLI):
             from tux.main import run  # noqa: PLC0415
 
             if debug:
-                self.rich.print_info("🐛 Debug mode enabled")
+                self.rich.print_info("Debug mode enabled")
 
             exit_code = run()
             if exit_code == 0:
-                self.rich.print_success("✅ Bot started successfully")
+                self.rich.print_success("Bot started successfully")
             elif exit_code == 130:
-                self.rich.print_info("🛑 Bot shutdown requested by user (Ctrl+C)")
+                self.rich.print_info("Bot shutdown requested by user (Ctrl+C)")
             else:
                 self.rich.print_error(f"Bot exited with code {exit_code}")
                 sys.exit(exit_code)
@@ -102,7 +102,7 @@ class TuxCLI(BaseCLI):
                 self.rich.print_error("Bot setup failed")
                 sys.exit(1)
             elif "Event loop stopped before Future completed" in str(e):
-                self.rich.print_info("🛑 Bot shutdown completed")
+                self.rich.print_info("Bot shutdown completed")
                 sys.exit(0)
             else:
                 self.rich.print_error(f"Runtime error: {e}")
@@ -112,7 +112,7 @@ class TuxCLI(BaseCLI):
             # Don't log additional error messages since they're already handled
             sys.exit(e.code)
         except KeyboardInterrupt:
-            self.rich.print_info("🛑 Bot shutdown requested by user (Ctrl+C)")
+            self.rich.print_info("Bot shutdown requested by user (Ctrl+C)")
             sys.exit(130)
         except Exception as e:
             self.rich.print_error(f"Failed to start bot: {e}")
@@ -123,7 +123,7 @@ class TuxCLI(BaseCLI):
 
         Displays the current version of Tux and related components.
         """
-        self.rich.print_section("📋 Tux Version Information", "blue")
+        self.rich.print_section("Tux Version Information", "blue")
         self.rich.rich_print(
             "[bold blue]Showing Tux version information...[/bold blue]",
         )

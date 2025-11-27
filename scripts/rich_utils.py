@@ -31,19 +31,19 @@ class RichCLI:
 
     def print_success(self, message: str) -> None:
         """Print a success message."""
-        self.console.print(f"[green]✅ {message}[/green]")
+        self.console.print(f"[green]{message}[/green]")
 
     def print_error(self, message: str) -> None:
         """Print an error message."""
-        self.console.print(f"[red]❌ {message}[/red]")
+        self.console.print(f"[red]{message}[/red]")
 
     def print_info(self, message: str) -> None:
         """Print an info message."""
-        self.console.print(f"[blue]🗨️ {message}[/blue]")
+        self.console.print(f"[blue]{message}[/blue]")
 
     def print_warning(self, message: str) -> None:
         """Print a warning message."""
-        self.console.print(f"[yellow]⚠️ {message}[/yellow]")
+        self.console.print(f"[yellow]{message}[/yellow]")
 
     def print_section(self, title: str, color: str = "blue") -> None:
         """Print a section header."""

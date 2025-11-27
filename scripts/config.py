@@ -100,15 +100,15 @@ class ConfigCLI(BaseCLI):
         Exit
             If configuration generation fails.
         """
-        self.console.print(Panel.fit("🔧 Configuration Generator", style="bold blue"))
+        self.console.print(Panel.fit("Configuration Generator", style="bold blue"))
 
         if output is not None:
             self.console.print(
-                "✗ Custom output paths are not supported when using CLI approach",
+                "Custom output paths are not supported when using CLI approach",
                 style="red",
             )
             self.console.print(
-                "  Use pyproject.toml configuration to specify custom paths",
+                "Use pyproject.toml configuration to specify custom paths",
                 style="yellow",
             )
             raise typer.Exit(code=1)
@@ -116,7 +116,7 @@ class ConfigCLI(BaseCLI):
         pyproject_path = Path("pyproject.toml")
         if not pyproject_path.exists():
             self.console.print(
-                "✗ pyproject.toml not found in current directory",
+                "pyproject.toml not found in current directory",
                 style="red",
             )
             raise typer.Exit(code=1)
@@ -156,7 +156,7 @@ class ConfigCLI(BaseCLI):
 
         # Generate each format
         for generator in formats_to_generate:
-            self.console.print(f"✓ Running generator: {generator}", style="green")
+            self.console.print(f"Running generator: {generator}", style="green")
 
             cmd = [*base_cmd, "--generator", generator]
 
@@ -164,19 +164,19 @@ class ConfigCLI(BaseCLI):
                 result = subprocess.run(cmd, capture_output=True, text=True, check=True)
                 if result.stdout:
                     self.console.print(
-                        f"  Output: {result.stdout.strip()}",
+                        f"Output: {result.stdout.strip()}",
                         style="dim",
                     )
             except subprocess.CalledProcessError as e:
-                self.console.print(f"✗ Error running {generator}: {e}", style="red")
+                self.console.print(f"Error running {generator}: {e}", style="red")
                 if e.stdout:
-                    self.console.print(f"  Stdout: {e.stdout}", style="dim")
+                    self.console.print(f"Stdout: {e.stdout}", style="dim")
                 if e.stderr:
-                    self.console.print(f"  Stderr: {e.stderr}", style="red")
+                    self.console.print(f"Stderr: {e.stderr}", style="red")
                 raise typer.Exit(code=1) from e
 
         self.console.print(
-            "\n✅ Configuration files generated successfully!",
+            "\nConfiguration files generated successfully!",
             style="bold green",
         )
 
@@ -245,11 +245,11 @@ class ConfigCLI(BaseCLI):
                         style="red",
                     )
 
-            self.console.print("\n✅ Configuration is valid!", style="bold green")
+            self.console.print("\nConfiguration is valid!", style="bold green")
 
         except Exception as e:
             self.console.print(
-                f"\n✗ Configuration validation failed: {e}",
+                f"\nConfiguration validation failed: {e}",
                 style="bold red",
             )
             raise typer.Exit(code=1) from e

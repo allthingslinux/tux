@@ -95,10 +95,10 @@ class TestCLI(BaseCLI):
 
             os.execvp(command[0], command)
         except FileNotFoundError:
-            self.rich.print_error(f"❌ Command not found: {command[0]}")
+            self.rich.print_error(f"Command not found: {command[0]}")
             return False
         except KeyboardInterrupt:
-            self.rich.print_info("🛑 Test run interrupted")
+            self.rich.print_info("Test run interrupted")
             return False
 
     def _build_coverage_command(
@@ -148,7 +148,7 @@ class TestCLI(BaseCLI):
         if format_type == "html":
             html_report_path = Path("docs/htmlcov/index.html")
             if html_report_path.exists():
-                self.rich.print_info("🌐 Opening HTML coverage report in browser...")
+                self.rich.print_info("Opening HTML coverage report in browser...")
                 webbrowser.open(f"file://{html_report_path.resolve()}")
 
     # ============================================================================
@@ -157,17 +157,17 @@ class TestCLI(BaseCLI):
 
     def all_tests(self) -> None:
         """Run all tests with coverage and enhanced output."""
-        self.rich.print_section("🧪 Running Tests", "blue")
+        self.rich.print_section("Running Tests", "blue")
         self._run_test_command(["uv", "run", "pytest"], "Test run")
 
     def quick_tests(self) -> None:
         """Run tests without coverage (faster)."""
-        self.rich.print_section("⚡ Quick Tests", "blue")
+        self.rich.print_section("Quick Tests", "blue")
         self._run_test_command(["uv", "run", "pytest", "--no-cov"], "Quick test run")
 
     def plain_tests(self) -> None:
         """Run tests with plain output."""
-        self.rich.print_section("📝 Plain Tests", "blue")
+        self.rich.print_section("Plain Tests", "blue")
         self._run_test_command(
             ["uv", "run", "pytest", "-p", "no:sugar"],
             "Plain test run",
@@ -175,7 +175,7 @@ class TestCLI(BaseCLI):
 
     def parallel_tests(self) -> None:
         """Run tests in parallel."""
-        self.rich.print_section("🔄 Parallel Tests", "blue")
+        self.rich.print_section("Parallel Tests", "blue")
         self._run_test_command(
             ["uv", "run", "pytest", "-n", "auto"],
             "Parallel test run",
@@ -189,7 +189,7 @@ class TestCLI(BaseCLI):
         ] = False,
     ) -> None:
         """Run tests and generate HTML report."""
-        self.rich.print_section("🌐 HTML Report", "blue")
+        self.rich.print_section("HTML Report", "blue")
         cmd = [
             "uv",
             "run",
@@ -228,7 +228,7 @@ class TestCLI(BaseCLI):
         ] = False,
     ) -> None:
         """Generate comprehensive coverage reports."""
-        self.rich.print_section("📈 Coverage Report", "blue")
+        self.rich.print_section("Coverage Report", "blue")
 
         cmd = self._build_coverage_command(specific, format_type, quick, fail_under)
         success = self._run_test_command(cmd, "Coverage report generation")
@@ -238,7 +238,7 @@ class TestCLI(BaseCLI):
 
     def benchmark_tests(self) -> None:
         """Run benchmark tests."""
-        self.rich.print_section("📊 Benchmark Tests", "blue")
+        self.rich.print_section("Benchmark Tests", "blue")
         self._run_test_command(
             ["uv", "run", "pytest", "--benchmark-only", "--benchmark-sort=mean"],
             "Benchmark test run",

@@ -234,7 +234,7 @@ class DocsCLI(BaseCLI):
 
         try:
             if open_browser:
-                self.rich.print_info(f"🌐 Opening browser at http://{host}:{port}")
+                self.rich.print_info(f"Opening browser at http://{host}:{port}")
                 webbrowser.open(f"http://{host}:{port}")
 
             # Run server command without capturing output (for real-time streaming)
@@ -277,7 +277,7 @@ class DocsCLI(BaseCLI):
         ] = True,
     ) -> None:
         """Build documentation site for production."""
-        self.rich.print_section("🏗️ Building Documentation", "blue")
+        self.rich.print_section("Building Documentation", "blue")
 
         if not (mkdocs_path := self._find_mkdocs_config()):
             return
@@ -308,7 +308,7 @@ class DocsCLI(BaseCLI):
 
     def clean(self) -> None:
         """Clean documentation build artifacts."""
-        self.rich.print_section("🧹 Cleaning Documentation", "blue")
+        self.rich.print_section("Cleaning Documentation", "blue")
 
         # Clean build directory
         build_dir = Path("build/docs")
@@ -320,7 +320,7 @@ class DocsCLI(BaseCLI):
 
     def validate(self) -> None:
         """Validate documentation structure and links."""
-        self.rich.print_section("✅ Validating Documentation", "blue")
+        self.rich.print_section("Validating Documentation", "blue")
 
         if not (mkdocs_path := self._find_mkdocs_config()):
             return
@@ -335,7 +335,7 @@ class DocsCLI(BaseCLI):
 
     def check(self) -> None:
         """Check documentation for issues using MkDocs build validation."""
-        self.rich.print_section("🔍 Checking Documentation", "blue")
+        self.rich.print_section("Checking Documentation", "blue")
 
         if not (mkdocs_path := self._find_mkdocs_config()):
             return
@@ -345,19 +345,19 @@ class DocsCLI(BaseCLI):
             self._run_command(
                 ["uv", "run", "mkdocs", "build", "--strict", "-f", mkdocs_path],
             )
-            self.rich.print_success("✅ Documentation validation passed")
+            self.rich.print_success("Documentation validation passed")
         except subprocess.CalledProcessError:
-            self.rich.print_error("❌ Documentation validation failed")
+            self.rich.print_error("Documentation validation failed")
 
     def watch(self) -> None:
         """Watch for changes and rebuild automatically."""
-        self.rich.print_section("👀 Watching Documentation", "blue")
+        self.rich.print_section("Watching Documentation", "blue")
         self.rich.print_info("Starting documentation server with auto-reload...")
         self.serve()
 
     def lint(self) -> None:
         """Lint documentation files."""
-        self.rich.print_section("🔍 Linting Documentation", "blue")
+        self.rich.print_section("Linting Documentation", "blue")
 
         # Check for common markdown issues
         docs_dir = Path("docs/content")
@@ -390,7 +390,7 @@ class DocsCLI(BaseCLI):
 
     def info(self) -> None:
         """Show documentation configuration and status."""
-        self.rich.print_section("📋 Documentation Information", "blue")
+        self.rich.print_section("Documentation Information", "blue")
 
         # Show mkdocs.yml location
         if mkdocs_path := self._find_mkdocs_config():
@@ -418,7 +418,7 @@ class DocsCLI(BaseCLI):
 
     def list_pages(self) -> None:
         """List all documentation pages."""
-        self.rich.print_section("📚 Documentation Pages", "blue")
+        self.rich.print_section("Documentation Pages", "blue")
 
         docs_dir = Path("docs/content")
         if not docs_dir.exists():
@@ -468,7 +468,7 @@ class DocsCLI(BaseCLI):
         This runs the docs using Cloudflare Workers locally, useful for testing
         the production environment before deployment.
         """
-        self.rich.print_section("🔧 Starting Wrangler Dev Server", "blue")
+        self.rich.print_section("Starting Wrangler Dev Server", "blue")
 
         docs_dir = Path("docs")
         if not docs_dir.exists():
@@ -521,7 +521,7 @@ class DocsCLI(BaseCLI):
         Cloudflare Workers will automatically run tests and include coverage reports.
         Use --env to deploy to preview or production environments.
         """
-        self.rich.print_section("🚀 Deploying to Cloudflare Workers", "blue")
+        self.rich.print_section("Deploying to Cloudflare Workers", "blue")
 
         # Build docs first (without strict to allow warnings)
         self.rich.print_info("Building documentation...")
@@ -561,7 +561,7 @@ class DocsCLI(BaseCLI):
 
         Shows recent deployments with their status, version, and timestamp.
         """
-        self.rich.print_section("📜 Deployment History", "blue")
+        self.rich.print_section("Deployment History", "blue")
 
         cmd = ["wrangler", "deployments", "list"]
         if limit:
@@ -604,7 +604,7 @@ class DocsCLI(BaseCLI):
         - view: Show details of a specific version
         - upload: Create a new version with optional preview alias
         """
-        self.rich.print_section("🫧 Managing Versions", "blue")
+        self.rich.print_section("Managing Versions", "blue")
 
         cmd = ["wrangler", "versions", action]
 
@@ -643,7 +643,7 @@ class DocsCLI(BaseCLI):
 
         Tails the logs of your deployed Workers documentation, showing requests and errors.
         """
-        self.rich.print_section("🦚 Tailing Logs", "blue")
+        self.rich.print_section("Tailing Logs", "blue")
 
         cmd = ["wrangler", "tail"]
         if format_output:
@@ -684,7 +684,7 @@ class DocsCLI(BaseCLI):
 
         Use wrangler-deployments to find the version ID you want to rollback to.
         """
-        self.rich.print_section("🔙 Rolling Back Deployment", "blue")
+        self.rich.print_section("Rolling Back Deployment", "blue")
 
         if not version_id:
             self.rich.print_error(

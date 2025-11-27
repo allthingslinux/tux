@@ -250,22 +250,21 @@ class DockerCLI(BaseCLI):
             client.containers.list()  # type: ignore[attr-defined]
 
         except Exception:
-            if docker_host := self._get_docker_host():
-                self.rich.print_error(f"Docker daemon not accessible at {docker_host}")
-                self.rich.print_info("Try:")
-                self.rich.print_info("   - Start Docker: systemctl --user start docker")
+            docker_host = self._get_docker_host()
+            error_msg = (
+                f"Docker daemon not accessible at {docker_host}"
+                if docker_host
+                else "Docker daemon not running or accessible"
+            )
+            self.rich.print_error(error_msg)
+            self.rich.print_info("Try:")
+            self.rich.print_info("- Start Docker: systemctl --user start docker")
+            self.rich.print_info(
+                "- Or use system Docker: sudo systemctl start docker",
+            )
+            if not docker_host:
                 self.rich.print_info(
-                    "   - Or use system Docker: sudo systemctl start docker",
-                )
-            else:
-                self.rich.print_error("Docker daemon not running or accessible")
-                self.rich.print_info("Try:")
-                self.rich.print_info("   - Start Docker: systemctl --user start docker")
-                self.rich.print_info(
-                    "   - Or use system Docker: sudo systemctl start docker",
-                )
-                self.rich.print_info(
-                    "   - Or set DOCKER_HOST: export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/docker.sock",
+                    "- Or set DOCKER_HOST: export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/docker.sock",
                 )
             return False
 
@@ -508,21 +507,21 @@ class DockerCLI(BaseCLI):
                 "STARTUP_DELAY": "10",
             }
             self.rich.print_info("Production mode enabled:")
-            self.rich.print_info("   - Enhanced retry logic (5 attempts, 10s delay)")
-            self.rich.print_info("   - Production-optimized settings")
+            self.rich.print_info("- Enhanced retry logic (5 attempts, 10s delay)")
+            self.rich.print_info("- Production-optimized settings")
         else:
             env["DEBUG"] = "true"
             self.rich.print_info("Development mode enabled:")
-            self.rich.print_info("   - Debug mode")
-            self.rich.print_info("   - Development-friendly logging")
+            self.rich.print_info("- Debug mode")
+            self.rich.print_info("- Development-friendly logging")
 
         if watch:
-            self.rich.print_info("   - Hot reload enabled")
+            self.rich.print_info("- Hot reload enabled")
 
         if monitor:
-            self.rich.print_info("   - Smart monitoring enabled")
-            self.rich.print_info("   - Auto-cleanup on configuration errors")
-            self.rich.print_info("   - Automatic service orchestration")
+            self.rich.print_info("- Smart monitoring enabled")
+            self.rich.print_info("- Auto-cleanup on configuration errors")
+            self.rich.print_info("- Automatic service orchestration")
 
         # If not in detached mode and no monitoring requested, use standard foreground mode
         if not detach and not monitor:

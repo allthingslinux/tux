@@ -345,7 +345,7 @@ class DatabaseCLI(BaseCLI):
         Applies all pending migrations to bring the database up to date.
         Safe to run multiple times - only applies what's needed.
         """
-        self.rich.print_section("⬆️ Apply Migrations", "blue")
+        self.rich.print_section("⬆Apply Migrations", "blue")
         self.rich.rich_print("[bold blue]Applying pending migrations...[/bold blue]")
 
         try:
@@ -362,7 +362,7 @@ class DatabaseCLI(BaseCLI):
         - Available migration heads
         - Any pending migrations to apply
         """
-        self.rich.print_section("📊 Migration Status", "blue")
+        self.rich.print_section("Migration Status", "blue")
         self.rich.rich_print("[bold blue]Checking migration status...[/bold blue]")
 
         try:
@@ -406,7 +406,7 @@ class DatabaseCLI(BaseCLI):
         Exit
             If migration generation fails.
         """
-        self.rich.print_section("📝 New Migration", "blue")
+        self.rich.print_section("New Migration", "blue")
         self.rich.rich_print(f"[bold blue]Generating migration: {message}[/bold blue]")
 
         try:
@@ -438,7 +438,7 @@ class DatabaseCLI(BaseCLI):
         Displays the complete migration history in a tree format
         showing revision relationships and messages.
         """
-        self.rich.print_section("📜 Migration History", "blue")
+        self.rich.print_section("Migration History", "blue")
         self.rich.rich_print("[bold blue]Showing migration history...[/bold blue]")
 
         try:
@@ -453,7 +453,7 @@ class DatabaseCLI(BaseCLI):
         Checks that all migration files are properly formatted and
         can be applied without conflicts. Useful before deployments.
         """
-        self.rich.print_section("✅ Validate Migrations", "blue")
+        self.rich.print_section("Validate Migrations", "blue")
         self.rich.rich_print(
             "[bold blue]Checking migration files for issues...[/bold blue]",
         )
@@ -486,7 +486,7 @@ class DatabaseCLI(BaseCLI):
         uv run db show base          # Show base revision
         uv run db show abc123        # Show specific migration
         """
-        self.rich.print_section("📋 Show Migration", "blue")
+        self.rich.print_section("Show Migration", "blue")
         self.rich.rich_print(f"[bold blue]Showing migration: {revision}[/bold blue]")
 
         try:
@@ -549,7 +549,7 @@ class DatabaseCLI(BaseCLI):
                 self.rich.rich_print(f"[green]Found {len(tables)} tables:[/green]")
                 for table_name, column_count in tables:
                     self.rich.rich_print(
-                        f"  📊 [cyan]{table_name}[/cyan]: {column_count} columns",
+                        f"[cyan]{table_name}[/cyan]: {column_count} columns",
                     )
 
                 await service.disconnect()
@@ -566,7 +566,7 @@ class DatabaseCLI(BaseCLI):
         Performs health checks on the database connection and reports
         connection status and response times.
         """
-        self.rich.print_section("🏥 Database Health", "blue")
+        self.rich.print_section("Database Health", "blue")
         self.rich.rich_print("[bold blue]Checking database health...[/bold blue]")
 
         async def _health_check():
@@ -578,7 +578,7 @@ class DatabaseCLI(BaseCLI):
                 health = await service.health_check()
 
                 if health["status"] == "healthy":
-                    self.rich.rich_print("[green]✅ Database is healthy![/green]")
+                    self.rich.rich_print("[green]Database is healthy![/green]")
                     self.rich.rich_print(
                         f"[green]Connection: {health.get('connection', 'OK')}[/green]",
                     )
@@ -586,7 +586,7 @@ class DatabaseCLI(BaseCLI):
                         f"[green]Response time: {health.get('response_time', 'N/A')}[/green]",
                     )
                 else:
-                    self.rich.rich_print("[red]❌ Database is unhealthy![/red]")
+                    self.rich.rich_print("[red]Database is unhealthy![/red]")
                     self.rich.rich_print(
                         f"[red]Error: {health.get('error', 'Unknown error')}[/red]",
                     )
@@ -606,7 +606,7 @@ class DatabaseCLI(BaseCLI):
         defined in the models exist in the database and are accessible.
         Useful for catching schema mismatches after code changes.
         """
-        self.rich.print_section("🔍 Schema Validation", "blue")
+        self.rich.print_section("Schema Validation", "blue")
         self.rich.rich_print(
             "[bold blue]Validating database schema against models...[/bold blue]",
         )
@@ -625,7 +625,7 @@ class DatabaseCLI(BaseCLI):
 
                 if schema_result["status"] == "valid":
                     self.rich.rich_print(
-                        "[green]✅ Database schema validation passed![/green]",
+                        "[green]Database schema validation passed![/green]",
                     )
                     self.rich.rich_print(
                         "[green]All tables and columns match model definitions.[/green]",
@@ -636,11 +636,11 @@ class DatabaseCLI(BaseCLI):
                         "Unknown schema validation error",
                     )
                     self.rich.rich_print(
-                        "[red]❌ Database schema validation failed![/red]",
+                        "[red]Database schema validation failed![/red]",
                     )
                     self.rich.rich_print(f"[red]Error: {error_msg}[/red]")
                     self.rich.rich_print("")
-                    self.rich.rich_print("[yellow]💡 Suggested fixes:[/yellow]")
+                    self.rich.rich_print("[yellow]Suggested fixes:[/yellow]")
                     self.rich.rich_print(
                         "  • Run 'uv run db reset' to reset and reapply migrations",
                     )
@@ -667,7 +667,7 @@ class DatabaseCLI(BaseCLI):
         Identifies and displays currently running queries that may be
         causing performance issues or blocking operations.
         """
-        self.rich.print_section("⏱️ Query Analysis", "blue")
+        self.rich.print_section("⏱Query Analysis", "blue")
         self.rich.rich_print(
             "[bold blue]Checking for long-running queries...[/bold blue]",
         )
@@ -719,12 +719,12 @@ class DatabaseCLI(BaseCLI):
                     )
                     for pid, duration, query, state in long_queries:
                         self.rich.rich_print(
-                            f"  🔴 [red]PID {pid}[/red]: {state} for {duration}",
+                            f"[red]PID {pid}[/red]: {state} for {duration}",
                         )
                         self.rich.rich_print(f"     Query: {query[:100]}...")
                 else:
                     self.rich.rich_print(
-                        "[green]✅ No long-running queries found[/green]",
+                        "[green]No long-running queries found[/green]",
                     )
 
                 await service.disconnect()
@@ -747,9 +747,9 @@ class DatabaseCLI(BaseCLI):
 
         Use this to test the full migration chain or fix migration issues.
         """
-        self.rich.print_section("🔄 Reset Database", "yellow")
+        self.rich.print_section("Reset Database", "yellow")
         self.rich.rich_print(
-            "[bold yellow]⚠️  This will reset your database![/bold yellow]",
+            "[bold yellow]This will reset your database![/bold yellow]",
         )
         self.rich.rich_print(
             "[yellow]Downgrading to base and reapplying all migrations...[/yellow]",
@@ -797,9 +797,9 @@ class DatabaseCLI(BaseCLI):
 
         For normal development, use 'db reset' instead.
         """
-        self.rich.print_section("💥 Nuclear Reset", "red")
+        self.rich.print_section("Nuclear Reset", "red")
         self.rich.rich_print(
-            "[bold red]🚨 DANGER: This will DELETE ALL DATA![/bold red]",
+            "[bold red]DANGER: This will DELETE ALL DATA![/bold red]",
         )
         self.rich.rich_print(
             "[red]This is extremely destructive - only use when migrations are broken![/red]",
@@ -921,9 +921,9 @@ class DatabaseCLI(BaseCLI):
         ⚠️  WARNING: This can cause data loss if rolling back migrations
         that added tables/columns. Always backup first!
         """
-        self.rich.print_section("⬇️ Downgrade Database", "yellow")
+        self.rich.print_section("⬇Downgrade Database", "yellow")
         self.rich.rich_print(
-            f"[bold yellow]⚠️  Rolling back to revision: {revision}[/bold yellow]",
+            f"[bold yellow]Rolling back to revision: {revision}[/bold yellow]",
         )
         self.rich.rich_print(
             "[yellow]This may cause data loss - backup your database first![/yellow]",
@@ -949,7 +949,7 @@ class DatabaseCLI(BaseCLI):
         Displays version information for the database CLI, alembic,
         and database driver components.
         """
-        self.rich.print_section("📌 Version Information", "blue")
+        self.rich.print_section("Version Information", "blue")
         self.rich.rich_print(
             "[bold blue]Showing database version information...[/bold blue]",
         )
