@@ -190,15 +190,15 @@ jobs:
           message_template: 'Preview: {{repo}}@{{short_sha}} on {{branch}} by {{actor}}
             (run {{run_number}})'
       - name: Find Pull Request
-        if: github.event_name == 'push' && steps.preview_deploy.outcome == 'success'
+        if: github.event_name == 'push'
         uses: juliangruber/find-pull-request-action@v1
         id: find_pr
         with:
           branch: ${{ github.ref_name }}
           state: open
       - name: Find Documentation Comment
-        if: steps.preview_deploy.outcome == 'success' && (github.event_name == 'pull_request'
-          || steps.find_pr.outputs.number != '')
+        if: github.event_name == 'pull_request' || steps.find_pr.outputs.number !=
+          ''
         uses: peter-evans/find-comment@v4
         id: find_comment
         with:
@@ -206,8 +206,8 @@ jobs:
           comment-author: github-actions[bot]
           body-includes: '## 📚 Documentation Preview'
       - name: Create or Update Comment
-        if: steps.preview_deploy.outcome == 'success' && (github.event_name == 'pull_request'
-          || steps.find_pr.outputs.number != '')
+        if: github.event_name == 'pull_request' || steps.find_pr.outputs.number !=
+          ''
         uses: peter-evans/create-or-update-comment@v5
         with:
           comment-id: ${{ steps.find_comment.outputs.comment-id }}
@@ -218,6 +218,6 @@ jobs:
             | Type | URL |
             |------|-----|
             | Production | [https://tux.atl.dev](https://tux.atl.dev) |
-            | Preview | ${{ steps.preview_deploy.outputs.deployment_url && format('[{0}]({0})', steps.preview_deploy.outputs.deployment_url) || '[Cloudflare Workers dashboard](https://dash.cloudflare.com/)' }} |
+            | Preview | ${{ steps.preview_deploy.outcome == 'success' && steps.preview_deploy.outputs.deployment_url && format('[{0}]({0})', steps.preview_deploy.outputs.deployment_url) || (steps.preview_deploy.outcome == 'failure' && '❌ Deployment failed - check workflow logs') || '[Cloudflare Workers dashboard](https://dash.cloudflare.com/)' }} |
             **Deployment Info:**
-            ${{ steps.preview_deploy.outputs.version_id && format('- Version ID: `{0}`', steps.preview_deploy.outputs.version_id) || '- A preview version has been uploaded to Cloudflare Workers.' }}
+            ${{ steps.preview_deploy.outcome == 'success' && steps.preview_deploy.outputs.version_id && format('- Version ID: `{0}`', steps.preview_deploy.outputs.version_id) || (steps.preview_deploy.outcome == 'failure' && '❌ **Deployment failed** - Authentication error. Please check Cloudflare API token configuration.') || '- A preview version has been uploaded to Cloudflare Workers.' }}
