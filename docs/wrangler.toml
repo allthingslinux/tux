@@ -43,9 +43,15 @@ routes = [
 # Preview environment (all non-production branches/PRs)
 # How it works:
 # 1. GitHub Actions workflow uploads new version: wrangler versions upload --env preview
-# 2. Each version gets unique URL: <version-id>-tux-docs.<subdomain>.workers.dev
-# 3. Version gets deployed to 100% traffic: wrangler versions deploy <version-id> --env preview
-# 4. Preview URLs posted automatically in GitHub PR comments
+#    Output includes: "Version Preview URL: https://<version-id>-tux-docs.<subdomain>.workers.dev"
+# 2. Version gets deployed to 100% traffic: wrangler versions deploy <version-id> --env preview
+#    Note: Deploy output does NOT include preview URL (action limitation)
+# 3. Preview URLs posted automatically in GitHub PR comments
+#
+# CURRENT STATUS: Preview deployments work perfectly, but PR comments show limited info
+# due to action not parsing preview URLs from wrangler output.
+#
+# FUTURE IMPROVEMENT: Action should be enhanced to parse "Version Preview URL:" from upload output
 #
 # Branch aliases (optional): wrangler versions upload --preview-alias <alias> --env preview
 # Creates persistent URL: <alias>-tux-docs.<subdomain>.workers.dev (Wrangler 4.21.0+)

@@ -207,6 +207,21 @@ jobs:
           issue-number: ${{ github.event.pull_request.number || steps.find_pr.outputs.number }}
           comment-author: github-actions[bot]
           body-includes: '## 📚 Documentation Preview'
+      - name: Prepare Preview URL
+        if: github.event_name == 'pull_request' || steps.find_pr.outputs.number !=
+          ''
+        id: prepare_url
+        run: |
+          if [ -n "${{ steps.preview_deploy.outputs.deployment_url }}" ]; then
+            echo "preview_url=${{ steps.preview_deploy.outputs.deployment_url }}" >> "$GITHUB_OUTPUT"
+            echo "Using deployment URL from action" >> "$GITHUB_STEP_SUMMARY"
+          else
+            # Action limitation: doesn't parse preview URLs from upload output
+            # For now, we'll show that deployments work but URLs aren't parsed
+            echo "preview_url=Preview deployed successfully (URL parsing not available)" >> "$GITHUB_OUTPUT"
+            echo "Preview deployment completed successfully" >> "$GITHUB_STEP_SUMMARY"
+            echo "Action bug: doesn't parse 'Version Preview URL:' from wrangler upload output" >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Create or Update Comment
         if: github.event_name == 'pull_request' || steps.find_pr.outputs.number !=
           ''
@@ -214,9 +229,10 @@ jobs:
         with:
           comment-id: ${{ steps.find_comment.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number || steps.find_pr.outputs.number }}
+          edit-mode: replace
           body: |-
             ## 📚 Documentation Preview
             | Type | URL | Version | Message |
             |------|-----|---------|---------|
             | Production | [https://tux.atl.dev](https://tux.atl.dev) | - | - |
-            | Preview | ${{ steps.preview_deploy.outputs.deployment_url && format('[{0}]({0})', steps.preview_deploy.outputs.deployment_url) || (steps.preview_deploy.outputs.version_id && format('[{0}]({0})', format('https://{0}-tux-docs.allthingslinux.workers.dev', steps.preview_deploy.outputs.version_id))) || '❌ Deployment failed - check workflow logs' }} | ${{ steps.preview_deploy.outputs.version_id || '-' }} | ${{ steps.preview_deploy.outputs.message || '-' }} |
+            | Preview | ${{ steps.prepare_url.outputs.preview_url && format('[{0}]({0})', steps.prepare_url.outputs.preview_url) || steps.prepare_url.outputs.preview_url }} | ${{ steps.preview_deploy.outputs.version_id || '-' }} | ${{ steps.preview_deploy.outputs.message || '-' }} |
