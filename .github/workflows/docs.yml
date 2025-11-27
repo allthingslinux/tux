@@ -179,18 +179,43 @@ jobs:
             (run {{run_number}})'
       - name: Upload Preview Version
         if: github.ref != 'refs/heads/main' || github.event_name == 'pull_request'
+        id: preview_upload
+        run: |
+          # Run wrangler upload directly to capture the preview URL
+          UPLOAD_OUTPUT=$(npx wrangler@4 versions upload --config wrangler.toml --env preview --message="Preview: tux@${{ github.sha }}" 2>&1)
+
+          # Extract version ID
+          VERSION_ID=$(echo "$UPLOAD_OUTPUT" | grep "Worker Version ID:" | sed 's/.*Worker Version ID: //' | tr -d '\n')
+
+          # Extract preview URL from upload output
+          PREVIEW_URL=$(echo "$UPLOAD_OUTPUT" | grep "Version Preview URL:" | sed 's/.*Version Preview URL: //' | tr -d '\n')
+
+          # Echo the output for debugging
+          echo "Upload output:" >> "$GITHUB_STEP_SUMMARY"
+          echo "$UPLOAD_OUTPUT" >> "$GITHUB_STEP_SUMMARY"
+
+          # Set outputs
+          if [ -n "$VERSION_ID" ]; then
+            echo "version_id=$VERSION_ID" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -n "$PREVIEW_URL" ]; then
+            echo "preview_url=$PREVIEW_URL" >> "$GITHUB_OUTPUT"
+            echo "✅ Found preview URL: $PREVIEW_URL" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "❌ No preview URL found in upload output" >> "$GITHUB_STEP_SUMMARY"
+          fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        working-directory: docs
+      - name: Deploy Preview Version
+        if: github.ref != 'refs/heads/main' || github.event_name == 'pull_request'
         id: preview_deploy
-        uses: mkcode/wrangler-version-deploy-action-with-metadata@v1
-        continue-on-error: true
-        with:
-          api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          wrangler_command: npx wrangler@4
-          working_directory: docs
-          config: wrangler.toml
-          upload_args: --env preview
-          deploy_args: --env preview
-          message_template: 'Preview: {{repo}}@{{short_sha}} on {{branch}} by {{actor}}
-            (run {{run_number}})'
+        run: |
+          # Deploy the uploaded version
+          npx wrangler@4 versions deploy "${{ steps.preview_upload.outputs.version_id }}" -y --config wrangler.toml --env preview --message="Preview: tux@${{ github.sha }} on ${{ github.ref_name }} by ${{ github.actor }} (run ${{ github.run_number }})"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        working-directory: docs
       - name: Find Pull Request
         if: github.event_name == 'push'
         uses: juliangruber/find-pull-request-action@v1
@@ -212,15 +237,14 @@ jobs:
           ''
         id: prepare_url
         run: |
-          if [ -n "${{ steps.preview_deploy.outputs.deployment_url }}" ]; then
-            echo "preview_url=${{ steps.preview_deploy.outputs.deployment_url }}" >> "$GITHUB_OUTPUT"
-            echo "Using deployment URL from action" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "${{ steps.preview_upload.outputs.preview_url }}" ]; then
+            echo "preview_url=${{ steps.preview_upload.outputs.preview_url }}" >> "$GITHUB_OUTPUT"
+            echo "is_url=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Using preview URL from wrangler upload output" >> "$GITHUB_STEP_SUMMARY"
           else
-            # Action limitation: doesn't parse preview URLs from upload output
-            # For now, we'll show that deployments work but URLs aren't parsed
-            echo "preview_url=Preview deployed successfully (URL parsing not available)" >> "$GITHUB_OUTPUT"
+            echo "preview_url=🚀 Preview deployed successfully" >> "$GITHUB_OUTPUT"
+            echo "is_url=false" >> "$GITHUB_OUTPUT"
             echo "Preview deployment completed successfully" >> "$GITHUB_STEP_SUMMARY"
-            echo "Action bug: doesn't parse 'Version Preview URL:' from wrangler upload output" >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Create or Update Comment
         if: github.event_name == 'pull_request' || steps.find_pr.outputs.number !=
@@ -235,4 +259,4 @@ jobs:
             | Type | URL | Version | Message |
             |------|-----|---------|---------|
             | Production | [https://tux.atl.dev](https://tux.atl.dev) | - | - |
-            | Preview | ${{ steps.prepare_url.outputs.preview_url && format('[{0}]({0})', steps.prepare_url.outputs.preview_url) || steps.prepare_url.outputs.preview_url }} | ${{ steps.preview_deploy.outputs.version_id || '-' }} | ${{ steps.preview_deploy.outputs.message || '-' }} |
+            | Preview | ${{ steps.prepare_url.outputs.is_url == 'true' && format('[{0}]({0})', steps.prepare_url.outputs.preview_url) || steps.prepare_url.outputs.preview_url }} | ${{ steps.preview_upload.outputs.version_id || '-' }} | Preview: tux@${{ github.sha }} on ${{ github.ref_name }} by ${{ github.actor }} (run ${{ github.run_number }}) |
