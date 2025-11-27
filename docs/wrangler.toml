@@ -50,7 +50,7 @@ routes = [
 # - Non-production branches: npx wrangler versions upload --env preview
 # This prevents the "multiple environments" warning and ensures correct deployment.
 [env.preview]
-# Inherits top-level name "tux-docs" - previews use same worker as production
+name = "tux-docs"  # Use same worker name as production (prevents tux-docs-preview)
 # No custom domain - uses auto-generated *.workers.dev URLs
 
 # Observability - provides logs and metrics
