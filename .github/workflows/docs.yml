@@ -186,7 +186,7 @@ jobs:
           working_directory: docs
           config: wrangler.toml
           upload_args: --env preview
-          only_upload: 'true'
+          deploy_args: --env preview
           message_template: 'Preview: {{repo}}@{{short_sha}} on {{branch}} by {{actor}}
             (run {{run_number}})'
       - name: Find Pull Request
@@ -214,10 +214,8 @@ jobs:
           issue-number: ${{ github.event.pull_request.number || steps.find_pr.outputs.number }}
           body: |-
             ## 📚 Documentation Preview
-            *This comment will be updated on each deployment.*
+            ${{ steps.preview_deploy.outcome == 'success' && steps.preview_deploy.outputs.version_id && format('- Version ID: `{0}`', steps.preview_deploy.outputs.version_id) || (steps.preview_deploy.outcome == 'failure' && '❌ **Deployment failed** - Authentication error. Please check Cloudflare API token configuration.') || '- A preview version has been uploaded to Cloudflare Workers.' }}
             | Type | URL |
             |------|-----|
             | Production | [https://tux.atl.dev](https://tux.atl.dev) |
             | Preview | ${{ steps.preview_deploy.outcome == 'success' && steps.preview_deploy.outputs.deployment_url && format('[{0}]({0})', steps.preview_deploy.outputs.deployment_url) || (steps.preview_deploy.outcome == 'failure' && '❌ Deployment failed - check workflow logs') || '[Cloudflare Workers dashboard](https://dash.cloudflare.com/)' }} |
-            **Deployment Info:**
-            ${{ steps.preview_deploy.outcome == 'success' && steps.preview_deploy.outputs.version_id && format('- Version ID: `{0}`', steps.preview_deploy.outputs.version_id) || (steps.preview_deploy.outcome == 'failure' && '❌ **Deployment failed** - Authentication error. Please check Cloudflare API token configuration.') || '- A preview version has been uploaded to Cloudflare Workers.' }}
