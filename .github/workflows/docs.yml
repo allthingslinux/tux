@@ -219,4 +219,4 @@ jobs:
             | Type | URL | Version | Message |
             |------|-----|---------|---------|
             | Production | [https://tux.atl.dev](https://tux.atl.dev) | - | - |
-            | Preview | ${{ steps.preview_deploy.outputs.deployment_url && format('[{0}]({0})', steps.preview_deploy.outputs.deployment_url) || '❌ Deployment failed - check workflow logs' }} | ${{ steps.preview_deploy.outputs.version_id || '-' }} | ${{ steps.preview_deploy.outputs.message || '-' }} |
+            | Preview | ${{ steps.preview_deploy.outputs.deployment_url && format('[{0}]({0})', steps.preview_deploy.outputs.deployment_url) || (steps.preview_deploy.outputs.version_id && format('[{0}]({0})', format('https://{0}-tux-docs.allthingslinux.workers.dev', steps.preview_deploy.outputs.version_id))) || '❌ Deployment failed - check workflow logs' }} | ${{ steps.preview_deploy.outputs.version_id || '-' }} | ${{ steps.preview_deploy.outputs.message || '-' }} |

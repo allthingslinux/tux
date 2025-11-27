@@ -1,19 +1,22 @@
 # ==============================================================================
 # TUX DOCUMENTATION - CLOUDFLARE WORKERS CONFIGURATION
 # ==============================================================================
-# Deploy: wrangler deploy (from docs/ directory)
-# Or configure Workers Builds to use this config automatically
+# Deploy: wrangler versions upload + wrangler versions deploy (from docs/ directory)
+# Used by GitHub Actions workflow: .github/workflows/docs.yml
 #
 # Based on: https://developers.cloudflare.com/workers/static-assets/
+#           https://developers.cloudflare.com/workers/configuration/previews/
+#           https://developers.cloudflare.com/workers/configuration/routing/custom-domains/
 # ==============================================================================
 
 account_id = "53d9d9e6ebc5a0dddeeb59477445ea0c"
 name = "tux-docs"
-compatibility_date = "2025-09-24"
+compatibility_date = "2025-09-24"  # Latest stable compatibility date
 
 # Enable Preview URLs for all non-production deployments
-# Each version gets a unique URL: <version>-tux-docs.<subdomain>.workers.dev
-# Branch deployments can use aliases: <branch>-tux-docs.<subdomain>.workers.dev
+# Each version gets a unique URL: <version-id>-tux-docs.<subdomain>.workers.dev
+# Branch deployments can use aliases: <alias>-tux-docs.<subdomain>.workers.dev
+# Available for versions uploaded after 2024-09-25 (Wrangler 3.74.0+)
 preview_urls = true
 
 # Enable workers.dev subdomain (required for preview URLs)
@@ -28,30 +31,31 @@ directory = "./site"
 not_found_handling = "404-page"          # Serve 404.html for missing pages
 html_handling = "auto-trailing-slash"    # Auto-handle trailing slashes (recommended for docs)
 
-# Production deployment (main branch)
+# Production deployment (main branch only)
 # URL: https://tux.atl.dev (custom domain)
-# Configure in Cloudflare Dashboard: Workers Builds → Production Branch = "main"
+# GitHub Actions workflow: uploads + deploys when pushed to main branch
 [env.production]
 name = "tux-docs"
 routes = [
   { pattern = "tux.atl.dev", custom_domain = true }
 ]
 
-# Preview environment (all non-production branches)
+# Preview environment (all non-production branches/PRs)
 # How it works:
-# 1. Workers Builds creates a new version for each push to non-production branches
-# 2. Each version gets: <version-id>-tux-docs.<subdomain>.workers.dev
-# 3. Branch aliases (optional): Use `wrangler versions upload --preview-alias v0.1.0`
-#    Creates: v0-1-0-tux-docs.<subdomain>.workers.dev (persistent URL)
-# 4. PRs automatically get preview URLs in GitHub PR comments
+# 1. GitHub Actions workflow uploads new version: wrangler versions upload --env preview
+# 2. Each version gets unique URL: <version-id>-tux-docs.<subdomain>.workers.dev
+# 3. Version gets deployed to 100% traffic: wrangler versions deploy <version-id> --env preview
+# 4. Preview URLs posted automatically in GitHub PR comments
 #
-# IMPORTANT: Configure Workers Builds deploy commands with environment flags:
-# - Production (main branch): npx wrangler deploy --env production
-# - Non-production branches: npx wrangler versions upload --env preview
-# This prevents the "multiple environments" warning and ensures correct deployment.
+# Branch aliases (optional): wrangler versions upload --preview-alias <alias> --env preview
+# Creates persistent URL: <alias>-tux-docs.<subdomain>.workers.dev (Wrangler 4.21.0+)
+#
+# IMPORTANT: GitHub Actions workflow handles deployment:
+# - Production (main branch): uploads + deploys to tux.atl.dev
+# - Preview (other branches): uploads + deploys to *.workers.dev URLs
 [env.preview]
-name = "tux-docs"  # Use same worker name as production (prevents tux-docs-preview)
-# No custom domain - uses auto-generated *.workers.dev URLs
+name = "tux-docs"  # Same worker name as production (avoids separate tux-docs-preview worker)
+# No custom domain - uses auto-generated preview URLs on *.workers.dev
 
 # Observability - provides logs and metrics
 [observability]
@@ -63,13 +67,12 @@ enabled = true
 [placement]
 mode = "smart"
 
-# Note: Build configuration is handled by Workers Builds CI/CD
-# Configure build command in Cloudflare Dashboard: Workers Builds → Build configuration
-# Build command: build.sh
-# Root directory: docs
+# Note: Build configuration is handled by GitHub Actions CI/CD
+# Build process (in .github/workflows/docs.yml):
+# 1. Run tests and generate coverage reports
+# 2. Build MkDocs documentation with coverage included
+# 3. Upload Worker version and deploy to appropriate environment
 #
-# This custom build script:
-# 1. Runs tests to generate fresh coverage reports
-# 2. Builds MkDocs documentation with coverage included
-#
-# No external dependencies - everything runs in Cloudflare's build environment
+# Deployment uses Wrangler v4 with Versions API:
+# - Production: wrangler versions upload --env production + wrangler versions deploy
+# - Preview: wrangler versions upload --env preview + wrangler versions deploy
