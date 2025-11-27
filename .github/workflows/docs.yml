@@ -163,23 +163,30 @@ jobs:
       # They will fail gracefully in act, allowing manual testing of docs build steps
       - name: Deploy to Production
         if: github.ref == 'refs/heads/main'
-        uses: cloudflare/wrangler-action@v3
+        id: production_deploy
+        uses: mkcode/wrangler-version-deploy-action-with-metadata@v1
         continue-on-error: true
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: docs
-          command: deploy --env production
+          api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          wrangler_command: npx wrangler
+          working_directory: docs
+          upload_args: --env production
+          deploy_args: --env production
+          message_template: 'Production: {{repo}}@{{short_sha}} on {{branch}} by {{actor}}
+            (run {{run_number}})'
       - name: Upload Preview Version
         if: github.ref != 'refs/heads/main' || github.event_name == 'pull_request'
         id: preview_deploy
-        uses: cloudflare/wrangler-action@v3
+        uses: mkcode/wrangler-version-deploy-action-with-metadata@v1
         continue-on-error: true
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: docs
-          command: versions upload --env preview
+          api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          wrangler_command: npx wrangler
+          working_directory: docs
+          upload_args: --env preview
+          only_upload: 'true'
+          message_template: 'Preview: {{repo}}@{{short_sha}} on {{branch}} by {{actor}}
+            (run {{run_number}})'
       - name: Find Pull Request
         if: github.event_name == 'push' && steps.preview_deploy.outcome == 'success'
         uses: juliangruber/find-pull-request-action@v1
@@ -203,13 +210,13 @@ jobs:
         with:
           comment-id: ${{ steps.find_comment.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number || steps.find_pr.outputs.number }}
-          body: |-
+          body: |
             ## 📚 Documentation Preview
-            The documentation has been built and deployed to a preview environment.
-            **Production URL:** [https://tux.atl.dev](https://tux.atl.dev)
-            **Preview Deployment:** A preview version has been uploaded to Cloudflare Workers.
-            Check the [Cloudflare Workers dashboard](https://dash.cloudflare.com/) for the preview URL.
-            > Preview URLs follow the format: `<version-id>-tux-docs.<subdomain>.workers.dev`
             ---
             *This comment will be updated on each deployment.*
+            **Production URL:** [https://tux.atl.dev](https://tux.atl.dev)
+            **Preview Deployment:**
+            ${{ steps.preview_deploy.outputs.version_id && format('- Version ID: `{0}`', steps.preview_deploy.outputs.version_id) || '- A preview version has been uploaded to Cloudflare Workers.' }}
+            ${{ steps.preview_deploy.outputs.deployment_url && format('- Deployment URL: {0}', steps.preview_deploy.outputs.deployment_url) || '- Check the [Cloudflare Workers dashboard](https://dash.cloudflare.com/) for the preview URL.' }}
+            > Preview URLs follow the format: `<version-id>-tux-docs.<subdomain>.workers.dev`
           edit-mode: replace
