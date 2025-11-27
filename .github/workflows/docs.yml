@@ -84,6 +84,8 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    outputs:
+      any: ${{ needs.changes.outputs.any }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -129,6 +131,8 @@ jobs:
           building docs without coverage reports"
       - name: Build MkDocs Documentation
         working-directory: docs
+        env:
+          MKDOCS_GIT_COMMITTERS_APIKEY: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Building MkDocs documentation..."
           uv run mkdocs build
@@ -144,11 +148,12 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     needs: [build]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref,
-      'refs/heads/v'))
+    if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref,
+      'refs/heads/v'))) || github.event_name == 'pull_request'
     permissions:
       contents: read
       deployments: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -171,7 +176,8 @@ jobs:
           workingDirectory: docs
           command: deploy --env production
       - name: Upload Preview Version
-        if: github.ref != 'refs/heads/main'
+        if: github.ref != 'refs/heads/main' || github.event_name == 'pull_request'
+        id: preview_deploy
         uses: cloudflare/wrangler-action@v3
         continue-on-error: true
         with:
@@ -179,3 +185,18 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: docs
           command: versions upload --env preview
+      - name: Comment on Pull Request
+        if: github.event_name == 'pull_request' && steps.preview_deploy.outcome ==
+          'success'
+        uses: peter-evans/create-or-update-comment@v5
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |-
+            ## 📚 Documentation Preview
+            The documentation has been built and deployed to a preview environment.
+            **Production URL:** [https://tux.atl.dev](https://tux.atl.dev)
+            **Preview Deployment:** A preview version has been uploaded to Cloudflare Workers.
+            Check the [Cloudflare Workers dashboard](https://dash.cloudflare.com/) for the preview URL.
+            > Preview URLs follow the format: `<version-id>-tux-docs.<subdomain>.workers.dev`
+            ---
+            *This comment will be updated on each deployment.*
