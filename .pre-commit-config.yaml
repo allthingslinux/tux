@@ -40,12 +40,6 @@ repos:
     rev: v0.46.0
     hooks:
       - id: markdownlint-fix
-  - repo: https://github.com/executablebooks/mdformat
-    rev: 1.0.0
-    hooks:
-      - id: mdformat
-        additional_dependencies:
-          - mdformat-ruff
   - repo: https://github.com/asottile/add-trailing-comma
     rev: v4.0.0
     hooks:

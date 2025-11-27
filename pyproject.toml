@@ -80,7 +80,6 @@ dev = [
     "pydoclint>=0.7.3",
     "docstr-coverage>=2.3.2",
     "pydantic-settings-export[email,regions,toml] @ git+https://github.com/jag-k/pydantic-settings-export.git@73a558a329541954a583001a88151cd8c2355fa0",
-    "mdformat-ruff>=0.1.3",
 ]
 test = [
     "pytest>=8.4.2",
@@ -274,10 +273,6 @@ docstring-code-line-length = "dynamic"
 indent-style = "space"
 line-ending = "lf"
 quote-style = "double"
-
-# [tool.mdformat]
-# This tool can be configured here in the future if needed.
-# See https://github.com/csala/mdformat-pyproject for more information.
 
 [tool.yamlfix]
 # Preserve original sequence style (flow vs block) to prevent single-item
