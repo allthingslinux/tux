@@ -5,6 +5,7 @@ Development CLI Script.
 A unified interface for all development operations using the clean CLI infrastructure.
 """
 
+import shutil
 import subprocess
 import sys
 from collections.abc import Callable
@@ -66,6 +67,7 @@ class DevCLI(BaseCLI):
             ),
             # Workflow commands
             Command("pre-commit", self.pre_commit, "Run pre-commit checks"),
+            Command("clean", self.clean, "Clean temporary files and cache directories"),
             Command("all", self.run_all_checks, "Run all development checks"),
         ]
 
@@ -139,7 +141,7 @@ class DevCLI(BaseCLI):
 
     def lint(self) -> None:
         """Run linting checks with Ruff to ensure code quality."""
-        self.rich.print_section("🔍 Running Linting", "blue")
+        self.rich.print_section("Running Linting", "blue")
         self.rich.print_info("Checking code quality with Ruff...")
         success = self._run_tool_command(
             ["uv", "run", "ruff", "check", "."],
@@ -151,7 +153,7 @@ class DevCLI(BaseCLI):
 
     def lint_fix(self) -> None:
         """Run linting checks with Ruff and automatically apply fixes."""
-        self.rich.print_section("🔧 Running Linting with Fixes", "blue")
+        self.rich.print_section("Running Linting with Fixes", "blue")
         success = self._run_tool_command(
             ["uv", "run", "ruff", "check", "--fix", "."],
             "Linting with fixes completed successfully",
@@ -164,7 +166,7 @@ class DevCLI(BaseCLI):
 
     def format_code(self) -> None:
         """Format code using Ruff's formatter for consistent styling."""
-        self.rich.print_section("✨ Formatting Code", "blue")
+        self.rich.print_section("Formatting Code", "blue")
         success = self._run_tool_command(
             ["uv", "run", "ruff", "format", "."],
             "Code formatting completed successfully",
@@ -175,7 +177,7 @@ class DevCLI(BaseCLI):
 
     def type_check(self) -> None:
         """Perform static type checking using basedpyright."""
-        self.rich.print_section("🔍 Type Checking", "blue")
+        self.rich.print_section("Type Checking", "blue")
         success = self._run_tool_command(
             ["uv", "run", "basedpyright"],
             "Type checking completed successfully",
@@ -186,7 +188,7 @@ class DevCLI(BaseCLI):
 
     def lint_docstring(self) -> None:
         """Lint docstrings for proper formatting and completeness."""
-        self.rich.print_section("🔍 Linting Docstrings", "blue")
+        self.rich.print_section("Linting Docstrings", "blue")
         success = self._run_tool_command(
             ["uv", "run", "pydoclint", "--config=pyproject.toml", "."],
             "Docstring linting completed successfully",
@@ -198,7 +200,7 @@ class DevCLI(BaseCLI):
 
     def docstring_coverage(self) -> None:
         """Check docstring coverage across the codebase."""
-        self.rich.print_section("🔍 Docstring Coverage", "blue")
+        self.rich.print_section("Docstring Coverage", "blue")
         self._run_tool_command(
             ["uv", "run", "docstr-coverage", "--verbose", "2", "."],
             "Docstring coverage report generated",
@@ -207,7 +209,7 @@ class DevCLI(BaseCLI):
 
     def pre_commit(self) -> None:
         """Run pre-commit hooks to ensure code quality before commits."""
-        self.rich.print_section("✅ Running Pre-commit Checks", "blue")
+        self.rich.print_section("Running Pre-commit Checks", "blue")
         success = self._run_tool_command(
             ["uv", "run", "pre-commit", "run", "--all-files"],
             "Pre-commit checks completed successfully",
@@ -215,6 +217,156 @@ class DevCLI(BaseCLI):
         if not success:
             self.rich.print_error("Pre-commit checks did not pass - see issues above")
             sys.exit(1)
+
+    def _remove_item(self, item: Path, project_root: Path) -> tuple[int, int]:
+        """Remove a file or directory and return (count, size).
+
+        Parameters
+        ----------
+        item : Path
+            File or directory to remove.
+        project_root : Path
+            Project root directory for relative path display.
+
+        Returns
+        -------
+        tuple[int, int]
+            Tuple of (items_removed, bytes_freed).
+        """
+        try:
+            if item.is_file():
+                size = item.stat().st_size
+                item.unlink()
+                self.console.print(
+                    f"[dim]Removed: {item.relative_to(project_root)}[/dim]",
+                )
+                return (1, size)
+            if item.is_dir():
+                dir_size = sum(f.stat().st_size for f in item.rglob("*") if f.is_file())
+                shutil.rmtree(item)
+                self.console.print(
+                    f"[dim]Removed: {item.relative_to(project_root)}/[/dim]",
+                )
+                return (1, dir_size)
+        except OSError as e:
+            self.rich.print_warning(
+                f"Could not remove {item.relative_to(project_root)}: {e}",
+            )
+        return (0, 0)
+
+    def _clean_empty_directories(self, project_root: Path) -> int:
+        """Clean empty directories in tests/unit and scripts.
+
+        Parameters
+        ----------
+        project_root : Path
+            Project root directory.
+
+        Returns
+        -------
+        int
+            Number of directories removed.
+        """
+        cleaned = 0
+        for dir_path in [project_root / "tests" / "unit", project_root / "scripts"]:
+            if not dir_path.exists():
+                continue
+
+            for subdir in dir_path.iterdir():
+                if not subdir.is_dir() or subdir.name in (
+                    "__pycache__",
+                    ".pytest_cache",
+                ):
+                    continue
+
+                contents = list(subdir.iterdir())
+                if not contents or all(
+                    item.name == "__pycache__" and item.is_dir() for item in contents
+                ):
+                    try:
+                        shutil.rmtree(subdir)
+                        cleaned += 1
+                        self.console.print(
+                            f"[dim]Removed empty directory: {subdir.relative_to(project_root)}/[/dim]",
+                        )
+                    except OSError as e:
+                        self.rich.print_warning(
+                            f"Could not remove {subdir.relative_to(project_root)}: {e}",
+                        )
+        return cleaned
+
+    def clean(self) -> None:
+        """Clean temporary files, cache directories, and build artifacts."""
+        self.rich.print_section("Cleaning Project", "blue")
+
+        project_root = Path(__file__).parent.parent
+        cleaned_count = 0
+        total_size = 0
+
+        # Patterns to clean
+        patterns_to_clean = [
+            # Python cache
+            ("**/__pycache__", "Python cache directories"),
+            ("**/*.pyc", "Python compiled files"),
+            ("**/*.pyo", "Python optimized files"),
+            ("**/*$py.class", "Python class files"),
+            # Pytest cache
+            (".pytest_cache", "Pytest cache directory"),
+            # Coverage files
+            (".coverage", "Coverage data file"),
+            (".coverage.*", "Coverage data files"),
+            # Ruff cache
+            (".ruff_cache", "Ruff cache directory"),
+            # Mypy cache
+            (".mypy_cache", "Mypy cache directory"),
+            # Build artifacts
+            ("build", "Build directory"),
+            ("dist", "Distribution directory"),
+            ("*.egg-info", "Egg info directories"),
+            # Test artifacts
+            ("htmlcov", "HTML coverage reports"),
+            ("coverage.xml", "Coverage XML report"),
+            ("coverage.json", "Coverage JSON report"),
+            ("lcov.info", "LCOV coverage report"),
+            ("junit.xml", "JUnit XML report"),
+            (".hypothesis", "Hypothesis cache"),
+        ]
+
+        # Directories to never clean
+        protected_dirs = {".venv", "venv"}
+
+        for pattern, description in patterns_to_clean:
+            matches = list(project_root.glob(pattern))
+            if not matches:
+                continue
+
+            # Filter out protected directories
+            matches = [
+                m
+                for m in matches
+                if all(protected not in str(m) for protected in protected_dirs)
+            ]
+
+            if not matches:
+                continue
+
+            self.rich.print_info(f"Cleaning {description}...")
+
+            for item in matches:
+                count, size = self._remove_item(item, project_root)
+                cleaned_count += count
+                total_size += size
+
+        # Clean empty directories
+        cleaned_count += self._clean_empty_directories(project_root)
+
+        if cleaned_count > 0:
+            size_mb = total_size / (1024 * 1024)
+            self.rich.print_success(
+                f"Cleaned {cleaned_count} item(s), freed {size_mb:.2f} MB",
+            )
+        else:
+            self.rich.print_info("Nothing to clean - project is already clean!")
 
     def run_all_checks(
         self,
@@ -224,7 +376,7 @@ class DevCLI(BaseCLI):
         ] = False,
     ) -> None:
         """Run all development checks including linting, type checking, and documentation."""
-        self.rich.print_section("🚀 Running All Development Checks", "blue")
+        self.rich.print_section("Running All Development Checks", "blue")
         checks: list[tuple[str, Callable[[], None]]] = [
             ("Linting", self.lint_fix if fix else self.lint),
             ("Code Formatting", self.format_code),
@@ -260,7 +412,7 @@ class DevCLI(BaseCLI):
         self.console.print()
 
         # Summary using Rich table
-        self.rich.print_section("📊 Development Checks Summary", "blue")
+        self.rich.print_section("Development Checks Summary", "blue")
 
         passed = sum(bool(success) for _, success in results)
         total = len(results)
@@ -269,7 +421,7 @@ class DevCLI(BaseCLI):
         table_data: list[tuple[str, str, str]] = [
             (
                 check_name,
-                "✅ PASSED" if success else "❌ FAILED",
+                "PASSED" if success else "FAILED",
                 "Completed" if success else "Failed",
             )
             for check_name, success in results
@@ -283,9 +435,9 @@ class DevCLI(BaseCLI):
 
         self.console.print()
         if passed == total:
-            self.rich.print_success(f"🎉 All {total} checks passed!")
+            self.rich.print_success(f"All {total} checks passed!")
         else:
-            self.rich.print_error(f"⚠️ {passed}/{total} checks passed")
+            self.rich.print_error(f"{passed}/{total} checks passed")
             sys.exit(1)
 
 
