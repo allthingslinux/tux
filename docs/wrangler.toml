@@ -7,6 +7,7 @@
 # Based on: https://developers.cloudflare.com/workers/static-assets/
 # ==============================================================================
 
+account_id = "53d9d9e6ebc5a0dddeeb59477445ea0c"
 name = "tux-docs"
 compatibility_date = "2025-09-24"
 
