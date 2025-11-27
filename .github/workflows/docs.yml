@@ -170,6 +170,7 @@ jobs:
           api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           wrangler_command: npx wrangler
           working_directory: docs
+          config: wrangler.toml
           upload_args: --env production
           deploy_args: --env production
           message_template: 'Production: {{repo}}@{{short_sha}} on {{branch}} by {{actor}}
@@ -183,6 +184,7 @@ jobs:
           api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           wrangler_command: npx wrangler
           working_directory: docs
+          config: wrangler.toml
           upload_args: --env preview
           only_upload: 'true'
           message_template: 'Preview: {{repo}}@{{short_sha}} on {{branch}} by {{actor}}
@@ -210,13 +212,12 @@ jobs:
         with:
           comment-id: ${{ steps.find_comment.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number || steps.find_pr.outputs.number }}
-          body: |
+          body: |-
             ## 📚 Documentation Preview
-            ---
             *This comment will be updated on each deployment.*
-            **Production URL:** [https://tux.atl.dev](https://tux.atl.dev)
-            **Preview Deployment:**
+            | Type | URL |
+            |------|-----|
+            | Production | [https://tux.atl.dev](https://tux.atl.dev) |
+            | Preview | ${{ steps.preview_deploy.outputs.deployment_url && format('[{0}]({0})', steps.preview_deploy.outputs.deployment_url) || '[Cloudflare Workers dashboard](https://dash.cloudflare.com/)' }} |
+            **Deployment Info:**
             ${{ steps.preview_deploy.outputs.version_id && format('- Version ID: `{0}`', steps.preview_deploy.outputs.version_id) || '- A preview version has been uploaded to Cloudflare Workers.' }}
-            ${{ steps.preview_deploy.outputs.deployment_url && format('- Deployment URL: {0}', steps.preview_deploy.outputs.deployment_url) || '- Check the [Cloudflare Workers dashboard](https://dash.cloudflare.com/) for the preview URL.' }}
-            > Preview URLs follow the format: `<version-id>-tux-docs.<subdomain>.workers.dev`
-          edit-mode: replace

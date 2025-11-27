@@ -1419,6 +1419,18 @@ wheels = [
 ]
 
 [[package]]
+name = "mdformat-ruff"
+version = "0.1.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ruff" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3a/e2/9003dc57c78aea34b21f67854d842985ceac48028d288432efa113df3887/mdformat_ruff-0.1.3.tar.gz", hash = "sha256:2ddd2758dd3f6738c1c7bfbeb89320d271454f4cd8c28a99968a50d3578b15d6", size = 3416, upload-time = "2024-02-11T01:03:58.143Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b1/22/3f2464d478f145bbcb731cee9fe720b9e4d69efb6ffd8bc4491f14ca20a2/mdformat_ruff-0.1.3-py3-none-any.whl", hash = "sha256:9c0cf7bfe6bf99b9e0e617e960041d06e9fa84300d5645f922306dd2ed0d1296", size = 3932, upload-time = "2024-02-11T01:03:57.01Z" },
+]
+
+[[package]]
 name = "mdurl"
 version = "0.1.2"
 source = { registry = "https://pypi.org/simple" }
@@ -3159,6 +3171,7 @@ dependencies = [
 dev = [
     { name = "basedpyright" },
     { name = "docstr-coverage" },
+    { name = "mdformat-ruff" },
     { name = "pre-commit" },
     { name = "pydantic-settings-export", extra = ["email", "regions", "toml"] },
     { name = "pydoclint" },
@@ -3282,6 +3295,7 @@ requires-dist = [
 dev = [
     { name = "basedpyright", specifier = "==1.29.5" },
     { name = "docstr-coverage", specifier = ">=2.3.2" },
+    { name = "mdformat-ruff", specifier = ">=0.1.3" },
     { name = "pre-commit", specifier = ">=4.3.0" },
     { name = "pydantic-settings-export", extras = ["email", "regions", "toml"], git = "https://github.com/jag-k/pydantic-settings-export.git?rev=73a558a329541954a583001a88151cd8c2355fa0" },
     { name = "pydoclint", specifier = ">=0.7.3" },

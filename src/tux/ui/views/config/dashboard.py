@@ -1746,7 +1746,7 @@ class ConfigDashboard(discord.ui.LayoutView):
         modal = CreateRankModal(self.bot, self.guild, self, available_ranks)
         await interaction.response.send_modal(modal)
 
-    async def _handle_init_default_ranks(
+    async def _handle_init_default_ranks(  # noqa: PLR0915
         self,
         interaction: discord.Interaction,
     ) -> None:

@@ -326,7 +326,7 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
         # Has hyphens/underscores - likely a single file (e.g., 'bot-token', 'first-run')
         return f"{md_path}.md"
 
-    def _resolve_markdown_path(
+    def _resolve_markdown_path(  # noqa: PLR0911
         self,
         original_url: str,
         md_path: str,

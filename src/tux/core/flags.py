@@ -77,7 +77,7 @@ class TuxFlagConverter(commands.FlagConverter):
     """
 
     @classmethod
-    def parse_flags(
+    def parse_flags(  # noqa: PLR0912, PLR0915
         cls,
         argument: str,
         *,
