@@ -146,7 +146,7 @@ class TestCLI(BaseCLI):
     def _open_coverage_browser(self, format_type: str) -> None:
         """Open coverage report in browser if HTML format."""
         if format_type == "html":
-            html_report_path = Path("htmlcov/index.html")
+            html_report_path = Path("docs/htmlcov/index.html")
             if html_report_path.exists():
                 self.rich.print_info("🌐 Opening HTML coverage report in browser...")
                 webbrowser.open(f"file://{html_report_path.resolve()}")

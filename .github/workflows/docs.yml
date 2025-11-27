@@ -116,19 +116,12 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: tests.yml
           name: coverage-html
-          path: htmlcov
+          path: docs/htmlcov
           if_no_artifact_found: ignore
           search_artifacts: true
           allow_forks: false
           repo: ${{ github.repository }}
           commit: ${{ github.event.pull_request.head.sha || github.sha }}
-
-      # Prepare coverage for MkDocs
-      # Note: In act (local testing), this may fail if coverage isn't available
-      # Coverage must be generated manually or the mkdocs-coverage plugin will be skipped
-      - name: Prepare Coverage for MkDocs
-        run: ./.github/scripts/docs.sh prepare-coverage || echo "Coverage not available,
-          building docs without coverage reports"
       - name: Build MkDocs Documentation
         working-directory: docs
         env:

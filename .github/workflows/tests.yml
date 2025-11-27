@@ -89,9 +89,10 @@ jobs:
           echo "Running all tests with unified coverage..."
 
           # Run all test types with combined coverage
+          # Generate htmlcov in docs/ directory for direct use by MkDocs
           uv run pytest \
             --cov-report=xml:coverage.xml \
-            --cov-report=html:htmlcov \
+            --cov-report=html:docs/htmlcov \
             --cov-report=term-missing:skip-covered \
             --junitxml=junit.xml \
             --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} \
@@ -119,6 +120,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-html
-          path: htmlcov
+          path: docs/htmlcov
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
           if-no-files-found: warn
