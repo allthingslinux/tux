@@ -1,8 +1,6 @@
 ---
 title: CLI Reference
 icon: octicons/terminal-24
-hide:
-  - toc
 ---
 
 # CLI Reference
@@ -13,3 +11,4 @@ hide:
 ::: mkdocs-typer
     :module: scripts.cli
     :command: cli
+    :depth: 3
