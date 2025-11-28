@@ -42,6 +42,8 @@
 .md-typeset__table table:not([class]) {
   display: table;
   width: 100%;
+  /* Use tabular numerals for better alignment in tables */
+  font-variant-numeric: tabular-nums;
 }
 
 
@@ -403,8 +405,8 @@
 /* Main intro paragraph */
 .home-page-content > p:first-of-type {
   font-size: 1.25rem !important;
-  line-height: 1.7 !important;
-  margin: 0 auto 3rem auto !important;
+  line-height: 1.65 !important;
+  margin: 0 auto 2rem auto !important;
   max-width: 800px !important;
   text-align: center !important;
   color: var(--md-default-fg-color--light) !important;
@@ -413,8 +415,8 @@
 /* Regular paragraphs */
 .home-page-content > p {
   font-size: 1.125rem !important;
-  line-height: 1.7 !important;
-  margin: 0 auto 2rem auto !important;
+  line-height: 1.65 !important;
+  margin: 0 auto 1.5rem auto !important;
   max-width: 800px !important;
   text-align: center !important;
   color: var(--md-default-fg-color--light) !important;
@@ -424,15 +426,15 @@
 .home-page-content section > p,
 .home-page-content div > p:not(:has(a)):not(:first-of-type) {
   font-size: 1rem !important;
-  line-height: 1.6 !important;
-  margin: 0 auto 1.5rem auto !important;
+  line-height: 1.55 !important;
+  margin: 0 auto 1.2rem auto !important;
   max-width: 700px !important;
   text-align: center !important;
 }
 
 /* Horizontal rules */
 .home-page-content hr {
-  margin: 3rem auto !important;
+  margin: 2rem auto !important;
   max-width: 600px !important;
   border-color: var(--md-border-color) !important;
 }

@@ -12,7 +12,9 @@
 :root {
   /* Main font stack - Inter with fallbacks */
   font-family: Inter, sans-serif;
-  font-feature-settings: 'liga' 1, 'calt' 1; /* fix for Chrome */
+  /* Enable Inter's best features: ligatures, contextual alternates, and disambiguation */
+  /* ss02 = Inter's "Disambiguation" set - makes I, l, 1, 0, O more distinct */
+  font-feature-settings: 'liga' 1, 'calt' 1, 'ss02' 1; /* fix for Chrome */
   --md-text-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif;
 
   /* Monospace font stack - JetBrains Mono with fallbacks */
@@ -24,6 +26,8 @@
   :root {
     font-family: InterVariable, sans-serif;
     --md-text-font: "InterVariable", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif;
+    /* Variable font features - same as static Inter */
+    font-feature-settings: 'liga' 1, 'calt' 1, 'ss02' 1;
   }
 }
 
@@ -40,9 +44,15 @@
 body {
   /* Accessible line-height for body text */
   line-height: 1.5;
+  /* Default font weight */
+  font-weight: 500;
   /* Improve text rendering on macOS */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent mobile browsers from auto-adjusting font size */
+  -moz-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* Font rendering optimization */
@@ -107,9 +117,10 @@ article > h1,
 .md-main h1,
 .md-main__inner h1,
 .md-container h1 {
-  font-size: 2.389rem !important; /* 47.78px with 125% html (2.389rem * 20px = 47.78px) */
+  font-size: 2.0rem !important; /* 40px with 125% html (2.0rem * 20px = 40px) */
   font-weight: 600 !important;
   line-height: 1.2 !important;
+  letter-spacing: -0.02em !important; /* Slightly tighter for large headings */
   margin-top: 1rem !important;
   margin-bottom: 1rem !important;
 }
@@ -134,7 +145,7 @@ article > h1,
   .md-main h1,
   .md-main__inner h1,
   .md-container h1 {
-    font-size: 2.172rem !important; /* 47.78px with 137.5% html (2.172rem * 22px = 47.784px) */
+    font-size: 1.8rem !important; /* 39.6px with 137.5% html (1.8rem * 22px = 39.6px) */
   }
 }
 
@@ -158,7 +169,7 @@ article > h1,
   .md-main h1,
   .md-main__inner h1,
   .md-container h1 {
-    font-size: 1.991rem !important; /* 47.78px with 150% html (1.991rem * 24px = 47.784px) */
+    font-size: 1.6rem !important; /* 38.4px with 150% html (1.6rem * 24px = 38.4px) */
   }
 }
 
@@ -202,11 +213,12 @@ article > h2,
 .md-content-wrapper h2,
 .md-main h2,
 .md-main__inner h2 {
-  font-size: 1.991rem !important; /* 39.81px with 125% html (1.991rem * 20px = 39.82px) */
+  font-size: 1.6rem !important; /* 32px with 125% html (1.6rem * 20px = 32px) */
   font-weight: 500 !important;
-  line-height: 1.3 !important;
-  margin-top: 2rem !important;
-  margin-bottom: 1rem !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.01em !important; /* Slightly tighter for medium headings */
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
 }
 
 @media screen and (min-width: 100em) {
@@ -224,7 +236,7 @@ article > h2,
   .md-content-wrapper h2,
   .md-main h2,
   .md-main__inner h2 {
-    font-size: 1.810rem !important; /* 39.81px with 137.5% html (1.810rem * 22px = 39.82px) */
+    font-size: 1.4rem !important; /* 30.8px with 137.5% html (1.4rem * 22px = 30.8px) */
   }
 }
 
@@ -243,7 +255,7 @@ article > h2,
   .md-content-wrapper h2,
   .md-main h2,
   .md-main__inner h2 {
-    font-size: 1.659rem !important; /* 39.81px with 150% html (1.659rem * 24px = 39.816px) */
+    font-size: 1.25rem !important; /* 30px with 150% html (1.25rem * 24px = 30px) */
   }
 }
 
@@ -262,11 +274,11 @@ article > h3,
 .md-content-wrapper h3,
 .md-main h3,
 .md-main__inner h3 {
-  font-size: 1.659rem !important; /* 33.18px with 125% html (1.659rem * 20px = 33.18px) */
+  font-size: 1.25rem !important; /* 25px with 125% html (1.25rem * 20px = 25px) */
   font-weight: 500 !important;
-  line-height: 1.3 !important;
-  margin-top: 1.5rem !important;
-  margin-bottom: 0.75rem !important;
+  line-height: 1.25 !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.5rem !important;
 }
 
 @media screen and (min-width: 100em) {
@@ -284,7 +296,7 @@ article > h3,
   .md-content-wrapper h3,
   .md-main h3,
   .md-main__inner h3 {
-    font-size: 1.508rem !important; /* 33.18px with 137.5% html (1.508rem * 22px = 33.176px) */
+    font-size: 1.15rem !important; /* 25.3px with 137.5% html (1.15rem * 22px = 25.3px) */
   }
 }
 
@@ -303,7 +315,7 @@ article > h3,
   .md-content-wrapper h3,
   .md-main h3,
   .md-main__inner h3 {
-    font-size: 1.383rem !important; /* 33.18px with 150% html (1.383rem * 24px = 33.192px) */
+    font-size: 1.05rem !important; /* 25.2px with 150% html (1.05rem * 24px = 25.2px) */
   }
 }
 
@@ -322,11 +334,11 @@ article > h4,
 .md-content-wrapper h4,
 .md-main h4,
 .md-main__inner h4 {
-  font-size: 1.383rem !important; /* 27.65px with 125% html (1.383rem * 20px = 27.66px) */
+  font-size: 1.15rem !important; /* 23px with 125% html (1.15rem * 20px = 23px) */
   font-weight: 500 !important;
-  line-height: 1.4 !important;
-  margin-top: 1.25rem !important;
-  margin-bottom: 0.5rem !important;
+  line-height: 1.3 !important;
+  margin-top: 1rem !important;
+  margin-bottom: 0.4rem !important;
 }
 
 @media screen and (min-width: 100em) {
@@ -344,7 +356,7 @@ article > h4,
   .md-content-wrapper h4,
   .md-main h4,
   .md-main__inner h4 {
-    font-size: 1.257rem !important; /* 27.65px with 137.5% html (1.257rem * 22px = 27.654px) */
+    font-size: 1.045rem !important; /* 23px with 137.5% html (1.045rem * 22px = 22.99px) */
   }
 }
 
@@ -363,7 +375,7 @@ article > h4,
   .md-content-wrapper h4,
   .md-main h4,
   .md-main__inner h4 {
-    font-size: 1.152rem !important; /* 27.65px with 150% html (1.152rem * 24px = 27.648px) */
+    font-size: 0.958rem !important; /* 23px with 150% html (0.958rem * 24px = 22.992px) */
   }
 }
 
@@ -382,11 +394,11 @@ article > h5,
 .md-content-wrapper h5,
 .md-main h5,
 .md-main__inner h5 {
-  font-size: 1.152rem !important; /* 23.04px with 125% html (1.152rem * 20px = 23.04px) */
+  font-size: 1.05rem !important; /* 21px with 125% html (1.05rem * 20px = 21px) */
   font-weight: 500 !important;
-  line-height: 1.4 !important;
-  margin-top: 1rem !important;
-  margin-bottom: 0.5rem !important;
+  line-height: 1.3 !important;
+  margin-top: 0.8rem !important;
+  margin-bottom: 0.4rem !important;
 }
 
 @media screen and (min-width: 100em) {
@@ -404,7 +416,7 @@ article > h5,
   .md-content-wrapper h5,
   .md-main h5,
   .md-main__inner h5 {
-    font-size: 1.047rem !important; /* 23.04px with 137.5% html (1.047rem * 22px = 23.034px) */
+    font-size: 0.955rem !important; /* 21px with 137.5% html (0.955rem * 22px = 21.01px) */
   }
 }
 
@@ -423,7 +435,7 @@ article > h5,
   .md-content-wrapper h5,
   .md-main h5,
   .md-main__inner h5 {
-    font-size: 0.96rem !important; /* 23.04px with 150% html (0.96rem * 24px = 23.04px) */
+    font-size: 0.875rem !important; /* 21px with 150% html (0.875rem * 24px = 21px) */
   }
 }
 
@@ -444,9 +456,9 @@ article > h6,
 .md-main__inner h6 {
   font-size: 0.96rem !important; /* 19.2px with 125% html (0.96rem * 20px = 19.2px) */
   font-weight: 500 !important;
-  line-height: 1.5 !important;
-  margin-top: 0.75rem !important;
-  margin-bottom: 0.5rem !important;
+  line-height: 1.4 !important;
+  margin-top: 0.6rem !important;
+  margin-bottom: 0.4rem !important;
 }
 
 @media screen and (min-width: 100em) {
@@ -495,9 +507,16 @@ p,
 .md-content__inner p,
 article p {
   font-size: 1em !important; /* Inherit from .md-typeset base (0.667rem = 16px) */
-  line-height: 1.6 !important;
-  margin-top: 1em !important;
-  margin-bottom: 1em !important; /* Add spacing between paragraphs (1em = 16px) */
+  line-height: 1.55 !important;
+  margin-top: 0.8em !important;
+  margin-bottom: 0.8em !important; /* Add spacing between paragraphs (0.8em = ~13px) */
+}
+
+/* Shorter lines (like blockquotes) can have larger line-height for better readability */
+/* Article recommends 45ch for blockquotes and larger line-height for shorter lines */
+.md-typeset blockquote {
+  max-inline-size: 45ch;
+  line-height: 1.7 !important;
 }
 
 /* Override Material's .md-typeset base font-size */
@@ -529,6 +548,7 @@ small,
 .md-content__inner small {
   font-size: 0.667rem !important; /* 13.33px with 125% html (0.667rem * 20px = 13.34px) */
   line-height: 1.5 !important;
+  letter-spacing: 0.02em !important; /* Slightly wider for better readability at small sizes */
 }
 
 @media screen and (min-width: 100em) {
@@ -579,6 +599,90 @@ code, pre, .codehilite {
   font-variant-ligatures: common-ligatures contextual;
   text-rendering: optimizeSpeed;
   font-optical-sizing: auto;
+}
+
+/* Compact list spacing */
+.md-typeset ul,
+.md-typeset ol {
+  margin-top: 0.6em !important;
+  margin-bottom: 0.6em !important;
+  padding-left: 1.5em !important;
+}
+
+.md-typeset ul li,
+.md-typeset ol li {
+  margin-top: 0.3em !important;
+  margin-bottom: 0.3em !important;
+  line-height: 1.55 !important;
+}
+
+/* Compact admonition boxes - tighter spacing without breaking layout */
+.md-typeset .admonition,
+.md-typeset details {
+  margin-top: 0.75em !important;
+  margin-bottom: 0.75em !important;
+  padding: 0.5rem 0.75rem !important;
+}
+
+/* Compact title bar - don't touch padding to preserve icon positioning */
+.md-typeset .admonition-title,
+.md-typeset summary {
+  margin-bottom: 0.4rem !important;
+  line-height: 1.4 !important;
+  /* Leave padding as Material default to preserve icon alignment */
+}
+
+/* Reduce gap between title and content */
+.md-typeset .admonition-title + *,
+.md-typeset summary + * {
+  margin-top: 0.4rem !important;
+}
+
+/* Compact content area */
+.md-typeset .admonition > *:not(.admonition-title):not(summary),
+.md-typeset details > *:not(summary):not(.admonition-title) {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.md-typeset .admonition > *:last-child,
+.md-typeset details > *:last-child {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Tight paragraph spacing inside admonitions */
+.md-typeset .admonition p,
+.md-typeset details p {
+  margin-top: 0.4em !important;
+  margin-bottom: 0.4em !important;
+  line-height: 1.5 !important;
+}
+
+.md-typeset .admonition p:first-of-type,
+.md-typeset details p:first-of-type {
+  margin-top: 0 !important;
+}
+
+.md-typeset .admonition p:last-of-type,
+.md-typeset details p:last-of-type {
+  margin-bottom: 0 !important;
+}
+
+/* Compact lists inside admonitions */
+.md-typeset .admonition ul,
+.md-typeset .admonition ol,
+.md-typeset details ul,
+.md-typeset details ol {
+  margin-top: 0.4em !important;
+  margin-bottom: 0.4em !important;
+}
+
+.md-typeset .admonition ul:first-child,
+.md-typeset .admonition ol:first-child,
+.md-typeset details ul:first-child,
+.md-typeset details ol:first-child {
+  margin-top: 0 !important;
 }
 
 /* Navigation font rendering */
