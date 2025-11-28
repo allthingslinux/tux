@@ -4,5 +4,7 @@
 {{ super() }}
 <!-- Inter font from rsms.me -->
 <link rel="preconnect" href="https://rsms.me/">
+<!-- Preload Inter variable font for better performance -->
+<link rel="preload" href="https://rsms.me/inter/font-files/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 {% endblock %}
