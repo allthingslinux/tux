@@ -499,17 +499,17 @@ article > h6,
   }
 }
 
-/* Base paragraph text - must be exactly 16px */
-/* Use 1em to inherit from .md-typeset base (0.667rem = 16px) */
+/* Base paragraph text - must be exactly 17px */
+/* Use 1em to inherit from .md-typeset base (0.708rem = 17px) */
 p,
 .md-typeset p,
 .md-content p,
 .md-content__inner p,
 article p {
-  font-size: 1em !important; /* Inherit from .md-typeset base (0.667rem = 16px) */
+  font-size: 1em !important; /* Inherit from .md-typeset base (0.708rem = 17px) */
   line-height: 1.55 !important;
   margin-top: 0.8em !important;
-  margin-bottom: 0.8em !important; /* Add spacing between paragraphs (0.8em = ~13px) */
+  margin-bottom: 0.8em !important; /* Add spacing between paragraphs (0.8em = ~14px) */
 }
 
 /* Shorter lines (like blockquotes) can have larger line-height for better readability */
@@ -521,23 +521,23 @@ article p {
 
 /* Override Material's .md-typeset base font-size */
 /* Material uses px2rem(16px) with 20px base = 0.8rem */
-/* We want paragraphs to be exactly 16px across all breakpoints */
+/* We want paragraphs to be exactly 17px across all breakpoints */
 /* Material's html font-size: 125% (20px), 137.5% (22px), 150% (24px) */
 /* Material's breakpoints: 100em for 137.5%, 125em for 150% */
-/* To get 16px: 16/20=0.8rem, 16/22=0.727rem, 16/24=0.667rem */
+/* To get 17px: 17/20=0.85rem, 17/22=0.773rem, 17/24=0.708rem */
 .md-typeset {
-  font-size: 0.8rem !important; /* 16px with 125% html (0.8rem * 20px = 16px) */
+  font-size: 0.85rem !important; /* 17px with 125% html (0.85rem * 20px = 17px) */
 }
 
 @media screen and (min-width: 100em) {
   .md-typeset {
-    font-size: 0.727rem !important; /* 16px with 137.5% html (0.727rem * 22px = 15.994px) */
+    font-size: 0.773rem !important; /* 17px with 137.5% html (0.773rem * 22px = 17.006px) */
   }
 }
 
 @media screen and (min-width: 125em) {
   .md-typeset {
-    font-size: 0.667rem !important; /* 16px with 150% html (0.667rem * 24px = 16.008px) */
+    font-size: 0.708rem !important; /* 17px with 150% html (0.708rem * 24px = 16.992px) */
   }
 }
 
@@ -619,6 +619,7 @@ code, pre, .codehilite {
 /* Compact admonition boxes - tighter spacing without breaking layout */
 .md-typeset .admonition,
 .md-typeset details {
+  font-size: 1em !important; /* Inherit from .md-typeset base (17px) */
   margin-top: 0.75em !important;
   margin-bottom: 0.75em !important;
   padding: 0.5rem 0.75rem !important;
@@ -627,6 +628,7 @@ code, pre, .codehilite {
 /* Compact title bar - don't touch padding to preserve icon positioning */
 .md-typeset .admonition-title,
 .md-typeset summary {
+  font-size: 1em !important; /* Inherit from .md-typeset base (17px) */
   margin-bottom: 0.4rem !important;
   line-height: 1.4 !important;
   /* Leave padding as Material default to preserve icon alignment */
@@ -654,6 +656,7 @@ code, pre, .codehilite {
 /* Tight paragraph spacing inside admonitions */
 .md-typeset .admonition p,
 .md-typeset details p {
+  font-size: 1em !important; /* Inherit from .md-typeset base (17px) */
   margin-top: 0.4em !important;
   margin-bottom: 0.4em !important;
   line-height: 1.5 !important;
@@ -674,6 +677,7 @@ code, pre, .codehilite {
 .md-typeset .admonition ol,
 .md-typeset details ul,
 .md-typeset details ol {
+  font-size: 1em !important; /* Inherit from .md-typeset base (17px) */
   margin-top: 0.4em !important;
   margin-bottom: 0.4em !important;
 }

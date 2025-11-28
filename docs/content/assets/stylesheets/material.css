@@ -87,6 +87,7 @@
   /* Admonitions */
   --md-admonition-fg-color: var(--md-default-fg-color);
   --md-admonition-bg-color: var(--md-default-bg-color);
+  --md-admonition-border-color: #565f89;
 
   /* Footer */
   --md-footer-bg-color: rgba(16, 16, 20, 0.87);
@@ -245,6 +246,130 @@
   opacity: 1 !important;
 }
 
+/* Admonitions - better borders and contrast for dark mode */
+/* Border colors match the title background color for each admonition type */
+/* Material uses hex colors with alpha: #RRGGBBAA format (e.g., #448aff1a = rgba(68, 138, 255, 0.1)) */
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition,
+[data-md-color-scheme="tokyo-night"] .md-typeset details {
+  border-top: 0.075rem solid;
+  border-right: 0.075rem solid;
+  border-bottom: 0.075rem solid;
+  border-left: 0.3rem solid;
+  box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.2);
+}
+
+/* Note - #448aff1a = rgba(68, 138, 255, 0.1) */
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.note,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.note {
+  border-color: rgba(68, 138, 255, 0.1) !important;
+}
+
+/* Abstract - #00b0ff1a = rgba(0, 176, 255, 0.1) */
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.abstract,
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.summary,
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.tldr,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.abstract,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.summary,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.tldr {
+  border-color: rgba(0, 176, 255, 0.1) !important;
+}
+
+/* Info - #00b8d41a = rgba(0, 184, 212, 0.1) */
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.info,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.info {
+  border-color: rgba(0, 184, 212, 0.1) !important;
+}
+
+/* Tip - #00bfa51a = rgba(0, 191, 165, 0.1) */
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.tip,
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.hint,
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.important,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.tip,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.hint,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.important {
+  border-color: rgba(0, 191, 165, 0.1) !important;
+}
+
+/* Success - #00c8531a = rgba(0, 200, 83, 0.1) */
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.success,
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.check,
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.done,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.success,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.check,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.done {
+  border-color: rgba(0, 200, 83, 0.1) !important;
+}
+
+/* Question - #64dd171a = rgba(100, 221, 23, 0.1) */
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.question,
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.help,
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.faq,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.question,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.help,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.faq {
+  border-color: rgba(100, 221, 23, 0.1) !important;
+}
+
+/* Warning - #ff91001a = rgba(255, 145, 0, 0.1) */
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.warning,
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.caution,
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.attention,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.warning,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.caution,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.attention {
+  border-color: rgba(255, 145, 0, 0.1) !important;
+}
+
+/* Failure - #ff52521a = rgba(255, 82, 82, 0.1) */
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.failure,
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.missing,
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.fail,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.failure,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.missing,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.fail {
+  border-color: rgba(255, 82, 82, 0.1) !important;
+}
+
+/* Danger - #ff17441a = rgba(255, 23, 68, 0.1) */
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.danger,
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.error,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.danger,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.error {
+  border-color: rgba(255, 23, 68, 0.1) !important;
+}
+
+/* Bug - #f500571a = rgba(245, 0, 87, 0.1) */
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.bug,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.bug {
+  border-color: rgba(245, 0, 87, 0.1) !important;
+}
+
+/* Example - #7c4dff1a = rgba(124, 77, 255, 0.1) */
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.example,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.example {
+  border-color: rgba(124, 77, 255, 0.1) !important;
+}
+
+/* Quote - #9e9e9e1a = rgba(158, 158, 158, 0.1) */
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.quote,
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.cite,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.quote,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.cite {
+  border-color: rgba(158, 158, 158, 0.1) !important;
+}
+
+/* Custom WIP admonition - border matches title bar background color */
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition.wip,
+[data-md-color-scheme="tokyo-night"] .md-typeset details.wip {
+  border-color: rgba(255, 152, 0, 0.1) !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset .admonition-title,
+[data-md-color-scheme="tokyo-night"] .md-typeset summary {
+  border-bottom: 1px solid rgba(86, 95, 137, 0.5);
+  font-weight: 600;
+}
+
 /* Catppuccin Latte Theme */
 [data-md-color-scheme="catppuccin-latte"] {
   color-scheme: light;
@@ -392,11 +517,121 @@
 }
 
 /* Admonitions - better borders and contrast */
+/* Border colors match the title background color for each admonition type */
+/* Material uses hex colors with alpha: #RRGGBBAA format (e.g., #448aff1a = rgba(68, 138, 255, 0.1)) */
 [data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition,
 [data-md-color-scheme="catppuccin-latte"] .md-typeset details {
+  border-top: 0.075rem solid;
+  border-right: 0.075rem solid;
+  border-bottom: 0.075rem solid;
   border-left: 0.3rem solid;
-  border-color: var(--md-admonition-border-color);
   box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.08);
+}
+
+/* Note - #448aff1a = rgba(68, 138, 255, 0.1) */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.note,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.note {
+  border-color: rgba(68, 138, 255, 0.1) !important;
+}
+
+/* Abstract - #00b0ff1a = rgba(0, 176, 255, 0.1) */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.abstract,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.summary,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.tldr,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.abstract,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.summary,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.tldr {
+  border-color: rgba(0, 176, 255, 0.1) !important;
+}
+
+/* Info - #00b8d41a = rgba(0, 184, 212, 0.1) */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.info,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.info {
+  border-color: rgba(0, 184, 212, 0.1) !important;
+}
+
+/* Tip - #00bfa51a = rgba(0, 191, 165, 0.1) */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.tip,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.hint,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.important,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.tip,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.hint,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.important {
+  border-color: rgba(0, 191, 165, 0.1) !important;
+}
+
+/* Success - #00c8531a = rgba(0, 200, 83, 0.1) */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.success,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.check,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.done,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.success,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.check,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.done {
+  border-color: rgba(0, 200, 83, 0.1) !important;
+}
+
+/* Question - #64dd171a = rgba(100, 221, 23, 0.1) */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.question,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.help,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.faq,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.question,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.help,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.faq {
+  border-color: rgba(100, 221, 23, 0.1) !important;
+}
+
+/* Warning - #ff91001a = rgba(255, 145, 0, 0.1) */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.warning,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.caution,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.attention,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.warning,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.caution,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.attention {
+  border-color: rgba(255, 145, 0, 0.1) !important;
+}
+
+/* Failure - #ff52521a = rgba(255, 82, 82, 0.1) */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.failure,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.missing,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.fail,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.failure,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.missing,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.fail {
+  border-color: rgba(255, 82, 82, 0.1) !important;
+}
+
+/* Danger - #ff17441a = rgba(255, 23, 68, 0.1) */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.danger,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.error,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.danger,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.error {
+  border-color: rgba(255, 23, 68, 0.1) !important;
+}
+
+/* Bug - #f500571a = rgba(245, 0, 87, 0.1) */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.bug,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.bug {
+  border-color: rgba(245, 0, 87, 0.1) !important;
+}
+
+/* Example - #7c4dff1a = rgba(124, 77, 255, 0.1) */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.example,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.example {
+  border-color: rgba(124, 77, 255, 0.1) !important;
+}
+
+/* Quote - #9e9e9e1a = rgba(158, 158, 158, 0.1) */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.quote,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.cite,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.quote,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.cite {
+  border-color: rgba(158, 158, 158, 0.1) !important;
+}
+
+/* Custom WIP admonition - border matches title bar background color */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition.wip,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details.wip {
+  border-color: rgba(255, 152, 0, 0.1) !important;
 }
 
 [data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition-title,

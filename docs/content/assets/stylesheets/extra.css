@@ -726,7 +726,7 @@
 
 .md-typeset .admonition.wip,
 .md-typeset details.wip {
-  border-color: rgb(255, 152, 0); /* Orange color for work in progress */
+  border-color: rgba(255, 152, 0, 0.1) !important; /* Orange color for work in progress - matches title bar background */
 }
 
 .md-typeset .wip > .admonition-title,
