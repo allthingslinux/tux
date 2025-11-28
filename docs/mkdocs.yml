@@ -41,8 +41,8 @@ watch:
 extra:
   # Custom copyright partial: overrides/partials/copyright.html
   footer_links:
-    - text: Sitemap
-      href: reference/sitemap
+    - text: FAQ
+      href: reference/faq
     - text: Listings
       href: reference/listings
   social:
@@ -223,8 +223,6 @@ plugins:
       css_files: [content/assets/stylesheets/*.css]
   - ezlinks:
       enabled: true
-  - pagetree:
-      enabled: true
   - mermaid2:
       enabled: true
       arguments:
@@ -240,7 +238,6 @@ plugins:
       enabled: true
       resolve_closest: true
       link_titles: auto
-      record_backlinks: true
   - social:
       enabled: true
       cards_layout_options:
