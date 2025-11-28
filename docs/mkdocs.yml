@@ -252,7 +252,7 @@ plugins:
   - coverage:
       enabled: true
       page_path: reference/coverage
-      html_report_dir: htmlcov
+      html_report_dir: docs/htmlcov
   - extract_listings:
       enabled: true
       search_page_path: reference/listings.md
