@@ -195,14 +195,15 @@ plugins:
       enabled: true
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - optimize:
-      enabled: true
+      enabled: !ENV [CI, false]
+      cache_dir: ../.cache/mkdocs/optimize
   - git-committers:
-      enabled: true
+      enabled: !ENV [CI, false]
       repository: allthingslinux/tux
       token: !ENV [MKDOCS_GIT_COMMITTERS_APIKEY]
       branch: v0.1.0
       docs_path: docs/content/
-      cache_dir: .cache/plugin/git-committers/
+      cache_dir: ../.cache/mkdocs/git-committers/
   - literate-nav:
       enabled: true
       nav_file: navigation.md
@@ -231,6 +232,13 @@ plugins:
       enabled: true
   - tags:
       enabled: true
+      # Case-insensitive tag sorting for consistent ordering
+      tags_sort_by: !!python/name:material.plugins.tags.tag_name_casefold
+      # Allow tags in table of contents for better navigation
+      listings_toc: true
+      # Export tags to JSON for external tooling
+      export: true
+      export_file: tags.json
   - mkdocs-backlinks:
       enabled: false
       ignored_pages: [Home, Navigation]
@@ -240,6 +248,7 @@ plugins:
       link_titles: auto
   - social:
       enabled: true
+      cache_dir: ../.cache/mkdocs/plugins/social
       cards_layout_options:
         background_color: '#181825'
         # background_color: transparent
@@ -426,7 +435,7 @@ plugins:
             filters: []
             # Group members by category (Attributes, Classes, Functions, Modules)
             # Creates organized sections with headings for each member type
-            group_by_category: true
+            group_by_category: false
             # Order members within categories (source/alphabetical/__all__)
             # "source" = order as they appear in code, "alphabetical" = A-Z sorting
             # "__all__" = order defined in module's __all__ attribute (Insiders only)
