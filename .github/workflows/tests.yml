@@ -93,7 +93,9 @@ jobs:
           # Run all test types with combined coverage
           # Generate htmlcov in docs/ directory for direct use by MkDocs
           # Use junit_family=legacy for pretty-printed test names in Codecov UI
+          # Explicitly specify --cov=src/tux for clarity (also in pyproject.toml addopts)
           uv run pytest \
+            --cov=src/tux \
             --cov-report=xml:coverage.xml \
             --cov-report=html:docs/htmlcov \
             --cov-report=term-missing:skip-covered \

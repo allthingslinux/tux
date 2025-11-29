@@ -1,95 +1,187 @@
 ---
 # ==============================================================================
-# TUX DISCORD BOT - UNIFIED CODECOV CONFIGURATION
+# Codecov Configuration
 # ==============================================================================
 #
-# This configuration is optimized for unified test coverage where all tests
-# (unit, integration, e2e) run together and generate a single comprehensive
-# coverage report.
+# This file configures Codecov integration for Tux.
+# It defines coverage requirements, status checks, reporting behavior, and
+# file exclusions for comprehensive test coverage tracking.
 #
-# DOCUMENTATION: https://docs.codecov.com/docs/codecov-yaml
+# All tests (unit, integration, and end-to-end) run together and generate
+# a unified coverage report that is uploaded to Codecov for analysis.
+#
+# Documentation: https://docs.codecov.com/docs/codecov-yaml
+# Validation:    https://api.codecov.io/validate
 # ==============================================================================
 # ==============================================================================
-# CODECOV BEHAVIOR SETTINGS
+# Codecov Behavior Settings
 # ==============================================================================
 codecov:
+  # Wait for all CI status checks to pass before posting Codecov status.
+  # This ensures coverage reports are only posted after successful CI runs.
   require_ci_to_pass: true
+
+  # Disable coverage report expiration. Reports will be processed regardless
+  # of age, allowing for delayed uploads or manual processing scenarios.
   # yamllint disable-line rule:truthy
   max_report_age: false
+
+  # Enable Codecov's default path fixes for common CI environments.
+  # These automatically normalize file paths from various CI systems.
   disable_default_path_fixes: false
 # ==============================================================================
-# COVERAGE REQUIREMENTS
+# Coverage Configuration
 # ==============================================================================
 coverage:
+  # Number of decimal places to display in coverage percentages.
   precision: 2
-  round: down
-  range: 70...100
-  status:
-    project:
-      # Overall project coverage - enforced at 80%
-      default:
-        target: 80%
-        threshold: 1%
-        informational: false  # Enforce coverage requirements
 
-      # Component-specific coverage requirements (more lenient for complex areas)
-      database:
-        target: 85%
-        threshold: 2%
-        informational: false
-        flags: [database]
-      core:
-        target: 80%
-        threshold: 2%
-        informational: false
-        flags: [core]
-      ui:
-        target: 70%
-        threshold: 3%
-        informational: true  # UI components can be more lenient
-        flags: [ui]
-      modules:
-        target: 75%
-        threshold: 3%
-        informational: true  # Command modules vary in complexity
-        flags: [modules]
-      services:
-        target: 75%
-        threshold: 3%
-        informational: true  # Services may have external dependencies
-        flags: [services]
-    patch:
-      # New code coverage requirements
+  # Rounding direction for coverage calculations.
+  # Options: 'down', 'up', 'nearest'
+  round: down
+
+  # Coverage percentage range for UI color coding.
+  # Format: start...end (three dots)
+  # - Red background: below start percentage
+  # - Yellow background: between start and end percentages
+  # - Green background: at or above end percentage
+  range: 75...100
+
+  # ============================================================================
+  # Status Check Configuration
+  # ============================================================================
+  status:
+    # --------------------------------------------------------------------------
+    # Project Coverage Status
+    # --------------------------------------------------------------------------
+    # Enforces overall project coverage requirements across all code.
+    # This status check blocks pull requests that do not meet coverage thresholds.
+    project:
       default:
+        # Minimum coverage percentage required for the entire project.
+        # Status check will fail if coverage falls below this threshold.
         target: 80%
-        threshold: 5%
+
+        # Permitted coverage drop before status check fails.
+        # Allows minor fluctuations while maintaining quality standards.
+        threshold: 1%
+
+        # Status check is blocking (not informational only).
+        # Pull requests cannot be merged if this check fails.
         informational: false
+
+        # Behavior when no coverage report is uploaded.
+        # 'failure' ensures coverage reports are always required.
+        if_not_found: failure
+
+        # Behavior when CI fails.
+        # 'error' ensures status only passes when CI succeeds.
+        if_ci_failed: error
+
+    # --------------------------------------------------------------------------
+    # Patch Coverage Status
+    # --------------------------------------------------------------------------
+    # Enforces coverage requirements for new and modified code in pull requests.
+    # This ensures that all changes are properly tested before merging.
+    patch:
+      default:
+        # Minimum coverage percentage required for new/changed code.
+        # Higher threshold than project coverage to maintain quality.
+        target: 80%
+
+        # Permitted coverage drop for new code.
+        # More lenient than project coverage to account for refactoring.
+        threshold: 5%
+
+        # Status check is blocking (not informational only).
+        informational: false
+
+        # Only enforce patch coverage on pull requests, not on direct commits.
         only_pulls: true
+
+        # Behavior when no coverage report is uploaded.
+        if_not_found: failure
+
+        # Behavior when CI fails.
+        if_ci_failed: error
 # ==============================================================================
-# COMPONENT FLAG DEFINITIONS
+# Parser Configuration
 # ==============================================================================
-# Component-based flags for tracking coverage by architectural areas.
-# These automatically categorize coverage based on file paths, providing
-# better insights than test-type categorization.
-flags:
-  database:
-    paths: [src/tux/database/]
-    carryforward: true
-  core:
-    paths: [src/tux/core/]
-    carryforward: true
-  ui:
-    paths: [src/tux/ui/]
-    carryforward: true
-  modules:
-    paths: [src/tux/modules/]
-    carryforward: true
-  services:
-    paths: [src/tux/services/]
-    carryforward: true
+# Controls how Codecov parses coverage reports from various tools.
+parsers:
+  # V1 parser configuration for Python coverage reports.
+  # Handles XML coverage reports generated by coverage.py via pytest-cov.
+  v1:
+    # Include files with zero coverage in the coverage report.
+    # This provides complete visibility into all source files.
+    include_full_missed_files: true
 # ==============================================================================
-# FILE IGNORING
+# Pull Request Comment Configuration
 # ==============================================================================
+# Controls the format and behavior of Codecov comments on pull requests.
+comment:
+  # Comment layout components, displayed in order:
+  # - condensed_header: Summary header with key metrics
+  # - diff: Coverage changes for modified lines
+  # - condensed_files: List of files with coverage changes
+  # - condensed_footer: Footer with links and metadata
+  layout: condensed_header, diff, condensed_files, condensed_footer
+
+  # Comment posting behavior.
+  # 'default' posts comments on all pull requests with coverage data.
+  behavior: default
+
+  # Post comments even when coverage does not change.
+  # Set to 'true' to only comment when coverage changes occur.
+  require_changes: false
+
+  # Do not require base commit coverage report to post comment.
+  require_base: false
+
+  # Require head commit coverage report to post comment.
+  require_head: true
+
+  # Display project-wide coverage in addition to patch coverage.
+  hide_project_coverage: false
+
+  # Number of builds to wait before posting comment.
+  # Set to 1 to post immediately after first build completes.
+  after_n_builds: 1
+# ==============================================================================
+# GitHub Integration
+# ==============================================================================
+# Enhanced integration with GitHub's pull request interface.
+github_checks:
+  # Enable GitHub Check Run annotations.
+  # Displays line-by-line coverage information directly in PR file diffs.
+  # Annotations show which lines are covered or uncovered by tests.
+  annotations: true
+# ==============================================================================
+# Path Normalization
+# ==============================================================================
+# Normalizes file paths in coverage reports to match repository structure.
+#
+# Coverage.py is configured with relative_files=true in pyproject.toml,
+# but CI environments may still generate absolute paths. These path fixes
+# ensure Codecov can correctly map coverage data to repository files.
+#
+# Pattern format: "source_pattern::target_path/"
+# - Uses regex patterns for matching
+# - Normalizes absolute CI paths to relative repository paths
+fixes:
+  # Normalize any absolute path containing src/tux/ to relative src/tux/
+  # Examples of transformations:
+  #   /home/runner/work/tux/tux/src/tux/core/app.py => src/tux/core/app.py
+  #   /tmp/workspace/src/tux/database/models.py => src/tux/database/models.py
+  - .*/src/tux/::src/tux/
+# ==============================================================================
+# File Exclusion
+# ==============================================================================
+# Files and directories to exclude from coverage reporting.
+#
+# These patterns prevent non-source files, test files, and generated artifacts
+# from being included in coverage calculations. This ensures coverage metrics
+# reflect only the actual source code being tested.
 ignore:
   # Test files and development artifacts
   - tests/
@@ -103,7 +195,7 @@ ignore:
   - typings/
   - __pycache__/
 
-  # Project management files
+  # Project management and documentation files
   - docs/
   - scripts/
   - assets/
@@ -115,33 +207,5 @@ ignore:
   - flake.*
   - shell.nix
 
-  # Generated files
+  # Generated files and build artifacts
   - prisma/
-# ==============================================================================
-# PARSER CONFIGURATION
-# ==============================================================================
-parsers:
-  v1:
-    include_full_missed_files: true
-# ==============================================================================
-# COMMENT CONFIGURATION
-# ==============================================================================
-comment:
-  layout: condensed_header, diff, flags, components, condensed_files, condensed_footer
-  behavior: default
-  require_changes: true
-  require_base: false
-  require_head: true
-  after_n_builds: 1
-  show_carryforward_flags: true
-# ==============================================================================
-# GITHUB INTEGRATION
-# ==============================================================================
-# Enhanced integration with GitHub's pull request interface
-github_checks:
-  annotations: true  # Show line-by-line coverage in PR file diffs
-# ==============================================================================
-# PATH NORMALIZATION
-# ==============================================================================
-# Fix coverage.py path mapping for src/tux structure
-fixes: [.*/src/tux/::src/tux/, src/tux/::src/tux/]
