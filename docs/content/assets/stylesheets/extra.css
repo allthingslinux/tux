@@ -718,28 +718,6 @@
   }
 }
 
-/* Custom WIP (Work In Progress) admonition */
-:root {
-  /* Material Design hourglass icon for work in progress */
-  --md-admonition-icon--wip: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6zm10 14.5V20H8v-3.5l4-4 4 4zm-4-5l-4-4V4h8v3.5l-4 4z"/></svg>');
-}
-
-.md-typeset .admonition.wip,
-.md-typeset details.wip {
-  border-color: rgba(255, 152, 0, 0.1) !important; /* Orange color for work in progress - matches title bar background */
-}
-
-.md-typeset .wip > .admonition-title,
-.md-typeset .wip > summary {
-  background-color: rgba(255, 152, 0, 0.1);
-}
-
-.md-typeset .wip > .admonition-title::before,
-.md-typeset .wip > summary::before {
-  background-color: rgb(255, 152, 0);
-  -webkit-mask-image: var(--md-admonition-icon--wip);
-  mask-image: var(--md-admonition-icon--wip);
-}
 
 /* Contributors section - git-committers plugin */
 .md-contributors {
@@ -803,4 +781,83 @@
 body[dir="rtl"] .md-contributors__label {
   margin-right: 0;
   margin-left: 0.5rem;
+}
+
+/* Custom tag styling - thinner with darker background and light outline */
+.md-tag,
+.md-typeset .md-tag,
+.md-typeset .md-tag[href] {
+  padding: 0.2rem 0.5rem !important;
+  margin: 0 !important;
+  font-size: 0.65rem !important;
+  line-height: 1.4 !important;
+  border-radius: 0.25rem !important;
+  font-weight: 500 !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease !important;
+  will-change: background-color, border-color, box-shadow, color !important;
+  text-decoration: none !important;
+  box-sizing: border-box !important;
+  display: inline-block !important;
+  border: 1px solid transparent !important;
+  align-items: center !important;
+  gap: 0 !important;
+}
+
+/* Dark theme tag styling */
+[data-md-color-scheme="tokyo-night"] .md-tag,
+[data-md-color-scheme="tokyo-night"] .md-typeset .md-tag,
+[data-md-color-scheme="tokyo-night"] .md-typeset .md-tag[href] {
+  background-color: rgba(22, 22, 30, 0.8) !important;
+  color: #a9b1d6 !important;
+  border: 1px dashed rgba(169, 177, 214, 0.4) !important;
+  box-shadow: none !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-tag:hover,
+[data-md-color-scheme="tokyo-night"] .md-tag:focus,
+[data-md-color-scheme="tokyo-night"] .md-typeset .md-tag:hover,
+[data-md-color-scheme="tokyo-night"] .md-typeset .md-tag:focus,
+[data-md-color-scheme="tokyo-night"] .md-typeset .md-tag[href]:hover,
+[data-md-color-scheme="tokyo-night"] .md-typeset .md-tag[href]:focus,
+[data-md-color-scheme="tokyo-night"] .md-typeset a.md-tag:hover,
+[data-md-color-scheme="tokyo-night"] .md-typeset a.md-tag:focus {
+  background-color: rgba(122, 162, 247, 0.2) !important;
+  border: 1px dashed rgba(169, 177, 214, 0.4) !important;
+  box-shadow: none !important;
+  color: #c0caf5 !important;
+  padding: 0.2rem 0.5rem !important;
+  margin: 0 !important;
+  transform: none !important;
+  text-decoration: none !important;
+  border-radius: 0.25rem !important;
+}
+
+/* Light theme tag styling */
+[data-md-color-scheme="catppuccin-latte"] .md-tag,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .md-tag,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .md-tag[href] {
+  background-color: rgba(48, 52, 70, 0.85) !important;
+  color: #dce0e8 !important;
+  border: 1px dashed rgba(220, 224, 232, 0.4) !important;
+  box-shadow: none !important;
+}
+
+/* Override Material's hover rule with more specific selectors */
+[data-md-color-scheme="catppuccin-latte"] .md-tag:hover,
+[data-md-color-scheme="catppuccin-latte"] .md-tag:focus,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .md-tag:hover,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .md-tag:focus,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .md-tag[href]:hover,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .md-tag[href]:focus,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset a.md-tag:hover,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset a.md-tag:focus {
+  background-color: rgba(30, 102, 245, 0.25) !important;
+  border: 1px dashed rgba(220, 224, 232, 0.4) !important;
+  box-shadow: none !important;
+  color: #eff1f5 !important;
+  padding: 0.2rem 0.5rem !important;
+  margin: 0 !important;
+  transform: none !important;
+  text-decoration: none !important;
+  border-radius: 0.25rem !important;
 }
