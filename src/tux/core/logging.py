@@ -418,13 +418,19 @@ def _configure_third_party_logging() -> None:
 
             # Route to loguru with original source information
             try:
+                # Get message and escape curly braces to prevent format string errors
+                message = record.getMessage()
+                # Escape curly braces in message (e.g., JSON content) to prevent
+                # loguru from interpreting them as format placeholders
+                escaped_message = message.replace("{", "{{").replace("}", "}}")
+
                 logger.patch(
                     lambda r: r.update(
                         name=record.name,  # e.g., "discord.gateway"
                         function=record.funcName,  # e.g., "on_ready"
                         line=record.lineno,  # Line number
                     ),
-                ).opt(exception=record.exc_info).log(level, "{}", record.getMessage())
+                ).opt(exception=record.exc_info).log(level, escaped_message)
             except Exception as e:
                 # Fallback if patching fails
                 safe_msg = getattr(record, "msg", None) or str(record)
