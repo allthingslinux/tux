@@ -187,7 +187,7 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         send_to_sentry=False,
     ),
     commands.MissingRequiredArgument: ErrorHandlerConfig(
-        message_format="{error}",
+        message_format="Missing required argument: `{error.param.name}`",
         send_to_sentry=False,
     ),
     commands.MissingRequiredAttachment: ErrorHandlerConfig(

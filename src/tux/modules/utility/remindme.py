@@ -125,7 +125,6 @@ class RemindMe(BaseCog):
         self,
         ctx: commands.Context[Tux],
         time: str,
-        *,
         reminder: str,
     ) -> None:
         """
@@ -153,10 +152,14 @@ class RemindMe(BaseCog):
         seconds = convert_to_seconds(time)
 
         if seconds == 0:
-            await ctx.reply(
-                "Invalid time format. Please use `[number][unit]` (e.g., 1h30m, 2d, 5min).",
-                ephemeral=True,
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="Invalid time format. Please use `[number][unit]` (e.g., 1h30m, 2d, 5min).",
             )
+            await ctx.reply(embed=embed, ephemeral=True)
             return
 
         expires_at = datetime.datetime.now(datetime.UTC) + datetime.timedelta(
