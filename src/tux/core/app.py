@@ -291,6 +291,7 @@ class TuxApp:
         Start the Tux bot with full lifecycle management.
 
         This method orchestrates the complete bot startup sequence, including:
+
         - Sentry initialization for error tracking
         - Signal handler registration for graceful shutdown
         - Configuration validation and owner ID resolution
