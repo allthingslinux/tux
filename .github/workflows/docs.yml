@@ -97,6 +97,9 @@ jobs:
             docs
             src
             scripts
+            .github/actions
+            .github/workflows
+            .github/scripts
       - name: Setup Python
         uses: ./.github/actions/setup-python
         with:
