@@ -1,6 +1,10 @@
 ---
 title: Choosing Instrumentation - Decision Guide
 description: When to use transactions, spans, or metrics in Sentry
+tags:
+  - developer-guide
+  - best-practices
+  - sentry
 ---
 
 # Choosing Instrumentation - Decision Guide

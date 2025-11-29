@@ -1,10 +1,15 @@
 ---
 title: Database Controllers
+tags:
+  - developer-guide
+  - concepts
+  - database
+  - controllers
 ---
 
 # Database Controllers
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 Tux's controller layer provides a clean, composable interface for database operations. Controllers encapsulate business logic, optimize queries, and provide consistent APIs for database interactions.

@@ -1,5 +1,8 @@
 ---
 title: Installation
+tags:
+  - selfhost
+  - installation
 ---
 
 # Installation

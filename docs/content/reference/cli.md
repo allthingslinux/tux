@@ -1,11 +1,15 @@
 ---
 title: CLI Reference
 icon: octicons/terminal-24
+tags:
+  - reference
+  - cli
+  - api
 ---
 
 # CLI Reference
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 ::: mkdocs-typer

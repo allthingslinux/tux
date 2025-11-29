@@ -1,10 +1,14 @@
 ---
 title: Systemd
+tags:
+  - selfhost
+  - installation
+  - systemd
 ---
 
 # Systemd Installation
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 This guide provides information on installing and managing Tux using systemd on a Linux system.

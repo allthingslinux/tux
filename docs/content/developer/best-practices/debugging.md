@@ -1,11 +1,15 @@
 ---
 title: Debugging Best Practices
 description: Debugging best practices for Tux development, including logging, interactive debugging, testing, and common debugging scenarios.
+tags:
+  - developer-guide
+  - best-practices
+  - debugging
 ---
 
 # Debugging Best Practices
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 ## Development Setup

@@ -1,10 +1,14 @@
 ---
 title: First Run Instructions
+tags:
+  - selfhost
+  - installation
+  - setup
 ---
 
 # First Run Instructions
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 Start Tux for the first time and verify everything works.

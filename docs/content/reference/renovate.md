@@ -1,11 +1,15 @@
 ---
 title: Renovate Configuration
 icon: octicons/package-dependencies-16
+tags:
+  - reference
+  - renovate
+  - dependencies
 ---
 
 # Renovate Configuration
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 Renovate is an automated dependency update tool that helps keep Tux's dependencies up-to-date, secure, and maintainable. This document explains Renovate's purpose and documents Tux's actual configuration.

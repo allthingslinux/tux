@@ -3,6 +3,11 @@ title: ENV Reference
 icon: material/folder-cog
 hide:
   - toc
+tags:
+  - reference
+  - configuration
+  - environment
+---
 ---
 <!-- region:config -->
 # ENV Reference

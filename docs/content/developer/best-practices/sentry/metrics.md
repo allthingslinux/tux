@@ -1,6 +1,10 @@
 ---
 title: Sentry Metrics
 description: Using Sentry metrics to track performance and usage throughout Tux
+tags:
+  - developer-guide
+  - best-practices
+  - sentry
 ---
 
 # Sentry Metrics

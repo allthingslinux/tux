@@ -1,8 +1,12 @@
 ---
 title: Database Integration
+tags:
+  - developer-guide
+  - tutorials
+  - database
 ---
 
 # Database Integration
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.

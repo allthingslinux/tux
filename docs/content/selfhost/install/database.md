@@ -1,10 +1,14 @@
 ---
 title: Database Installation
+tags:
+  - selfhost
+  - installation
+  - database
 ---
 
 # Database Installation
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 Tux uses PostgreSQL 17+ as its database. This guide covers installing PostgreSQL using Docker Compose (recommended) or manually.

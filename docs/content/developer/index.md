@@ -1,10 +1,12 @@
 ---
 title: Developer Guide
+tags:
+  - developer-guide
 ---
 
 # Developer Guide
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 This section contains documentation for developers working with Tux.

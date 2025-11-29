@@ -1,11 +1,15 @@
 ---
 title: Git Best Practices
 description: Git best practices for Tux development, including branching strategy, commit conventions, and workflow automation.
+tags:
+  - developer-guide
+  - best-practices
+  - git
 ---
 
 # Git Best Practices
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 ## Contributing Workflows

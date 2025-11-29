@@ -84,7 +84,6 @@ title: Navigation
   * [SBOM](./reference/sbom.md)
   * [Renovate](./reference/renovate.md)
   * [Listings](./reference/listings.md)
-  * [Tags](./reference/tags.md)
   * [Style Guide](./reference/style-guide.md)
 * [Support](./support/index.md)
   * [Troubleshooting](./support/troubleshooting/index.md)
@@ -93,3 +92,4 @@ title: Navigation
     * [Self-Host](./support/troubleshooting/selfhost.md)
     * [Developer](./support/troubleshooting/developer.md)
 * [Changelog](./changelog.md)
+* [Tags](./tags.md)

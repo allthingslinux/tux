@@ -1,10 +1,14 @@
 ---
 title: Branch Naming Conventions
+tags:
+  - developer-guide
+  - best-practices
+  - git
 ---
 
 # Branch Naming Conventions
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 This document defines the official branch naming rules for this repository and explains why they exist.

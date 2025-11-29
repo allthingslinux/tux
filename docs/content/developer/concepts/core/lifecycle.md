@@ -1,11 +1,16 @@
 ---
 title: Lifecycle Orchestration
 description: Complete bot lifecycle orchestration from startup through shutdown, coordinating database, permissions, cogs, and monitoring systems.
+tags:
+  - developer-guide
+  - concepts
+  - core
+  - lifecycle
 ---
 
 # Lifecycle Orchestration
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 The lifecycle orchestration system (`src/tux/core/setup/`) manages Tux's complete startup and shutdown sequences, coordinating database connections, permission systems, cog loading, caching, and monitoring.

@@ -1,6 +1,10 @@
 ---
 title: Transactions and Spans
 description: How to use transactions and spans for tracing in Tux
+tags:
+  - developer-guide
+  - best-practices
+  - sentry
 ---
 
 # Transactions and Spans

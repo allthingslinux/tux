@@ -1,11 +1,15 @@
 ---
 title: Code Review Best Practices
 description: Code review best practices for Tux development, including effective review techniques, common patterns, and collaboration guidelines.
+tags:
+  - developer-guide
+  - best-practices
+  - code-review
 ---
 
 # Code Review Best Practices
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 ## Why Code Reviews Matter

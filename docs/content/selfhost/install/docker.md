@@ -1,5 +1,9 @@
 ---
 title: Installation via Docker
+tags:
+  - selfhost
+  - installation
+  - docker
 ---
 
 # Installation via Docker
@@ -7,7 +11,7 @@ title: Installation via Docker
 !!! tip "Tip"
     You can use Podman instead of Docker.
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 Deploy Tux using Docker Compose for easy setup and management. Docker Compose handles PostgreSQL, Tux, and optional Adminer (database management UI).

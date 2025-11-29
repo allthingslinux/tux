@@ -1,11 +1,15 @@
 ---
 title: Logging Best Practices
 description: Logging best practices for Tux development using loguru, including structured logging, third-party library interception, and debugging patterns.
+tags:
+  - developer-guide
+  - best-practices
+  - logging
 ---
 
 # Logging Best Practices
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 Effective logging is essential for understanding what your bot is doing, debugging issues, and monitoring production systems. Good logs tell a story of what happened, when it happened, and why it happened. Bad logs are noise that obscures important information.

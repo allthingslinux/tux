@@ -1,10 +1,12 @@
 ---
 title: Support
+tags:
+  - support
 ---
 
 # Support
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 If you need any assistance with Tux or want to report bugs/leave feedback, we have many support channels available to help you.

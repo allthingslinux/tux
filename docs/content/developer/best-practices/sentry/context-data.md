@@ -1,6 +1,10 @@
 ---
 title: Context and Data
 description: How to add tags, context, span data, scopes, and user information in Sentry
+tags:
+  - developer-guide
+  - best-practices
+  - sentry
 ---
 
 # Context and Data

@@ -1,10 +1,15 @@
 ---
 title: Database Models
+tags:
+  - developer-guide
+  - concepts
+  - database
+  - models
 ---
 
 # Database Models
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 ## Overview

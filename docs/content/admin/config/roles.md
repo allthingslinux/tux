@@ -1,5 +1,9 @@
 ---
 title: Roles Configuration
+tags:
+  - admin-guide
+  - configuration
+  - roles
 ---
 
 # Roles Configuration

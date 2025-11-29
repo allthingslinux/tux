@@ -1,6 +1,10 @@
 ---
 title: Sampling
 description: How Sentry sampling works in Tux and how to configure it
+tags:
+  - developer-guide
+  - best-practices
+  - sentry
 ---
 
 # Sampling

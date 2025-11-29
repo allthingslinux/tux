@@ -1,5 +1,9 @@
 ---
 title: Ranks Configuration
+tags:
+  - admin-guide
+  - configuration
+  - ranks
 ---
 
 # Ranks Configuration

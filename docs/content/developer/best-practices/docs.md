@@ -1,11 +1,15 @@
 ---
 title: Documentation Best Practices
 description: Documentation best practices for Tux development, including writing standards, structure guidelines, and quality assurance processes.
+tags:
+  - developer-guide
+  - best-practices
+  - documentation
 ---
 
 # Documentation Best Practices
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 ## Core Principles

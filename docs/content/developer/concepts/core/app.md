@@ -1,11 +1,16 @@
 ---
 title: Application Layer
 description: Tux application entrypoint and lifecycle management with signal handling, configuration validation, and graceful startup/shutdown flows.
+tags:
+  - developer-guide
+  - concepts
+  - core
+  - architecture
 ---
 
 # Application Layer
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 The application layer (`src/tux/core/app.py`) orchestrates Tux's complete lifecycle from startup to shutdown. It handles initialization, signal handling, configuration validation, and graceful error recovery.

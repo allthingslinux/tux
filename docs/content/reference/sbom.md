@@ -3,11 +3,16 @@ title: Software Bill of Materials (SBOM)
 icon: material/invoice-text-check
 hide:
   - toc
+tags:
+  - reference
+  - sbom
+  - dependencies
+---
 ---
 
 # Software Bill of Materials (SBOM)
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 This page provides a comprehensive list of all dependencies used in Tux, including their licenses and versions. This information is essential for software supply chain security and legal compliance.

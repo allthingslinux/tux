@@ -1,10 +1,15 @@
 ---
 title: Database Testing
+tags:
+  - developer-guide
+  - concepts
+  - database
+  - testing
 ---
 
 # Database Testing
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 ## Overview

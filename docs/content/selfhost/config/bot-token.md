@@ -1,10 +1,14 @@
 ---
 title: Bot Token Configuration
+tags:
+  - selfhost
+  - configuration
+  - bot-token
 ---
 
 # Bot Token Configuration
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 Quick guide to get your Discord bot token configured for Tux.

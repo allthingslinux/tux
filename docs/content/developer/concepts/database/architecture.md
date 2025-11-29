@@ -1,10 +1,15 @@
 ---
 title: Database Architecture
+tags:
+  - developer-guide
+  - concepts
+  - database
+  - architecture
 ---
 
 # Database Architecture
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 Tux's database architecture follows a three-layer pattern that separates concerns while maintaining type safety and developer experience. The architecture prioritizes async-first design, automatic resource management, and composable operations built on PostgreSQL.

@@ -1,5 +1,7 @@
 ---
 title: Self-Hoster Guide
+tags:
+  - selfhost
 ---
 
 # Self-Hoster Guide

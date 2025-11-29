@@ -1,10 +1,14 @@
 ---
 title: Namespace Best Practices
+tags:
+  - developer-guide
+  - best-practices
+  - namespace
 ---
 
 # Namespace Best Practices
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 This guide explains namespace packages and the `__all__` declaration in Python, with specific examples from the Tux codebase and best practices for maintaining clean APIs.

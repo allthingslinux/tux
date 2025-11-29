@@ -1,11 +1,16 @@
 ---
 title: Permission System
 description: Database-driven permission system for guild-specific command access control with role-based hierarchies.
+tags:
+  - developer-guide
+  - concepts
+  - core
+  - permissions
 ---
 
 # Permission System
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 Tux uses a database-driven permission system that lets each guild customize who can use which commands. Instead of hardcoding permissions, everything is stored in the database and configured per-guild through commands.

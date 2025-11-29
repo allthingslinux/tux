@@ -1,11 +1,16 @@
 ---
 title: XP & Leveling
 description: Earn experience points (XP) by chatting and level up to unlock roles and rewards.
+tags:
+  - user-guide
+  - features
+  - leveling
+  - xp
 ---
 
 # XP & Leveling
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 The XP & Leveling system rewards active community members with experience points for their messages. As you gain XP, you level up and can unlock special roles and rewards. This gamification system encourages engagement and recognizes active contributors.

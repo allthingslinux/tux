@@ -1,11 +1,15 @@
 ---
 title: Error Handling Best Practices
 description: Error handling best practices for Tux development, including exception patterns, graceful degradation, and debugging techniques.
+tags:
+  - developer-guide
+  - best-practices
+  - error-handling
 ---
 
 # Error Handling Best Practices
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 Error handling is crucial for building reliable Discord bots. Users expect your bot to handle failures gracefully, provide helpful feedback, and continue operating even when things go wrong. Good error handling separates professional bots from fragile ones.

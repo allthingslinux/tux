@@ -1,10 +1,14 @@
 ---
 title: Database Management
+tags:
+  - selfhost
+  - operations
+  - database
 ---
 
 # Database Management
 
-!!! wip "Work in progress"
+!!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
 Manage your Tux database including backups, migrations, and administration tools.
