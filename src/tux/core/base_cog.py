@@ -16,12 +16,12 @@ from typing import TYPE_CHECKING, Any
 from discord.ext import commands
 from loguru import logger
 
-from tux.database.controllers import DatabaseCoordinator
 from tux.shared.config import CONFIG
 from tux.shared.functions import generate_usage
 
 if TYPE_CHECKING:
     from tux.core.bot import Tux
+    from tux.database.controllers import DatabaseCoordinator
 
 
 class BaseCog(commands.Cog):

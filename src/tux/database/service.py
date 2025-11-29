@@ -31,7 +31,6 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlmodel import SQLModel
 
-from tux.services.sentry import capture_database_error
 from tux.services.sentry.metrics import record_database_metric
 from tux.shared.config import CONFIG
 
@@ -142,6 +141,9 @@ class DatabaseService:
             logger.error(f"Database connectivity test failed: {e}", exc_info=True)
             # Capture exception with database context for Sentry
             # Note: self._engine is guaranteed to be not None here due to check above
+            # Lazy import to avoid circular dependency: tux.database.service → tux.services.sentry → tux.core.context → tux.database.controllers → tux.database.service
+            from tux.services.sentry import capture_database_error  # noqa: PLC0415
+
             with sentry_sdk.push_scope() as scope:
                 # Use tag for filtering (operation type)
                 scope.set_tag("database.operation", "test_connection")

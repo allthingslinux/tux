@@ -10,8 +10,6 @@ import sentry_sdk
 from discord import Interaction
 from discord.ext import commands
 
-from tux.core.context import get_interaction_context
-
 from .config import is_initialized
 
 # Type alias for a command context or an interaction.
@@ -186,6 +184,9 @@ def _set_command_context_from_ctx(ctx: commands.Context[commands.Bot]) -> None:
 
 def _set_command_context_from_interaction(interaction: Interaction) -> None:
     """Set context from an interaction."""
+    # Lazy import to avoid circular dependency: tux.services.sentry.context → tux.core.context → tux.core.base_cog → tux.database.controllers → tux.database.service → tux.services.sentry
+    from tux.core.context import get_interaction_context  # noqa: PLC0415
+
     interaction_context = get_interaction_context(interaction)
 
     command_data = {
