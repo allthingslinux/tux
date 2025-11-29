@@ -108,6 +108,18 @@ jobs:
       # Upload coverage to Codecov (requires GitHub OIDC)
       # Note: OIDC authentication requires GitHub Actions environment and won't work with act (local testing)
       # The step will fail gracefully due to fail_ci_if_error: false, allowing tests to pass in act
+      # Verify coverage file exists and contains data before uploading
+      - name: Verify Coverage File
+        if: ${{ !cancelled() }}
+        run: |
+          if [ ! -f coverage.xml ]; then
+            echo "❌ Error: coverage.xml not found"
+            exit 1
+          fi
+          echo "✅ Coverage file exists"
+          echo "File size: $(wc -c < coverage.xml) bytes"
+          echo "First 20 lines of coverage.xml:"
+          head -20 coverage.xml
       - name: Upload Coverage to Codecov
         if: ${{ !cancelled() }}
         uses: codecov/codecov-action@v5

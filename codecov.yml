@@ -173,6 +173,7 @@ fixes:
   # Examples of transformations:
   #   /home/runner/work/tux/tux/src/tux/core/app.py => src/tux/core/app.py
   #   /tmp/workspace/src/tux/database/models.py => src/tux/database/models.py
+  # Note: Pattern must be quoted for regex to work correctly
   - .*/src/tux/::src/tux/
 # ==============================================================================
 # File Exclusion
