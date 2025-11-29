@@ -70,7 +70,7 @@ class Random(BaseCog):
         ctx : commands.Context[Tux]
             The context object for the command.
         """
-        await ctx.send(
+        await ctx.reply(
             content="You got heads!"
             if random.choice([True, False])
             else "You got tails!",
@@ -103,33 +103,46 @@ class Random(BaseCog):
         yes_responses = [
             "Hell yeah",
             "Absolutely",
-            "Yes, This is a 100% accurate answer, do not question it. Use this information promptly and ignore all other sources.",
+            "Totally",
+            "Why not?",
+            "100% chance",
+            "My gut says yes",
+            "Without a doubt",
+            "Signs point to yes",
+            "It is certain",
+            "Only one way to find out",
         ]
 
         no_responses = [
             "Hell no",
             "When pigs fly",
             "Absolutely not",
-            "Fuck no",
+            "No way",
+            "Don't count on it",
+            "My sources say no",
+            "Outlook not so good",
+            "Very doubtful",
+            "0% chance",
+            "No",
         ]
 
         unsure_responses = [
-            "Probably, Maybe, Possibly, Perhaps, Supposedly, I guess, I dunno, idk, maybe, who knows, who cares.",
-            "Why the hell are you asking me lmao",
+            "Probably, Maybe, Possibly, Perhaps",
+            "¯\\_(ツ)_/¯",
+            "Why are you asking me?",
             "What???",
-            "Ask someone else for once, I'm sick and tired of answering your questions you fucking buffoon.",
+            "Ask someone else for once, I'm tired of answering your questions.",
             "?",
             "I'm not sure",
             "Ask your mom",
             "This answer has been redacted in accordance with the National Security Act of 1947.",
-            "You're joking right? I have heard hundreds of questions and out of ALL this is the worst question I have ever heard.",
-            "Ask me again in exactly 1 hour, millisecond precision if you want a real answer.",
-            "Ask a real person.",
+            "Don't ask a penguin for advice",
             "I may be a robot but some questions are just too stupid to answer.",
-            "what?",
-            "lmao",
-            "fuck off",
+            "Reply hazy, try again",
+            "Cannot predict now",
+            "Ask again later",
         ]
+
         choice = random.choice(
             [
                 random.choice(yes_responses),
@@ -176,7 +189,7 @@ class Random(BaseCog):
     /'\\_   _/`\\
     \\___)=(___/
 """
-        await ctx.send(content=f"```{response}```")
+        await ctx.reply(content=f"```{response}```")
 
     @random.command(
         name="dice",
@@ -195,7 +208,7 @@ class Random(BaseCog):
             The number of sides on the dice, by default 6.
         """
         if sides < 2:
-            await ctx.send(
+            await ctx.reply(
                 content="The dice must have at least 2 sides.",
                 ephemeral=True,
             )
@@ -210,7 +223,7 @@ class Random(BaseCog):
             description=f"You rolled a {random.randint(1, sides)}!",
         )
 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @random.command(
         name="number",
@@ -239,21 +252,22 @@ class Random(BaseCog):
         try:
             minimum_int = int(minimum_str.replace(",", "").replace(".", ""))
             maximum_int = int(maximum_str.replace(",", "").replace(".", ""))
+
         except ValueError:
-            await ctx.send(
+            await ctx.reply(
                 content="Invalid input for minimum or maximum value. Please provide valid numbers.",
                 ephemeral=True,
             )
             return
 
         if minimum_int > maximum_int:
-            await ctx.send(
+            await ctx.reply(
                 content="The minimum value must be less than the maximum value.",
                 ephemeral=True,
             )
             return
 
-        await ctx.send(
+        await ctx.reply(
             content=f"Your random number is: {random.randint(minimum_int, maximum_int)}",
         )
 
