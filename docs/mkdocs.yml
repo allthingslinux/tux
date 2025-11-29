@@ -209,7 +209,7 @@ plugins:
       tab_length: 2
       implicit_index: false
   - git-revision-date-localized:
-      enabled: true
+      enabled: !ENV [CI, false]
       enable_creation_date: true
   - minify:
       enabled: true
