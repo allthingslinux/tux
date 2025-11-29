@@ -19,6 +19,11 @@ from tux.core.bot import Tux
 from tux.services.http_client import http_client
 from tux.ui.embeds import EmbedCreator
 
+# JPEG quality (low quality for deepfry aesthetic, but not so low it hurts compression)
+JPEG_QUALITY = 1
+# AVIF quality (lower = smaller file, range 0-100, 30 is good for deepfry aesthetic)
+AVIF_QUALITY = 1
+
 
 class Deepfry(BaseCog):
     """Image deepfrying effects for Discord."""
@@ -131,14 +136,25 @@ class Deepfry(BaseCog):
         """
         Apply deepfry effects to an image.
 
+        Parameters
+        ----------
+        image : Image.Image
+            The image to process.
+
         Returns
         -------
         Image.Image
             The deepfried image.
         """
         image = image.convert("RGB")
-        # Downscale for processing
-        image = image.resize((int(image.width * 0.25), int(image.height * 0.25)))
+        # Store original size to restore later
+        original_size = image.size
+
+        # Downscale for processing (25% of current size)
+        image = image.resize(
+            (int(image.width * 0.25), int(image.height * 0.25)),
+            Image.Resampling.LANCZOS,
+        )
         image = ImageEnhance.Sharpness(image).enhance(100.0)
 
         # Extract red channel and enhance
@@ -151,7 +167,7 @@ class Deepfry(BaseCog):
         image = Image.blend(image, r, 0.75)
 
         # Upscale back to original size
-        return image.resize((int(image.width * 4), int(image.height * 4)))
+        return image.resize(original_size, Image.Resampling.LANCZOS)
 
     async def _send_error_embed(
         self,
@@ -184,7 +200,13 @@ class Deepfry(BaseCog):
     ) -> None:
         """Send the processed image result."""
         buffer = io.BytesIO()
-        image.save(buffer, format="JPEG", quality=1)
+        image.save(
+            buffer,
+            format="JPEG",
+            quality=JPEG_QUALITY,
+            optimize=True,
+            progressive=True,
+        )
         buffer.seek(0)
 
         file = discord.File(buffer, filename="deepfried.jpg")
@@ -210,6 +232,8 @@ class Deepfry(BaseCog):
             loop=0,
             duration=durations,
             disposal=2,
+            quality=AVIF_QUALITY,
+            speed=6,  # Higher speed = faster encoding, slightly larger files (0-8)
         )
         buffer.seek(0)
 
