@@ -23,7 +23,12 @@ from sqlmodel import SQLModel, Session, select
 from tux.database.models.models import Guild, GuildConfig
 from tux.database.service import DatabaseService
 from tux.database.controllers import GuildController, GuildConfigController
-from tests.conftest import TEST_GUILD_ID, TEST_CHANNEL_ID, TEST_USER_ID, TEST_MODERATOR_ID
+from tests.fixtures import (
+    TEST_CHANNEL_ID,
+    TEST_GUILD_ID,
+    TEST_MODERATOR_ID,
+    TEST_USER_ID,
+)
 
 
 # =============================================================================

@@ -25,8 +25,16 @@ from tux.database.models.models import Guild, GuildConfig, CaseType, Case, Permi
 from tux.database.models.base import TimestampMixin, BaseModel
 from tux.database.service import DatabaseService
 from tux.core.permission_system import DEFAULT_RANKS
-# Test constants and validation functions are now available from conftest.py
-from tests.conftest import TEST_GUILD_ID, TEST_CHANNEL_ID, TEST_USER_ID, TEST_MODERATOR_ID, validate_guild_structure, validate_guild_config_structure, validate_relationship_integrity
+# Test constants and validation functions
+from tests.fixtures import (
+    TEST_CHANNEL_ID,
+    TEST_GUILD_ID,
+    TEST_MODERATOR_ID,
+    TEST_USER_ID,
+    validate_guild_config_structure,
+    validate_guild_structure,
+    validate_relationship_integrity,
+)
 
 
 # =============================================================================
