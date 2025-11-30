@@ -173,13 +173,51 @@ class TestCLI(BaseCLI):
             "Plain test run",
         )
 
-    def parallel_tests(self) -> None:
-        """Run tests in parallel."""
-        self.rich.print_section("Parallel Tests", "blue")
-        self._run_test_command(
-            ["uv", "run", "pytest", "-n", "auto"],
-            "Parallel test run",
-        )
+    def parallel_tests(
+        self,
+        workers: Annotated[
+            int | None,
+            Option(
+                "--workers",
+                "-n",
+                help="Number of parallel workers (default: auto, uses CPU count)",
+            ),
+        ] = None,
+        load_scope: Annotated[
+            str | None,
+            Option(
+                "--load-scope",
+                help="Load balancing scope: module, class, or function (default: module)",
+            ),
+        ] = None,
+    ) -> None:
+        """Run tests in parallel using pytest-xdist.
+
+        Uses multiprocessing for true parallelism. Coverage is automatically
+        combined across workers.
+
+        Parameters
+        ----------
+        workers : int | None
+            Number of parallel workers. If None, uses 'auto' (CPU count).
+        load_scope : str | None
+            Load balancing scope. Options: 'module', 'class', 'function'.
+            Default is 'module' for best performance.
+        """
+        self.rich.print_section("Parallel Tests (pytest-xdist)", "blue")
+        cmd = ["uv", "run", "pytest"]
+
+        # Add xdist options
+        if workers is None:
+            cmd.extend(["-n", "auto"])
+        else:
+            cmd.extend(["-n", str(workers)])
+
+        # Add load balancing scope if specified
+        if load_scope:
+            cmd.extend(["--dist", load_scope])
+
+        self._run_test_command(cmd, "Parallel test run")
 
     def html_report(
         self,
