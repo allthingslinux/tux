@@ -1,0 +1,1533 @@
+/* Coverage Report Styling - Themed for Tokyo Night & Catppuccin Latte */
+/* Works both standalone and when embedded in MkDocs */
+
+/* ============================================================================
+   Loader Styles - Prevents theme flashing during load
+   ============================================================================ */
+
+/* Loader overlay for coverage iframe */
+#coverage-loader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--md-default-bg-color, #1a1b26);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#coverage-loader.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Spinner animation */
+.coverage-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(122, 162, 247, 0.2);
+  border-top-color: #7aa2f7;
+  border-radius: 50%;
+  animation: coverage-spin 0.8s linear infinite;
+}
+
+@keyframes coverage-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Light theme spinner */
+[data-md-color-scheme="catppuccin-latte"] #coverage-loader {
+  background: var(--md-default-bg-color, #eff1f5);
+}
+
+[data-md-color-scheme="catppuccin-latte"] .coverage-spinner {
+  border-color: rgba(30, 102, 245, 0.2);
+  border-top-color: #1e66f5;
+}
+
+/* Iframe container with relative positioning for loader */
+#coviframe-container {
+  position: relative;
+  min-height: 400px;
+}
+
+#coviframe {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#coviframe.loaded {
+  opacity: 1;
+}
+
+/* ============================================================================
+   Base Styles - Work standalone (no MkDocs wrapper)
+   ============================================================================ */
+
+/* Default to dark theme (Tokyo Night) for standalone viewing */
+body.indexfile {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif;
+  /* Enable Inter's best features: ligatures, contextual alternates, and disambiguation */
+  font-feature-settings: 'liga' 1, 'calt' 1, 'ss02' 1;
+  text-rendering: auto;
+  font-kerning: normal;
+  background-color: #1a1b26;
+  color: #a9b1d6;
+}
+
+/* Theme classes for iframe theme syncing */
+body.indexfile.theme-tokyo-night {
+  background-color: #1a1b26 !important;
+  color: #a9b1d6 !important;
+}
+
+body.indexfile.theme-catppuccin-latte {
+  background-color: #eff1f5 !important;
+  color: #4c4f69 !important;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif !important;
+  font-feature-settings: 'liga' 1, 'calt' 1, 'ss02' 1 !important;
+  text-rendering: auto !important;
+  font-kerning: normal !important;
+}
+
+/* Header - Standalone */
+body.indexfile header {
+  background: #16161e;
+  border-bottom: 1px solid rgba(86, 95, 137, 0.5);
+  color: #a9b1d6;
+}
+
+body.indexfile header .content {
+  padding: 1rem 3.5rem;
+}
+
+body.indexfile header h1 {
+  color: #a9b1d6;
+  font-size: 1.25em;
+  text-rendering: optimizeLegibility;
+}
+
+body.indexfile header h1 .pc_cov {
+  color: #7aa2f7;
+  font-weight: 600;
+}
+
+body.indexfile header h2 {
+  color: #a9b1d6;
+  text-rendering: optimizeLegibility;
+}
+
+body.indexfile header h2 a.button {
+  background: rgba(26, 27, 38, 0.54);
+  border: 1px solid #787c99;
+  color: #a9b1d6;
+  border-radius: 0.2rem;
+  padding: 0.1em 0.5em;
+  margin: 1px calc(0.1em + 1px);
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+body.indexfile header h2 a.button:hover {
+  background: rgba(26, 27, 38, 0.7);
+  border-color: #7aa2f7;
+  color: #c0caf5;
+}
+
+body.indexfile header h2 a.button.current {
+  background: rgba(122, 162, 247, 0.2);
+  border: 2px solid #7aa2f7;
+  color: #c0caf5;
+  font-weight: 600;
+}
+
+body.indexfile header p.text {
+  color: #9ca5d0;
+  font-style: italic;
+}
+
+body.indexfile header p.text a.nav {
+  color: #7aa2f7;
+}
+
+body.indexfile header p.text a.nav:hover {
+  color: #89b4fa;
+  text-decoration: underline;
+}
+
+/* Filter Container - Standalone */
+body.indexfile #filter_container {
+  color: #a9b1d6;
+}
+
+body.indexfile #filter_container #filter {
+  background: rgba(26, 27, 38, 0.8);
+  border: 2px solid #787c99;
+  color: #a9b1d6;
+  border-radius: 0.2rem;
+  padding: 0.2em 0.5em;
+}
+
+body.indexfile #filter_container #filter:focus {
+  border-color: #7aa2f7;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.2);
+}
+
+body.indexfile #filter_container #filter::placeholder {
+  color: #565f89;
+}
+
+body.indexfile #filter_container label {
+  color: #787c99;
+}
+
+/* Table - Standalone */
+body.indexfile table.index {
+  background: transparent;
+  border: 1px solid rgba(86, 95, 137, 0.3);
+  border-radius: 0.2rem;
+  overflow: hidden;
+}
+
+body.indexfile table.index thead {
+  background: rgba(22, 22, 30, 0.8);
+}
+
+body.indexfile table.index th {
+  background: rgba(22, 22, 30, 0.8);
+  color: #a9b1d6;
+  border-bottom: 2px solid rgba(86, 95, 137, 0.5);
+  font-weight: 600;
+  padding: 0.5em;
+}
+
+body.indexfile table.index th.name {
+  color: #c0caf5;
+}
+
+body.indexfile table.index th.tablehead.grouphead {
+  background: rgba(26, 27, 38, 0.54);
+  color: #787c99;
+  font-weight: 500;
+  font-size: 0.9em;
+}
+
+body.indexfile table.index tbody tr.region {
+  background: transparent;
+  border-bottom: 1px solid rgba(86, 95, 137, 0.2);
+  transition: background-color 0.2s ease;
+}
+
+body.indexfile table.index tbody tr.region:hover {
+  background: rgba(26, 27, 38, 0.54);
+}
+
+body.indexfile table.index tbody tr.region td {
+  color: #a9b1d6;
+  padding: 0.5em;
+}
+
+body.indexfile table.index tbody tr.region td.name a {
+  color: #7aa2f7;
+  text-decoration: none;
+}
+
+body.indexfile table.index tbody tr.region td.name a:hover {
+  background-color: #24283b;
+  color: #c0caf5;
+  border-radius: 0.2rem;
+  padding: 0.1em 0.2em;
+  margin: 0 -0.2em;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Coverage percentage colors - Standalone */
+body.indexfile table.index tbody tr.region td[data-ratio] {
+  font-weight: 500;
+}
+
+/* High coverage (90-100%) - Green */
+body.indexfile table.index tbody tr.region td[data-ratio^="9"],
+body.indexfile table.index tbody tr.region td[data-ratio^="10"] {
+  color: #9ece6a;
+}
+
+/* Medium coverage (50-89%) - Yellow/Orange */
+body.indexfile table.index tbody tr.region td[data-ratio^="5"],
+body.indexfile table.index tbody tr.region td[data-ratio^="6"],
+body.indexfile table.index tbody tr.region td[data-ratio^="7"],
+body.indexfile table.index tbody tr.region td[data-ratio^="8"] {
+  color: #e0af68;
+}
+
+/* Low coverage (1-49%) - Orange/Red */
+body.indexfile table.index tbody tr.region td[data-ratio^="1"],
+body.indexfile table.index tbody tr.region td[data-ratio^="2"],
+body.indexfile table.index tbody tr.region td[data-ratio^="3"],
+body.indexfile table.index tbody tr.region td[data-ratio^="4"] {
+  color: #ff9e64;
+}
+
+/* Zero coverage - Red */
+body.indexfile table.index tbody tr.region td[data-ratio^="0"]:not([data-ratio="0 0"]) {
+  color: #f7768e;
+}
+
+/* Main Content - Standalone */
+body.indexfile main#index {
+  background: transparent;
+  color: #a9b1d6;
+  margin: 1rem 0 0 3.5rem;
+}
+
+/* Help Panel - Standalone */
+body.indexfile #help_panel {
+  background: rgba(26, 27, 38, 0.95);
+  border: 1px solid #787c99;
+  border-radius: 0.2rem;
+  color: #a9b1d6;
+  padding: 0.5em 1em;
+  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.3);
+}
+
+body.indexfile #help_panel .legend {
+  color: #c0caf5;
+  font-weight: 600;
+}
+
+body.indexfile #help_panel kbd {
+  background: rgba(22, 22, 30, 0.8);
+  border: 1px solid #565f89;
+  color: #a9b1d6;
+  border-radius: 0.2rem;
+  padding: 0.2em 0.4em;
+  font-family: "JetBrains Mono", "SF Mono", "Monaco", "Inconsolata", "Fira Code", "Droid Sans Mono", "Courier New", monospace;
+  font-feature-settings: "liga" 1, "calt" 1, "zero" 1;
+  font-variant-ligatures: common-ligatures contextual;
+  text-rendering: optimizeSpeed;
+  box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.2);
+}
+
+/* Footer - Standalone */
+body.indexfile footer {
+  color: #9ca5d0;
+  margin: 1rem 3.5rem;
+}
+
+body.indexfile footer .content {
+  color: #9ca5d0;
+  font-style: italic;
+}
+
+/* Source Code View - Standalone */
+body.indexfile #source {
+  background: transparent;
+  color: #a9b1d6;
+}
+
+body.indexfile #source pre {
+  background: #16161e;
+  border: 1px solid rgba(86, 95, 137, 0.3);
+  border-radius: 0.2rem;
+  color: #a9b1d6;
+  padding: 1em;
+  overflow-x: auto;
+}
+
+body.indexfile #source .annotate {
+  color: #787c99;
+}
+
+/* ============================================================================
+   Individual File Template Styles - Standalone (body.pyfile)
+   ============================================================================ */
+
+/* Base styles for individual file pages */
+body.pyfile {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif;
+  font-feature-settings: 'liga' 1, 'calt' 1, 'ss02' 1;
+  text-rendering: auto;
+  font-kerning: normal;
+  background-color: #1a1b26;
+  color: #a9b1d6;
+}
+
+/* Theme classes for iframe theme syncing */
+body.pyfile.theme-tokyo-night {
+  background-color: #1a1b26 !important;
+  color: #a9b1d6 !important;
+}
+
+body.pyfile.theme-catppuccin-latte {
+  background-color: #eff1f5 !important;
+  color: #4c4f69 !important;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif !important;
+  font-feature-settings: 'liga' 1, 'calt' 1, 'ss02' 1 !important;
+  text-rendering: auto !important;
+  font-kerning: normal !important;
+}
+
+/* Header - Individual File */
+body.pyfile header {
+  background: #16161e;
+  border-bottom: 1px solid rgba(86, 95, 137, 0.5);
+  color: #a9b1d6;
+}
+
+body.pyfile header .content {
+  padding: 1rem 3.5rem;
+}
+
+body.pyfile header h1 {
+  color: #a9b1d6;
+  font-size: 1.25em;
+  text-rendering: optimizeLegibility;
+}
+
+body.pyfile header h1 .pc_cov {
+  color: #7aa2f7;
+  font-weight: 600;
+}
+
+body.pyfile header h1 b {
+  color: #c0caf5;
+  font-weight: 600;
+}
+
+body.pyfile header h2 {
+  color: #a9b1d6;
+  text-rendering: optimizeLegibility;
+}
+
+/* Toggle Buttons */
+body.pyfile header h2 button {
+  background: rgba(26, 27, 38, 0.54);
+  border: 1px solid #787c99;
+  color: #a9b1d6;
+  border-radius: 0.2rem;
+  padding: 0.1em 0.5em;
+  margin: 1px calc(0.1em + 1px);
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+body.pyfile header h2 button:hover {
+  background: rgba(26, 27, 38, 0.7);
+  border-color: #7aa2f7;
+  color: #c0caf5;
+}
+
+body.pyfile header h2 button.run {
+  border-color: #9ece6a;
+}
+
+body.pyfile header h2 button.mis {
+  border-color: #f7768e;
+}
+
+body.pyfile header h2 button.exc {
+  border-color: #565f89;
+}
+
+body.pyfile header h2 button.par {
+  border-color: #e0af68;
+}
+
+body.pyfile header p.text {
+  color: #9ca5d0;
+  font-style: italic;
+}
+
+body.pyfile header p.text a.nav {
+  color: #7aa2f7;
+}
+
+body.pyfile header p.text a.nav:hover {
+  background-color: #24283b;
+  color: #c0caf5;
+  border-radius: 0.2rem;
+  padding: 0.1em 0.2em;
+  margin: 0 -0.2em;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Help Panel Wrapper */
+body.pyfile #help_panel_wrapper {
+  position: relative;
+}
+
+body.pyfile #help_panel_wrapper #help_panel_state {
+  display: none;
+}
+
+body.pyfile #help_panel_wrapper label {
+  cursor: pointer;
+}
+
+body.pyfile #help_panel_wrapper #keyboard_icon {
+  width: 24px;
+  height: 24px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+body.pyfile #help_panel_wrapper #keyboard_icon:hover {
+  opacity: 1;
+}
+
+body.pyfile #help_panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: rgba(26, 27, 38, 0.95);
+  border: 1px solid #787c99;
+  border-radius: 0.2rem;
+  color: #a9b1d6;
+  padding: 0.5em 1em;
+  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.3);
+  display: none;
+  z-index: 1000;
+}
+
+body.pyfile #help_panel_wrapper #help_panel_state:checked ~ #help_panel {
+  display: block;
+}
+
+body.pyfile #help_panel .legend {
+  color: #c0caf5;
+  font-weight: 600;
+  margin-bottom: 0.5em;
+}
+
+body.pyfile #help_panel .keyhelp p {
+  margin: 0.3em 0;
+  color: #a9b1d6;
+}
+
+body.pyfile #help_panel kbd {
+  background: rgba(22, 22, 30, 0.8);
+  border: 1px solid #565f89;
+  color: #a9b1d6;
+  border-radius: 0.2rem;
+  padding: 0.2em 0.4em;
+  font-family: "JetBrains Mono", "SF Mono", "Monaco", "Inconsolata", "Fira Code", "Droid Sans Mono", "Courier New", monospace;
+  font-feature-settings: "liga" 1, "calt" 1, "zero" 1;
+  font-variant-ligatures: common-ligatures contextual;
+  text-rendering: optimizeSpeed;
+  box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.2);
+  margin: 0 0.1em;
+}
+
+/* Source Code View - Individual File */
+body.pyfile #source {
+  background: #16161e;
+  border: 1px solid rgba(86, 95, 137, 0.3);
+  border-radius: 0.2rem;
+  color: #a9b1d6;
+  box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.2);
+}
+
+body.pyfile #source p {
+  margin: 0;
+  padding: 0.1em 0.5em;
+  font-family: "JetBrains Mono", "SF Mono", "Monaco", "Inconsolata", "Fira Code", "Droid Sans Mono", "Courier New", monospace;
+  font-feature-settings: "liga" 1, "calt" 1, "zero" 1;
+  font-variant-ligatures: common-ligatures contextual;
+  text-rendering: optimizeSpeed;
+  line-height: 1.6;
+  border-radius: 0.1rem;
+}
+
+/* Line number styles */
+body.pyfile #source p .n {
+  display: inline-block;
+  width: 3em;
+  text-align: right;
+  padding-right: 1em;
+  color: #565f89;
+  user-select: none;
+}
+
+body.pyfile #source p .n a {
+  color: #565f89;
+  text-decoration: none;
+}
+
+body.pyfile #source p .n a:hover {
+  color: #7aa2f7;
+}
+
+/* Source code line types - More visible backgrounds */
+body.pyfile #source p.pln {
+  background: transparent;
+}
+
+body.pyfile #source p.run {
+  background: rgba(158, 206, 106, 0.2);
+}
+
+body.pyfile #source p.mis {
+  background: rgba(247, 118, 142, 0.25);
+}
+
+body.pyfile #source p.exc {
+  background: rgba(86, 95, 137, 0.3);
+}
+
+body.pyfile #source p.par {
+  background: rgba(224, 175, 104, 0.25);
+}
+
+body.pyfile #source p.run2 {
+  background: rgba(158, 206, 106, 0.25);
+}
+
+/* Syntax highlighting - Match Material theme colors */
+body.pyfile #source p .t {
+  color: #a9b1d6;
+}
+
+body.pyfile #source p .str {
+  color: #9ece6a; /* --md-code-hl-string-color */
+}
+
+body.pyfile #source p .key {
+  color: #7aa2f7; /* --md-code-hl-keyword-color */
+  font-weight: 500;
+}
+
+body.pyfile #source p .op {
+  color: #89ddff; /* --md-code-hl-operator-color */
+}
+
+body.pyfile #source p .nam {
+  color: #a9b1d6; /* --md-code-hl-name-color */
+}
+
+body.pyfile #source p .com {
+  color: #565f89; /* --md-code-hl-comment-color */
+  font-style: italic;
+}
+
+/* Footer - Individual File */
+body.pyfile footer {
+  color: #9ca5d0;
+  margin: 1rem 3.5rem;
+}
+
+body.pyfile footer .content {
+  color: #9ca5d0;
+  font-style: italic;
+}
+
+body.pyfile footer .content a.nav {
+  color: #7aa2f7;
+}
+
+body.pyfile footer .content a.nav:hover {
+  background-color: #24283b;
+  color: #c0caf5;
+  border-radius: 0.2rem;
+  padding: 0.1em 0.2em;
+  margin: 0 -0.2em;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Hidden elements */
+body.pyfile aside.hidden {
+  display: none;
+}
+
+/* ============================================================================
+   Theme-specific styles for iframe (applied via JavaScript theme classes)
+   ============================================================================ */
+
+/* Light theme (Catppuccin Latte) - Standalone */
+body.indexfile.theme-catppuccin-latte header {
+  background: #e6e9ef !important;
+  border-bottom: 1px solid #ccd0da !important;
+  color: #4c4f69 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+body.indexfile.theme-catppuccin-latte header h1 {
+  color: #4c4f69 !important;
+}
+
+body.indexfile.theme-catppuccin-latte header h1 .pc_cov {
+  color: #1e66f5 !important;
+}
+
+body.indexfile.theme-catppuccin-latte header h2 {
+  color: #4c4f69 !important;
+}
+
+body.indexfile.theme-catppuccin-latte header h2 a.button {
+  background: rgba(230, 233, 239, 0.4) !important;
+  border: 1px solid #ccd0da !important;
+  color: #4c4f69 !important;
+}
+
+body.indexfile.theme-catppuccin-latte header h2 a.button:hover {
+  background: rgba(30, 102, 245, 0.15) !important;
+  border-color: #1e66f5 !important;
+  color: #1a1d2e !important;
+  box-shadow: 0 0.1rem 0.2rem rgba(30, 102, 245, 0.2) !important;
+}
+
+body.indexfile.theme-catppuccin-latte header h2 a.button.current {
+  background: rgba(30, 102, 245, 0.25) !important;
+  border: 2px solid #1e66f5 !important;
+  color: #1a1d2e !important;
+  box-shadow: 0 0.1rem 0.3rem rgba(30, 102, 245, 0.3) !important;
+}
+
+body.indexfile.theme-catppuccin-latte header p.text {
+  color: #5c5f77 !important;
+}
+
+body.indexfile.theme-catppuccin-latte header p.text a.nav {
+  color: #1e66f5 !important;
+}
+
+body.indexfile.theme-catppuccin-latte header p.text a.nav:hover {
+  background-color: #e6e9ef !important;
+  color: #1a1d2e !important;
+  border-radius: 0.2rem !important;
+  padding: 0.1em 0.2em !important;
+  margin: 0 -0.2em !important;
+  text-decoration: none !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+body.indexfile.theme-catppuccin-latte #filter_container {
+  color: #4c4f69 !important;
+}
+
+body.indexfile.theme-catppuccin-latte #filter_container #filter {
+  background: rgba(230, 233, 239, 0.9) !important;
+  border: 2px solid #ccd0da !important;
+  color: #4c4f69 !important;
+}
+
+body.indexfile.theme-catppuccin-latte #filter_container #filter:focus {
+  border-color: #1e66f5 !important;
+  box-shadow: 0 0.1rem 0.3rem rgba(30, 102, 245, 0.2) !important;
+}
+
+body.indexfile.theme-catppuccin-latte #filter_container #filter::placeholder {
+  color: #7c7f93 !important;
+}
+
+body.indexfile.theme-catppuccin-latte #filter_container label {
+  color: #5c5f77 !important;
+}
+
+body.indexfile.theme-catppuccin-latte table.index {
+  border: 1px solid #ccd0da !important;
+  box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.08) !important;
+}
+
+body.indexfile.theme-catppuccin-latte table.index thead {
+  background: #dce0e8 !important;
+}
+
+body.indexfile.theme-catppuccin-latte table.index th {
+  background: #dce0e8 !important;
+  color: #4c4f69 !important;
+  border-bottom: 2px solid #ccd0da !important;
+}
+
+body.indexfile.theme-catppuccin-latte table.index th.name {
+  color: #1a1d2e !important;
+}
+
+body.indexfile.theme-catppuccin-latte table.index th.tablehead.grouphead {
+  background: rgba(220, 224, 232, 0.8) !important;
+  color: #5c5f77 !important;
+}
+
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region {
+  border-bottom: 1px solid rgba(204, 208, 218, 0.5) !important;
+}
+
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region:hover {
+  background: rgba(230, 233, 239, 0.5) !important;
+}
+
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region td {
+  color: #4c4f69 !important;
+}
+
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region td.name a {
+  color: #1e66f5 !important;
+}
+
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region td.name a:hover {
+  background-color: #e6e9ef !important;
+  color: #1a1d2e !important;
+  border-radius: 0.2rem !important;
+  padding: 0.1em 0.2em !important;
+  margin: 0 -0.2em !important;
+  text-decoration: none !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region td[data-ratio^="9"],
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region td[data-ratio^="10"] {
+  color: #40a02b !important;
+}
+
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region td[data-ratio^="5"],
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region td[data-ratio^="6"],
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region td[data-ratio^="7"],
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region td[data-ratio^="8"] {
+  color: #df8e1d !important;
+}
+
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region td[data-ratio^="1"],
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region td[data-ratio^="2"],
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region td[data-ratio^="3"],
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region td[data-ratio^="4"] {
+  color: #fe640b !important;
+}
+
+body.indexfile.theme-catppuccin-latte table.index tbody tr.region td[data-ratio^="0"]:not([data-ratio="0 0"]) {
+  color: #d20f39 !important;
+}
+
+body.indexfile.theme-catppuccin-latte main#index {
+  color: #4c4f69 !important;
+}
+
+body.indexfile.theme-catppuccin-latte #help_panel {
+  background: rgba(239, 241, 245, 0.95) !important;
+  border: 1px solid #ccd0da !important;
+  color: #4c4f69 !important;
+  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.15) !important;
+}
+
+body.indexfile.theme-catppuccin-latte #help_panel .legend {
+  color: #1a1d2e !important;
+}
+
+body.indexfile.theme-catppuccin-latte #help_panel kbd {
+  background: rgba(220, 224, 232, 0.8) !important;
+  border: 1px solid #ccd0da !important;
+  color: #4c4f69 !important;
+  box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.1) !important;
+}
+
+body.indexfile.theme-catppuccin-latte footer {
+  color: #5c5f77 !important;
+}
+
+body.indexfile.theme-catppuccin-latte footer .content {
+  color: #5c5f77 !important;
+}
+
+body.indexfile.theme-catppuccin-latte #source {
+  color: #4c4f69 !important;
+}
+
+body.indexfile.theme-catppuccin-latte #source pre {
+  background: #e6e9ef !important;
+  border: 1px solid #ccd0da !important;
+  color: #4c4f69 !important;
+  box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.08) !important;
+}
+
+body.indexfile.theme-catppuccin-latte #source .annotate {
+  color: #5c5f77 !important;
+}
+
+/* Light theme (Catppuccin Latte) - Individual File Pages */
+body.pyfile.theme-catppuccin-latte header {
+  background: #e6e9ef !important;
+  border-bottom: 1px solid #ccd0da !important;
+  color: #4c4f69 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+body.pyfile.theme-catppuccin-latte header h1 {
+  color: #4c4f69 !important;
+}
+
+body.pyfile.theme-catppuccin-latte header h1 .pc_cov {
+  color: #1e66f5 !important;
+}
+
+body.pyfile.theme-catppuccin-latte header h2 {
+  color: #4c4f69 !important;
+}
+
+body.pyfile.theme-catppuccin-latte header p.text {
+  color: #5c5f77 !important;
+}
+
+body.pyfile.theme-catppuccin-latte header p.text a.nav {
+  color: #1e66f5 !important;
+}
+
+body.pyfile.theme-catppuccin-latte header p.text a.nav:hover {
+  background-color: #e6e9ef !important;
+  color: #1a1d2e !important;
+  border-radius: 0.2rem !important;
+  padding: 0.1em 0.2em !important;
+  margin: 0 -0.2em !important;
+  text-decoration: none !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+body.pyfile.theme-catppuccin-latte footer .content a.nav {
+  color: #1e66f5 !important;
+}
+
+body.pyfile.theme-catppuccin-latte footer .content a.nav:hover {
+  background-color: #e6e9ef !important;
+  color: #1a1d2e !important;
+  border-radius: 0.2rem !important;
+  padding: 0.1em 0.2em !important;
+  margin: 0 -0.2em !important;
+  text-decoration: none !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+/* Light theme source code area - Individual File Pages */
+body.pyfile.theme-catppuccin-latte #source {
+  background: #e6e9ef !important;
+  border: 1px solid #ccd0da !important;
+  color: #4c4f69 !important;
+  box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.08) !important;
+}
+
+body.pyfile.theme-catppuccin-latte #source p {
+  color: #4c4f69 !important;
+}
+
+body.pyfile.theme-catppuccin-latte #source p .n {
+  color: #7c7f93 !important;
+}
+
+body.pyfile.theme-catppuccin-latte #source p .n a {
+  color: #7c7f93 !important;
+}
+
+body.pyfile.theme-catppuccin-latte #source p .n a:hover {
+  color: #1e66f5 !important;
+}
+
+/* Light theme line backgrounds - More visible */
+body.pyfile.theme-catppuccin-latte #source p.run {
+  background: rgba(64, 160, 43, 0.2) !important; /* Green with better visibility */
+}
+
+body.pyfile.theme-catppuccin-latte #source p.mis {
+  background: rgba(210, 15, 57, 0.2) !important; /* Red with better visibility */
+}
+
+body.pyfile.theme-catppuccin-latte #source p.exc {
+  background: rgba(124, 127, 147, 0.25) !important; /* Grey with better visibility */
+}
+
+body.pyfile.theme-catppuccin-latte #source p.par {
+  background: rgba(223, 142, 29, 0.2) !important; /* Orange with better visibility */
+}
+
+body.pyfile.theme-catppuccin-latte #source p.run2 {
+  background: rgba(64, 160, 43, 0.25) !important; /* Green with better visibility */
+}
+
+/* Light theme syntax highlighting - Match Material theme colors */
+body.pyfile.theme-catppuccin-latte #source p .str {
+  color: #40a02b !important; /* --md-code-hl-string-color */
+}
+
+body.pyfile.theme-catppuccin-latte #source p .key {
+  color: #8839ef !important; /* --md-code-hl-keyword-color */
+}
+
+body.pyfile.theme-catppuccin-latte #source p .op {
+  color: #04a5e5 !important; /* --md-code-hl-operator-color */
+}
+
+body.pyfile.theme-catppuccin-latte #source p .nam {
+  color: #4c4f69 !important; /* --md-code-hl-name-color */
+}
+
+body.pyfile.theme-catppuccin-latte #source p .com {
+  color: #7c7f93 !important; /* --md-code-hl-comment-color */
+}
+
+body.pyfile.theme-catppuccin-latte footer {
+  color: #5c5f77 !important;
+}
+
+body.pyfile.theme-catppuccin-latte footer .content {
+  color: #5c5f77 !important;
+}
+
+/* ============================================================================
+   MkDocs Embedded Styles - Override base styles when embedded
+   ============================================================================ */
+
+/* Target coverage report when embedded in MkDocs */
+.md-typeset #index,
+.md-typeset main#index,
+.md-typeset .indexfile,
+.md-typeset body.indexfile {
+  font-family: var(--md-text-font, "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif) !important;
+  font-feature-settings: 'liga' 1, 'calt' 1, 'ss02' 1 !important;
+  text-rendering: auto !important;
+  font-kerning: normal !important;
+}
+
+/* Dark Theme - Tokyo Night (when embedded) */
+[data-md-color-scheme="tokyo-night"] .md-typeset header {
+  background: #16161e !important;
+  border-bottom: 1px solid rgba(86, 95, 137, 0.5) !important;
+  color: #a9b1d6 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset header .content {
+  padding: 1rem 3.5rem !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset header h1 {
+  color: #a9b1d6 !important;
+  font-size: 1.25em !important;
+  text-rendering: optimizeLegibility !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset header h1 .pc_cov {
+  color: #7aa2f7 !important;
+  font-weight: 600 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset header h2 {
+  color: #a9b1d6 !important;
+  text-rendering: optimizeLegibility !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset header h2 a.button {
+  background: rgba(26, 27, 38, 0.54) !important;
+  border: 1px solid #787c99 !important;
+  color: #a9b1d6 !important;
+  border-radius: 0.2rem !important;
+  padding: 0.1em 0.5em !important;
+  margin: 1px calc(0.1em + 1px) !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset header h2 a.button:hover {
+  background: rgba(26, 27, 38, 0.7) !important;
+  border-color: #7aa2f7 !important;
+  color: #c0caf5 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset header h2 a.button.current {
+  background: rgba(122, 162, 247, 0.2) !important;
+  border: 2px solid #7aa2f7 !important;
+  color: #c0caf5 !important;
+  font-weight: 600 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset header p.text {
+  color: #787c99 !important;
+  font-style: italic !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset header p.text a.nav {
+  color: #7aa2f7 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset header p.text a.nav:hover {
+  background-color: #24283b !important;
+  color: #c0caf5 !important;
+  border-radius: 0.2rem !important;
+  padding: 0.1em 0.2em !important;
+  margin: 0 -0.2em !important;
+  text-decoration: none !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset #filter_container {
+  color: #a9b1d6 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset #filter_container #filter {
+  background: rgba(26, 27, 38, 0.8) !important;
+  border: 2px solid #787c99 !important;
+  color: #a9b1d6 !important;
+  border-radius: 0.2rem !important;
+  padding: 0.2em 0.5em !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset #filter_container #filter:focus {
+  border-color: #7aa2f7 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.2) !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset #filter_container #filter::placeholder {
+  color: #565f89 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset #filter_container label {
+  color: #787c99 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index {
+  background: transparent !important;
+  border: 1px solid rgba(86, 95, 137, 0.3) !important;
+  border-radius: 0.2rem !important;
+  overflow: hidden !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index thead {
+  background: rgba(22, 22, 30, 0.8) !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index th {
+  background: rgba(22, 22, 30, 0.8) !important;
+  color: #a9b1d6 !important;
+  border-bottom: 2px solid rgba(86, 95, 137, 0.5) !important;
+  font-weight: 600 !important;
+  padding: 0.5em !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index th.name {
+  color: #c0caf5 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index th.tablehead.grouphead {
+  background: rgba(26, 27, 38, 0.54) !important;
+  color: #787c99 !important;
+  font-weight: 500 !important;
+  font-size: 0.9em !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(86, 95, 137, 0.2) !important;
+  transition: background-color 0.2s ease !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region:hover {
+  background: rgba(26, 27, 38, 0.54) !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region td {
+  color: #a9b1d6 !important;
+  padding: 0.5em !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region td.name a {
+  color: #7aa2f7 !important;
+  text-decoration: none !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region td.name a:hover {
+  background-color: #24283b !important;
+  color: #c0caf5 !important;
+  border-radius: 0.2rem !important;
+  padding: 0.1em 0.2em !important;
+  margin: 0 -0.2em !important;
+  text-decoration: none !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region td[data-ratio] {
+  font-weight: 500 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region td[data-ratio^="9"],
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region td[data-ratio^="10"] {
+  color: #9ece6a !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region td[data-ratio^="5"],
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region td[data-ratio^="6"],
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region td[data-ratio^="7"],
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region td[data-ratio^="8"] {
+  color: #e0af68 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region td[data-ratio^="1"],
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region td[data-ratio^="2"],
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region td[data-ratio^="3"],
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region td[data-ratio^="4"] {
+  color: #ff9e64 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset table.index tbody tr.region td[data-ratio^="0"]:not([data-ratio="0 0"]) {
+  color: #f7768e !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset main#index {
+  background: transparent !important;
+  color: #a9b1d6 !important;
+  margin: 1rem 0 0 3.5rem !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset #help_panel {
+  background: rgba(26, 27, 38, 0.95) !important;
+  border: 1px solid #787c99 !important;
+  border-radius: 0.2rem !important;
+  color: #a9b1d6 !important;
+  padding: 0.5em 1em !important;
+  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset #help_panel .legend {
+  color: #c0caf5 !important;
+  font-weight: 600 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset #help_panel kbd {
+  background: rgba(22, 22, 30, 0.8) !important;
+  border: 1px solid #565f89 !important;
+  color: #a9b1d6 !important;
+  border-radius: 0.2rem !important;
+  padding: 0.2em 0.4em !important;
+  font-family: var(--md-code-font, "JetBrains Mono", "SF Mono", "Monaco", "Inconsolata", "Fira Code", "Droid Sans Mono", "Courier New", monospace) !important;
+  font-feature-settings: "liga" 1, "calt" 1, "zero" 1 !important;
+  font-variant-ligatures: common-ligatures contextual !important;
+  text-rendering: optimizeSpeed !important;
+  box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset footer {
+  color: #787c99 !important;
+  margin: 1rem 3.5rem !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset footer .content {
+  color: #787c99 !important;
+  font-style: italic !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset #source {
+  background: transparent !important;
+  color: #a9b1d6 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset #source pre {
+  background: #16161e !important;
+  border: 1px solid rgba(86, 95, 137, 0.3) !important;
+  border-radius: 0.2rem !important;
+  color: #a9b1d6 !important;
+  padding: 1em !important;
+  overflow-x: auto !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .md-typeset #source .annotate {
+  color: #787c99 !important;
+}
+
+/* Light Theme - Catppuccin Latte (when embedded) */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset header {
+  background: #e6e9ef !important;
+  border-bottom: 1px solid #ccd0da !important;
+  color: #4c4f69 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset header .content {
+  padding: 1rem 3.5rem !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset header h1 {
+  color: #4c4f69 !important;
+  font-size: 1.25em !important;
+  text-rendering: optimizeLegibility !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset header h1 .pc_cov {
+  color: #1e66f5 !important;
+  font-weight: 600 !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset header h2 {
+  color: #4c4f69 !important;
+  text-rendering: optimizeLegibility !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset header h2 a.button {
+  background: rgba(230, 233, 239, 0.4) !important;
+  border: 1px solid #ccd0da !important;
+  color: #4c4f69 !important;
+  border-radius: 0.2rem !important;
+  padding: 0.1em 0.5em !important;
+  margin: 1px calc(0.1em + 1px) !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+  box-shadow: 0 0.05rem 0.1rem rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset header h2 a.button:hover {
+  background: rgba(30, 102, 245, 0.15) !important;
+  border-color: #1e66f5 !important;
+  color: #1a1d2e !important;
+  box-shadow: 0 0.1rem 0.2rem rgba(30, 102, 245, 0.2) !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset header h2 a.button.current {
+  background: rgba(30, 102, 245, 0.25) !important;
+  border: 2px solid #1e66f5 !important;
+  color: #1a1d2e !important;
+  font-weight: 600 !important;
+  box-shadow: 0 0.1rem 0.3rem rgba(30, 102, 245, 0.3) !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset header p.text {
+  color: #5c5f77 !important;
+  font-style: italic !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset header p.text a.nav {
+  color: #1e66f5 !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset header p.text a.nav:hover {
+  background-color: #e6e9ef !important;
+  color: #1a1d2e !important;
+  border-radius: 0.2rem !important;
+  padding: 0.1em 0.2em !important;
+  margin: 0 -0.2em !important;
+  text-decoration: none !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset #filter_container {
+  color: #4c4f69 !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset #filter_container #filter {
+  background: rgba(230, 233, 239, 0.9) !important;
+  border: 2px solid #ccd0da !important;
+  color: #4c4f69 !important;
+  border-radius: 0.2rem !important;
+  padding: 0.2em 0.5em !important;
+  box-shadow: 0 0.05rem 0.1rem rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset #filter_container #filter:focus {
+  border-color: #1e66f5 !important;
+  outline: none !important;
+  box-shadow: 0 0.1rem 0.3rem rgba(30, 102, 245, 0.2) !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset #filter_container #filter::placeholder {
+  color: #7c7f93 !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset #filter_container label {
+  color: #5c5f77 !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index {
+  background: transparent !important;
+  border: 1px solid #ccd0da !important;
+  border-radius: 0.2rem !important;
+  overflow: hidden !important;
+  box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index thead {
+  background: #dce0e8 !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index th {
+  background: #dce0e8 !important;
+  color: #4c4f69 !important;
+  border-bottom: 2px solid #ccd0da !important;
+  font-weight: 600 !important;
+  padding: 0.5em !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index th.name {
+  color: #1a1d2e !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index th.tablehead.grouphead {
+  background: rgba(220, 224, 232, 0.8) !important;
+  color: #5c5f77 !important;
+  font-weight: 500 !important;
+  font-size: 0.9em !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(204, 208, 218, 0.5) !important;
+  transition: background-color 0.2s ease !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region:hover {
+  background: rgba(230, 233, 239, 0.5) !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region td {
+  color: #4c4f69 !important;
+  padding: 0.5em !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region td.name a {
+  color: #1e66f5 !important;
+  text-decoration: none !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region td.name a:hover {
+  background-color: #e6e9ef !important;
+  color: #1a1d2e !important;
+  border-radius: 0.2rem !important;
+  padding: 0.1em 0.2em !important;
+  margin: 0 -0.2em !important;
+  text-decoration: none !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region td[data-ratio] {
+  font-weight: 500 !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region td[data-ratio^="9"],
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region td[data-ratio^="10"] {
+  color: #40a02b !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region td[data-ratio^="5"],
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region td[data-ratio^="6"],
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region td[data-ratio^="7"],
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region td[data-ratio^="8"] {
+  color: #df8e1d !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region td[data-ratio^="1"],
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region td[data-ratio^="2"],
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region td[data-ratio^="3"],
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region td[data-ratio^="4"] {
+  color: #fe640b !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table.index tbody tr.region td[data-ratio^="0"]:not([data-ratio="0 0"]) {
+  color: #d20f39 !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset main#index {
+  background: transparent !important;
+  color: #4c4f69 !important;
+  margin: 1rem 0 0 3.5rem !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset #help_panel {
+  background: rgba(239, 241, 245, 0.95) !important;
+  border: 1px solid #ccd0da !important;
+  border-radius: 0.2rem !important;
+  color: #4c4f69 !important;
+  padding: 0.5em 1em !important;
+  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset #help_panel .legend {
+  color: #1a1d2e !important;
+  font-weight: 600 !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset #help_panel kbd {
+  background: rgba(220, 224, 232, 0.8) !important;
+  border: 1px solid #ccd0da !important;
+  color: #4c4f69 !important;
+  border-radius: 0.2rem !important;
+  padding: 0.2em 0.4em !important;
+  font-family: var(--md-code-font, "JetBrains Mono", "SF Mono", "Monaco", "Inconsolata", "Fira Code", "Droid Sans Mono", "Courier New", monospace) !important;
+  font-feature-settings: "liga" 1, "calt" 1, "zero" 1 !important;
+  font-variant-ligatures: common-ligatures contextual !important;
+  text-rendering: optimizeSpeed !important;
+  box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset footer {
+  color: #5c5f77 !important;
+  margin: 1rem 3.5rem !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset footer .content {
+  color: #5c5f77 !important;
+  font-style: italic !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset #source {
+  background: transparent !important;
+  color: #4c4f69 !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset #source pre {
+  background: #e6e9ef !important;
+  border: 1px solid #ccd0da !important;
+  border-radius: 0.2rem !important;
+  color: #4c4f69 !important;
+  padding: 1em !important;
+  overflow-x: auto !important;
+  box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset #source .annotate {
+  color: #5c5f77 !important;
+}
+
+/* ============================================================================
+   Responsive Adjustments
+   ============================================================================ */
+
+@media screen and (max-width: 76.25em) {
+  body.indexfile header .content,
+  [data-md-color-scheme="tokyo-night"] .md-typeset header .content,
+  [data-md-color-scheme="catppuccin-latte"] .md-typeset header .content {
+    padding: 1rem 1.5rem !important;
+  }
+
+  body.indexfile main#index,
+  [data-md-color-scheme="tokyo-night"] .md-typeset main#index,
+  [data-md-color-scheme="catppuccin-latte"] .md-typeset main#index {
+    margin: 1rem 0 0 1.5rem !important;
+  }
+
+  body.indexfile footer,
+  [data-md-color-scheme="tokyo-night"] .md-typeset footer,
+  [data-md-color-scheme="catppuccin-latte"] .md-typeset footer {
+    margin: 1rem 1.5rem !important;
+  }
+}
+
+@media screen and (max-width: 48em) {
+  body.indexfile header .content,
+  [data-md-color-scheme="tokyo-night"] .md-typeset header .content,
+  [data-md-color-scheme="catppuccin-latte"] .md-typeset header .content {
+    padding: 0.75rem 1rem !important;
+  }
+
+  body.indexfile main#index,
+  [data-md-color-scheme="tokyo-night"] .md-typeset main#index,
+  [data-md-color-scheme="catppuccin-latte"] .md-typeset main#index {
+    margin: 0.75rem 0 0 1rem !important;
+  }
+
+  body.indexfile table.index,
+  [data-md-color-scheme="tokyo-night"] .md-typeset table.index,
+  [data-md-color-scheme="catppuccin-latte"] .md-typeset table.index {
+    font-size: 0.875em !important;
+  }
+}

@@ -11,10 +11,10 @@ function getMdFileUrl() {
       // From: https://github.com/owner/repo/edit/branch/docs/path/file.md
       // To: https://raw.githubusercontent.com/owner/repo/branch/docs/path/file.md
       return editUrl
-        .replace('github.com', 'raw.githubusercontent.com')
-        .replace('/edit/', '/');
+        .replace("github.com", "raw.githubusercontent.com")
+        .replace("/edit/", "/");
     } catch (e) {
-      console.error('URL conversion failed:', e);
+      console.error("URL conversion failed:", e);
     }
   }
   return null;
@@ -48,7 +48,6 @@ function getMdFileUrl() {
 //     });
 //   }
 // });
-
 
 // Copy page as Markdown functionality - DISABLED due to layout shift issues
 // TODO: Re-enable when layout shift can be prevented
@@ -153,11 +152,11 @@ document.addEventListener('DOMContentLoaded', function() {
 */
 
 // Typography Diagnostic Tool - Only runs on style.md page
-(function() {
-  'use strict';
+(function () {
+  "use strict";
 
   // Only run on the style guide page
-  if (!document.querySelector('.font-size-display')) {
+  if (!document.querySelector(".font-size-display")) {
     return;
   }
 
@@ -167,57 +166,61 @@ document.addEventListener('DOMContentLoaded', function() {
     return parseFloat(computed.fontSize);
   }
 
-
   function updateFontSizes() {
     // Update viewport info
-    const viewportInfo = document.getElementById('viewport-info');
-    const htmlFontSize = document.getElementById('html-font-size');
-    const baseRem = document.getElementById('base-rem');
+    const viewportInfo = document.getElementById("viewport-info");
+    const htmlFontSize = document.getElementById("html-font-size");
+    const baseRem = document.getElementById("base-rem");
 
     if (viewportInfo) {
       const width = window.innerWidth;
-      const widthEm = width / parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const widthEm =
+        width / parseFloat(getComputedStyle(document.documentElement).fontSize);
       viewportInfo.textContent = `${width}px (${widthEm.toFixed(2)}em)`;
     }
 
     if (htmlFontSize) {
-      const htmlSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const htmlSize = parseFloat(
+        getComputedStyle(document.documentElement).fontSize
+      );
       htmlFontSize.textContent = `${htmlSize.toFixed(2)}px`;
     }
 
     if (baseRem) {
-      const base = parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const base = parseFloat(
+        getComputedStyle(document.documentElement).fontSize
+      );
       baseRem.textContent = `1rem = ${base.toFixed(2)}px`;
     }
 
     // Update all font-size displays
-    const displays = document.querySelectorAll('.font-size-display');
+    const displays = document.querySelectorAll(".font-size-display");
 
     // Create hidden test elements to ensure we measure correctly independently of where we are in the DOM
-    const testContainer = document.createElement('div');
-    testContainer.className = 'md-typeset';
-    testContainer.style.position = 'absolute';
-    testContainer.style.visibility = 'hidden';
-    testContainer.style.pointerEvents = 'none';
+    const testContainer = document.createElement("div");
+    testContainer.className = "md-typeset";
+    testContainer.style.position = "absolute";
+    testContainer.style.visibility = "hidden";
+    testContainer.style.pointerEvents = "none";
     document.body.appendChild(testContainer);
 
     const elementsToMeasure = {
-        'h1': document.createElement('h1'),
-        'h2': document.createElement('h2'),
-        'h3': document.createElement('h3'),
-        'h4': document.createElement('h4'),
-        'p': document.createElement('p'),
-        'small': document.createElement('small')
+      h1: document.createElement("h1"),
+      h2: document.createElement("h2"),
+      h3: document.createElement("h3"),
+      h4: document.createElement("h4"),
+      p: document.createElement("p"),
+      small: document.createElement("small"),
     };
 
     // Setup test elements
     Object.entries(elementsToMeasure).forEach(([key, el]) => {
-        el.textContent = 'Test';
-        testContainer.appendChild(el);
+      el.textContent = "Test";
+      testContainer.appendChild(el);
     });
 
-    displays.forEach(display => {
-      const selector = display.getAttribute('data-selector');
+    displays.forEach((display) => {
+      const selector = display.getAttribute("data-selector");
       const element = elementsToMeasure[selector];
 
       if (element) {
@@ -225,12 +228,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (size !== null) {
           display.textContent = `${size.toFixed(2)}px`;
-          display.style.color = 'var(--md-primary-fg-color)';
+          display.style.color = "var(--md-primary-fg-color)";
         } else {
-          display.textContent = 'N/A';
+          display.textContent = "N/A";
         }
       } else {
-        display.textContent = 'err';
+        display.textContent = "err";
       }
     });
 
@@ -239,8 +242,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Initial load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', updateFontSizes);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", updateFontSizes);
   } else {
     updateFontSizes();
   }
@@ -254,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   let resizeTimeout;
-  window.addEventListener('resize', () => {
+  window.addEventListener("resize", () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(updateFontSizes, 100);
   });
