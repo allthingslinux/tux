@@ -30,7 +30,10 @@ extra_css:
   - ./assets/stylesheets/mkdocstrings.css
   - ./assets/stylesheets/pymdownx.css
   - ./assets/stylesheets/home.css
-extra_javascript: [./assets/javascript/extra.js]
+  - ./assets/stylesheets/coverage.css
+extra_javascript:
+  - ./assets/javascript/extra.js
+  - ./assets/javascript/coverage.js
 watch:
   # MkDocs automatically watches docs_dir (content/) and mkdocs.yml
   # Only need to watch additional files that affect the build:
@@ -92,7 +95,7 @@ theme:
     - navigation.sections
     - navigation.prune
     - navigation.expand
-    # - navigation.path
+    - navigation.path
     - navigation.footer
     - toc.follow
     # - toc.integrate
