@@ -113,7 +113,7 @@ jobs:
       - name: Install Dependencies
         run: |
           echo "Installing documentation dependencies..."
-          uv sync --group docs --no-dev
+          uv sync
 
       # Download coverage from tests workflow (requires GitHub API)
       # Note: This step requires GitHub API access and won't work with act (local testing)
