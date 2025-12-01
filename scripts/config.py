@@ -32,7 +32,7 @@ class ConfigCLI(BaseCLI):
         """Initialize the ConfigCLI."""
         super().__init__(
             name="config",
-            description="Configuration management and generation",
+            description="Configuration management",
         )
         self._setup_command_registry()
         self._setup_commands()
@@ -43,12 +43,12 @@ class ConfigCLI(BaseCLI):
             Command(
                 "generate",
                 self.generate,
-                "Generate configuration example files in various formats",
+                "Generate configuration example files",
             ),
             Command(
                 "validate",
                 self.validate,
-                "Validate the current configuration",
+                "Validate configuration files",
             ),
         ]
 
@@ -191,7 +191,7 @@ class ConfigCLI(BaseCLI):
         Exit
             If configuration validation fails.
         """
-        self.console.print(Panel.fit("🔍 Configuration Validator", style="bold blue"))
+        self.console.print(Panel.fit("Configuration Validator", style="bold blue"))
 
         try:
             # Try to load the config

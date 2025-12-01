@@ -2,7 +2,7 @@
 """
 Docker CLI Script.
 
-A unified interface for all Docker operations using the clean CLI infrastructure.
+Docker operations management.
 """
 
 import os
@@ -54,13 +54,13 @@ class Timer:
 
 
 class DockerCLI(BaseCLI):
-    """Docker CLI with unified interface for all Docker operations."""
+    """Docker operations management."""
 
     def __init__(self) -> None:
         """Initialize Docker CLI with command registry and setup."""
         super().__init__(
             name="docker",
-            description="Docker CLI - A unified interface for all Docker operations",
+            description="Docker operations",
         )
         self._docker_client = None
         self._setup_command_registry()
@@ -96,17 +96,16 @@ class DockerCLI(BaseCLI):
         all_commands = [
             # Docker Compose commands
             Command("build", self.build, "Build Docker images"),
-            Command("up", self.up, "Start Docker services with smart orchestration"),
+            Command("up", self.up, "Start Docker services"),
             Command("down", self.down, "Stop Docker services"),
-            Command("logs", self.logs, "Show Docker service logs"),
-            Command("ps", self.ps, "List running Docker containers"),
+            Command("logs", self.logs, "Show service logs"),
+            Command("ps", self.ps, "List containers"),
             Command("exec", self.exec, "Execute command in container"),
             Command("shell", self.shell, "Open shell in container"),
-            Command("restart", self.restart, "Restart Docker services"),
-            Command("health", self.health, "Check container health status"),
+            Command("restart", self.restart, "Restart services"),
+            Command("health", self.health, "Check container health"),
             Command("config", self.config, "Validate Docker Compose configuration"),
-            Command("pull", self.pull, "Pull latest Docker images"),
-            # Docker management commands
+            Command("pull", self.pull, "Pull Docker images"),
             Command("cleanup", self.cleanup, "Clean up Docker resources"),
         ]
 
@@ -441,7 +440,7 @@ class DockerCLI(BaseCLI):
         ] = False,
         target: Annotated[
             str | None,
-            Option("--target", help="Build target stage"),
+            Option("--target", help="Build target stage name"),
         ] = None,
     ) -> None:
         """Build Docker images."""
@@ -467,12 +466,15 @@ class DockerCLI(BaseCLI):
         ] = False,
         build: Annotated[
             bool,
-            Option("--build", help="Build images before starting"),
+            Option("--build", help="Build images before starting services"),
         ] = False,
-        watch: Annotated[bool, Option("--watch", help="Watch for changes")] = False,
+        watch: Annotated[
+            bool,
+            Option("--watch", help="Watch for file changes"),
+        ] = False,
         production: Annotated[
             bool,
-            Option("--production", help="Enable production mode features"),
+            Option("--production", help="Enable production mode"),
         ] = False,
         monitor: Annotated[
             bool,
@@ -480,18 +482,18 @@ class DockerCLI(BaseCLI):
         ] = False,
         max_restart_attempts: Annotated[
             int,
-            Option("--max-restart-attempts", help="Maximum restart attempts"),
+            Option("--max-restart-attempts", help="Maximum number of restart attempts"),
         ] = 3,
         restart_delay: Annotated[
             int,
-            Option("--restart-delay", help="Delay between restart attempts (seconds)"),
+            Option("--restart-delay", help="Delay between restart attempts in seconds"),
         ] = 5,
         services: Annotated[
             list[str] | None,
             Argument(help="Services to start"),
         ] = None,
     ) -> None:  # sourcery skip: extract-duplicate-method, low-code-quality
-        """Start Docker services with smart orchestration."""
+        """Start Docker services."""
         self.rich.print_section("Starting Docker Services", "blue")
 
         # Check if Docker is available
@@ -507,7 +509,7 @@ class DockerCLI(BaseCLI):
                 "STARTUP_DELAY": "10",
             }
             self.rich.print_info("Production mode enabled:")
-            self.rich.print_info("- Enhanced retry logic (5 attempts, 10s delay)")
+            self.rich.print_info("- Retry logic (5 attempts, 10s delay)")
             self.rich.print_info("- Production-optimized settings")
         else:
             env["DEBUG"] = "true"
@@ -519,9 +521,9 @@ class DockerCLI(BaseCLI):
             self.rich.print_info("- Hot reload enabled")
 
         if monitor:
-            self.rich.print_info("- Smart monitoring enabled")
+            self.rich.print_info("- Monitoring enabled")
             self.rich.print_info("- Auto-cleanup on configuration errors")
-            self.rich.print_info("- Automatic service orchestration")
+            self.rich.print_info("- Automatic service management")
 
         # If not in detached mode and no monitoring requested, use standard foreground mode
         if not detach and not monitor:
@@ -652,7 +654,10 @@ class DockerCLI(BaseCLI):
         ] = False,
         remove_orphans: Annotated[
             bool,
-            Option("--remove-orphans", help="Remove orphaned containers"),
+            Option(
+                "--remove-orphans",
+                help="Remove containers not defined in compose file",
+            ),
         ] = False,
         services: Annotated[list[str] | None, Argument(help="Services to stop")] = None,
     ) -> None:
@@ -682,7 +687,7 @@ class DockerCLI(BaseCLI):
         ] = False,
         tail: Annotated[
             int | None,
-            Option("-n", "--tail", help="Number of lines to show"),
+            Option("-n", "--tail", help="Number of log lines to show"),
         ] = None,
         services: Annotated[
             list[str] | None,
@@ -881,7 +886,7 @@ class DockerCLI(BaseCLI):
         force: Annotated[bool, Option("--force", help="Skip confirmation")] = False,
         dry_run: Annotated[
             bool,
-            Option("--dry-run", help="Show what would be cleaned without doing it"),
+            Option("--dry-run", help="Show cleanup plan without executing"),
         ] = False,
     ) -> None:
         """Clean up Docker resources."""

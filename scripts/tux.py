@@ -3,7 +3,7 @@
 """
 Tux Bot CLI Script.
 
-A unified interface for all Tux bot operations using the clean CLI infrastructure.
+Bot operations management.
 """
 
 import sys
@@ -21,11 +21,10 @@ from scripts.registry import Command
 
 
 class TuxCLI(BaseCLI):
-    """Tux Bot CLI with unified interface for all bot operations.
+    """Bot operations management.
 
-    A command-line interface for the Tux Discord bot that provides
-    commands for starting the bot, showing version information, and
-    other bot-related operations.
+    Commands for starting the bot, showing version information,
+    and other bot-related operations.
     """
 
     def __init__(self):
@@ -36,7 +35,7 @@ class TuxCLI(BaseCLI):
         """
         super().__init__(
             name="tux",
-            description="Tux Bot CLI - A unified interface for all bot operations",
+            description="Bot operations",
         )
         self._setup_command_registry()
         self._setup_commands()
@@ -46,8 +45,8 @@ class TuxCLI(BaseCLI):
         # All commands directly registered without groups
         all_commands = [
             # Bot operations
-            Command("start", self.start_bot, "Start the Tux Discord bot"),
-            Command("version", self.show_version, "Show Tux version information"),
+            Command("start", self.start_bot, "Start the Discord bot"),
+            Command("version", self.show_version, "Show version information"),
         ]
 
         for cmd in all_commands:

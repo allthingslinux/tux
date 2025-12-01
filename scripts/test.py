@@ -2,7 +2,7 @@
 """
 Test CLI Script.
 
-A unified interface for all testing operations using the clean CLI infrastructure.
+Testing operations management.
 """
 
 import os
@@ -11,7 +11,8 @@ import webbrowser
 from pathlib import Path
 from typing import Annotated
 
-from typer import Option  # type: ignore[attr-defined]
+import typer
+from typer import Argument, Option  # type: ignore[attr-defined]
 
 # Add src to path
 src_path = Path(__file__).parent.parent / "src"
@@ -25,10 +26,10 @@ from scripts.registry import Command
 
 
 class TestCLI(BaseCLI):
-    """Test CLI with unified interface for all testing operations.
+    """Testing operations management.
 
-    Provides comprehensive testing commands including coverage reports,
-    parallel execution, HTML reports, and benchmarking capabilities.
+    Commands for running tests, generating coverage reports,
+    parallel execution, HTML reports, and benchmarking.
     """
 
     def __init__(self):
@@ -39,10 +40,13 @@ class TestCLI(BaseCLI):
         """
         super().__init__(
             name="test",
-            description="Test CLI - A unified interface for all testing operations",
+            description="Testing operations",
         )
+        # Override no_args_is_help to allow callback to handle arguments
+        self.app.no_args_is_help = False
         self._setup_command_registry()
         self._setup_commands()
+        self._setup_default_command()
 
     def _setup_command_registry(self) -> None:
         """Set up the command registry with all test commands."""
@@ -52,19 +56,17 @@ class TestCLI(BaseCLI):
             Command(
                 "all",
                 self.all_tests,
-                "Run all tests with coverage and enhanced output",
+                "Run all tests with coverage",
             ),
-            Command("quick", self.quick_tests, "Run tests without coverage (faster)"),
+            Command("quick", self.quick_tests, "Run tests without coverage"),
             Command("plain", self.plain_tests, "Run tests with plain output"),
             Command("parallel", self.parallel_tests, "Run tests in parallel"),
-            # Report commands
-            Command("html", self.html_report, "Run tests and generate HTML report"),
+            Command("html", self.html_report, "Generate HTML report"),
             Command(
                 "coverage",
                 self.coverage_report,
-                "Generate comprehensive coverage reports",
+                "Generate coverage reports",
             ),
-            # Specialized commands
             Command("benchmark", self.benchmark_tests, "Run benchmark tests"),
         ]
 
@@ -80,6 +82,37 @@ class TestCLI(BaseCLI):
                 name=command.name,
                 help_text=command.help_text,
             )
+
+    def _setup_default_command(self) -> None:
+        """Set up default command to handle test file paths."""
+
+        @self.app.callback(invoke_without_command=True)
+        def default(
+            ctx: typer.Context,
+            test_paths: Annotated[
+                list[str] | None,
+                Argument(help="Test file paths or test identifiers"),
+            ] = None,
+            coverage: Annotated[
+                bool,
+                Option("--coverage", "-c", help="Enable coverage collection"),
+            ] = False,
+        ) -> None:
+            """Run tests with optional file paths.
+
+            If no test paths are provided and no command is specified,
+            runs all tests. By default, coverage is disabled for faster execution.
+            Use --coverage to enable coverage collection.
+            Test paths can be files, directories, or pytest node IDs.
+            """
+            if ctx.invoked_subcommand is None:
+                self.rich.print_section("Running Tests", "blue")
+                cmd = ["uv", "run", "pytest"]
+                if not coverage:
+                    cmd.append("--no-cov")
+                if test_paths:
+                    cmd.extend(test_paths)
+                self._run_test_command(cmd, "Test run")
 
     def _run_test_command(self, command: list[str], description: str) -> bool:
         """Run a test command and return success status.
@@ -155,26 +188,54 @@ class TestCLI(BaseCLI):
     # TEST COMMANDS
     # ============================================================================
 
-    def all_tests(self) -> None:
-        """Run all tests with coverage and enhanced output."""
+    def all_tests(
+        self,
+        test_paths: Annotated[
+            list[str] | None,
+            Argument(help="Test file paths or test identifiers"),
+        ] = None,
+    ) -> None:
+        """Run all tests with coverage."""
         self.rich.print_section("Running Tests", "blue")
-        self._run_test_command(["uv", "run", "pytest"], "Test run")
+        cmd = ["uv", "run", "pytest"]
+        if test_paths:
+            cmd.extend(test_paths)
+        self._run_test_command(cmd, "Test run")
 
-    def quick_tests(self) -> None:
+    def quick_tests(
+        self,
+        test_paths: Annotated[
+            list[str] | None,
+            Argument(help="Test file paths or test identifiers"),
+        ] = None,
+    ) -> None:
         """Run tests without coverage (faster)."""
         self.rich.print_section("Quick Tests", "blue")
-        self._run_test_command(["uv", "run", "pytest", "--no-cov"], "Quick test run")
+        cmd = ["uv", "run", "pytest", "--no-cov"]
+        if test_paths:
+            cmd.extend(test_paths)
+        self._run_test_command(cmd, "Quick test run")
 
-    def plain_tests(self) -> None:
+    def plain_tests(
+        self,
+        test_paths: Annotated[
+            list[str] | None,
+            Argument(help="Test file paths or test identifiers"),
+        ] = None,
+    ) -> None:
         """Run tests with plain output."""
         self.rich.print_section("Plain Tests", "blue")
-        self._run_test_command(
-            ["uv", "run", "pytest", "-p", "no:sugar"],
-            "Plain test run",
-        )
+        cmd = ["uv", "run", "pytest", "-p", "no:sugar"]
+        if test_paths:
+            cmd.extend(test_paths)
+        self._run_test_command(cmd, "Plain test run")
 
     def parallel_tests(
         self,
+        test_paths: Annotated[
+            list[str] | None,
+            Argument(help="Test file paths or test identifiers"),
+        ] = None,
         workers: Annotated[
             int | None,
             Option(
@@ -198,6 +259,8 @@ class TestCLI(BaseCLI):
 
         Parameters
         ----------
+        test_paths : list[str] | None
+            Test file paths or test identifiers.
         workers : int | None
             Number of parallel workers. If None, uses 'auto' (CPU count).
         load_scope : str | None
@@ -216,6 +279,10 @@ class TestCLI(BaseCLI):
         # Add load balancing scope if specified
         if load_scope:
             cmd.extend(["--dist", load_scope])
+
+        # Add test paths if provided
+        if test_paths:
+            cmd.extend(test_paths)
 
         self._run_test_command(cmd, "Parallel test run")
 
@@ -243,19 +310,19 @@ class TestCLI(BaseCLI):
         self,
         specific: Annotated[
             str | None,
-            Option(help="Specific path to include in coverage"),
+            Option("--specific", help="Path to include in coverage"),
         ] = None,
         format_type: Annotated[
             str | None,
-            Option(help="Coverage report format: html, xml, or json"),
+            Option("--format", help="Report format: html, xml, or json"),
         ] = None,
         quick: Annotated[
             bool,
-            Option(help="Quick run without generating coverage report"),
+            Option("--quick", help="Skip coverage report generation"),
         ] = False,
         fail_under: Annotated[
             str | None,
-            Option(help="Fail if coverage percentage is below this value"),
+            Option("--fail-under", help="Minimum coverage percentage required"),
         ] = None,
         open_browser: Annotated[
             bool,
@@ -265,7 +332,7 @@ class TestCLI(BaseCLI):
             ),
         ] = False,
     ) -> None:
-        """Generate comprehensive coverage reports."""
+        """Generate coverage reports."""
         self.rich.print_section("Coverage Report", "blue")
 
         cmd = self._build_coverage_command(specific, format_type, quick, fail_under)

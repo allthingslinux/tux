@@ -2,7 +2,7 @@
 """
 Documentation CLI Script.
 
-A unified interface for all documentation operations using the clean CLI infrastructure.
+Documentation operations management.
 """
 
 import os
@@ -24,10 +24,10 @@ from scripts.registry import Command
 
 
 class DocsCLI(BaseCLI):
-    """Documentation CLI with unified interface for all documentation operations.
+    """Documentation operations management.
 
-    Provides a comprehensive set of commands for managing MkDocs documentation,
-    including serving, building, deploying, and maintenance operations.
+    Commands for managing MkDocs documentation, including serving,
+    building, deploying, and maintenance operations.
     """
 
     def __init__(self):
@@ -38,7 +38,7 @@ class DocsCLI(BaseCLI):
         """
         super().__init__(
             name="docs",
-            description="Documentation CLI - A unified interface for all documentation operations",
+            description="Documentation operations",
         )
         self._setup_command_registry()
         self._setup_commands()
@@ -51,23 +51,20 @@ class DocsCLI(BaseCLI):
             Command(
                 "serve",
                 self.serve,
-                "Serve documentation locally with live reload",
+                "Serve documentation locally",
             ),
-            Command("build", self.build, "Build documentation site for production"),
-            # Documentation management
-            Command("clean", self.clean, "Clean documentation build artifacts"),
+            Command("build", self.build, "Build documentation site"),
+            Command("clean", self.clean, "Clean build artifacts"),
             Command(
                 "validate",
                 self.validate,
-                "Validate documentation structure and links",
+                "Validate documentation structure",
             ),
             Command("check", self.check, "Check documentation for issues"),
-            # Development tools
-            Command("watch", self.watch, "Watch for changes and rebuild automatically"),
+            Command("watch", self.watch, "Watch for changes and rebuild"),
             Command("lint", self.lint, "Lint documentation files"),
-            # Information
-            Command("info", self.info, "Show documentation configuration and status"),
-            Command("list", self.list_pages, "List all documentation pages"),
+            Command("info", self.info, "Show documentation configuration"),
+            Command("list", self.list_pages, "List documentation pages"),
             # Cloudflare Workers deployment commands
             Command(
                 "wrangler-dev",
@@ -178,15 +175,15 @@ class DocsCLI(BaseCLI):
         port: Annotated[int, Option("--port", "-p", help="Port to serve on")] = 8000,
         dirty: Annotated[
             bool,
-            Option("--dirty", help="Only re-build files that have changed"),
+            Option("--dirty", help="Rebuild only changed files"),
         ] = False,
         no_livereload: Annotated[
             bool,
-            Option("--no-livereload", help="Disable live reloading"),
+            Option("--no-livereload", help="Disable live reload"),
         ] = False,
         clean: Annotated[
             bool,
-            Option("--clean", help="Build without effects of mkdocs serve"),
+            Option("--clean", help="Clean build directory before building"),
         ] = False,
         strict: Annotated[bool, Option("--strict", help="Enable strict mode")] = False,
         watch_theme: Annotated[
@@ -195,7 +192,7 @@ class DocsCLI(BaseCLI):
         ] = False,
         open_browser: Annotated[
             bool,
-            Option("--open", help="Automatically open browser"),
+            Option("--open", help="Open browser automatically"),
         ] = False,
     ) -> None:
         """Serve documentation locally with live reload.
@@ -203,7 +200,7 @@ class DocsCLI(BaseCLI):
         Note: Uses click==8.2.1 to fix file watching issue with click>=8.3.0
         (https://github.com/mkdocs/mkdocs/issues/4032)
         """
-        self.rich.print_section("📚 Serving Documentation", "blue")
+        self.rich.print_section("Serving Documentation", "blue")
 
         if not (mkdocs_path := self._find_mkdocs_config()):
             return
@@ -257,7 +254,7 @@ class DocsCLI(BaseCLI):
         strict: Annotated[bool, Option("--strict", help="Enable strict mode")] = False,
         theme: Annotated[
             str,
-            Option("--theme", "-t", help="Theme to use (mkdocs or readthedocs)"),
+            Option("--theme", "-t", help="Theme to use"),
         ] = "",
         site_dir: Annotated[
             str,
@@ -265,14 +262,14 @@ class DocsCLI(BaseCLI):
                 "--site-dir",
                 "--output",
                 "-d",
-                help="Directory to output the build result",
+                help="Output directory",
             ),
         ] = "",
         use_directory_urls: Annotated[
             bool,
             Option(
                 "--use-directory-urls",
-                help="Use directory URLs when building pages",
+                help="Use directory URLs",
             ),
         ] = True,
     ) -> None:
@@ -460,7 +457,7 @@ class DocsCLI(BaseCLI):
         port: Annotated[int, Option("--port", "-p", help="Port to serve on")] = 8787,
         remote: Annotated[
             bool,
-            Option("--remote", help="Run on remote cloudflare infrastructure"),
+            Option("--remote", help="Run on remote Cloudflare infrastructure"),
         ] = False,
     ) -> None:  # sourcery skip: class-extract-method
         """Start local Wrangler development server.
@@ -512,7 +509,7 @@ class DocsCLI(BaseCLI):
         ] = "production",
         dry_run: Annotated[
             bool,
-            Option("--dry-run", help="Show what would be deployed"),
+            Option("--dry-run", help="Show deployment plan without deploying"),
         ] = False,
     ) -> None:
         """Deploy documentation to Cloudflare Workers.
@@ -554,7 +551,7 @@ class DocsCLI(BaseCLI):
         self,
         limit: Annotated[
             int,
-            Option("--limit", "-l", help="Number of deployments to show"),
+            Option("--limit", "-l", help="Maximum number of deployments to show"),
         ] = 10,
     ) -> None:
         """List deployment history for the documentation site.
@@ -586,15 +583,15 @@ class DocsCLI(BaseCLI):
         self,
         action: Annotated[
             str,
-            Option("--action", "-a", help="Action: list, view, or upload"),
+            Option("--action", "-a", help="Action to perform: list, view, or upload"),
         ] = "list",
         version_id: Annotated[
             str,
-            Option("--version-id", help="Version ID for view action"),
+            Option("--version-id", help="Version ID to view"),
         ] = "",
         alias: Annotated[
             str,
-            Option("--alias", help="Preview alias name for upload"),
+            Option("--alias", help="Preview alias name"),
         ] = "",
     ) -> None:
         """List and manage versions of the documentation.

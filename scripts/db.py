@@ -39,7 +39,7 @@ class DatabaseCLI(BaseCLI):
         """
         super().__init__(
             name="db",
-            description="Database CLI - Clean commands for SQLModel + Alembic",
+            description="Database operations",
         )
         self._setup_command_registry()
         self._setup_commands()
@@ -53,54 +53,54 @@ class DatabaseCLI(BaseCLI):
             Command(
                 "init",
                 self.init,
-                "Initialize database with proper migrations (recommended for new projects)",
+                "Initialize database with migrations",
             ),
             Command(
                 "dev",
                 self.dev,
-                "Development workflow: generate migration and apply it",
+                "Generate and apply migration",
             ),
-            Command("push", self.push, "Apply all pending migrations to database"),
-            Command("status", self.status, "Show current migration status"),
+            Command("push", self.push, "Apply pending migrations"),
+            Command("status", self.status, "Show migration status"),
             # ============================================================================
             # MIGRATION MANAGEMENT
             # ============================================================================
             Command(
                 "new",
                 self.new_migration,
-                "Generate new migration from model changes",
+                "Generate new migration",
             ),
             Command("history", self.history, "Show migration history"),
             Command(
                 "check",
                 self.check_migrations,
-                "Validate migration files for issues",
+                "Validate migration files",
             ),
             Command(
                 "show",
                 self.show_migration,
-                "Show details of a specific migration",
+                "Show migration details",
             ),
             # ============================================================================
             # DATABASE INSPECTION
             # ============================================================================
-            Command("tables", self.tables, "List all database tables"),
-            Command("health", self.health, "Check database connection health"),
-            Command("schema", self.schema, "Validate database schema matches models"),
-            Command("queries", self.queries, "Check for long-running queries"),
+            Command("tables", self.tables, "List database tables"),
+            Command("health", self.health, "Check database connection"),
+            Command("schema", self.schema, "Validate database schema"),
+            Command("queries", self.queries, "Check long-running queries"),
             # ============================================================================
             # ADMIN COMMANDS
             # ============================================================================
-            Command("reset", self.reset, "Reset database to clean state (safe)"),
+            Command("reset", self.reset, "Reset database to clean state"),
             Command(
                 "downgrade",
                 self.downgrade,
-                "Rollback to a previous migration revision",
+                "Rollback to previous migration",
             ),
             Command(
                 "nuke",
                 self.nuke,
-                "Nuclear reset: completely destroy database (dangerous)",
+                "Complete database reset (destructive)",
             ),
             Command("version", self.version, "Show version information"),
         ]
@@ -126,7 +126,10 @@ class DatabaseCLI(BaseCLI):
 
     def _print_section_header(self, title: str, emoji: str) -> None:
         """Print a standardized section header for database operations."""
-        self.rich.print_section(f"{emoji} {title}", "blue")
+        if emoji:
+            self.rich.print_section(f"{emoji} {title}", "blue")
+        else:
+            self.rich.print_section(title, "blue")
         self.rich.rich_print(f"[bold blue]{title}...[/bold blue]")
 
     # ============================================================================
@@ -146,12 +149,12 @@ class DatabaseCLI(BaseCLI):
 
         Use this for new projects or when you want proper migration files.
         """
-        self.rich.print_section("🚀 Initialize Database", "green")
+        self.rich.print_section("Initialize Database", "green")
         self.rich.rich_print(
-            "[bold green]Initializing database with proper migrations...[/bold green]",
+            "[bold green]Initializing database with migrations...[/bold green]",
         )
         self.rich.rich_print(
-            "[yellow]This will create a clean initial migration file.[/yellow]",
+            "[yellow]This will create an initial migration file.[/yellow]",
         )
         self.rich.rich_print("")
 
@@ -226,7 +229,7 @@ class DatabaseCLI(BaseCLI):
 
         if table_count > 0 or migration_count > 0 or migration_file_count > 0:
             self.rich.rich_print(
-                f"[red]⚠️  Database already has {table_count} tables, {migration_count} migrations in DB, and {migration_file_count} migration files![/red]",
+                f"[red]Database already has {table_count} tables, {migration_count} migrations in DB, and {migration_file_count} migration files![/red]",
             )
             self.rich.rich_print(
                 "[yellow]'db init' only works on completely empty databases with no migration files.[/yellow]",
@@ -260,8 +263,8 @@ class DatabaseCLI(BaseCLI):
             self.rich.rich_print("[blue]Applying initial migration...[/blue]")
             self._run_command(["uv", "run", "alembic", "upgrade", "head"])
 
-            self.rich.print_success("Database initialized with proper migrations!")
-            self.rich.rich_print("[green]✅ Ready for development![/green]")
+            self.rich.print_success("Database initialized with migrations")
+            self.rich.rich_print("[green]Ready for development[/green]")
 
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to initialize database")
@@ -297,7 +300,7 @@ class DatabaseCLI(BaseCLI):
         Exit
             If migration creation fails.
         """
-        self.rich.print_section("🚀 Development Workflow", "blue")
+        self.rich.print_section("Development Workflow", "blue")
 
         try:
             if create_only:
@@ -345,7 +348,7 @@ class DatabaseCLI(BaseCLI):
         Applies all pending migrations to bring the database up to date.
         Safe to run multiple times - only applies what's needed.
         """
-        self.rich.print_section("⬆Apply Migrations", "blue")
+        self.rich.print_section("Apply Migrations", "blue")
         self.rich.rich_print("[bold blue]Applying pending migrations...[/bold blue]")
 
         try:
@@ -426,7 +429,7 @@ class DatabaseCLI(BaseCLI):
                 self._run_command(["uv", "run", "alembic", "revision", "-m", message])
             self.rich.print_success(f"Migration generated: {message}")
             self.rich.rich_print(
-                "[yellow]💡 Review the migration file before applying![/yellow]",
+                "[yellow]Review the migration file before applying[/yellow]",
             )
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to generate migration")
@@ -505,7 +508,7 @@ class DatabaseCLI(BaseCLI):
         Shows all tables in the database with column counts and basic metadata.
         Useful for exploring database structure and verifying migrations.
         """
-        self._print_section_header("Database Tables", "📋")
+        self._print_section_header("Database Tables", "")
 
         async def _list_tables():
             """List all database tables with their metadata."""
@@ -602,7 +605,7 @@ class DatabaseCLI(BaseCLI):
     def schema(self) -> None:
         """Validate that database schema matches model definitions.
 
-        Performs a comprehensive check to ensure all tables and columns
+        Performs a check to ensure all tables and columns
         defined in the models exist in the database and are accessible.
         Useful for catching schema mismatches after code changes.
         """
@@ -667,7 +670,7 @@ class DatabaseCLI(BaseCLI):
         Identifies and displays currently running queries that may be
         causing performance issues or blocking operations.
         """
-        self.rich.print_section("⏱Query Analysis", "blue")
+        self.rich.print_section("Query Analysis", "blue")
         self.rich.rich_print(
             "[bold blue]Checking for long-running queries...[/bold blue]",
         )
@@ -772,7 +775,7 @@ class DatabaseCLI(BaseCLI):
             bool,
             Option(
                 "--fresh",
-                help="Also delete all migration files for complete fresh start",
+                help="Delete all migration files",
             ),
         ] = False,
         yes: Annotated[
@@ -780,29 +783,26 @@ class DatabaseCLI(BaseCLI):
             Option("--yes", "-y", help="Automatically answer 'yes' to all prompts"),
         ] = False,
     ) -> None:
-        """Nuclear reset: completely destroy the database.
+        """Complete database reset.
 
-        🚨 DANGER: This is extremely destructive!
+        WARNING: This operation is destructive and will permanently delete all data.
 
         This command will:
-        1. Drop ALL tables and alembic tracking
+        1. Drop all tables and alembic tracking
         2. Leave database completely empty
-        3. With --fresh: Also delete ALL migration files
+        3. With --fresh: Also delete all migration files
 
-        ⚠️  WARNING: This will DELETE ALL DATA permanently!
-        Only use this when you want to start completely from scratch.
-
-        After nuking, run 'db push' to recreate tables from existing migrations.
+        After reset, run 'db push' to recreate tables from existing migrations.
         With --fresh, run 'db init' to create new migrations from scratch.
 
         For normal development, use 'db reset' instead.
         """
-        self.rich.print_section("Nuclear Reset", "red")
+        self.rich.print_section("Complete Database Reset", "red")
         self.rich.rich_print(
-            "[bold red]DANGER: This will DELETE ALL DATA![/bold red]",
+            "[bold red]WARNING: This will DELETE ALL DATA[/bold red]",
         )
         self.rich.rich_print(
-            "[red]This is extremely destructive - only use when migrations are broken![/red]",
+            "[red]This operation is destructive. Use only when migrations are broken.[/red]",
         )
         self.rich.rich_print("")
         self.rich.rich_print("[yellow]This operation will:[/yellow]")
@@ -918,15 +918,15 @@ class DatabaseCLI(BaseCLI):
         uv run db downgrade base    # Rollback to initial empty state
         uv run db downgrade abc123  # Rollback to specific revision
 
-        ⚠️  WARNING: This can cause data loss if rolling back migrations
-        that added tables/columns. Always backup first!
+        WARNING: This can cause data loss if rolling back migrations
+        that added tables or columns. Always backup first.
         """
-        self.rich.print_section("⬇Downgrade Database", "yellow")
+        self.rich.print_section("Downgrade Database", "yellow")
         self.rich.rich_print(
             f"[bold yellow]Rolling back to revision: {revision}[/bold yellow]",
         )
         self.rich.rich_print(
-            "[yellow]This may cause data loss - backup your database first![/yellow]",
+            "[yellow]This may cause data loss. Backup your database first.[/yellow]",
         )
         self.rich.rich_print("")
 

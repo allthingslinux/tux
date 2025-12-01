@@ -32,7 +32,7 @@ tux/
 ├── scripts/                    # CLI scripts
 ├── tests/                      # Tests (unit/integration/e2e)
 ├── docs/                       # MkDocs documentation
-├── docker/                  # Docker related files
+├── docker/                     # Docker related files
 └── config/                     # Config examples
 ```
 
@@ -44,8 +44,9 @@ tux/
 - NumPy docstrings
 - Absolute imports preferred, relative imports allowed within the same module
 - Import grouping: stdlib → third-party → local
-- 120 char line length
+- 88 char line length
 - snake_case (functions/vars), PascalCase (classes), UPPER_CASE (constants)
+- Always add imports to the top of the file unless absolutely necessary
 
 **Quality checks:**
 

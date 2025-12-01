@@ -2,7 +2,7 @@
 """
 Development CLI Script.
 
-A unified interface for all development operations using the clean CLI infrastructure.
+Development tools and workflows.
 """
 
 import shutil
@@ -27,10 +27,10 @@ from scripts.registry import Command
 
 
 class DevCLI(BaseCLI):
-    """Development tools CLI with unified interface for all development operations.
+    """Development tools and workflows.
 
-    Provides comprehensive development tools including code quality checks,
-    formatting, type checking, documentation linting, and workflow automation.
+    Commands for code quality checks, formatting, type checking,
+    documentation linting, and workflow automation.
     """
 
     def __init__(self):
@@ -41,7 +41,7 @@ class DevCLI(BaseCLI):
         """
         super().__init__(
             name="dev",
-            description="Tux Development Tools CLI - A unified interface for all development operations",
+            description="Development tools",
         )
         self._setup_command_registry()
         self._setup_commands()
@@ -51,23 +51,22 @@ class DevCLI(BaseCLI):
         # All commands directly registered without groups
         all_commands = [
             # Code quality commands
-            Command("lint", self.lint, "Run linting with Ruff to check code quality"),
-            Command("lint-fix", self.lint_fix, "Run linting with Ruff and apply fixes"),
-            Command("format", self.format_code, "Format code with Ruff"),
-            Command("type-check", self.type_check, "Check types with basedpyright"),
+            Command("lint", self.lint, "Run linting checks"),
+            Command("lint-fix", self.lint_fix, "Run linting and apply fixes"),
+            Command("format", self.format_code, "Format code"),
+            Command("type-check", self.type_check, "Check types"),
             Command(
                 "lint-docstring",
                 self.lint_docstring,
-                "Lint docstrings with pydoclint",
+                "Lint docstrings",
             ),
             Command(
                 "docstring-coverage",
                 self.docstring_coverage,
-                "Check docstring coverage with docstr-coverage",
+                "Check docstring coverage",
             ),
-            # Workflow commands
             Command("pre-commit", self.pre_commit, "Run pre-commit checks"),
-            Command("clean", self.clean, "Clean temporary files and cache directories"),
+            Command("clean", self.clean, "Clean temporary files and cache"),
             Command("all", self.run_all_checks, "Run all development checks"),
         ]
 
@@ -139,12 +138,24 @@ class DevCLI(BaseCLI):
     # DEVELOPMENT COMMANDS
     # ============================================================================
 
-    def lint(self) -> None:
+    def lint(
+        self,
+        fix: Annotated[
+            bool,
+            Option("--fix", help="Automatically apply fixes"),
+        ] = False,
+    ) -> None:
         """Run linting checks with Ruff to ensure code quality."""
         self.rich.print_section("Running Linting", "blue")
         self.rich.print_info("Checking code quality with Ruff...")
+
+        cmd = ["uv", "run", "ruff", "check"]
+        if fix:
+            cmd.append("--fix")
+        cmd.append(".")
+
         success = self._run_tool_command(
-            ["uv", "run", "ruff", "check", "."],
+            cmd,
             "Linting completed successfully",
         )
         if not success:

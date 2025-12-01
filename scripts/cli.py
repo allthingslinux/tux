@@ -20,7 +20,7 @@ from scripts.db import DatabaseCLI
 from scripts.dev import DevCLI
 from scripts.docker_cli import DockerCLI
 from scripts.docs import DocsCLI
-from scripts.tests import TestCLI
+from scripts.test import TestCLI
 from scripts.tux import TuxCLI
 
 
@@ -53,37 +53,37 @@ def create_unified_cli() -> Typer:
     cli.add_typer(
         config_cli.app,
         name="config",
-        help="Configuration management and generation",
+        help="Configuration management",
     )
     cli.add_typer(
         db_cli.app,
         name="db",
-        help="Database operations and management",
+        help="Database operations",
     )
     cli.add_typer(
         dev_cli.app,
         name="dev",
-        help="Development tools and workflows",
+        help="Development tools",
     )
     cli.add_typer(
         docker_cli.app,
         name="docker",
-        help="Docker operations and management",
+        help="Docker operations",
     )
     cli.add_typer(
         docs_cli.app,
         name="docs",
-        help="Documentation operations and management",
+        help="Documentation operations",
     )
     cli.add_typer(
         test_cli.app,
         name="test",
-        help="Testing operations and management",
+        help="Testing operations",
     )
     cli.add_typer(
         tux_cli.app,
         name="tux",
-        help="Tux bot operations and management",
+        help="Bot operations",
     )
 
     return cli

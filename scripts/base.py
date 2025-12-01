@@ -41,7 +41,7 @@ class BaseCLI:
     console : Console
         Rich console for output formatting.
     rich : RichCLI
-        Rich CLI utilities for enhanced output.
+        Rich CLI utilities for formatted output.
     _command_registry : CommandRegistry
         Registry for managing CLI commands.
     """
