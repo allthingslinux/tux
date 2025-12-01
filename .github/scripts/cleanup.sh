@@ -42,11 +42,13 @@ setup_cleanup_params() {
       ;;
   esac
 
-  echo "keep_versions=$keep_versions" >> "$GITHUB_OUTPUT"
-  echo "remove_untagged=$remove_untagged" >> "$GITHUB_OUTPUT"
-  echo "clean_build_cache=$clean_build_cache" >> "$GITHUB_OUTPUT"
-  echo "cleanup_type=$cleanup_type" >> "$GITHUB_OUTPUT"
-  echo "dry_run=$dry_run_input" >> "$GITHUB_OUTPUT"
+  {
+    echo "keep_versions=$keep_versions"
+    echo "remove_untagged=$remove_untagged"
+    echo "clean_build_cache=$clean_build_cache"
+    echo "cleanup_type=$cleanup_type"
+    echo "dry_run=$dry_run_input"
+  } >> "$GITHUB_OUTPUT"
 }
 
 # Analyze Docker registry and output summary
@@ -54,6 +56,8 @@ registry_analysis() {
   local package_type="${1}"
   local package_name="${2}"
   local version_limit="${3}"
+  # registry_size_warning_gb is kept for API compatibility but not used in this function
+  # shellcheck disable=SC2034
   local registry_size_warning_gb="${4}"
 
   local size_bytes
@@ -157,6 +161,8 @@ cleanup_summary() {
   local remove_untagged="${3}"
   local clean_build_cache="${4}"
   local dry_run="${5}"
+  # default_keep_versions is kept for API compatibility but not used in this function
+  # shellcheck disable=SC2034
   local default_keep_versions="${6}"
   local build_cache_cleanup_days="${7}"
 

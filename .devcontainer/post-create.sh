@@ -10,7 +10,7 @@ if ! command -v uv > /dev/null 2>&1; then
     export PATH="$HOME/.cargo/bin:$PATH"
 
     # Add to bashrc for persistence
-    echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.bashrc
+    echo "export PATH=\"\$HOME/.cargo/bin:\$PATH\"" >> ~/.bashrc
 fi
 
 # Verify uv installation

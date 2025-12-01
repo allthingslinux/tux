@@ -60,19 +60,19 @@ validate_config() {
 start_bot_with_retry() {
     local attempts=0
 
-    while [ $attempts -lt $MAX_STARTUP_ATTEMPTS ]; do
+    while [ $attempts -lt "$MAX_STARTUP_ATTEMPTS" ]; do
         attempts=$((attempts + 1))
         echo "Starting Tux bot (attempt $attempts/$MAX_STARTUP_ATTEMPTS)..."
 
         # Validate configuration before starting
         if ! validate_config; then
             echo "Configuration validation failed"
-            if [ $attempts -ge $MAX_STARTUP_ATTEMPTS ]; then
+            if [ $attempts -ge "$MAX_STARTUP_ATTEMPTS" ]; then
                 echo "Maximum startup attempts reached. Exiting."
                 exit 1
       fi
             echo "Waiting ${STARTUP_DELAY}s before retry..."
-            sleep $STARTUP_DELAY
+            sleep "$STARTUP_DELAY"
             continue
     fi
 
@@ -82,12 +82,12 @@ start_bot_with_retry() {
             return 0
     else
             echo "Bot failed to start (exit code: $?)"
-            if [ $attempts -ge $MAX_STARTUP_ATTEMPTS ]; then
+            if [ $attempts -ge "$MAX_STARTUP_ATTEMPTS" ]; then
                 echo "Maximum startup attempts reached. Exiting."
                 exit 1
       fi
             echo "Waiting ${STARTUP_DELAY}s before retry..."
-            sleep $STARTUP_DELAY
+            sleep "$STARTUP_DELAY"
     fi
   done
 }

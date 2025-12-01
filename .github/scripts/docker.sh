@@ -4,6 +4,7 @@
 
 set -euo pipefail
 
+# shellcheck disable=SC2034
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Generate PR version for Docker builds
@@ -13,7 +14,8 @@ generate_pr_version() {
   local sha_prefix_length="${3:-7}"
 
   # Generate git describe format for PR builds to match VERSIONING.md expectations
-  local pr_version="pr-${pr_number}-$(echo "$sha" | cut -c1-${sha_prefix_length})"
+  local pr_version
+  pr_version="pr-${pr_number}-$(echo "$sha" | cut -c1-"${sha_prefix_length}")"
   echo "version=$pr_version" >> "$GITHUB_OUTPUT"
   echo "Generated PR version: $pr_version"
 }
