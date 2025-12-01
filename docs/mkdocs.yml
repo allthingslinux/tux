@@ -168,6 +168,7 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
   # Keys: Render keyboard shortcuts like ++ctrl+alt+del++
   - pymdownx.keys
   # Tabbed: Content tabs for grouping related content
@@ -536,7 +537,7 @@ plugins:
             # Prevents duplicate cross-references when documenting third-party code
             skip_local_inventory: true
   - api-autonav:
-      enabled: true
+      enabled: false
       modules: [../src/tux/]
       nav_section_title: API Reference
       api_root_uri: reference/src

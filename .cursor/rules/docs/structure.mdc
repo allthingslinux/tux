@@ -7,63 +7,69 @@ alwaysApply: false
 The documentation follows a role-based structure organized around user needs:
 
 - **Home**: Main landing page with overview
-- **FAQ**: Frequently asked questions with search and snippet search
 - **Getting Started**: Onboarding guides for different user types (users, admins, self-hosters, developers)
 - **User Guide**: Complete user experience with commands and features
 - **Admin Guide**: Server administration and configuration
 - **Self-Hoster Guide**: Installation, configuration, and management
 - **Developer Guide**: Complete development resources and best practices
 - **Reference**: Technical specifications, API docs, CLI, environment variables
+- **Support**: Support channels, troubleshooting guides, and help resources
 - **Changelog**: Version history and release notes
+- **FAQ**: Frequently asked questions (linked from footer)
+- **Tags**: Content tagging and categorization
 
-Navigation is handled by the `mkdocs-literate-nav` plugin using `SUMMARY.md` with wildcard patterns.
+Navigation is handled by the `mkdocs-literate-nav` plugin using `navigation.md` with wildcard patterns.
 
 ## Content Organization and Structure
 
 ### Directory Structure
 
-- **Source directory**: `content/` (all markdown source files)
-- **Build directory**: `site/` (MkDocs output, served by development server)
-- **Navigation file**: `content/SUMMARY.md` (literate navigation with wildcards)
-- **Home page**: `content/index.md` (main landing page)
-- **Includes**: `includes/` directory for shared content (abbreviations)
-- **Overrides**: `overrides/` directory for theme customizations
+- **Source directory**: `docs/content/` (all markdown source files)
+- **Build directory**: `docs/site/` (MkDocs output, served by development server)
+- **Navigation file**: `docs/content/navigation.md` (literate navigation with wildcards)
+- **Home page**: `docs/content/index.md` (main landing page)
+- **Includes**: `docs/includes/` directory for shared content (abbreviations)
+- **Overrides**: `docs/overrides/` directory for theme customizations
+- **Config file**: `docs/mkdocs.yml` (MkDocs configuration)
 
 ### Literate Navigation Organization
 
-Content follows a user-centric structure with Diátaxis principles and is organized using SUMMARY.md:
+Content follows a user-centric structure with Diátaxis principles and is organized using `navigation.md`:
 
 #### Core Sections
 
-- **`getting-started/`**: Onboarding guides for different user types
-- **`user/`**: Complete user guide with commands and features
-- **`admin/`**: Server administration, setup, configuration, and management
-- **`selfhost/`**: Self-hosting with installation, configuration, and management
-- **`developer/`**: Development resources, tutorials, guides, concepts, and best practices
-- **`reference/`**: Technical specifications, API docs, CLI, environment variables, troubleshooting
-- **`community/`**: Community resources, changelog, FAQ, support, and feedback
+- **`getting-started/`**: Onboarding guides for different user types (for-users.md, for-admins.md, for-self-hosters.md, for-developers.md)
+- **`user/`**: Complete user guide with commands (modules/) and features (features/)
+- **`admin/`**: Server administration with setup/ and config/ subdirectories
+- **`selfhost/`**: Self-hosting with install/, config/, and manage/ subdirectories
+- **`developer/`**: Development resources with tutorials/, guides/, concepts/, and best-practices/ subdirectories
+- **`reference/`**: Technical specifications, API docs (src/tux/), CLI, environment variables, coverage, SBOM
+- **`support/`**: Support channels and troubleshooting guides (troubleshooting/ subdirectory)
+- **Root level**: `changelog.md`, `faq.md`, `tags.md`, `navigation.md`
 
 #### Special Directories
 
-- **`assets/`**: Static files organized by type (images, stylesheets, javascript)
-- **`overrides/`**: MkDocs theme customizations (main.html, partials)
-- **`plugins/`**: Custom MkDocs plugins (tux plugin)
+- **`content/assets/`**: Static files organized by type (images/, stylesheets/, javascript/, known_words.txt)
+- **`overrides/`**: MkDocs theme customizations (main.html, home.html, partials/)
+- **`plugins/`**: Custom MkDocs plugins (mkdocs_auto_index/, mkdocs_sbom/, mkdocs_tux_plugin/)
 
 ### Automation Integration
 
-- **Auto-generated API docs**: `reference/src/` (mkdocstrings + api-autonav)
-- **Coverage reports**: `reference/coverage.md` (integrated test coverage)
-- **Snippet extraction**: `reference/snippet-search.md` (code snippet search)
-- **Social cards**: Auto-generated for all pages with custom backgrounds
-- **Spell checking**: Multi-backend spellcheck with custom word lists
-- **Custom plugins**: Tux plugin available for enhanced documentation features
+- **Auto-generated API docs**: `reference/src/tux/` (mkdocstrings + mkdocs-api-autonav)
+- **Coverage reports**: `reference/coverage.md` (integrated test coverage from htmlcov/)
+- **Listings search**: `reference/listings.md` (extract-listings plugin for code search)
+- **SBOM**: `reference/sbom.md` (mkdocs-sbom plugin for dependency listing)
+- **Social cards**: Auto-generated for all pages with custom backgrounds (mkdocs-social plugin)
+- **Spell checking**: Multi-backend spellcheck with custom word lists (`assets/known_words.txt`)
+- **Custom plugins**: Tux plugin, auto-index plugin, SBOM plugin
 
 ### File Naming Conventions
 
-- **Files**: `kebab-case.md` (e.g., `moderation-commands.md`, `bot-lifecycle.md`)
-- **Directories**: `kebab-case/` (e.g., `getting-started/`, `developer/`)
-- **Index files**: `index.md` in every directory (provides section overview)
-- **Assets**: Organized by type in subdirectories (`images/`, `stylesheets/`, `javascript/`)
+- **Files**: `kebab-case.md` (e.g., `moderation.md`, `first-run.md`, `bot-lifecycle.md`)
+- **Directories**: `kebab-case/` (e.g., `getting-started/`, `developer/`, `best-practices/`)
+- **Index files**: `index.md` in every directory (provides section overview, auto-indexed)
+- **Assets**: Organized by type in subdirectories (`assets/images/`, `assets/stylesheets/`, `assets/javascript/`)
+- **Special files**: `changelog.md`, `faq.md`, `tags.md`, `navigation.md` at root level
 
 ### Content Hierarchy
 
@@ -88,57 +94,68 @@ section-name/
 
 **With subdirectories** (admin, selfhost, developer):
 
-- `admin/setup/` → Inviting bot, initial config files
-- `admin/configuration/` → Bot settings, permissions, features, advanced config
-- `selfhost/install/` → Requirements, Docker, system setup, first run
-- `selfhost/config/` → Bot token, environment variables, database setup
-- `selfhost/manage/` → Monitoring, backups, updates, performance, security, logging, migrations
+- `admin/setup/` → Inviting bot, initial setup (index.md)
+- `admin/config/` → Bot settings, permissions, features (logs.md, roles.md, ranks.md, commands.md, jail.md)
+- `selfhost/install/` → Requirements, Docker, systemd, database, first run (index.md, docker.md, systemd.md, database.md, first-run.md)
+- `selfhost/config/` → Bot token, environment variables, database setup (bot-token.md, environment.md, database.md)
+- `selfhost/manage/` → Monitoring, backups, updates, operations (database.md, operations.md)
 - `developer/tutorials/` → Step-by-step development guides (wildcard: `developer/tutorials/*.md`)
-- `developer/concepts/` → Complex architectural topics with nested subdirectories (wildcard: `developer/concepts/*.md`)
-- `developer/best-practices/` → Code review, documentation, git workflow, CI/CD, testing
-- `reference/troubleshooting/` → User, admin, selfhost, developer specific issues
+- `developer/concepts/` → Complex architectural topics with nested subdirectories (wildcard: `developer/concepts/*/*.md`)
+- `developer/best-practices/` → Code review, documentation, git workflow, CI/CD, testing (includes sentry/ subdirectory)
+- `support/troubleshooting/` → User, admin, selfhost, developer specific issues (user.md, admin.md, selfhost.md, developer.md)
 
 **With nested subdirectories** (developer concepts):
 
-- `developer/concepts/core/` → Bot lifecycle, cog system, command system, permission system, configuration system, service layer, hot reload, error handling, logging
-- `developer/concepts/database/` → Database architecture, models, controllers, migrations, service layer, testing
-- `developer/concepts/ui/` → Buttons, embeds, modals, views
-- `developer/concepts/handlers/` → Hot reload system
-- `developer/concepts/services/` → Service layer architecture
-- `developer/concepts/wrappers/` → Service wrappers and utilities
-- `developer/concepts/tasks/` → Task monitor integration
+- `developer/concepts/core/` → Bot lifecycle, cog system, command system, permission system, plugins (app.md, bot.md, base-cog.md, cog-loader.md, lifecycle.md, modules.md, permission-system.md, plugins.md, logging.md, main.md)
+- `developer/concepts/database/` → Database architecture, models, controllers, migrations, service layer, testing (architecture.md, models.md, controllers.md, migrations.md, service.md, testing.md, utilities.md)
+- `developer/concepts/ui/` → Buttons, embeds, modals, views, components (buttons.md, embeds.md, modals.md, views.md, components.md)
+- `developer/concepts/handlers/` → Hot reload system (hot-reload.md)
+- `developer/concepts/services/` → Service layer architecture (index.md)
+- `developer/concepts/shared/` → Shared utilities and constants (index.md)
+- `developer/concepts/wrappers/` → Service wrappers and utilities (index.md)
+- `developer/concepts/tasks/` → Task monitor integration (task-monitor.md)
 
-**With standalone pages** (reference, community):
+**With standalone pages** (reference, root level):
 
 - `reference/cli.md` → CLI command reference
 - `reference/env.md` → Environment variables reference
-- `reference/coverage.md` → Test coverage report
+- `reference/coverage.md` → Test coverage report (auto-generated)
 - `reference/versioning.md` → Versioning and release information
-- `community/faq.md` → Frequently asked questions
-- `community/support.md` → Support and contact information
-- `community/feedback.md` → Community feedback and contribution
+- `reference/sbom.md` → Software Bill of Materials (auto-generated)
+- `reference/renovate.md` → Renovate bot configuration
+- `reference/listings.md` → Code listing search (auto-generated)
+- `reference/style-guide.md` → Documentation style guide
+- `reference/src/tux/` → Auto-generated API documentation (mkdocstrings)
+- `faq.md` → Frequently asked questions (root level)
+- `support/index.md` → Support and contact information
+- `changelog.md` → Version history and release notes (root level)
+- `tags.md` → Content tagging and categorization (root level)
 
 ### Adding New Content
 
 1. **Choose location**: Determine target audience and topic based on Diátaxis principles
-2. **Create structure**: Add `index.md` for new sections/subsections with implicit indexes
-3. **Update navigation**: Modify `content/SUMMARY.md` to include new pages using wildcards where appropriate
-4. **Add assets**: Place images in `content/assets/images/`, styles in `content/assets/stylesheets/`
+2. **Create structure**: Add `index.md` for new sections/subsections (auto-indexed by mkdocs-auto-index plugin)
+3. **Update navigation**: Modify `docs/content/navigation.md` to include new pages using wildcards where appropriate
+4. **Add assets**: Place images in `docs/content/assets/images/`, styles in `docs/content/assets/stylesheets/`
+5. **Follow naming**: Use kebab-case for files and directories
+6. **Add frontmatter**: Include title, description, and tags in YAML frontmatter
 
 ### Asset Organization
 
-- **Images**: `content/assets/images/` (logos, screenshots, diagrams with index pages)
-- **Stylesheets**: `content/assets/stylesheets/` (custom CSS with extra.css, material.css, mkdocstrings.css, pymdownx.css)
-- **JavaScript**: `content/assets/javascript/` (custom JS with extra.js)
-- **Known Words**: `content/assets/known_words.txt` (spellcheck dictionary)
+- **Images**: `docs/content/assets/images/` (logos, screenshots, diagrams - hero-bg.png, logo.png)
+- **Stylesheets**: `docs/content/assets/stylesheets/` (custom CSS: extra.css, material.css, mkdocstrings.css, pymdownx.css, coverage.css, home.css, reset.css, typography.css)
+- **JavaScript**: `docs/content/assets/javascript/` (custom JS: extra.js, coverage.js)
+- **Known Words**: `docs/content/assets/known_words.txt` (spellcheck dictionary)
 
 ### Navigation Structure
 
-Navigation is handled by the `mkdocs-literate-nav` plugin using `content/SUMMARY.md`:
+Navigation is handled by the `mkdocs-literate-nav` plugin using `docs/content/navigation.md`:
 
 - **Wildcard patterns**: `developer/tutorials/*.md` automatically includes all tutorial files
-- **Implicit indexes**: Automatic index page generation for directories without explicit index.md
+- **Implicit indexes**: Disabled (`implicit_index: false`) - explicit index.md files required
+- **Auto-index plugin**: `mkdocs-auto-index` plugin auto-generates index content below `<!-- AUTO_INDEX_START -->` markers
 - **Hierarchical structure**: Top-level sections with nested subsections
-- **User journey ordering**: Getting started → User → Admin → Self-host → Developer → Reference → Community
-- **Breadcrumb navigation**: Automatic breadcrumb trails with customizable delimiters
-- **Backlinks**: Digital garden-style linking between related pages
+- **User journey ordering**: Getting Started → User → Admin → Self-Host → Developer → Reference → Support → Changelog → Tags
+- **Breadcrumb navigation**: Automatic breadcrumb trails via navigation.path feature
+- **Backlinks**: Digital garden-style linking via mkdocs-backlinks plugin (currently disabled)
+- **Tab length**: 2 spaces for indentation in navigation.md

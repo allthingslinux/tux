@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
+from rich.console import Console
 from typer import Argument, Option  # type: ignore[attr-defined]
 
 # Add src to path
@@ -21,8 +22,8 @@ sys.path.insert(0, str(src_path))
 # Note: Logging is configured by pytest via conftest.py
 # No need to configure here as pytest will handle it
 
-from scripts.base import BaseCLI
-from scripts.registry import Command
+from scripts.base import BaseCLI, RichCLI
+from scripts.registry import Command, CommandRegistry
 
 
 class TestCLI(BaseCLI):
@@ -38,12 +39,18 @@ class TestCLI(BaseCLI):
         Sets up the CLI with test-specific commands and configures
         the command registry for pytest operations.
         """
-        super().__init__(
+        # Don't call super().__init__() because we need no_args_is_help=False
+        # Initialize BaseCLI components manually
+        # Create Typer app directly with no_args_is_help=False for callback support
+        self.app = typer.Typer(
             name="test",
-            description="Testing operations",
+            help="Testing operations",
+            rich_markup_mode="rich",
+            no_args_is_help=False,  # Allow callback to handle arguments
         )
-        # Override no_args_is_help to allow callback to handle arguments
-        self.app.no_args_is_help = False
+        self.console = Console()
+        self.rich = RichCLI()
+        self._command_registry = CommandRegistry()
         self._setup_command_registry()
         self._setup_commands()
         self._setup_default_command()
@@ -87,7 +94,7 @@ class TestCLI(BaseCLI):
         """Set up default command to handle test file paths."""
 
         @self.app.callback(invoke_without_command=True)
-        def default(
+        def _default_callback(  # pyright: ignore[reportUnusedFunction]
             ctx: typer.Context,
             test_paths: Annotated[
                 list[str] | None,

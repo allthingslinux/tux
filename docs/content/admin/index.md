@@ -2,6 +2,7 @@
 title: Admin Guide
 tags:
   - admin-guide
+icon: material/shield-outline
 ---
 
 # Admin Guide

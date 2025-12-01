@@ -2,7 +2,6 @@
 title: Navigation
 ---
 * [Home](./index.md)
-* [FAQ](./reference/faq.md)
 * [User Guide](./user/index.md)
   * [Features](./user/features/index.md)
     * user/features/*.md
@@ -65,6 +64,8 @@ title: Navigation
     * [CI/CD](./developer/best-practices/ci-cd.md)
     * [Async Patterns](./developer/best-practices/async.md)
     * [Error Handling](./developer/best-practices/error-handling.md)
+    * [Sentry](./developer/best-practices/sentry/index.md)
+      * developer/best-practices/sentry/*.md
     * [Logging](./developer/best-practices/logging.md)
     * [Caching](./developer/best-practices/caching.md)
     * [Code Review](./developer/best-practices/code-review.md)
@@ -93,3 +94,4 @@ title: Navigation
     * [Developer](./support/troubleshooting/developer.md)
 * [Changelog](./changelog.md)
 * [Tags](./tags.md)
+* [FAQ](./faq.md)

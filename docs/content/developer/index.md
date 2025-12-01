@@ -1,5 +1,6 @@
 ---
 title: Developer Guide
+icon: material/folder-search-outline
 tags:
   - developer-guide
 ---

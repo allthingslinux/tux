@@ -2,6 +2,7 @@
 title: Self-Hoster Guide
 tags:
   - selfhost
+icon: material/server-outline
 ---
 
 # Self-Hoster Guide

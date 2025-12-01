@@ -94,6 +94,8 @@ class DockerCLI(BaseCLI):
         """Set up the command registry with all Docker commands."""
         # All commands directly registered without groups
         all_commands = [
+            # Docker Compose passthrough (must be first to handle "docker compose" correctly)
+            Command("compose", self.compose, "Passthrough to docker compose command"),
             # Docker Compose commands
             Command("build", self.build, "Build Docker images"),
             Command("up", self.up, "Start Docker services"),
@@ -431,6 +433,37 @@ class DockerCLI(BaseCLI):
     # ============================================================================
     # DOCKER COMPOSE COMMANDS
     # ============================================================================
+
+    def compose(
+        self,
+        compose_args: Annotated[
+            list[str],
+            Argument(help="Arguments to pass to docker compose"),
+        ],
+    ) -> None:
+        """Passthrough to docker compose command.
+
+        This command allows you to use 'docker compose' directly, bypassing
+        the custom wrapper commands. Useful when you need to use docker compose
+        features not wrapped by this CLI.
+
+        Examples
+        --------
+            docker compose up -d
+            docker compose ps
+            docker compose logs -f tux
+            docker compose  # Shows docker compose help (if no args provided)
+        """
+        # Use system docker command to avoid conflicts with virtual env docker script
+        cmd = [self._get_docker_cmd(), "compose", "-f", "compose.yaml"]
+
+        # Add compose arguments (will be empty list if no args provided)
+        cmd.extend(compose_args)
+
+        try:
+            self._run_command(cmd)
+        except subprocess.CalledProcessError:
+            self.rich.print_error("Docker compose command failed")
 
     def build(
         self,

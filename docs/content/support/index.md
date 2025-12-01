@@ -1,5 +1,6 @@
 ---
 title: Support
+icon: material/chat-outline
 tags:
   - support
 ---

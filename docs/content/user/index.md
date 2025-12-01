@@ -4,6 +4,7 @@ hide:
   - toc
 tags:
   - user-guide
+icon: octicons/person-24
 ---
 
 # User Guide
