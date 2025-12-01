@@ -439,6 +439,11 @@ article > h5,
   }
 }
 
+/* Don't uppercase H5 headings. */
+.md-typeset h5 {
+  text-transform: none;
+}
+
 /* H6 Reset */
 h6,
 .md-typeset h6,
@@ -460,6 +465,8 @@ article > h6,
   margin-top: 0.6rem !important;
   margin-bottom: 0.4rem !important;
 }
+
+
 
 @media screen and (min-width: 100em) {
   h6,

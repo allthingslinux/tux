@@ -861,3 +861,8 @@ body[dir="rtl"] .md-contributors__label {
   text-decoration: none !important;
   border-radius: 0.25rem !important;
 }
+
+/* Add space above bold ToC entries. */
+.md-sidebar--secondary .md-nav__item:not(:first-child):has(strong) {
+  margin-top: 1rem;
+}

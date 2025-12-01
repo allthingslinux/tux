@@ -178,7 +178,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-#### Core Infrastructure
+Core Infrastructure
 
 * **Bot Framework**: Complete Discord bot built on discord.py with hybrid command support (slash and prefix commands)
 * **Hot Reload System**: File watching with watchdog for automatic cog reloading during development with dependency tracking
@@ -190,20 +190,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Type Converters**: Custom type converters for Discord entities
 * **Command Flags**: Flag-based command argument system
 
-#### Database System (Prisma-based)
+Database System (Prisma-based)
 
 * **Prisma Integration**: Database ORM using Prisma with PostgreSQL support
 * **Database Controllers**: Controller pattern with BaseController for centralized database management
 * **Database Models**: Guild, GuildConfig, Case, AFK, Reminder, Snippet, Levels, Starboard, StarboardMessage
 * **Database Client**: Singleton DatabaseClient for centralized database operations
 
-#### Permission System (Legacy)
+Permission System (Legacy)
 
 * **Hardcoded Permissions**: Permission system with hardcoded permission levels
 * **ConditionChecker**: Legacy permission checking system
 * **Role-Based Permissions**: Basic role-based permission checks
 
-#### Moderation System
+Moderation System
 
 * **Case Management**: Comprehensive case system with viewing, searching, and modification capabilities
 * **Ban/Kick**: Ban and kick commands with reason support
@@ -218,7 +218,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Snippet Ban/Unban**: Snippet restriction system
 * **Clear AFK**: Administrative AFK status clearing
 
-#### Utility Commands
+Utility Commands
 
 * **AFK System**: AFK status management with expiration times and automatic cleanup
 * **Self-Timeout**: User-initiated timeout command with confirmation dialogs
@@ -231,21 +231,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Wiki**: Wikipedia search integration
 * **Emoji Management**: Centralized emoji management system for application emojis
 
-#### Information Commands
+Information Commands
 
 * **Info**: Comprehensive information commands for Discord entities (members, channels, roles, emojis, guilds)
 * **Avatar**: User avatar display
 * **Member Count**: Server statistics (total members, humans, bots)
 * **Help System**: Enhanced help command with interactive UI components, navigation, and category organization
 
-#### Level System
+Level System
 
 * **XP and Levels**: User leveling system with XP tracking
 * **Level Commands**: Administrative commands for managing levels and XP
 * **Level Display**: User level information display
 * **Blacklist Functionality**: Ability to blacklist users from gaining XP
 
-#### Feature Modules
+Feature Modules
 
 * **Starboard**: Message starboard system with configurable thresholds
 * **Status Roles**: Automatic role assignment based on user status (March 23, 2025)
@@ -255,23 +255,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **InfluxDB Logger**: Metrics logging to InfluxDB (March 14, 2025)
 * **Event Handler**: Discord event handling system
 
-#### Tools
+Tools
 
 * **Code Execution**: Run code in multiple languages with Wandbox and Godbolt integration
 * **TLDR** (April 2024): Quick command documentation lookup
 * **XKCD** (June 2024): XKCD comic integration
 
-#### Fun Commands
+Fun Commands
 
 * **Random**: Random number and choice generation
 * **Cowsay**: ASCII art generation with customizable options
 
-#### Admin Commands
+Admin Commands
 
 * **Dev**: Development utilities including cog loading/unloading/reloading
 * **Eval**: Code evaluation with permission checks
 
-#### Plugins
+Plugins
 
 * **Role Count**: Role counting with emoji support
 * **TTY Roles**: Terminal/editor role management
@@ -279,7 +279,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Mail**: Mail system
 * **Mock**: Text mocking utility
 
-#### CLI Tools (Click-based)
+CLI Tools (Click-based)
 
 * **Click CLI**: Command-line interface built with Click (April 6, 2025)
 * **Semantic Versioning**: Dynamic version management utilities with build metadata generation
@@ -291,27 +291,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Documentation Commands**: `docs serve`, `docs build`
 * **Config Commands**: `config generate`
 
-#### Documentation
+Documentation
 
 * **MkDocs Material**: Initial documentation site setup with Material theme (July 31, 2024)
 
-#### Testing
+Testing
 
 * **Test Framework**: Comprehensive pytest setup with async support and coverage reporting
 * **Test Markers**: Unit, integration, slow, database, and async test markers
 * **Coverage Reporting**: Multiple coverage formats
 
-#### CI/CD
+CI/CD
 
 * **GitHub Actions**: CI/CD workflows for testing, linting, type checking, and Docker builds
 * **Pre-commit Hooks**: Automated code quality checks
 * **Docker Builds**: Multi-platform Docker builds
 
-#### Monitoring & Logging
+Monitoring & Logging
 
 * **Structured Logging**: Loguru-based structured logging with console output
 
-#### UI Components
+UI Components
 
 * **Embed System**: Comprehensive embed creation utilities with type-safe embed types
 * **Button Components**: Reusable button components
@@ -319,19 +319,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Modals**: Modal form system including report modals
 * **Views**: Interactive view system with confirmation dialogs and TLDR views
 
-#### HTTP & API Integration
+HTTP & API Integration
 
 * **HTTP Client**: Custom async HTTP client wrapper with retry logic and error handling
 * **API Wrappers**: Wrappers for GitHub, Godbolt, TLDR, Wandbox, and XKCD APIs
 
-#### Utilities
+Utilities
 
 * **Custom Exceptions**: Comprehensive exception hierarchy for error handling
 * **Version Management**: Dynamic version management using importlib.metadata
 * **Regex Patterns**: Common regex patterns for validation
 * **Shared Functions**: Utility functions for common operations
 
-#### Docker & Deployment
+Docker & Deployment
 
 * **Docker Compose**: Development environment with PostgreSQL and Adminer
 * **Adminer Integration**: Database administration interface with auto-login functionality

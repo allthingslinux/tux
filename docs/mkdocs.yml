@@ -129,11 +129,10 @@ markdown_extensions:
       permalink: true  # Add ¶ anchor links to headings on hover
   # PYMDOWNX EXTENSIONS (Python Markdown Extensions) ---------------
   # Snippets: Embed content from external files
-  # - pymdownx.snippets:
-  #     base_path: ['.']  # Base paths for snippet includes
-  #     check_paths: true  # Validate file paths exist
-  #     auto_append:  # Auto-include files in all docs
-  #       - docs/includes/abbreviations.md
+  - pymdownx.snippets:
+      base_path: [.]  # Base paths for snippet includes
+      # base_path: [!relative $config_dir]
+      check_paths: true  # Validate file paths exist
   # Highlight: Advanced syntax highlighting for code blocks
   - pymdownx.highlight:
       use_pygments: true  # Use Pygments for build-time highlighting
@@ -311,7 +310,7 @@ plugins:
       handlers:
         python:
           # Where to find your sources, see "Finding modules" in mkdocstrings docs
-          paths: [../src/tux]
+          paths: [../src/]
           # Pre-load modules for better cross-references to inherited members
           # Useful when classes inherit from external packages (discord.py, pydantic, etc.)
           preload_modules:
@@ -326,6 +325,7 @@ plugins:
           inventories:
             # Core Python standard library
             - url: https://docs.python.org/3/objects.inv
+              domains: [std, py]
             # Discord.py - primary Discord API library
             - url: https://discordpy.readthedocs.io/en/stable/objects.inv
             # Pydantic - data validation and parsing
@@ -370,10 +370,10 @@ plugins:
             - url: https://pytest-mock.readthedocs.io/en/latest/objects.inv
             # pytest-alembic - database migration testing
             - url: https://pytest-alembic.readthedocs.io/en/latest/objects.inv
+            # tux
+            - url: https://tux.atl.dev/objects.inv
           # Allow loading modules from external packages for cross-references
           load_external_modules: true
-          # Use custom Jinja2 templates for rendering API docs
-          custom_templates: overrides/python/material
           # Python handler options - see https://mkdocstrings.github.io/python/usage/configuration/general/
           options:
             # Griffe extensions for enhanced parsing - see https://mkdocstrings.github.io/griffe/extensions/
@@ -393,16 +393,18 @@ plugins:
               - griffe_warnings_deprecated
               # Modernize type annotations (PEP 585, 604, etc.)
               - griffe_modernized_annotations
+              - unpack_typeddict
             # CROSS-REFERENCES & NAVIGATION -------------------------------------------
             # Show backlinks to other documentation sections within each symbol
             # Creates breadcrumb trails showing where symbols are used
             backlinks: tree
             # Show base classes for inheritance hierarchy (alternative to diagrams)
-            show_bases: true
+            show_bases: false  # Disable bases when using inheritance diagrams
+            show_inheritance_diagram: false
             # GENERAL PARSING OPTIONS ------------------------------------------------
             # Allow inspecting modules when source code isn't available
             # Useful for compiled extensions but may include internal methods
-            allow_inspection: true
+            allow_inspection: false
             # Look for .pyi stub files alongside regular modules
             # Useful when documentation is provided separately from implementation
             find_stubs_package: true
@@ -429,7 +431,7 @@ plugins:
             show_symbol_type_toc: true  # Show type icons/emojis in table of contents
             # Navigation and organization settings
             show_root_toc_entry: true  # Include root symbol in TOC even if heading hidden
-            show_category_heading: true  # Show category headings when group_by_category=true
+            show_category_heading: false  # Disable category headings to reduce noise (optional)
             # MEMBER FILTERING & ORGANIZATION -------------------------------------
             # Filters for which members to include/exclude (empty = include all public)
             # Uses regex patterns: "!^_[^_]" excludes private/protected, keeps special methods
@@ -438,11 +440,10 @@ plugins:
             filters: []
             # Group members by category (Attributes, Classes, Functions, Modules)
             # Creates organized sections with headings for each member type
-            group_by_category: false
-            # Order members within categories (source/alphabetical/__all__)
-            # "source" = order as they appear in code, "alphabetical" = A-Z sorting
-            # "__all__" = order defined in module's __all__ attribute (Insiders only)
-            members_order: source
+            group_by_category: true  # Enable grouping for better organization
+            # Order members within categories by __all__ declaration, then source order
+            # This respects your explicit API declarations when available
+            members_order: [__all__, source]
             # Show auto-generated summary tables at the start of each symbol's docs
             # Can be boolean or dict to control summaries per member type:
             # summary: {attributes: true, functions: false, classes: true, modules: true}
@@ -462,8 +463,9 @@ plugins:
             docstring_style: numpy
             # Parser options for the chosen docstring style
             docstring_options:
-              # Don't discard first line of __init__ docstrings when merging into class
-              ignore_init_summary: false
+              # Discard first line of __init__ docstrings when merging into class
+              # Reduces duplication since class docstring usually covers initialization
+              ignore_init_summary: true
               # Remove doctest flags like +NORMALIZE_WHITESPACE from examples
               trim_doctest_flags: true
               # Allow multiple items in Returns section (numpy/google styles)
@@ -471,7 +473,7 @@ plugins:
             # How to render docstring sections: "table", "list", or "spacy"
             # "table" = traditional columns, "list" = RTD-style lists, "spacy" = wide tables
             # Lists work better for long content, tables for short descriptions
-            docstring_section_style: list
+            docstring_section_style: table
             # Merge __init__ method docstrings and parameters into parent class
             # Shows class signature like Class(param=default) and combines docstrings
             merge_init_into_class: true
@@ -481,9 +483,9 @@ plugins:
             # CONTROL WHICH DOCSTRING SECTIONS TO DISPLAY -------------------
             # All sections enabled for comprehensive API documentation
             show_docstring_attributes: true  # "Attributes:" section
-            show_docstring_functions: true  # "Functions:" section
-            show_docstring_classes: true  # "Classes:" section
-            show_docstring_modules: true  # "Modules:" section
+            show_docstring_functions: false  # "Functions:" section (redundant with members)
+            show_docstring_classes: false  # "Classes:" section (redundant with members)
+            show_docstring_modules: false  # "Modules:" section (redundant with members)
             show_docstring_description: true  # Main description text & admonitions
             show_docstring_examples: true  # "Examples:" section with code
             show_docstring_other_parameters: true  # "**Other Parameters:**" section
@@ -497,6 +499,8 @@ plugins:
             # Enable cross-references in function/method signatures (Insiders only)
             # Turns type hints into clickable links to documentation
             signature_crossrefs: true
+            relative_crossrefs: true
+            scoped_crossrefs: true
             # SIGNATURE FORMATTING --------------------------------------------------
             # How to display type annotation paths: "brief", "source", or "full"
             # "brief" (recommended): Shows only last component (Sequence[Path] vs typing.Sequence[pathlib.Path])
@@ -531,8 +535,8 @@ plugins:
             # Prevents duplicate cross-references when documenting third-party code
             skip_local_inventory: true
   - api-autonav:
-      enabled: false
-      modules: [../src/tux]
+      enabled: true
+      modules: [../src/tux/]
       nav_section_title: API Reference
       api_root_uri: reference/src
       nav_item_prefix: "<code class='doc-symbol doc-symbol-nav doc-symbol-module'></code> "
