@@ -130,8 +130,9 @@ markdown_extensions:
   # PYMDOWNX EXTENSIONS (Python Markdown Extensions) ---------------
   # Snippets: Embed content from external files
   - pymdownx.snippets:
-      base_path: [.]  # Base paths for snippet includes
-      # base_path: [!relative $config_dir]
+      base_path:
+        - !relative $config_dir  # Relative to docs/ directory
+        - !relative $config_dir/..  # Relative to project root (for CHANGELOG.md)
       check_paths: true  # Validate file paths exist
   # Highlight: Advanced syntax highlighting for code blocks
   - pymdownx.highlight:
