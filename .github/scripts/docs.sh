@@ -23,11 +23,11 @@ COMMAND="${1:-}"
 shift || true
 
 case "$COMMAND" in
-prepare-coverage)
-  prepare_coverage "$@"
-  ;;
-*)
-  echo "Usage: docs.sh {prepare-coverage} [args...]"
-  exit 1
-  ;;
+  prepare-coverage)
+    prepare_coverage "$@"
+    ;;
+  *)
+    echo "Usage: docs.sh {prepare-coverage} [args...]"
+    exit 1
+    ;;
 esac

@@ -18,13 +18,13 @@ determine_version() {
     version="${GITHUB_REF#refs/tags/}"
   fi
 
-  echo "version=$version" >>"$GITHUB_OUTPUT"
+  echo "version=$version" >> "$GITHUB_OUTPUT"
 
   # Check if this is a prerelease (contains alpha, beta, rc)
-  if [[ "$version" =~ (alpha|beta|rc) ]]; then
-    echo "is_prerelease=true" >>"$GITHUB_OUTPUT"
+  if [[ $version =~ (alpha|beta|rc)   ]]; then
+    echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
   else
-    echo "is_prerelease=false" >>"$GITHUB_OUTPUT"
+    echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
   fi
 
   echo "Release version: $version"
@@ -36,12 +36,12 @@ determine_version_and_branch() {
 
   # Strip 'v' prefix if present (semver format doesn't include it)
   local version_no_v="${version#v}"
-  echo "version_no_v=$version_no_v" >>"$GITHUB_OUTPUT"
+  echo "version_no_v=$version_no_v" >> "$GITHUB_OUTPUT"
 
   # Determine target branch for committing changelog
   # Try to find the default branch, fallback to common branch names
   local default_branch
-  default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "")
+  default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2> /dev/null | sed 's@^refs/remotes/origin/@@' || echo "")
 
   if [ -z "$default_branch" ]; then
     # Try common branch names
@@ -55,7 +55,7 @@ determine_version_and_branch() {
     fi
   fi
 
-  echo "branch=$default_branch" >>"$GITHUB_OUTPUT"
+  echo "branch=$default_branch" >> "$GITHUB_OUTPUT"
   echo "Version (no v): $version_no_v"
   echo "Target branch: $default_branch"
 
@@ -88,20 +88,20 @@ COMMAND="${1:-}"
 shift || true
 
 case "$COMMAND" in
-determine-version)
-  determine_version "$@"
-  ;;
-determine-version-and-branch)
-  determine_version_and_branch "$@"
-  ;;
-configure-git)
-  configure_git "$@"
-  ;;
-commit-changelog)
-  commit_changelog "$@"
-  ;;
-*)
-  echo "Usage: release.sh {determine-version|determine-version-and-branch|configure-git|commit-changelog} [args...]"
-  exit 1
-  ;;
+  determine-version)
+    determine_version "$@"
+    ;;
+  determine-version-and-branch)
+    determine_version_and_branch "$@"
+    ;;
+  configure-git)
+    configure_git "$@"
+    ;;
+  commit-changelog)
+    commit_changelog "$@"
+    ;;
+  *)
+    echo "Usage: release.sh {determine-version|determine-version-and-branch|configure-git|commit-changelog} [args...]"
+    exit 1
+    ;;
 esac

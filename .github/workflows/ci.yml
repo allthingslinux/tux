@@ -1,6 +1,8 @@
 ---
 name: CI
 on:
+  # Only trigger push on main and version branches to avoid duplicates with PR events
+  # PR events will handle all pull requests (including forks)
   push:
     branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
   pull_request:

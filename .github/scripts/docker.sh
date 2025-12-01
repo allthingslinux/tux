@@ -14,7 +14,7 @@ generate_pr_version() {
 
   # Generate git describe format for PR builds to match VERSIONING.md expectations
   local pr_version="pr-${pr_number}-$(echo "$sha" | cut -c1-${sha_prefix_length})"
-  echo "version=$pr_version" >>"$GITHUB_OUTPUT"
+  echo "version=$pr_version" >> "$GITHUB_OUTPUT"
   echo "Generated PR version: $pr_version"
 }
 
@@ -28,7 +28,7 @@ generate_release_version() {
   local tag_version="${github_ref#refs/tags/}"
   local clean_version="${tag_version#v}" # Remove 'v' prefix if present
   local release_version="$clean_version"
-  echo "version=$release_version" >>"$GITHUB_OUTPUT"
+  echo "version=$release_version" >> "$GITHUB_OUTPUT"
   echo "Generated release version: $release_version"
 }
 
@@ -36,14 +36,14 @@ COMMAND="${1:-}"
 shift || true
 
 case "$COMMAND" in
-generate-pr-version)
-  generate_pr_version "$@"
-  ;;
-generate-release-version)
-  generate_release_version "$@"
-  ;;
-*)
-  echo "Usage: docker.sh {generate-pr-version|generate-release-version} [args...]"
-  exit 1
-  ;;
+  generate-pr-version)
+    generate_pr_version "$@"
+    ;;
+  generate-release-version)
+    generate_release_version "$@"
+    ;;
+  *)
+    echo "Usage: docker.sh {generate-pr-version|generate-release-version} [args...]"
+    exit 1
+    ;;
 esac

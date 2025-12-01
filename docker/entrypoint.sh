@@ -29,10 +29,10 @@ except Exception:
         if [ $attempts -ge $max_attempts ]; then
             echo "Database connection timeout after $max_attempts attempts"
             exit 1
-        fi
+    fi
         echo "Database is unavailable - sleeping (attempt $attempts/$max_attempts)"
         sleep 2
-    done
+  done
     echo "Database is ready!"
 }
 
@@ -44,13 +44,13 @@ validate_config() {
     if [ -z "$BOT_TOKEN" ]; then
         echo "BOT_TOKEN is not set"
         return 1
-    fi
+  fi
 
     # Test configuration loading
     if ! python -c "import tux.shared.config.settings; print('Configuration loaded successfully')"; then
         echo "Failed to load configuration"
         return 1
-    fi
+  fi
 
     echo "Configuration validation passed"
     return 0
@@ -70,26 +70,26 @@ start_bot_with_retry() {
             if [ $attempts -ge $MAX_STARTUP_ATTEMPTS ]; then
                 echo "Maximum startup attempts reached. Exiting."
                 exit 1
-            fi
+      fi
             echo "Waiting ${STARTUP_DELAY}s before retry..."
             sleep $STARTUP_DELAY
             continue
-        fi
+    fi
 
         # Start the bot
         if exec tux start; then
             echo "Bot started successfully"
             return 0
-        else
+    else
             echo "Bot failed to start (exit code: $?)"
             if [ $attempts -ge $MAX_STARTUP_ATTEMPTS ]; then
                 echo "Maximum startup attempts reached. Exiting."
                 exit 1
-            fi
+      fi
             echo "Waiting ${STARTUP_DELAY}s before retry..."
             sleep $STARTUP_DELAY
-        fi
-    done
+    fi
+  done
 }
 
 # Signal handlers for graceful shutdown
@@ -101,9 +101,9 @@ cleanup() {
     # Kill any child processes
     if [ -n "$BOT_PID" ]; then
         echo "Stopping bot process (PID: $BOT_PID)..."
-        kill -TERM "$BOT_PID" 2>/dev/null || true
-        wait "$BOT_PID" 2>/dev/null || true
-    fi
+        kill -TERM "$BOT_PID" 2> /dev/null || true
+        wait "$BOT_PID" 2> /dev/null || true
+  fi
 
     echo "Cleanup complete"
     exit 0

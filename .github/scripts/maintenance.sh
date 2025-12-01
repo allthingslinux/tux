@@ -13,7 +13,7 @@ health_repository_summary() {
     echo "## Repository Health Check"
     echo "**Date**: $(date)"
     echo ""
-  } >>"$GITHUB_STEP_SUMMARY"
+  } >> "$GITHUB_STEP_SUMMARY"
 }
 
 # Check Docker registry size
@@ -25,7 +25,7 @@ registry_size_check() {
 
   # Get package info to check size
   local package_info
-  package_info=$(gh api "user/packages/container/$package_name" 2>/dev/null || echo '{"size_in_bytes": 0}')
+  package_info=$(gh api "user/packages/container/$package_name" 2> /dev/null || echo '{"size_in_bytes": 0}')
   local size_bytes
   size_bytes=$(echo "$package_info" | jq -r '.size_in_bytes // 0')
   local size_gb
@@ -36,7 +36,7 @@ registry_size_check() {
   {
     echo "size_gb=$size_gb"
     echo "size_warning=$size_warning"
-  } >>"$GITHUB_OUTPUT"
+  } >> "$GITHUB_OUTPUT"
 
   echo "Registry size: ${size_gb}GB"
 
@@ -55,11 +55,11 @@ clean_build_cache_images() {
 
   echo "Cleaning up build cache images..."
   # Delete build cache images older than specified days
-  gh api "user/packages/container/$package_name/versions" |
-    jq -r --arg cutoff "$(date -d "${days_old} days ago" -Iseconds)" \
-      '.[] | select(.name | contains("buildcache")) | select(.created_at < $cutoff) | .id' |
-    xargs -I {} gh api -X DELETE "user/packages/container/$package_name/versions/{}" ||
-    echo "No build cache images to clean"
+  gh api "user/packages/container/$package_name/versions" \
+                                                          | jq -r --arg cutoff "$(date -d "${days_old} days ago" -Iseconds)" \
+      '.[] | select(.name | contains("buildcache")) | select(.created_at < $cutoff) | .id' \
+                                                                                           | xargs -I {} gh api -X DELETE "user/packages/container/$package_name/versions/{}" \
+                                                                                     || echo "No build cache images to clean"
 }
 
 # Generate registry cleanup summary
@@ -79,7 +79,7 @@ registry_cleanup_summary() {
     else
       echo "- **Status**: Registry size is acceptable"
     fi
-  } >>"$GITHUB_STEP_SUMMARY"
+  } >> "$GITHUB_STEP_SUMMARY"
 }
 
 # Check for large files in repository
@@ -89,10 +89,10 @@ check_large_files() {
   {
     echo "### Large Files Check"
     echo "Checking for files larger than ${size_mb}MB..."
-  } >>"$GITHUB_STEP_SUMMARY"
+  } >> "$GITHUB_STEP_SUMMARY"
 
   local large_files
-  large_files=$(find . -type f -size +"${size_mb}M" -not -path "./.git/*" 2>/dev/null || echo "")
+  large_files=$(find . -type f -size +"${size_mb}M" -not -path "./.git/*" 2> /dev/null || echo "")
 
   if [ -n "$large_files" ]; then
     {
@@ -100,11 +100,11 @@ check_large_files() {
       echo '```'
       echo "$large_files"
       echo '```'
-    } >>"$GITHUB_STEP_SUMMARY"
+    } >> "$GITHUB_STEP_SUMMARY"
   else
-    echo "**No large files found**" >>"$GITHUB_STEP_SUMMARY"
+    echo "**No large files found**" >> "$GITHUB_STEP_SUMMARY"
   fi
-  echo "" >>"$GITHUB_STEP_SUMMARY"
+  echo "" >> "$GITHUB_STEP_SUMMARY"
 }
 
 # Check for outdated dependencies
@@ -112,20 +112,20 @@ check_dependencies() {
   {
     echo "### Dependencies Check"
     echo "Checking for outdated dependencies..."
-  } >>"$GITHUB_STEP_SUMMARY"
+  } >> "$GITHUB_STEP_SUMMARY"
 
-  if command -v uv >/dev/null 2>&1; then
+  if command -v uv > /dev/null 2>&1; then
     local outdated
-    outdated=$(uv outdated 2>/dev/null || echo "No outdated dependencies found")
+    outdated=$(uv outdated 2> /dev/null || echo "No outdated dependencies found")
     {
       echo '```'
       echo "$outdated"
       echo '```'
-    } >>"$GITHUB_STEP_SUMMARY"
+    } >> "$GITHUB_STEP_SUMMARY"
   else
-    echo "**uv not available for dependency check**" >>"$GITHUB_STEP_SUMMARY"
+    echo "**uv not available for dependency check**" >> "$GITHUB_STEP_SUMMARY"
   fi
-  echo "" >>"$GITHUB_STEP_SUMMARY"
+  echo "" >> "$GITHUB_STEP_SUMMARY"
 }
 
 # Check repository size
@@ -133,15 +133,15 @@ check_repository_size() {
   {
     echo "### Repository Size Analysis"
     local repo_size
-    repo_size=$(du -sh . 2>/dev/null | cut -f1 || echo "Unknown")
+    repo_size=$(du -sh . 2> /dev/null | cut -f1 || echo "Unknown")
     echo "**Repository Size**: $repo_size"
 
     # Check .git size
     local git_size
-    git_size=$(du -sh .git 2>/dev/null | cut -f1 || echo "Unknown")
+    git_size=$(du -sh .git 2> /dev/null | cut -f1 || echo "Unknown")
     echo "**Git History Size**: $git_size"
     echo ""
-  } >>"$GITHUB_STEP_SUMMARY"
+  } >> "$GITHUB_STEP_SUMMARY"
 }
 
 # Check stale branches
@@ -152,10 +152,10 @@ check_stale_branches() {
     echo "### Branch Analysis"
     echo "**Recent branches:**"
     echo '```'
-    git branch -r --sort=-committerdate | head -"$limit" 2>/dev/null || echo "Could not check branches"
+    git branch -r --sort=-committerdate | head -"$limit" 2> /dev/null || echo "Could not check branches"
     echo '```'
     echo ""
-  } >>"$GITHUB_STEP_SUMMARY"
+  } >> "$GITHUB_STEP_SUMMARY"
 }
 
 # Check container registry health
@@ -165,10 +165,10 @@ check_registry_health() {
 
   {
     echo "### Container Registry Health"
-    if command -v gh >/dev/null 2>&1; then
+    if command -v gh > /dev/null 2>&1; then
       # Get package info
       local package_info
-      package_info=$(gh api "user/packages/container/$package_name" 2>/dev/null || echo '{"size_in_bytes": 0, "version_count": 0}')
+      package_info=$(gh api "user/packages/container/$package_name" 2> /dev/null || echo '{"size_in_bytes": 0, "version_count": 0}')
       local size_bytes
       size_bytes=$(echo "$package_info" | jq -r '.size_in_bytes // 0')
       local version_count
@@ -189,7 +189,7 @@ check_registry_health() {
       echo "**GitHub CLI not available for registry check**"
     fi
     echo ""
-  } >>"$GITHUB_STEP_SUMMARY"
+  } >> "$GITHUB_STEP_SUMMARY"
 }
 
 # Check recent activity
@@ -201,48 +201,48 @@ check_recent_activity() {
     echo "### Recent Activity"
     echo "**Recent commits:**"
     echo '```'
-    git log --oneline --since="$since" | head -"$limit" 2>/dev/null || echo "Could not check recent commits"
+    git log --oneline --since="$since" | head -"$limit" 2> /dev/null || echo "Could not check recent commits"
     echo '```'
     echo ""
-  } >>"$GITHUB_STEP_SUMMARY"
+  } >> "$GITHUB_STEP_SUMMARY"
 }
 
 COMMAND="${1:-}"
 shift || true
 
 case "$COMMAND" in
-health-repository-summary)
-  health_repository_summary "$@"
-  ;;
-registry-size-check)
-  registry_size_check "$@"
-  ;;
-clean-build-cache-images)
-  clean_build_cache_images "$@"
-  ;;
-registry-cleanup-summary)
-  registry_cleanup_summary "$@"
-  ;;
-check-large-files)
-  check_large_files "$@"
-  ;;
-check-dependencies)
-  check_dependencies "$@"
-  ;;
-check-repository-size)
-  check_repository_size "$@"
-  ;;
-check-stale-branches)
-  check_stale_branches "$@"
-  ;;
-check-registry-health)
-  check_registry_health "$@"
-  ;;
-check-recent-activity)
-  check_recent_activity "$@"
-  ;;
-*)
-  echo "Usage: maintenance.sh {health-repository-summary|registry-size-check|clean-build-cache-images|registry-cleanup-summary|check-large-files|check-dependencies|check-repository-size|check-stale-branches|check-registry-health|check-recent-activity} [args...]"
-  exit 1
-  ;;
+  health-repository-summary)
+    health_repository_summary "$@"
+    ;;
+  registry-size-check)
+    registry_size_check "$@"
+    ;;
+  clean-build-cache-images)
+    clean_build_cache_images "$@"
+    ;;
+  registry-cleanup-summary)
+    registry_cleanup_summary "$@"
+    ;;
+  check-large-files)
+    check_large_files "$@"
+    ;;
+  check-dependencies)
+    check_dependencies "$@"
+    ;;
+  check-repository-size)
+    check_repository_size "$@"
+    ;;
+  check-stale-branches)
+    check_stale_branches "$@"
+    ;;
+  check-registry-health)
+    check_registry_health "$@"
+    ;;
+  check-recent-activity)
+    check_recent_activity "$@"
+    ;;
+  *)
+    echo "Usage: maintenance.sh {health-repository-summary|registry-size-check|clean-build-cache-images|registry-cleanup-summary|check-large-files|check-dependencies|check-repository-size|check-stale-branches|check-registry-health|check-recent-activity} [args...]"
+    exit 1
+    ;;
 esac

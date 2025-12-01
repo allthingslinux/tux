@@ -27,14 +27,14 @@ COMMAND="${1:-}"
 shift || true
 
 case "$COMMAND" in
-calculate-size-gb)
-  calculate_size_gb "$@"
-  ;;
-compare-size)
-  compare_size "$@"
-  ;;
-*)
-  echo "Usage: shared.sh {calculate-size-gb|compare-size} [args...]"
-  exit 1
-  ;;
+  calculate-size-gb)
+    calculate_size_gb "$@"
+    ;;
+  compare-size)
+    compare_size "$@"
+    ;;
+  *)
+    echo "Usage: shared.sh {calculate-size-gb|compare-size} [args...]"
+    exit 1
+    ;;
 esac
