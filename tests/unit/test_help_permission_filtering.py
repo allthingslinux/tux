@@ -5,6 +5,7 @@ Tests for the help command filtering based on user permissions.
 Commands should be hidden from users who don't have permission to use them.
 """
 
+from typing import Any
 import pytest
 from unittest.mock import MagicMock, AsyncMock, patch
 
@@ -27,7 +28,7 @@ class TestHelpPermissionFiltering:
         return bot
 
     @pytest.fixture
-    def mock_ctx(self) -> commands.Context:
+    def mock_ctx(self) -> commands.Context[Any]:
         """Create a mock command context."""
         ctx = MagicMock(spec=commands.Context)
         ctx.guild = MagicMock(spec=discord.Guild)
@@ -41,7 +42,7 @@ class TestHelpPermissionFiltering:
         return ctx
 
     @pytest.fixture
-    def mock_command(self) -> commands.Command:
+    def mock_command(self) -> commands.Command[Any, Any, Any]:
         """Create a mock command."""
         cmd = MagicMock(spec=commands.Command)
         cmd.name = "test_command"
@@ -57,8 +58,8 @@ class TestHelpPermissionFiltering:
     async def test_can_run_command_basic_checks(
         self,
         mock_bot: MagicMock,
-        mock_ctx: commands.Context,
-        mock_command: commands.Command,
+        mock_ctx: commands.Context[Any],
+        mock_command: commands.Command[Any, Any, Any],
     ) -> None:
         """Test basic command visibility checks."""
         help_data = HelpData(mock_bot, mock_ctx)
@@ -82,7 +83,7 @@ class TestHelpPermissionFiltering:
     async def test_can_run_command_dm_context(
         self,
         mock_bot: MagicMock,
-        mock_command: commands.Command,
+        mock_command: commands.Command[Any, Any, Any],
     ) -> None:
         """Test that all commands are visible in DM context."""
         # Create DM context (no guild)
@@ -102,7 +103,7 @@ class TestHelpPermissionFiltering:
     async def test_can_run_command_no_context(
         self,
         mock_bot: MagicMock,
-        mock_command: commands.Command,
+        mock_command: commands.Command[Any, Any, Any],
     ) -> None:
         """Test that commands are visible when no context is provided."""
         help_data = HelpData(mock_bot, None)
@@ -116,8 +117,8 @@ class TestHelpPermissionFiltering:
     async def test_can_run_command_restricted_for_non_owner(
         self,
         mock_bot: MagicMock,
-        mock_ctx: commands.Context,
-        mock_command: commands.Command,
+        mock_ctx: commands.Context[Any],
+        mock_command: commands.Command[Any, Any, Any],
     ) -> None:
         """Test that restricted commands are hidden from non-owners."""
         help_data = HelpData(mock_bot, mock_ctx)
@@ -134,8 +135,8 @@ class TestHelpPermissionFiltering:
     async def test_can_run_command_restricted_for_owner(
         self,
         mock_bot: MagicMock,
-        mock_ctx: commands.Context,
-        mock_command: commands.Command,
+        mock_ctx: commands.Context[Any],
+        mock_command: commands.Command[Any, Any, Any],
     ) -> None:
         """Test that restricted commands are visible to bot owner."""
         mock_ctx.author.id = 111111111  # Bot owner
@@ -153,8 +154,8 @@ class TestHelpPermissionFiltering:
     async def test_can_run_command_restricted_for_sysadmin(
         self,
         mock_bot: MagicMock,
-        mock_ctx: commands.Context,
-        mock_command: commands.Command,
+        mock_ctx: commands.Context[Any],
+        mock_command: commands.Command[Any, Any, Any],
     ) -> None:
         """Test that restricted commands are visible to sysadmin."""
         mock_ctx.author.id = 222222222  # Sysadmin
@@ -173,14 +174,14 @@ class TestHelpPermissionFiltering:
     async def test_can_run_command_permission_system(
         self,
         mock_bot: MagicMock,
-        mock_ctx: commands.Context,
-        mock_command: commands.Command,
+        mock_ctx: commands.Context[Any],
+        mock_command: commands.Command[Any, Any, Any],
     ) -> None:
         """Test that commands with permission system are filtered by rank."""
         help_data = HelpData(mock_bot, mock_ctx)
 
         # Mock command to use permission system
-        mock_command.callback.__uses_dynamic_permissions__ = True
+        mock_command.callback.__uses_dynamic_permissions__ = True  # type: ignore[attr-defined]
 
         # Mock permission system
         mock_perm_system = MagicMock()
@@ -198,14 +199,14 @@ class TestHelpPermissionFiltering:
     async def test_can_run_command_permission_rank_check(
         self,
         mock_bot: MagicMock,
-        mock_ctx: commands.Context,
-        mock_command: commands.Command,
+        mock_ctx: commands.Context[Any],
+        mock_command: commands.Command[Any, Any, Any],
     ) -> None:
         """Test permission rank checking for commands."""
         help_data = HelpData(mock_bot, mock_ctx)
 
         # Mock command to use permission system
-        mock_command.callback.__uses_dynamic_permissions__ = True
+        mock_command.callback.__uses_dynamic_permissions__ = True  # type: ignore[attr-defined]
 
         # Mock permission config - requires rank 3
         mock_cmd_perm = MagicMock()
@@ -235,18 +236,19 @@ class TestHelpPermissionFiltering:
     async def test_can_run_command_guild_owner_bypass(
         self,
         mock_bot: MagicMock,
-        mock_ctx: commands.Context,
-        mock_command: commands.Command,
+        mock_ctx: commands.Context[Any],
+        mock_command: commands.Command[Any, Any, Any],
     ) -> None:
         """Test that guild owner bypasses permission checks."""
         help_data = HelpData(mock_bot, mock_ctx)
 
         # Set user as guild owner
         mock_ctx.author.id = 222222222
-        mock_ctx.guild.owner_id = 222222222
+        if mock_ctx.guild is not None:
+            mock_ctx.guild.owner_id = 222222222
 
         # Mock command to use permission system
-        mock_command.callback.__uses_dynamic_permissions__ = True
+        mock_command.callback.__uses_dynamic_permissions__ = True  # type: ignore[attr-defined]
 
         # Mock permission config requiring rank 5
         mock_cmd_perm = MagicMock()
@@ -267,7 +269,7 @@ class TestHelpPermissionFiltering:
     async def test_get_command_categories_filters_commands(
         self,
         mock_bot: MagicMock,
-        mock_ctx: commands.Context,
+        mock_ctx: commands.Context[Any],
     ) -> None:
         """Test that get_command_categories filters commands by permissions."""
         # Create mock commands

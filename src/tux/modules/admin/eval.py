@@ -112,7 +112,7 @@ class Eval(BaseCog):
             )
             prefix = (
                 await self.bot.prefix_manager.get_prefix(ctx.guild.id)
-                if ctx.guild
+                if ctx.guild and self.bot.prefix_manager
                 else "$"
             )
             await ctx.send(

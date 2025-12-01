@@ -377,7 +377,7 @@ class TestModelQueries:
             assert top_guilds[2].case_count == 14
 
             # Test aggregation with raw SQL
-            result = await session.execute(text("SELECT COUNT(*) FROM guild"))  # type: ignore
+            result = await session.execute(text("SELECT COUNT(*) FROM guild"))
             count = result.scalar()
             assert count == 10
 

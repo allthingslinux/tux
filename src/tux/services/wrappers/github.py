@@ -103,6 +103,7 @@ class GithubService:
                 endpoint="repos.get",
                 not_found_resource=f"{CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER}/{CONFIG.EXTERNAL_SERVICES.GITHUB_REPO}",
             )
+            raise  # Always raises, but needed for type checker
 
         else:
             return repo
@@ -148,6 +149,7 @@ class GithubService:
                 service_name="GitHub",
                 endpoint="issues.create",
             )
+            raise  # Always raises, but needed for type checker
 
         else:
             return created_issue
@@ -198,6 +200,7 @@ class GithubService:
                 endpoint="issues.create_comment",
                 not_found_resource=f"Issue #{issue_number}",
             )
+            raise  # Always raises, but needed for type checker
 
         else:
             return created_issue_comment
@@ -244,6 +247,7 @@ class GithubService:
                 endpoint="issues.update",
                 not_found_resource=f"Issue #{issue_number}",
             )
+            raise  # Always raises, but needed for type checker
 
         else:
             return closed_issue
@@ -287,6 +291,7 @@ class GithubService:
                 endpoint="issues.get",
                 not_found_resource=f"Issue #{issue_number}",
             )
+            raise  # Always raises, but needed for type checker
 
         else:
             return issue
@@ -324,6 +329,7 @@ class GithubService:
                 service_name="GitHub",
                 endpoint="issues.list_for_repo",
             )
+            raise  # Always raises, but needed for type checker
 
         else:
             return open_issues
@@ -361,6 +367,7 @@ class GithubService:
                 service_name="GitHub",
                 endpoint="issues.list_for_repo",
             )
+            raise  # Always raises, but needed for type checker
 
         else:
             return closed_issues
@@ -398,6 +405,7 @@ class GithubService:
                 service_name="GitHub",
                 endpoint="pulls.list",
             )
+            raise  # Always raises, but needed for type checker
 
         else:
             return open_pulls
@@ -435,6 +443,7 @@ class GithubService:
                 service_name="GitHub",
                 endpoint="pulls.list",
             )
+            raise  # Always raises, but needed for type checker
 
         else:
             return closed_pulls
@@ -478,6 +487,7 @@ class GithubService:
                 endpoint="pulls.get",
                 not_found_resource=f"Pull Request #{pr_number}",
             )
+            raise  # Always raises, but needed for type checker
 
         else:
             return pull

@@ -441,19 +441,19 @@ def test_generate_toml_format() -> None:
     # Create a simple settings model
     # Built-in TOML generator expects JSON-encoded defaults
     fields = [
-        FieldInfoModel(  # type: ignore[call-arg,misc]  # type: ignore[call-arg]
+        FieldInfoModel(
             name="debug",
             types=["bool"],
             default="false",  # JSON boolean
             description="Enable debug mode",
         ),
-        FieldInfoModel(  # type: ignore[call-arg,misc]  # type: ignore[call-arg]
+        FieldInfoModel(
             name="port",
             types=["int"],
             default="8000",  # JSON number
             description="Server port",
         ),
-        FieldInfoModel(  # type: ignore[call-arg,misc]  # type: ignore[call-arg]
+        FieldInfoModel(
             name="name",
             types=["str"],
             default='"test"',  # JSON string
@@ -461,15 +461,15 @@ def test_generate_toml_format() -> None:
         ),
     ]
 
-    settings_info = SettingsInfoModel(  # type: ignore[call-arg]  # type: ignore[call-arg]
+    settings_info = SettingsInfoModel(
         name="TestSettings", docs="Test settings", fields=fields, child_settings=[],
     )
 
     # Generate TOML (suppress PSESettings warning about pyproject_toml_table_header)
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message=".*pyproject_toml_table_header.*")
-        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd(), respect_exclude=True)  # type: ignore[call-arg]
-    generator = TomlGenerator(pse_settings, TomlSettings(paths=[], comment_defaults=True))
+        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd(), respect_exclude=True)
+    generator = TomlGenerator(pse_settings, TomlSettings(paths=[], comment_defaults=True))  # type: ignore[call-arg]
     toml_output = generator.generate_single(settings_info)
 
     # Verify output contains commented field names and descriptions
@@ -492,13 +492,13 @@ def test_generate_yaml_format() -> None:
     from tux.shared.config.generators import YamlGenerator, YamlGeneratorSettings
 
     fields = [
-        FieldInfoModel(  # type: ignore[call-arg,misc]
+        FieldInfoModel(
             name="debug",
             types=["bool"],
             default="False",
             description="Enable debug mode",
         ),
-        FieldInfoModel(  # type: ignore[call-arg,misc]
+        FieldInfoModel(
             name="port",
             types=["int"],
             default="8000",
@@ -506,14 +506,14 @@ def test_generate_yaml_format() -> None:
         ),
     ]
 
-    settings_info = SettingsInfoModel(  # type: ignore[call-arg]
+    settings_info = SettingsInfoModel(
         name="TestSettings", docs="Test settings", fields=fields, child_settings=[],
     )
 
     # Generate YAML (suppress PSESettings warning)
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message=".*pyproject_toml_table_header.*")
-        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd(), respect_exclude=True)  # type: ignore[call-arg]
+        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd(), respect_exclude=True)
     generator = YamlGenerator(pse_settings, YamlGeneratorSettings(paths=[], include_comments=True))
     yaml_output = generator.generate_single(settings_info)
 
@@ -534,13 +534,13 @@ def test_generate_json_format() -> None:
     from tux.shared.config.generators import JsonGenerator, JsonGeneratorSettings
 
     fields = [
-        FieldInfoModel(  # type: ignore[call-arg,misc]
+        FieldInfoModel(
             name="debug",
             types=["bool"],
             default="False",
             description="Enable debug mode",
         ),
-        FieldInfoModel(  # type: ignore[call-arg,misc]
+        FieldInfoModel(
             name="port",
             types=["int"],
             default="8000",
@@ -548,14 +548,14 @@ def test_generate_json_format() -> None:
         ),
     ]
 
-    settings_info = SettingsInfoModel(  # type: ignore[call-arg]
+    settings_info = SettingsInfoModel(
         name="TestSettings", docs="Test settings", fields=fields, child_settings=[],
     )
 
     # Generate JSON (suppress PSESettings warning)
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message=".*pyproject_toml_table_header.*")
-        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd(), respect_exclude=True)  # type: ignore[call-arg]
+        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd(), respect_exclude=True)
     generator = JsonGenerator(pse_settings, JsonGeneratorSettings(paths=[], indent=2))
     json_output = generator.generate_single(settings_info)
 
@@ -577,23 +577,23 @@ def test_generate_with_nested_settings() -> None:
     # Create parent fields
     # Built-in TOML generator expects JSON-encoded defaults
     parent_fields = [
-        FieldInfoModel(  # type: ignore[call-arg,misc]
+        FieldInfoModel(
             name="debug", types=["bool"], default="false", description="Debug",        ),
     ]
 
     # Create child settings
     child_fields = [
-        FieldInfoModel(  # type: ignore[call-arg,misc]
+        FieldInfoModel(
             name="host", types=["str"], default='"localhost"', description="DB host",        ),
-        FieldInfoModel(  # type: ignore[call-arg,misc]
+        FieldInfoModel(
             name="port", types=["int"], default="5432", description="DB port",        ),
     ]
 
-    child_settings = SettingsInfoModel(  # type: ignore[call-arg]
+    child_settings = SettingsInfoModel(
         name="DatabaseConfig", docs="Database configuration", fields=child_fields, child_settings=[],
     )
 
-    settings_info = SettingsInfoModel(  # type: ignore[call-arg]
+    settings_info = SettingsInfoModel(
         name="AppSettings",
         docs="Application settings",
         fields=parent_fields,
@@ -603,20 +603,21 @@ def test_generate_with_nested_settings() -> None:
     # Generate TOML (suppress PSESettings warning)
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message=".*pyproject_toml_table_header.*")
-        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd(), respect_exclude=True)  # type: ignore[call-arg]
-    generator = TomlGenerator(pse_settings, TomlSettings(paths=[], comment_defaults=False))
+        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd(), respect_exclude=True)
+    generator = TomlGenerator(pse_settings, TomlSettings(paths=[], comment_defaults=False))  # type: ignore[call-arg]
     toml_output = generator.generate_single(settings_info)
 
     # Parse and verify nested structure
     parsed = tomllib.loads(toml_output)
     assert "debug" in parsed
-    # Built-in generator may use different section naming - check for nested structure
-    # It might use empty string key or the class name directly
-    nested_section = None
-    for key, value in parsed.items():
-        if isinstance(value, dict) and "host" in value:
-            nested_section = value
-            break
+    nested_section = next(
+        (
+            value
+            for _key, value in parsed.items()
+            if isinstance(value, dict) and "host" in value
+        ),
+        None,
+    )
     assert nested_section is not None, f"Expected nested section with 'host', got: {parsed}"
     assert "host" in nested_section
     assert "port" in nested_section

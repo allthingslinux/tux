@@ -210,7 +210,7 @@ def check_pytest_config() -> bool:
     print_header("Pytest Configuration")
 
     try:
-        import pytest  # type: ignore[reportMissingImports] # noqa: PLC0415
+        import pytest  # noqa: PLC0415
 
         version = getattr(pytest, "__version__", "unknown")
         print_success(f"pytest is installed: {version}")

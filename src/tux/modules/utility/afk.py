@@ -19,6 +19,7 @@ from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.database.models import AFK as AFKMODEL
 from tux.modules.utility import add_afk, del_afk
+from tux.shared.config import CONFIG
 from tux.shared.constants import (
     AFK_ALLOWED_MENTIONS,
     AFK_REASON_MAX_LENGTH,
@@ -213,7 +214,11 @@ class Afk(BaseCog):
 
         # Check if the message is a self-timeout command.
         # if it is, the member is probably trying to upgrade to a self-timeout, so AFK status should not be removed.
-        prefix = await self.bot.prefix_manager.get_prefix(message.guild.id)
+        prefix = (
+            await self.bot.prefix_manager.get_prefix(message.guild.id)
+            if self.bot.prefix_manager
+            else CONFIG.get_prefix()
+        )
         if message.content.startswith(f"{prefix}sto"):
             return
 

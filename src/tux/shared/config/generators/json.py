@@ -2,9 +2,11 @@
 
 Generates JSON configuration files from Pydantic settings models.
 """
+
 # ruff: noqa: PLR0911, PLR0912
 
 import ast
+import contextlib
 import json
 from pathlib import Path
 from typing import Any
@@ -13,7 +15,7 @@ from pydantic import BaseModel, Field
 from pydantic_settings_export.generators import (
     AbstractGenerator,  # type: ignore[import-untyped]
 )
-from pydantic_settings_export.models import (  # type: ignore[import-untyped]
+from pydantic_settings_export.models import (
     FieldInfoModel,
     SettingsInfoModel,
 )
@@ -32,7 +34,7 @@ class JsonGenerator(AbstractGenerator):  # type: ignore[type-arg]
     """Generate JSON configuration files."""
 
     name = "json"
-    config = JsonGeneratorSettings  # type: ignore[assignment]
+    config = JsonGeneratorSettings
 
     def generate_single(self, settings_info: SettingsInfoModel, level: int = 1) -> str:
         """Generate JSON format configuration.
@@ -50,19 +52,16 @@ class JsonGenerator(AbstractGenerator):  # type: ignore[type-arg]
             Generated JSON content
 
         """
-        # Build config dict
-        config: dict[str, Any] = {}
-
-        # Process top-level (non-nested) fields
-        for field in settings_info.fields:
-            config[field.name.lower()] = self._parse_value(field)
-
+        config: dict[str, Any] = {
+            field.name.lower(): self._parse_value(field)
+            for field in settings_info.fields
+        }
         # Process child settings (nested models) as nested dicts
         # Convert CamelCase class names to snake_case keys
         for child in settings_info.child_settings:
-            child_config: dict[str, Any] = {}
-            for field in child.fields:
-                child_config[field.name.lower()] = self._parse_value(field)
+            child_config: dict[str, Any] = {
+                field.name.lower(): self._parse_value(field) for field in child.fields
+            }
             # Convert class name (e.g. "ExternalServices") to snake_case (e.g. "external_services")
             section_name = camel_to_snake(child.name)
             config[section_name] = child_config
@@ -70,11 +69,12 @@ class JsonGenerator(AbstractGenerator):  # type: ignore[type-arg]
         # Convert to JSON with indentation
         return json.dumps(
             config,
-            indent=self.generator_config.indent,
+            indent=self.generator_config.indent,  # type: ignore[attr-defined]
             ensure_ascii=False,
-        )  # type: ignore[attr-defined]
+        )
 
     def _parse_value(self, field: FieldInfoModel) -> Any:
+        # sourcery skip: low-code-quality
         """Parse field value to appropriate Python type.
 
         Parameters
@@ -133,15 +133,10 @@ class JsonGenerator(AbstractGenerator):  # type: ignore[type-arg]
             if value.isdigit():
                 return int(value)
 
-            try:
-                # Try to parse as float
-                float_val = float(value)
+            with contextlib.suppress(ValueError):
                 # Only return as float if it has a decimal point
                 if "." in value:
-                    return float_val
-            except ValueError:
-                pass
-
+                    return float(value)
             # Handle list/dict literals
             if value.startswith("[") and value.endswith("]"):
                 try:

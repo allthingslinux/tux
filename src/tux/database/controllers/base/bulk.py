@@ -66,9 +66,9 @@ class BulkOperationsController[ModelT]:
             for record_id, values in updates:
                 stmt = (
                     update(self.model)
-                    .where(self.model.id == record_id)
+                    .where(self.model.id == record_id)  # type: ignore[attr-defined]
                     .values(**values)
-                )  # type: ignore[attr-defined]
+                )
                 await session.execute(stmt)
                 # In SQLAlchemy 2.0+, rowcount is not available. Count affected rows differently
                 updated_count += 1  # Assume each update affects 1 row if successful
@@ -168,9 +168,7 @@ class BulkOperationsController[ModelT]:
                     stmt = stmt.where(filter_expr)
 
                 result = await session.execute(stmt)
-                existing = result.scalars().first()
-
-                if existing:
+                if existing := result.scalars().first():
                     # Update existing record
                     if update_columns:
                         for col in update_columns:

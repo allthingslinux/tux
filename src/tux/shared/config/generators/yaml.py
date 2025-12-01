@@ -2,9 +2,11 @@
 
 Generates YAML configuration files from Pydantic settings models.
 """
+
 # ruff: noqa: PLR0911, PLR0912
 
 import ast
+import contextlib
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +15,7 @@ from pydantic import BaseModel, Field
 from pydantic_settings_export.generators import (
     AbstractGenerator,  # type: ignore[import-untyped]
 )
-from pydantic_settings_export.models import (  # type: ignore[import-untyped]
+from pydantic_settings_export.models import (
     FieldInfoModel,
     SettingsInfoModel,
 )
@@ -35,9 +37,10 @@ class YamlGenerator(AbstractGenerator):  # type: ignore[type-arg]
     """Generate YAML configuration files."""
 
     name = "yaml"
-    config = YamlGeneratorSettings  # type: ignore[assignment]
+    config = YamlGeneratorSettings
 
     def generate_single(self, settings_info: SettingsInfoModel, level: int = 1) -> str:
+        # sourcery skip: low-code-quality, merge-list-extend, move-assign-in-block
         """Generate YAML format configuration.
 
         Parameters
@@ -55,19 +58,16 @@ class YamlGenerator(AbstractGenerator):  # type: ignore[type-arg]
         """
         lines: list[str] = []
 
-        # Build config dict
-        config: dict[str, Any] = {}
-
-        # Process top-level (non-nested) fields
-        for field in settings_info.fields:
-            config[field.name.lower()] = self._parse_value(field)
-
+        config: dict[str, Any] = {
+            field.name.lower(): self._parse_value(field)
+            for field in settings_info.fields
+        }
         # Process child settings (nested models) as nested dicts
         # Convert CamelCase class names to snake_case keys
         for child in settings_info.child_settings:
-            child_config: dict[str, Any] = {}
-            for field in child.fields:
-                child_config[field.name.lower()] = self._parse_value(field)
+            child_config: dict[str, Any] = {
+                field.name.lower(): self._parse_value(field) for field in child.fields
+            }
             # Convert class name (e.g. "ExternalServices") to snake_case (e.g. "external_services")
             section_name = camel_to_snake(child.name)
             config[section_name] = child_config
@@ -91,10 +91,7 @@ class YamlGenerator(AbstractGenerator):  # type: ignore[type-arg]
             elif ":" in line:
                 # Check if this is a section header (ends with : and no value after)
                 stripped = line.strip()
-                if stripped.endswith(":") and not stripped.startswith("-"):
-                    # Section header - comment it out too for consistency
-                    result_lines.append(f"# {line}")
-                else:
+                if not stripped.endswith(":") or stripped.startswith("-"):
                     # Value line - add description and comment out
                     field_name = line.split(":")[0].strip()
 
@@ -113,8 +110,8 @@ class YamlGenerator(AbstractGenerator):  # type: ignore[type-arg]
                                         result_lines.append(f"# {field.description}")
                                     break
 
-                    # Comment out the value
-                    result_lines.append(f"# {line}")
+                # Section header - comment it out too for consistency
+                result_lines.append(f"# {line}")
             else:
                 result_lines.append(line)
 
@@ -123,6 +120,7 @@ class YamlGenerator(AbstractGenerator):  # type: ignore[type-arg]
         return "\n".join(lines)
 
     def _parse_value(self, field: FieldInfoModel) -> Any:
+        # sourcery skip: low-code-quality
         """Parse field value to appropriate Python type.
 
         Parameters
@@ -143,10 +141,7 @@ class YamlGenerator(AbstractGenerator):  # type: ignore[type-arg]
                 return {}
             if field.types and "bool" in field.types:
                 return False
-            if field.types and "int" in field.types:
-                return 0
-            return ""
-
+            return 0 if field.types and "int" in field.types else ""
         value = field.default
 
         # If value is a string representation from pydantic, try to parse it
@@ -175,15 +170,10 @@ class YamlGenerator(AbstractGenerator):  # type: ignore[type-arg]
             if value.isdigit():
                 return int(value)
 
-            try:
-                # Try to parse as float
-                float_val = float(value)
+            with contextlib.suppress(ValueError):
                 # Only return as float if it has a decimal point
                 if "." in value:
-                    return float_val
-            except ValueError:
-                pass
-
+                    return float(value)
             # Handle list/dict literals
             if value.startswith("[") and value.endswith("]"):
                 try:

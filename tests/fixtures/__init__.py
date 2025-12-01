@@ -10,9 +10,9 @@ Fixtures are automatically discovered by pytest when imported in conftest.py.
 
 # Import modules to register fixtures with pytest
 # These imports are for side effects (pytest fixture registration)
-from . import database_fixtures  # noqa: F401  # type: ignore[reportUnusedImport]
-from . import test_data_fixtures  # noqa: F401  # type: ignore[reportUnusedImport]
-from . import sentry_fixtures  # noqa: F401  # type: ignore[reportUnusedImport]
+from . import database_fixtures  # noqa: F401
+from . import test_data_fixtures  # noqa: F401
+from . import sentry_fixtures  # noqa: F401
 
 # Export test constants and utility functions
 from .test_data_fixtures import (

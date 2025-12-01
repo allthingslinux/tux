@@ -385,7 +385,7 @@ class CommunicationService:
         self,
         action: str,
         reason: str,
-        moderator: discord.User,
+        moderator: discord.User | discord.Member,
     ) -> discord.Embed:
         """
         Create a DM embed for moderation actions.

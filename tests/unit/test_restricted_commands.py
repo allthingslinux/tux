@@ -51,7 +51,7 @@ class TestRestrictedCommands:
         assert isinstance(RESTRICTED_COMMANDS, frozenset)
         # Attempting to add should raise AttributeError
         with pytest.raises(AttributeError):
-            RESTRICTED_COMMANDS.add("test")  # type: ignore[attr-defined]
+            RESTRICTED_COMMANDS.add("test")
 
     @pytest.mark.unit
     @pytest.mark.asyncio
