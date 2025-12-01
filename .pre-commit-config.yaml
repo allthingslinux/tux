@@ -30,7 +30,7 @@ repos:
     rev: v1.37.1
     hooks:
       - id: yamllint
-        exclude: docker-compose.*\.yml$
+        exclude: compose.*\.yaml$
         args: [-c=.yamllint.yml]
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.9
