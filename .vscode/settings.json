@@ -12,6 +12,24 @@
     },
     "editor.formatOnSave": true
   },
+  "[shellscript]": {
+    "editor.defaultFormatter": "mkhl.shfmt",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.shellcheck": "explicit"
+    }
+  },
+  "shfmt.executablePath": "",
+  "shfmt.executableArgs": [
+    "-ln", "bash",
+    "-i", "2",
+    "-ci",
+    "-bn",
+    "-sr",
+    "-kp",
+    "-s"
+  ],
+  "shfmt.formatIgnored": true,
   "python.languageServer": "None",
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python3",
   "python.terminal.activateEnvInCurrentTerminal": true,
@@ -147,5 +165,8 @@
     "editor.tabSize": 4,
     "files.trimTrailingWhitespace": true
   },
-  "autoDocstring.docstringFormat": "numpy"
+  "autoDocstring.docstringFormat": "numpy",
+  "shellcheck.enable": true,
+  "shellcheck.enableQuickFix": true,
+  "shellcheck.run": "onType"
 }

@@ -17,7 +17,9 @@
     "ms-azuretools.vscode-containers",
     "tamasfe.even-better-toml",
     "DavidAnson.vscode-markdownlint",
-    "ms-python.debugpy"
+    "ms-python.debugpy",
+    "timonwong.shellcheck",
+    "mkhl.shfmt"
   ],
   "unwantedRecommendations": [
     "ms-python.pylint",

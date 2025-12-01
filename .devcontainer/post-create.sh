@@ -10,7 +10,9 @@ if ! command -v uv > /dev/null 2>&1; then
     export PATH="$HOME/.cargo/bin:$PATH"
 
     # Add to bashrc for persistence
-    echo "export PATH=\"\$HOME/.cargo/bin:\$PATH\"" >> ~/.bashrc
+    # Use single quotes to write literal $HOME and $PATH (they'll expand when bashrc is sourced)
+    # shellcheck disable=SC2016
+    echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.bashrc
 fi
 
 # Verify uv installation

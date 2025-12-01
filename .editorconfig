@@ -40,8 +40,16 @@ indent_size = 8
 indent_size = 2
 
 # Shell scripts
+# shfmt configuration matches pre-commit hook: -ln bash -i 2 -ci -bn -sr -kp -s
 [*.{sh,bash,zsh,fish}]
+indent_style = space
 indent_size = 2
+# shfmt-specific properties (shfmt 3.8.0+)
+shell_variant = bash
+binary_next_line = true
+switch_case_indent = true
+space_redirects = true
+keep_padding = true
 
 # Nix files
 [*.nix]
