@@ -103,7 +103,7 @@ jobs:
       # CODEQL INITIALIZATION
       # Configures language-specific analysis parameters
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3
+        uses: github/codeql-action/init@497990dfed22177a82ba1bbab381bc8f6d27058f # v3
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
@@ -111,7 +111,7 @@ jobs:
       # SECURITY ANALYSIS EXECUTION
       # Performs comprehensive static analysis with categorized results
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3
+        uses: github/codeql-action/analyze@497990dfed22177a82ba1bbab381bc8f6d27058f # v3
         with:
           category: /language:${{matrix.language}}
 
