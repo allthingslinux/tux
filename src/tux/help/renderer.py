@@ -409,7 +409,9 @@ class HelpRenderer:
             truncated_desc = truncate_description(description)
             options.append(
                 SelectOption(
-                    label=cmd_name, value=cmd_name, description=truncated_desc
+                    label=cmd_name,
+                    value=cmd_name,
+                    description=truncated_desc,
                 ),
             )
 
