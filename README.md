@@ -3,6 +3,9 @@
 > [!NOTE]
 **Tux v0.1.0 is our first major release! If you encounter any issues or need support, please join our community server [on Discord](https://discord.gg/gpmSjcjQxg) for help and announcements.**
 
+<h1 align="center">Tux</h1>
+<h3 align="center">A Discord bot for the All Things Linux Discord server</h3>
+
 <div align="center">
     <p align="center">
         <!-- Latest Release & Tech Stack -->

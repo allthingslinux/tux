@@ -146,5 +146,6 @@
     "editor.defaultFormatter": "tamasfe.even-better-toml",
     "editor.tabSize": 4,
     "files.trimTrailingWhitespace": true
-  }
+  },
+  "autoDocstring.docstringFormat": "numpy"
 }
