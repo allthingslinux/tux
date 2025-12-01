@@ -1,16 +1,12 @@
-"""
-Command and Interaction Context Utilities.
+"""Command and interaction context utilities.
 
 This module provides helper functions to abstract and normalize the process of
 extracting contextual information from different types of command invocations
-in `discord.py`.
-
-The primary goal is to create a single, consistent dictionary format for context
-data, regardless of whether the command was triggered by a traditional prefix
-command (`commands.Context`) or a slash command (`discord.Interaction`).
-This standardized context is invaluable for logging, error reporting (e.g., to
-Sentry), and any other system that needs to operate on command data without
-worrying about the source type.
+in discord.py. Creates a single, consistent dictionary format for context data,
+regardless of whether the command was triggered by a traditional prefix command
+(commands.Context) or a slash command (discord.Interaction). This standardized
+context is used for logging, error reporting, and systems that need to operate
+on command data without worrying about the source type.
 """
 
 from __future__ import annotations
@@ -22,6 +18,8 @@ from discord.ext import commands
 
 # Type alias for a command context or an interaction.
 ContextOrInteraction = commands.Context[Any] | Interaction
+
+__all__ = ["get_interaction_context", "ContextOrInteraction"]
 
 
 def _get_interaction_details(source: Interaction) -> dict[str, Any]:
@@ -80,21 +78,20 @@ def get_interaction_context(source: ContextOrInteraction) -> dict[str, Any]:
     """
     Build a standardized dictionary of context from a command or interaction.
 
-    This is the main public function of the module. It takes either a
-    `commands.Context` or a `discord.Interaction` and returns a dictionary
-    with a consistent set of keys, abstracting away the differences between
-    the two source types.
+    Main public function of the module. Takes either a commands.Context or a
+    discord.Interaction and returns a dictionary with a consistent set of keys,
+    abstracting away the differences between the two source types.
 
     Parameters
     ----------
-    source : Context[Tux] | Interaction
-        The command `Context` or `Interaction` object.
+    source : ContextOrInteraction
+        The command Context or Interaction object.
 
     Returns
     -------
     dict[str, Any]
-        A dictionary with standardized context keys like `user_id`,
-        `command_name`, `guild_id`, `command_type`, etc.
+        A dictionary with standardized context keys like user_id, command_name,
+        guild_id, command_type, etc.
     """
     # Safely get the user/author attribute; fall back to None
     user = (

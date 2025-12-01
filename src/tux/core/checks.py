@@ -1,16 +1,13 @@
-"""
-Dynamic Permission System - Fully Database-Driven.
+"""Dynamic permission system with database-driven command access control.
 
-This module provides dynamic permission decorators with ZERO hardcoded opinions.
-All permission requirements are stored in the database and configured per-guild.
+This module provides permission decorators and system initialization functions
+for enforcing command-level permissions based on database configuration. All
+permission requirements are stored in the database and evaluated per-guild at
+runtime. Commands are denied by default if no explicit permission is configured.
 
-Usage:
-    @requires_command_permission()  # 100% dynamic, reads from database
-    async def ban(self, ctx, user): ...
-
-Configuration:
-    Guilds configure permissions via /config permission commands.
-    Without configuration, commands are denied by default (secure).
+The permission system is initialized during bot setup and provides decorators
+for command access control. Guild administrators configure permissions through
+the bot's configuration commands.
 """
 
 # Dynamic permission decorator

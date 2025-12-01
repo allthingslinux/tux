@@ -1,45 +1,8 @@
 """Flag converters for Discord bot commands.
 
 This module provides specialized flag converters for various moderation and utility
-commands, extending Discord.py's flag system with enhanced boolean handling and
+commands, extending discord.py's flag system with enhanced boolean handling and
 case-insensitive parsing.
-
-Classes
--------
-TuxFlagConverter
-    Enhanced flag converter with improved boolean flag handling.
-BanFlags
-    Flags for ban commands.
-TempBanFlags
-    Flags for temporary ban commands.
-UnbanFlags
-    Flags for unban commands.
-KickFlags
-    Flags for kick commands.
-WarnFlags
-    Flags for warn commands.
-TimeoutFlags
-    Flags for timeout commands.
-UntimeoutFlags
-    Flags for untimeout commands.
-JailFlags
-    Flags for jail commands.
-UnjailFlags
-    Flags for unjail commands.
-CasesViewFlags
-    Flags for viewing cases.
-CaseModifyFlags
-    Flags for modifying cases.
-SnippetBanFlags
-    Flags for snippet ban commands.
-SnippetUnbanFlags
-    Flags for snippet unban commands.
-PollBanFlags
-    Flags for poll ban commands.
-PollUnbanFlags
-    Flags for poll unban commands.
-TldrFlags
-    Flags for tldr commands.
 """
 
 import discord
@@ -50,26 +13,38 @@ from tux.core.converters import CaseTypeConverter, TimeConverter, convert_bool
 from tux.database.models import CaseType
 from tux.shared.constants import DEFAULT_REASON
 
+__all__ = [
+    # Base converter
+    "TuxFlagConverter",
+    # Moderation flags
+    "BanFlags",
+    "TempBanFlags",
+    "UnbanFlags",
+    "KickFlags",
+    "WarnFlags",
+    "TimeoutFlags",
+    "UntimeoutFlags",
+    "JailFlags",
+    "UnjailFlags",
+    # Case management flags
+    "CasesViewFlags",
+    "CaseModifyFlags",
+    # Snippet flags
+    "SnippetBanFlags",
+    "SnippetUnbanFlags",
+    # Poll flags
+    "PollBanFlags",
+    "PollUnbanFlags",
+    # Utility flags
+    "TldrFlags",
+]
+
 
 class TuxFlagConverter(commands.FlagConverter):
-    """A commands.FlagConverter but that supports Boolean flags with empty body.
+    """Enhanced flag converter with improved boolean flag handling.
 
-    Parameters
-    ----------
-    commands : commands.FlagConverter
-        The base flag converter.
-
-    Returns
-    -------
-    TuxFlagConverter
-        The Tux flag converter.
-
-    Raises
-    ------
-    commands.MissingFlagArgument
-        If a flag is missing.
-    commands.TooManyArguments
-        If too many arguments are passed.
+    Extends discord.py's FlagConverter to support boolean flags with empty body
+    (e.g., "-silent" becomes "-silent True"). Based on DuckBot's implementation.
 
     Notes
     -----
@@ -82,18 +57,18 @@ class TuxFlagConverter(commands.FlagConverter):
         argument: str,
         *,
         ignore_extra: bool = True,
-    ) -> dict[str, list[str]]:
+    ) -> dict[str, list[str]]:  # sourcery skip: low-code-quality
         """Parse command arguments into flags with enhanced boolean handling.
 
-        This method extends Discord.py's flag parsing to handle trailing boolean
-        flags without explicit values (e.g., "-silent" becomes "-silent True").
+        Extends discord.py's flag parsing to handle trailing boolean flags without
+        explicit values (e.g., "-silent" becomes "-silent True").
 
         Parameters
         ----------
         argument : str
             The raw argument string to parse.
         ignore_extra : bool, optional
-            Whether to ignore extra arguments that aren't flags. Default is True.
+            Whether to ignore extra arguments that aren't flags. Defaults to True.
 
         Returns
         -------
@@ -115,7 +90,7 @@ class TuxFlagConverter(commands.FlagConverter):
         last_flag: commands.Flag | None = None
 
         # Normalise: allow trailing boolean flags without a space (e.g. "-silent")
-        working_argument = argument if argument.endswith(" ") else argument + " "
+        working_argument = argument if argument.endswith(" ") else f"{argument} "
 
         case_insensitive = cls.__commands_flag_case_insensitive__
 
@@ -485,7 +460,11 @@ class CasesViewFlags(
     )
 
     def __init__(self, *args: object, **kwargs: object) -> None:
-        """Initialize CasesViewFlags with default values for None attributes."""
+        """Initialize CasesViewFlags with default values for None attributes.
+
+        Ensures type, user, and moderator attributes are set to None if not
+        provided during initialization.
+        """
         super().__init__(*args, **kwargs)
         if not hasattr(self, "type"):
             self.type = None
@@ -524,7 +503,7 @@ class CaseModifyFlags(
         default=None,
     )
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize CaseModifyFlags and validate that at least one field is provided.
 
         Raises
@@ -700,30 +679,3 @@ class TldrFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="
         aliases=["both"],
         default=False,
     )
-
-
-__all__ = [
-    # Base converter
-    "TuxFlagConverter",
-    # Moderation flags
-    "BanFlags",
-    "TempBanFlags",
-    "UnbanFlags",
-    "KickFlags",
-    "WarnFlags",
-    "TimeoutFlags",
-    "UntimeoutFlags",
-    "JailFlags",
-    "UnjailFlags",
-    # Case management flags
-    "CasesViewFlags",
-    "CaseModifyFlags",
-    # Snippet flags
-    "SnippetBanFlags",
-    "SnippetUnbanFlags",
-    # Poll flags
-    "PollBanFlags",
-    "PollUnbanFlags",
-    # Utility flags
-    "TldrFlags",
-]

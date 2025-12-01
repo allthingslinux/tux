@@ -1,21 +1,11 @@
-"""
-Dynamic Permission Decorators.
+"""Dynamic permission decorators with database-driven access control.
 
-This module provides fully dynamic, database-driven permission decorators
-that have NO hardcoded opinions about permission ranks or names.
-
-Architecture:
-    ALL commands use @requires_command_permission() with NO arguments.
-    The required permission rank is stored in the database per-guild.
-    Guilds MUST configure permissions before commands work (safe default).
-
-Recommended Usage:
-    @requires_command_permission()  # 100% dynamic, reads from database
-    async def ban(self, ctx, user): ...
-
-Configuration:
-    Admins use `/config permission command ban rank:3` to set requirements.
-    Without configuration, commands are DENIED by default (safe mode).
+This module provides database-driven permission decorators that read required
+permission ranks from the database per-guild. All commands use
+@requires_command_permission() with no arguments. The required permission rank
+is stored in the database per-guild. Guilds must configure permissions before
+commands work (safe default). Without configuration, commands are denied by
+default.
 """
 
 from __future__ import annotations
@@ -31,6 +21,8 @@ from loguru import logger
 from tux.core.permission_system import get_permission_system
 from tux.shared.config import CONFIG
 from tux.shared.exceptions import TuxPermissionDeniedError
+
+__all__ = ["requires_command_permission"]
 
 F = TypeVar("F", bound=Callable[..., Awaitable[Any]])
 
@@ -76,8 +68,8 @@ def requires_command_permission(
         async def wrapper(*args: Any, **kwargs: Any) -> Any:  # noqa: PLR0912
             """Check permissions and execute the decorated function if allowed.
 
-            This wrapper performs comprehensive permission checking including
-            bot owner bypass, guild owner bypass, and database-driven rank checking.
+            Performs comprehensive permission checking including bot owner bypass,
+            guild owner bypass, and database-driven rank checking.
 
             Parameters
             ----------
@@ -199,7 +191,8 @@ async def _get_user_rank_from_interaction(
     """
     Get user permission rank from an interaction (for app commands).
 
-    Uses Discord.py's built-in Context.from_interaction() to create a proper context.
+    Uses discord.py's built-in Context.from_interaction() to create a proper
+    context, then queries the permission system for the user's rank.
 
     Parameters
     ----------
@@ -224,9 +217,18 @@ def _extract_context_or_interaction(
     """
     Extract Discord context or interaction from function arguments.
 
+    Searches through positional arguments to find a commands.Context or
+    discord.Interaction instance. Handles hybrid commands that may have both.
+
+    Parameters
+    ----------
+    args : tuple[Any, ...]
+        The positional arguments to search through.
+
     Returns
     -------
-        Tuple of (context, interaction) - one will be None, the other populated
+    tuple[commands.Context[Any] | None, discord.Interaction[Any] | None]
+        Tuple of (context, interaction). One will be None, the other populated.
     """
     for arg in args:
         # Prefix commands use Context
@@ -246,8 +248,3 @@ def _extract_context_or_interaction(
             # Likely a context-like object
             return (cast(commands.Context[Any], arg), None)
     return (None, None)
-
-
-__all__ = [
-    "requires_command_permission",
-]

@@ -12,6 +12,8 @@ from tux.core.setup.base import BotSetupService
 if TYPE_CHECKING:
     from tux.core.bot import Tux
 
+__all__ = ["CogSetupService"]
+
 
 class CogSetupService(BotSetupService):
     """Handles cog loading and plugin setup during bot initialization."""

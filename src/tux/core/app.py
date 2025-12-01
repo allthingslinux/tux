@@ -1,7 +1,7 @@
 """
 Tux application entrypoint and lifecycle management.
 
-This module provides the orchestration necessary to run the Tux Discord bot,
+This module provides the orchestration necessary to run Tux,
 including command prefix resolution, signal handling, configuration validation,
 and structured startup/shutdown flows with Sentry integration.
 """
@@ -24,15 +24,16 @@ from tux.shared.config import CONFIG
 if TYPE_CHECKING:
     from tux.core.bot import Tux
 
+__all__ = ["TuxApp", "get_prefix"]
+
 
 async def get_prefix(bot: "Tux", message: discord.Message) -> list[str]:
     """
     Resolve the command prefix for a guild using the prefix manager.
 
-    This function uses the in-memory prefix cache for optimal performance,
-    falling back to the default prefix when the guild is unavailable. If
-    BOT_INFO__PREFIX is set in environment variables, all guilds will use
-    that prefix, ignoring database settings.
+    Uses in-memory prefix cache for optimal performance, falling back to
+    default prefix when guild is unavailable. Environment variable override
+    (BOT_INFO__PREFIX) takes priority over all other settings.
 
     Parameters
     ----------
@@ -45,13 +46,6 @@ async def get_prefix(bot: "Tux", message: discord.Message) -> list[str]:
     -------
     list[str]
         A list containing the resolved command prefix.
-
-    Notes
-    -----
-    Prefix resolution follows this priority order:
-    1. Environment variable override (BOT_INFO__PREFIX)
-    2. Guild-specific prefix from prefix manager cache
-    3. Default prefix from configuration
     """
     # Priority 1: Environment variable override for testing/development
     if CONFIG.is_prefix_override_enabled():
@@ -103,8 +97,6 @@ class TuxApp:
         """
         Initialize the application state.
 
-        Notes
-        -----
         The bot instance is not created until :meth:`start` to ensure the
         event loop and configuration are properly initialized.
         """
@@ -119,8 +111,8 @@ class TuxApp:
         """
         Run the Tux bot application.
 
-        This is the synchronous entrypoint typically invoked by the CLI.
-        Creates a new event loop, runs the bot, and handles shutdown gracefully.
+        Synchronous entrypoint typically invoked by the CLI. Creates a new
+        event loop, runs the bot, and handles shutdown gracefully.
 
         Returns
         -------
@@ -131,11 +123,6 @@ class TuxApp:
         ------
         RuntimeError
             If a critical application error occurs during startup.
-
-        Notes
-        -----
-        This method handles KeyboardInterrupt gracefully and ensures the
-        event loop is properly closed regardless of how the application exits.
         """
         try:
             # Create a fresh event loop for this application run
@@ -227,14 +214,13 @@ class TuxApp:
 
         # During setup, use traditional signal handlers that work with synchronous code
         def _signal_handler(signum: int, frame: FrameType | None) -> None:
-            """
-            Handle signals during setup - SIGINT causes immediate exit.
+            """Handle signals during setup - SIGINT causes immediate exit.
 
             Parameters
             ----------
             signum : int
                 The signal number received.
-            frame : FrameType, optional
+            frame : FrameType | None
                 The current stack frame when the signal was received.
             """
             # For SIGINT, exit immediately
@@ -290,13 +276,9 @@ class TuxApp:
         """
         Start the Tux bot with full lifecycle management.
 
-        This method orchestrates the complete bot startup sequence, including:
-
-        - Sentry initialization for error tracking
-        - Signal handler registration for graceful shutdown
-        - Configuration validation and owner ID resolution
-        - Bot instance creation and Discord connection
-        - Background task monitoring for shutdown events
+        Orchestrates the complete bot startup sequence: Sentry initialization,
+        signal handler registration, configuration validation, bot instance
+        creation, Discord connection, and background task monitoring.
 
         Returns
         -------
@@ -306,8 +288,8 @@ class TuxApp:
         Notes
         -----
         The bot is not created until this method is called to ensure proper
-        event loop and configuration initialization. This method will block
-        until the bot disconnects or a shutdown signal is received.
+        event loop and configuration initialization. Blocks until the bot
+        disconnects or a shutdown signal is received.
         """
         # Initialize error tracking and monitoring before anything else
         SentryManager.setup()
@@ -388,15 +370,13 @@ class TuxApp:
         """
         Resolve owner IDs based on configuration and eval permission settings.
 
+        If ALLOW_SYSADMINS_EVAL is enabled, sysadmin IDs are added to the
+        owner set, granting them eval command access.
+
         Returns
         -------
         set[int]
             Set of user IDs with owner-level permissions.
-
-        Notes
-        -----
-        If ALLOW_SYSADMINS_EVAL is enabled, sysadmin IDs are added to the
-        owner set, granting them eval command access.
         """
         # Start with the bot owner (always has owner permissions)
         owner_ids = {CONFIG.USER_IDS.BOT_OWNER_ID}
@@ -447,9 +427,7 @@ class TuxApp:
         """
         Wait for bot internal setup to complete before connecting.
 
-        Notes
-        -----
-        This ensures all database connections, caches, and internal services
+        Ensures all database connections, caches, and internal services
         are ready before attempting to connect to Discord.
         """
         logger.info("Waiting for bot setup to complete...")
@@ -470,14 +448,9 @@ class TuxApp:
         """
         Establish WebSocket connection to Discord gateway with reconnection support.
 
-        This method creates background tasks for the Discord connection and
-        shutdown monitoring, waiting for either to complete.
-
-        Notes
-        -----
-        The bot must already be logged in before calling this method.
-        Uses connect() call with auto-reconnect and proper task coordination
-        for graceful shutdown.
+        Creates background tasks for the Discord connection and shutdown
+        monitoring, waiting for either to complete. The bot must already be
+        logged in before calling this method.
         """
         if not self.bot:
             return
@@ -512,13 +485,9 @@ class TuxApp:
         """
         Monitor for shutdown signals while the bot is running.
 
-        This method creates and waits on a shutdown event that is set by
-        signal handlers when a termination signal is received.
-
-        Notes
-        -----
-        This task runs concurrently with the bot connection task and will
-        trigger shutdown when a signal is received.
+        Creates and waits on a shutdown event that is set by signal handlers
+        when a termination signal is received. Runs concurrently with the bot
+        connection task.
         """
         # Create an event flag that signal handlers can set
         self._shutdown_event = asyncio.Event()
@@ -532,18 +501,14 @@ class TuxApp:
         """
         Gracefully shut down the bot and flush telemetry.
 
-        This method ensures proper cleanup of all bot resources, including
-        closing the Discord connection and flushing any pending Sentry events.
+        Ensures proper cleanup of all bot resources, including closing the
+        Discord connection and flushing any pending Sentry events. Called
+        automatically in the finally block of :meth:`start`.
 
         Returns
         -------
         int
             Exit code: 130 if user requested shutdown, 0 otherwise.
-
-        Notes
-        -----
-        This method is called automatically in the finally block of :meth:`start`,
-        ensuring cleanup occurs regardless of how the application exits.
         """
         # Close the Discord WebSocket connection and cleanup bot resources
         # (database connections, HTTP sessions, background tasks, etc.)

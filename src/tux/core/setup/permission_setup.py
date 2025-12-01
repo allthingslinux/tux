@@ -12,6 +12,8 @@ if TYPE_CHECKING:
     from tux.core.bot import Tux
     from tux.database.service import DatabaseService
 
+__all__ = ["PermissionSetupService"]
+
 
 class PermissionSetupService(BotSetupService):
     """Handles permission system initialization during bot setup."""

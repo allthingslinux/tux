@@ -80,18 +80,16 @@ class Tux(commands.Bot):
         """
         Initialize the Tux bot and schedule async setup.
 
+        The actual bot setup happens asynchronously in the setup task to avoid
+        blocking initialization. The setup task is created after a brief delay
+        to ensure the event loop is ready.
+
         Parameters
         ----------
         *args : Any
             Positional arguments passed to discord.py's Bot.__init__.
         **kwargs : Any
             Keyword arguments passed to discord.py's Bot.__init__.
-
-        Notes
-        -----
-        The actual bot setup happens asynchronously in the setup task to avoid
-        blocking initialization. The setup task is created after a brief delay
-        to ensure the event loop is ready.
         """
         super().__init__(*args, **kwargs)
 
@@ -131,8 +129,6 @@ class Tux(commands.Bot):
         """
         Create the async setup task in the proper event loop context.
 
-        Notes
-        -----
         Called by ``call_soon`` to ensure we're in the event loop's execution
         context. Prevents ``RuntimeError`` when creating tasks too early.
         """
@@ -144,21 +140,15 @@ class Tux(commands.Bot):
         """
         Perform one-time bot setup and initialization.
 
-        This method delegates to BotSetupOrchestrator which handles:
-        - Database connection and validation
-        - Cog loading
-        - Cache initialization (prefixes, etc.)
-        - Background task startup
+        Delegates to BotSetupOrchestrator which handles database connection,
+        cog loading, cache initialization, and background task startup. Uses
+        lazy import of BotSetupOrchestrator to avoid circular dependencies.
+        All setup operations are traced with Sentry spans for monitoring.
 
         Raises
         ------
         RuntimeError
             If database setup fails (wrapped from connection errors).
-
-        Notes
-        -----
-        Uses lazy import of BotSetupOrchestrator to avoid circular dependencies.
-        All setup operations are traced with Sentry spans for monitoring.
         """
         try:
             with start_span("bot.setup", "Bot setup process") as span:
@@ -185,17 +175,14 @@ class Tux(commands.Bot):
         """
         Get the database coordinator for accessing database controllers.
 
+        Provides convenient access to database operations via controllers like
+        ``bot.db.guild_config.get_guild_config()``. The coordinator is cached
+        to avoid creating new instances on every access.
+
         Returns
         -------
         DatabaseCoordinator
             Coordinator providing access to all database controllers.
-
-        Notes
-        -----
-        This property provides convenient access to database operations via
-        controllers like ``bot.db.guild_config.get_guild_config()``.
-
-        The coordinator is cached to avoid creating new instances on every access.
         """
         if self._db_coordinator is None:
             self._db_coordinator = DatabaseCoordinator(self.db_service)
@@ -205,14 +192,9 @@ class Tux(commands.Bot):
         """
         Discord.py lifecycle hook called before connecting to Discord.
 
-        This hook initializes the emoji manager and checks setup task status.
-        It also schedules post-ready startup tasks.
-
-        Notes
-        -----
-        This is a discord.py callback that runs after __init__ but before
-        the bot connects to Discord. It's a good place for async initialization
-        that doesn't require being connected to Discord yet.
+        Initializes the emoji manager, checks setup task status, and schedules
+        post-ready startup tasks. This is a discord.py callback that runs after
+        __init__ but before the bot connects to Discord.
         """
         # Initialize emoji manager (loads custom emojis, etc.)
         if not self._emoji_manager_initialized:
@@ -246,19 +228,9 @@ class Tux(commands.Bot):
         """
         Execute post-ready startup tasks after bot is fully connected.
 
-        This method waits for both Discord READY and internal setup completion,
-        then performs final initialization steps like logging the banner,
-        instrumenting commands for Sentry, and recording bot statistics.
-
-        Notes
-        -----
-        Execution order:
-        1. Wait for Discord READY event
-        2. Wait for internal bot setup (database, cogs)
-        3. Record start time
-        4. Display startup banner
-        5. Instrument commands for Sentry tracing
-        6. Record initial bot statistics
+        Waits for both Discord READY and internal setup completion, then performs
+        final initialization: records start time, displays startup banner,
+        instruments commands for Sentry tracing, and records initial bot statistics.
         """
         # Wait for Discord connection and READY event
         await self.wait_until_ready()
@@ -292,16 +264,14 @@ class Tux(commands.Bot):
         """
         Get prefix cache statistics for monitoring.
 
+        Returns zero values if prefix manager is not initialized yet. Used for
+        monitoring cache hit rates and performance.
+
         Returns
         -------
         dict[str, int]
             Dictionary containing prefix cache metrics (cached_prefixes,
             cache_loaded, default_prefix).
-
-        Notes
-        -----
-        Returns zero values if prefix manager is not initialized yet.
-        Used for monitoring cache hit rates and performance.
         """
         if self.prefix_manager:
             return self.prefix_manager.get_cache_stats()
@@ -311,12 +281,9 @@ class Tux(commands.Bot):
         """
         Record basic bot statistics to Sentry context for monitoring.
 
-        Captures guild count, user count, channel count, and uptime.
-        This data is attached to all Sentry events for debugging context.
-
-        Notes
-        -----
-        Only records stats if Sentry is initialized. Safe to call repeatedly.
+        Captures guild count, user count, channel count, and uptime. This data
+        is attached to all Sentry events for debugging context. Only records
+        stats if Sentry is initialized. Safe to call repeatedly.
         """
         if not self.sentry_manager.is_initialized:
             return
@@ -335,13 +302,9 @@ class Tux(commands.Bot):
         """
         Discord.py event handler for disconnect events.
 
-        Called when the bot loses connection to Discord. This can happen due
-        to network issues, Discord outages, or intentional reconnection.
-
-        Notes
-        -----
-        Logs a warning and reports to Sentry for monitoring. Disconnects are
-        normal and discord.py will automatically attempt to reconnect.
+        Called when the bot loses connection to Discord. Logs a warning and
+        reports to Sentry for monitoring. Disconnects are normal and discord.py
+        will automatically attempt to reconnect.
         """
         logger.warning("Bot disconnected from Discord")
 
@@ -357,13 +320,9 @@ class Tux(commands.Bot):
         """
         Wait for the setup task to complete if still running.
 
-        If setup fails, triggers bot shutdown to prevent running in a
-        partially initialized state.
-
-        Notes
-        -----
-        Any exceptions from the setup task are logged and captured,
-        then the bot shuts down.
+        If setup fails, triggers bot shutdown to prevent running in a partially
+        initialized state. Any exceptions from the setup task are logged and
+        captured, then the bot shuts down.
         """
         if self.setup_task and not self.setup_task.done():
             with start_span("bot.wait_setup", "Waiting for setup to complete"):
@@ -383,15 +342,10 @@ class Tux(commands.Bot):
         """
         Gracefully shut down the bot and clean up all resources.
 
-        Performs shutdown in three phases:
-        1. Cancel setup task if still running
-        2. Clean up background tasks
-        3. Close Discord, database, and HTTP connections
-
-        Notes
-        -----
-        This method is idempotent - calling it multiple times is safe.
-        All phases are traced with Sentry for monitoring shutdown performance.
+        Performs shutdown in three phases: cancel setup task if still running,
+        clean up background tasks, and close Discord, database, and HTTP connections.
+        This method is idempotent - calling it multiple times is safe. All phases
+        are traced with Sentry for monitoring shutdown performance.
         """
         with start_transaction("bot.shutdown", "Bot shutdown process") as transaction:
             # Idempotent guard - prevent duplicate shutdown attempts
@@ -422,13 +376,9 @@ class Tux(commands.Bot):
         """
         Cancel and wait for the setup task if still running.
 
-        This prevents the setup task from continuing to run during shutdown,
-        which could cause errors or resource leaks.
-
-        Notes
-        -----
-        Cancellation is graceful - we suppress CancelledError and wait for
-        the task to fully terminate.
+        Prevents the setup task from continuing to run during shutdown, which
+        could cause errors or resource leaks. Cancellation is graceful - we
+        suppress CancelledError and wait for the task to fully terminate.
         """
         with start_span("bot.handle_setup_task", "Handling setup task during shutdown"):
             # Cancel startup task if it exists
@@ -459,18 +409,11 @@ class Tux(commands.Bot):
         """
         Close all external connections (Discord, database, HTTP client).
 
-        Each connection type is closed independently with error handling to
-        ensure one failure doesn't prevent others from closing properly.
-
-        Notes
-        -----
-        Closing order:
-        1. Discord gateway/WebSocket connection
-        2. Database connection pool
-        3. HTTP client session
-
-        All errors are logged and reported to Sentry but don't prevent
-        other resources from being cleaned up.
+        Each connection type is closed independently with error handling to ensure
+        one failure doesn't prevent others from closing properly. Closing order:
+        Discord gateway/WebSocket connection, database connection pool, then HTTP
+        client session. All errors are logged and reported to Sentry but don't
+        prevent other resources from being cleaned up.
         """
         with start_span("bot.close_connections", "Closing connections") as span:
             # Close Discord gateway connection
@@ -519,13 +462,9 @@ class Tux(commands.Bot):
         """
         Display the startup banner with bot information.
 
-        Creates and prints a formatted banner showing bot name, version,
-        guild count, user count, and configured prefix.
-
-        Notes
-        -----
-        This is called once after the bot is fully ready. The banner is
-        printed to stderr (console) for visibility in logs.
+        Creates and prints a formatted banner showing bot name, version, guild
+        count, user count, and configured prefix. Called once after the bot is
+        fully ready. The banner is printed to stderr (console) for visibility in logs.
         """
         with start_span("bot.log_banner", "Displaying startup banner"):
             banner = create_banner(

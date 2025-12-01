@@ -1,4 +1,4 @@
-"""Task monitoring and cleanup utilities for the Tux bot.
+"""Task monitoring and cleanup utilities for Tux.
 
 Encapsulates background task monitoring and shutdown cleanup routines.
 """
@@ -15,12 +15,20 @@ from loguru import logger
 from tux.services.sentry import capture_exception_safe
 from tux.services.sentry.tracing import start_span
 
+__all__ = ["TaskMonitor"]
+
 
 class TaskMonitor:
-    """Manage monitoring and cleanup of asyncio tasks for a bot instance."""
+    """
+    Manages monitoring and cleanup of asyncio tasks for a bot instance.
+
+    Provides periodic task monitoring and graceful shutdown cleanup routines
+    to prevent resource leaks and ensure proper task cancellation.
+    """
 
     def __init__(self, bot: Any) -> None:
-        """Initialize the task monitor.
+        """
+        Initialize the task monitor.
 
         Parameters
         ----------
@@ -37,13 +45,12 @@ class TaskMonitor:
         logger.debug("Task monitoring started")
 
     def stop(self) -> None:
-        """Stop the background task monitoring loop if running."""
+        """Stop the background task monitoring loop."""
         if self._monitor_loop.is_running():
             self._monitor_loop.stop()
 
     async def _monitor_tasks_loop_impl(self) -> None:
-        """
-        Monitor and clean up running tasks periodically.
+        """Monitor and clean up running tasks periodically.
 
         Raises
         ------
@@ -56,7 +63,9 @@ class TaskMonitor:
                     t for t in asyncio.all_tasks() if t is not asyncio.current_task()
                 ]
                 tasks_by_type = self._categorize_tasks(all_tasks)
+
                 await self._process_finished_tasks(tasks_by_type)
+
             except Exception as e:
                 logger.error(f"Task monitoring failed: {e}")
                 capture_exception_safe(e)
@@ -67,8 +76,7 @@ class TaskMonitor:
         self,
         tasks_list: list[asyncio.Task[Any]],
     ) -> dict[str, list[asyncio.Task[Any]]]:
-        """
-        Categorize tasks by type for monitoring and cleanup.
+        """Categorize tasks by type for monitoring and cleanup.
 
         Returns
         -------
@@ -122,12 +130,13 @@ class TaskMonitor:
                 tasks_by_type = self._categorize_tasks(all_tasks)
 
                 await self._cancel_tasks(tasks_by_type)
+
             except Exception as e:
                 logger.error(f"Error during task cleanup: {e}")
                 capture_exception_safe(e)
 
     async def _stop_task_loops(self) -> None:
-        """Stop all task loops in cogs as well as the monitor loop itself."""
+        """Stop all task loops in cogs and the monitor loop."""
         with start_span("bot.stop_task_loops", "Stopping task loops"):
             for cog_name in self.bot.cogs:
                 cog = self.bot.get_cog(cog_name)
@@ -139,6 +148,7 @@ class TaskMonitor:
                         try:
                             value.stop()
                             logger.debug(f"Stopped task loop {cog_name}.{name}")
+
                         except Exception as e:
                             logger.error(
                                 f"Error stopping task loop {cog_name}.{name}: {e}",
@@ -151,7 +161,7 @@ class TaskMonitor:
         self,
         tasks_by_type: dict[str, list[asyncio.Task[Any]]],
     ) -> None:
-        """Cancel tasks by category and await their completion."""
+        """Cancel tasks by category and await completion."""
         with start_span("bot.cancel_tasks", "Cancelling tasks by category") as span:
             for task_type, task_list in tasks_by_type.items():
                 if not task_list:
@@ -159,6 +169,7 @@ class TaskMonitor:
 
                 # Collect raw task names
                 task_names: list[str] = []
+
                 for t in task_list:
                     name = t.get_name() or "unnamed"
                     if name in ("None", "unnamed"):
@@ -172,6 +183,7 @@ class TaskMonitor:
                 # Build concise preview for logs: collapse duplicates, truncate, and limit count
                 seen: dict[str, int] = {}
                 order: list[str] = []
+
                 for n in task_names:
                     if n not in seen:
                         seen[n] = 0
@@ -186,7 +198,7 @@ class TaskMonitor:
                     s : str
                         The string to shorten.
                     max_len : int, optional
-                        Maximum length, by default 60.
+                        Maximum length. Defaults to 60.
 
                     Returns
                     -------
@@ -196,6 +208,7 @@ class TaskMonitor:
                     return s if len(s) <= max_len else f"{s[: max_len - 1]}…"
 
                 display_entries: list[str] = []
+
                 for n in order:
                     count = seen[n]
                     short = _shorten(n)
@@ -214,6 +227,7 @@ class TaskMonitor:
                     task.cancel()
 
                 results = await asyncio.gather(*task_list, return_exceptions=True)
+
                 for result in results:
                     if isinstance(result, Exception) and not isinstance(
                         result,
@@ -222,6 +236,3 @@ class TaskMonitor:
                         logger.error(
                             f"Exception during task cancellation for {task_type}: {result!r}",
                         )
-
-
-__all__ = ["TaskMonitor"]

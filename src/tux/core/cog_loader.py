@@ -1,13 +1,10 @@
-"""
-Dynamic cog loading system with priority-based ordering and telemetry.
+"""Dynamic cog loading system with priority-based ordering and telemetry.
 
-This module provides the CogLoader class, which handles discovery, validation,
-and loading of bot cogs (extensions) from the filesystem. It supports:
-- Priority-based loading order for dependency management
-- Concurrent loading within priority groups
-- Configuration error handling with graceful skipping
-- Performance monitoring and telemetry via Sentry
-- Follows discord.py's extension loading patterns and best practices
+This module provides the CogLoader class for discovery, validation, and loading
+of bot cogs (extensions) from the filesystem. Supports priority-based loading
+order for dependency management, concurrent loading within priority groups,
+configuration error handling with graceful skipping, and performance monitoring
+via Sentry. Follows discord.py's extension loading patterns.
 """
 
 import ast
@@ -34,13 +31,15 @@ from tux.shared.config import CONFIG
 from tux.shared.constants import COG_PRIORITIES, MILLISECONDS_PER_SECOND
 from tux.shared.exceptions import TuxCogLoadError, TuxConfigurationError
 
+__all__ = ["CogLoader"]
+
 
 class CogLoader(commands.Cog):
     """
     Dynamic cog loader with priority-based ordering and performance tracking.
 
-    This class manages the discovery, validation, and loading of bot cogs from
-    the filesystem. It ensures proper load order based on priorities, handles
+    Manages the discovery, validation, and loading of bot cogs from the
+    filesystem. Ensures proper load order based on priorities, handles
     configuration errors gracefully, and provides detailed telemetry.
 
     Attributes
@@ -53,15 +52,6 @@ class CogLoader(commands.Cog):
         Dictionary tracking load time for each cog (for performance monitoring).
     load_priorities : dict[str, int]
         Priority mapping for cog categories (higher = loads first).
-
-    Notes
-    -----
-    Loading order is critical for cogs with dependencies. Priority groups
-    include:
-    - handlers: Highest priority (event handlers, error handlers)
-    - services: High priority (core services)
-    - modules: Normal priority (bot commands and features)
-    - plugins: Lowest priority (user extensions)
     """
 
     def __init__(self, bot: commands.Bot) -> None:
@@ -88,11 +78,8 @@ class CogLoader(commands.Cog):
         """
         Check if a file is eligible for loading as a cog.
 
-        Validates that the file:
-        - Is not in the ignore list
-        - Is a Python file (.py extension)
-        - Doesn't start with underscore (private module convention)
-        - Is a regular file (not a directory or special file)
+        Validates that the file is not in the ignore list, is a Python file,
+        doesn't start with underscore, and contains a valid extension setup function.
 
         Parameters
         ----------
@@ -161,8 +148,9 @@ class CogLoader(commands.Cog):
         """
         Check if an exception is or contains a configuration error.
 
-        Walks the exception chain to detect TuxConfigurationError anywhere
-        in the cause/context chain.
+        Walks the exception chain to detect TuxConfigurationError anywhere in
+        the cause/context chain. Handles both explicit (__cause__) and implicit
+        (__context__) exception chaining.
 
         Parameters
         ----------
@@ -173,11 +161,6 @@ class CogLoader(commands.Cog):
         -------
         bool
             True if the exception chain contains a TuxConfigurationError.
-
-        Notes
-        -----
-        Handles both explicit (__cause__) and implicit (__context__) exception
-        chaining to catch config errors wrapped in other exception types.
         """
         current_exception = exception
 
@@ -195,17 +178,15 @@ class CogLoader(commands.Cog):
         """
         Log configuration error and mark cog as skipped in telemetry.
 
+        Provides consistent logging for configuration errors, ensuring users
+        receive clear guidance on how to enable the cog.
+
         Parameters
         ----------
         path : Path
             The path to the cog that was skipped.
         error : Exception
             The configuration error that caused the skip.
-
-        Notes
-        -----
-        This provides consistent logging for configuration errors, ensuring
-        users receive clear guidance on how to enable the cog.
         """
         module_name = str(path)
         set_span_attributes(
@@ -218,11 +199,11 @@ class CogLoader(commands.Cog):
             "To enable this cog, configure the required settings in your .env file",
         )
 
-    # ---------- Module Path Resolution ----------
-
     def _resolve_module_path(self, path: Path) -> str:
         """
         Convert a file path to a Python module path.
+
+        Strips the .py extension and converts path separators to dots.
 
         Parameters
         ----------
@@ -238,10 +219,6 @@ class CogLoader(commands.Cog):
         --------
         >>> loader._resolve_module_path(Path("tux/modules/admin/dev.py"))
         "tux.modules.admin.dev"
-
-        Notes
-        -----
-        Strips the .py extension and converts path separators to dots.
         """
         relative_path = path.relative_to(Path(__file__).parent.parent)
         return f"tux.{str(relative_path).replace('/', '.').replace('\\', '.')[:-3]}"
@@ -250,9 +227,10 @@ class CogLoader(commands.Cog):
         """
         Check if a module or its parent is already loaded.
 
-        This prevents duplicate loading of cogs and submodules. For example,
-        if "tux.modules.admin" is loaded, this will return True for
-        "tux.modules.admin.dev".
+        Prevents duplicate loading of cogs and submodules. For example, if
+        "tux.modules.admin" is loaded, this will return True for
+        "tux.modules.admin.dev". Checks all parent modules in the path
+        hierarchy to prevent conflicts with already-loaded extensions.
 
         Parameters
         ----------
@@ -263,11 +241,6 @@ class CogLoader(commands.Cog):
         -------
         bool
             True if the module or any parent module is already loaded.
-
-        Notes
-        -----
-        Checks all parent modules in the path hierarchy to prevent
-        conflicts with already-loaded extensions.
         """
         module_parts = module.split(".")
 
@@ -287,19 +260,15 @@ class CogLoader(commands.Cog):
 
         return False
 
-    # ---------- Cog Loading ----------
-
     @span("cog.load_single")
     async def _load_single_cog(self, path: Path) -> None:
         """
         Load a single cog with timing, error tracking, and telemetry.
 
-        This orchestrates the complete loading process:
-        1. Resolve module path from file path
-        2. Check for duplicate loading
-        3. Load the extension via discord.py
-        4. Record timing metrics and telemetry
-        5. Handle configuration errors gracefully
+        Orchestrates the complete loading process: resolves module path, checks
+        for duplicate loading, loads the extension via discord.py, records timing
+        metrics, and handles configuration errors gracefully. Configuration errors
+        are handled gracefully and logged as warnings rather than failures.
 
         Parameters
         ----------
@@ -310,11 +279,6 @@ class CogLoader(commands.Cog):
         ------
         TuxCogLoadError
             If the cog fails to load due to non-configuration errors.
-
-        Notes
-        -----
-        Configuration errors are handled gracefully and logged as warnings
-        rather than failures, allowing the bot to start with partial features.
         """
         start_time = time.perf_counter()
 
@@ -375,14 +339,14 @@ class CogLoader(commands.Cog):
             )
             raise TuxCogLoadError(error_msg) from e
 
-    # ---------- Priority & Grouping ----------
-
     def _get_cog_priority(self, path: Path) -> int:
         """
         Get the loading priority for a cog based on its parent directory category.
 
         Priority determines load order within the cog system. Cogs with higher
         priority values are loaded before cogs with lower priority values.
+        Priority is determined by the parent directory name, not the cog name.
+        Priorities are configured in COG_PRIORITIES constant.
 
         Parameters
         ----------
@@ -393,18 +357,6 @@ class CogLoader(commands.Cog):
         -------
         int
             The priority value (higher = loaded earlier), defaults to 0.
-
-        Examples
-        --------
-        >>> loader._get_cog_priority(Path("tux/services/handlers/error.py"))
-        100  # handlers have highest priority
-        >>> loader._get_cog_priority(Path("tux/modules/admin/ban.py"))
-        50   # modules have normal priority
-
-        Notes
-        -----
-        Priority is determined by the parent directory name, not the cog name.
-        Priorities are configured in COG_PRIORITIES constant.
         """
         return self.load_priorities.get(path.parent.name, 0)
 
@@ -414,18 +366,14 @@ class CogLoader(commands.Cog):
         Load a group of cogs concurrently with telemetry and error tracking.
 
         Cogs within the same priority group are loaded in parallel for faster
-        startup times. Configuration errors are handled gracefully by returning
-        None and don't count as failures.
+        startup times. Configuration errors are handled gracefully and don't
+        count as failures. Uses asyncio.gather with return_exceptions=True to
+        ensure one cog's failure doesn't prevent others from loading.
 
         Parameters
         ----------
         cogs : Sequence[Path]
             The sequence of cog paths to load concurrently.
-
-        Notes
-        -----
-        Uses asyncio.gather with return_exceptions=True to ensure one cog's
-        failure doesn't prevent others from loading.
         """
         if not cogs:
             return
@@ -467,14 +415,16 @@ class CogLoader(commands.Cog):
             if isinstance(result, Exception):
                 logger.error(f"Error loading {cog}: {result}")
 
-    # ---------- Directory Processing ----------
-
     async def _discover_and_prioritize_cogs(
         self,
         directory: Path,
     ) -> list[tuple[int, Path]]:
         """
         Discover eligible cogs in a directory and assign priorities.
+
+        Recursively searches the directory for Python files, validates each as
+        an eligible cog, assigns priorities based on parent directory, and
+        sorts by priority for sequential loading.
 
         Parameters
         ----------
@@ -485,12 +435,6 @@ class CogLoader(commands.Cog):
         -------
         list[tuple[int, Path]]
             List of (priority, path) tuples sorted by priority (highest first).
-
-        Notes
-        -----
-        This method recursively searches the directory for Python files,
-        validates each as an eligible cog, assigns priorities based on
-        parent directory, and sorts by priority for sequential loading.
         """
         # Recursively find all Python files in directory
         all_py_files = list(directory.rglob("*.py"))
@@ -511,15 +455,13 @@ class CogLoader(commands.Cog):
         """
         Record the priority distribution of cogs for telemetry.
 
+        Counts how many cogs exist at each priority level and records this in
+        Sentry for monitoring load order distribution.
+
         Parameters
         ----------
         cog_paths : list[tuple[int, Path]]
             List of (priority, path) tuples to analyze.
-
-        Notes
-        -----
-        Counts how many cogs exist at each priority level and records
-        this in Sentry for monitoring load order distribution.
         """
         priority_groups: dict[int, int] = {}
         for priority, _ in cog_paths:
@@ -530,18 +472,15 @@ class CogLoader(commands.Cog):
         """
         Load cogs sequentially by priority group.
 
-        Cogs are grouped by priority and each group is loaded before moving
-        to the next lower priority. Within each group, cogs load concurrently.
+        Cogs are grouped by priority and each group is loaded before moving to
+        the next lower priority. Within each group, cogs load concurrently.
+        Ensures that high-priority cogs (handlers, services) are fully loaded
+        before lower-priority cogs (modules, plugins) start loading.
 
         Parameters
         ----------
         cog_paths : list[tuple[int, Path]]
             Sorted list of (priority, path) tuples (highest priority first).
-
-        Notes
-        -----
-        This ensures that high-priority cogs (handlers, services) are fully
-        loaded before lower-priority cogs (modules, plugins) start loading.
         """
         current_group: list[Path] = []
         current_priority: int | None = None
@@ -563,14 +502,12 @@ class CogLoader(commands.Cog):
         """
         Process a single file for loading (non-directory path).
 
+        Checks eligibility before attempting to load the file as a cog.
+
         Parameters
         ----------
         path : Path
             The file path to process.
-
-        Notes
-        -----
-        Checks eligibility before attempting to load the file as a cog.
         """
         set_span_attributes({"path.is_dir": False})
         if await self.is_cog_eligible(path):
@@ -580,24 +517,15 @@ class CogLoader(commands.Cog):
         """
         Process a directory of cogs with priority-based loading.
 
-        This method:
-        1. Discovers all Python files recursively
-        2. Validates each file as an eligible cog
-        3. Groups cogs by priority
-        4. Loads each priority group sequentially (higher priority first)
-        5. Within each group, loads cogs concurrently
+        Discovers all Python files recursively, validates each as an eligible cog,
+        groups cogs by priority, and loads each priority group sequentially (higher
+        priority first). Within each group, cogs load concurrently. This balances
+        dependency order with performance.
 
         Parameters
         ----------
         path : Path
             The directory path to process recursively.
-
-        Notes
-        -----
-        Loading strategy:
-        - Priority groups are loaded sequentially (ensures handlers load first)
-        - Cogs within a group load concurrently (faster startup)
-        - This balances dependency order with performance
         """
         set_span_attributes({"path.is_dir": True})
 
@@ -612,15 +540,15 @@ class CogLoader(commands.Cog):
         # Load cogs sequentially by priority group
         await self._load_by_priority_groups(cog_paths)
 
-    # ---------- Public Loading Methods ----------
-
     @span("cog.load_path")
     async def load_cogs(self, path: Path) -> None:
         """
         Load cogs from a file or directory path with priority-based ordering.
 
-        Automatically handles both single files and directories. Directories
-        are processed recursively with priority-based loading.
+        Automatically handles both single files and directories. Directories are
+        processed recursively with priority-based loading. This is the main entry
+        point for loading cogs from a path. Delegates to _process_single_file or
+        _process_directory based on path type.
 
         Parameters
         ----------
@@ -631,12 +559,6 @@ class CogLoader(commands.Cog):
         ------
         TuxCogLoadError
             If an error occurs during cog discovery or loading.
-
-        Notes
-        -----
-        This is the main entry point for loading cogs from a path.
-        Delegates to _process_single_file or _process_directory based on
-        path type.
         """
         # Tag Sentry span with path for debugging
         set_span_attributes({"cog.path": str(path)})
@@ -660,9 +582,11 @@ class CogLoader(commands.Cog):
         """
         Load cogs from a named folder relative to the tux package with timing.
 
-        This method provides performance monitoring and slow cog detection for
-        a specific folder. It's used to load major cog categories like
-        "services/handlers", "modules", or "plugins".
+        Provides performance monitoring and slow cog detection for a specific
+        folder. Used to load major cog categories like "services/handlers",
+        "modules", or "plugins". Skips gracefully if the folder doesn't exist
+        (useful for optional plugin directories). Logs warnings for cogs that
+        take >1s to load.
 
         Parameters
         ----------
@@ -674,11 +598,6 @@ class CogLoader(commands.Cog):
         ------
         TuxCogLoadError
             If an error occurs during folder loading.
-
-        Notes
-        -----
-        Skips gracefully if the folder doesn't exist (useful for optional
-        plugin directories). Logs warnings for cogs that take >1s to load.
         """
         start_time = time.perf_counter()
 
@@ -755,11 +674,11 @@ class CogLoader(commands.Cog):
         """
         Initialize the cog loader and load all bot cogs in priority order.
 
-        This is the main entrypoint for the cog loading system, called during
-        bot startup. It loads cogs in this order:
-        1. services/handlers (error handlers, event listeners) - highest priority
-        2. modules (bot commands and features) - normal priority
-        3. plugins (user extensions) - lowest priority
+        Main entrypoint for the cog loading system, called during bot startup.
+        Loads cogs in this order: services/handlers (highest priority), modules
+        (normal priority), then plugins (lowest priority). Creates a CogLoader
+        instance, loads all cog folders sequentially, registers the CogLoader
+        itself as a cog, and provides comprehensive telemetry via Sentry.
 
         Parameters
         ----------
@@ -770,14 +689,6 @@ class CogLoader(commands.Cog):
         ------
         TuxCogLoadError
             If critical errors occur during cog loading.
-
-        Notes
-        -----
-        This method:
-        - Creates a CogLoader instance
-        - Loads all cog folders sequentially (respects priorities)
-        - Registers the CogLoader itself as a cog
-        - Provides comprehensive telemetry via Sentry
         """
         start_time = time.perf_counter()
         cog_loader = cls(bot)

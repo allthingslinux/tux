@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
     from tux.core.bot import Tux
 
+__all__ = ["BotSetupOrchestrator"]
+
 
 class BotSetupOrchestrator:
     """Orchestrates the bot setup process using specialized setup services."""
@@ -40,6 +42,9 @@ class BotSetupOrchestrator:
     async def setup(self, span: DummySpan | Any) -> None:
         """
         Execute all setup steps with standardized error handling.
+
+        Performs setup in order: database (with migrations), permission system,
+        prefix manager, cogs, and task monitoring.
 
         Raises
         ------

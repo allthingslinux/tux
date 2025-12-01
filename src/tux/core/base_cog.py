@@ -23,14 +23,15 @@ if TYPE_CHECKING:
     from tux.core.bot import Tux
     from tux.database.controllers import DatabaseCoordinator
 
+__all__ = ["BaseCog"]
+
 
 class BaseCog(commands.Cog):
     """
     Enhanced base cog class providing database access and automatic usage generation.
 
-    This class serves as the foundation for all bot cogs, offering convenient
-    access to database controllers, configuration values, and automatic command
-    usage string generation based on function signatures.
+    Foundation for all bot cogs, offering convenient access to database controllers,
+    configuration values, and automatic command usage string generation.
 
     Attributes
     ----------
@@ -38,14 +39,6 @@ class BaseCog(commands.Cog):
         The bot instance this cog is attached to.
     _unload_task : asyncio.Task[None] | None
         Background task for graceful cog unloading when config is missing.
-
-    Notes
-    -----
-    All cogs should inherit from this class to gain access to:
-    - Database operations via ``self.db``
-    - Configuration access via ``self.get_config()``
-    - Automatic command usage generation
-    - Graceful unloading on missing configuration
     """
 
     _unload_task: asyncio.Task[None] | None = None
@@ -54,15 +47,13 @@ class BaseCog(commands.Cog):
         """
         Initialize the base cog with bot instance and command usage setup.
 
+        Automatically generates usage strings for all commands in this cog
+        that don't have explicit usage strings defined.
+
         Parameters
         ----------
         bot : Tux
             The bot instance this cog will be attached to.
-
-        Notes
-        -----
-        Automatically generates usage strings for all commands in this cog
-        that don't have explicit usage strings defined.
         """
         super().__init__()
 
@@ -76,23 +67,15 @@ class BaseCog(commands.Cog):
         """
         Generate usage strings for all commands in this cog that lack explicit usage.
 
-        The generated usage follows the pattern:
-        ``<qualified_name> <param tokens>``
-
-        Where:
-        - Required parameters are denoted as ``<name: Type>``
-        - Optional parameters are denoted as ``[name: Type]``
-        - The prefix is intentionally omitted (provided by ``ctx.prefix``)
+        Generated usage follows: ``<qualified_name> <param tokens>`` where required
+        parameters are ``<name: Type>`` and optional are ``[name: Type]``. Prefix
+        is omitted (provided by ``ctx.prefix``). Respects explicit usage strings
+        if already set. Errors are logged but don't prevent cog loading.
 
         Examples
         --------
         ``ban <member: Member> [reason: str]``
         ``config set <key: str> <value: str>``
-
-        Notes
-        -----
-        Respects explicit usage strings if already set on a command.
-        Errors during generation are logged but don't prevent cog loading.
         """
         try:
             for command in self.get_commands():
@@ -113,9 +96,9 @@ class BaseCog(commands.Cog):
         """
         Generate a usage string with support for flags and positional parameters.
 
-        This method inspects the command's callback signature to detect:
-        - FlagConverter parameters (e.g., ``--flag value``)
-        - Positional parameters (e.g., ``<required>`` or ``[optional]``)
+        Inspects the command's callback signature to detect FlagConverter parameters
+        and positional parameters. Delegates to shared usage generator for consistency.
+        Falls back to command name if generation fails.
 
         Parameters
         ----------
@@ -126,11 +109,6 @@ class BaseCog(commands.Cog):
         -------
         str
             Generated usage string, or qualified command name as fallback.
-
-        Notes
-        -----
-        Delegates to shared usage generator for consistency across all cogs.
-        Falls back gracefully to command name if generation fails.
         """
         flag_converter: type[commands.FlagConverter] | None = None
 
@@ -169,6 +147,9 @@ class BaseCog(commands.Cog):
         """
         Get the database coordinator for accessing database controllers.
 
+        Provides convenient access to database operations without needing to
+        access ``self.bot.db`` directly.
+
         Returns
         -------
         DatabaseCoordinator
@@ -178,11 +159,6 @@ class BaseCog(commands.Cog):
         --------
         >>> await self.db.guild_config.get_guild_config(guild_id)
         >>> await self.db.cases.create_case(...)
-
-        Notes
-        -----
-        This property provides convenient access to database operations without
-        needing to access ``self.bot.db`` directly.
         """
         return self.bot.db
 
@@ -190,13 +166,15 @@ class BaseCog(commands.Cog):
         """
         Get a configuration value from CONFIG with support for nested keys.
 
+        Supports dot notation for nested values (e.g., ``"BOT_INFO.BOT_NAME"``).
+        Errors during retrieval are logged but don't raise exceptions.
+
         Parameters
         ----------
         key : str
-            The configuration key to retrieve. Supports dot notation for
-            nested values (e.g., ``"BOT_INFO.BOT_NAME"``).
+            The configuration key to retrieve.
         default : Any, optional
-            Default value to return if key is not found, by default None.
+            Default value to return if key is not found. Defaults to None.
 
         Returns
         -------
@@ -209,11 +187,6 @@ class BaseCog(commands.Cog):
         'Tux'
         >>> self.get_config("MISSING_KEY", "fallback")
         'fallback'
-
-        Notes
-        -----
-        Errors during retrieval are logged but don't raise exceptions.
-        Returns the default value on any error.
         """
         try:
             # Support nested keys like "BOT_INFO.BOT_NAME"
@@ -250,8 +223,10 @@ class BaseCog(commands.Cog):
         """
         Check if required configuration is missing and log warning.
 
-        This allows cogs to detect missing configuration at load time and
-        return early from __init__ to prevent partial initialization.
+        Allows cogs to detect missing configuration at load time and return
+        early from __init__ to prevent partial initialization. When this returns
+        True, the cog's __init__ should return early. The cog will be loaded but
+        commands won't be registered properly, preventing runtime errors.
 
         Parameters
         ----------
@@ -272,17 +247,8 @@ class BaseCog(commands.Cog):
         ...     if self.unload_if_missing_config(
         ...         not CONFIG.GITHUB_TOKEN, "GITHUB_TOKEN"
         ...     ):
-        ...         return  # Exit early, cog will be partially loaded but won't register commands
+        ...         return  # Exit early, cog will be partially loaded
         ...     self.github_client = GitHubClient()
-
-        Notes
-        -----
-        When this returns True, the cog's __init__ should return early to avoid
-        initializing services that depend on the missing config. The cog will be
-        loaded but commands won't be registered properly, preventing runtime errors.
-
-        For complete cog unloading, the bot owner should remove the cog from the
-        modules directory or use the reload system to unload it programmatically.
         """
         if condition:
             # Get the module name from the stack
@@ -308,15 +274,13 @@ class BaseCog(commands.Cog):
         """
         Perform the actual cog unload operation.
 
+        Called as a background task by ``unload_if_missing_config()``.
+        Errors during unload are logged but don't raise exceptions.
+
         Parameters
         ----------
         extension_name : str
             Full extension name to unload.
-
-        Notes
-        -----
-        This is called as a background task by ``unload_if_missing_config()``.
-        Errors during unload are logged but don't raise exceptions.
         """
         try:
             await self.bot.unload_extension(extension_name)

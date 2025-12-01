@@ -1,33 +1,11 @@
-"""
-Centralized Loguru Configuration for Tux Discord Bot.
+"""Centralized loguru configuration for Tux Discord bot.
 
-This module provides clean, standardized logging setup following loguru best practices:
-- Single global logger configuration
-- Environment-based configuration
-- Structured logging helpers
-- Third-party library log interception
-- IDE-clickable file paths
-
-Configuration Priority
----------------------
-Log level is determined in this order (highest to lowest):
-1. Explicit `level` parameter (for testing)
-2. `CONFIG.LOG_LEVEL` from .env file
-3. `CONFIG.DEBUG=1` sets DEBUG level
-4. Default "INFO"
-
-Usage
------
-Call once at application startup:
-
-    from tux.shared.config import CONFIG
-    from tux.core.logging import configure_logging
-
-    configure_logging(config=CONFIG)
-
-For debugging specific issues, override the level:
-
-    configure_logging(level="DEBUG")
+This module provides clean, standardized logging setup following loguru best
+practices: single global logger configuration, environment-based configuration,
+structured logging helpers, third-party library log interception, and IDE-clickable
+file paths. Log level is determined in this order (highest to lowest): explicit
+level parameter (for testing), CONFIG.LOG_LEVEL from .env file, CONFIG.DEBUG=1
+sets DEBUG level, or default "INFO".
 """
 
 from __future__ import annotations
@@ -43,10 +21,13 @@ from loguru import logger
 if TYPE_CHECKING:
     from tux.shared.config.settings import Config
 
+__all__ = [
+    "configure_logging",
+    "configure_testing_logging",
+    "StructuredLogger",
+    "verify_logging_interception",
+]
 
-# =============================================================================
-# CONFIGURATION CONSTANTS
-# =============================================================================
 
 # Libraries whose logs should be intercepted and routed through loguru
 INTERCEPTED_LIBRARIES = [
@@ -135,16 +116,11 @@ class _LoggingState:
 _state = _LoggingState()
 
 
-# =============================================================================
-# MAIN CONFIGURATION FUNCTION
-# =============================================================================
-
-
 def configure_testing_logging() -> None:
     """
     Configure logging specifically for testing environment.
 
-    This sets up logging with DEBUG level and testing-appropriate configuration.
+    Sets up logging with DEBUG level and testing-appropriate configuration.
     Call this once at test startup.
     """
     configure_logging(level="DEBUG")
@@ -158,7 +134,9 @@ def configure_logging(
     """
     Configure the global loguru logger for the Tux application.
 
-    This is the main entry point for logging configuration. Call once at startup.
+    Main entry point for logging configuration. Call once at startup. Log level
+    is determined by: explicit level parameter (highest priority), config.LOG_LEVEL,
+    config.DEBUG setting, or default "INFO".
 
     Parameters
     ----------
@@ -171,12 +149,9 @@ def configure_logging(
 
     Examples
     --------
-    Normal usage (respects .env configuration):
-        >>> from tux.shared.config import CONFIG
-        >>> configure_logging(config=CONFIG)
-
-    Override for testing:
-        >>> configure_logging(level="DEBUG")
+    >>> from tux.shared.config import CONFIG
+    >>> configure_logging(config=CONFIG)  # Normal usage
+    >>> configure_logging(level="DEBUG")  # Override for testing
     """
     # Prevent duplicate configuration
     if _state.configured:
@@ -202,11 +177,6 @@ def configure_logging(
     logger.info(f"Logging configured at {log_level} level")
 
 
-# =============================================================================
-# CONFIGURATION HELPERS
-# =============================================================================
-
-
 def _configure_level_colors() -> None:
     """Configure custom colors for each log level."""
     for level_name, color in LEVEL_COLORS.items():
@@ -214,14 +184,12 @@ def _configure_level_colors() -> None:
 
 
 def _determine_log_level(level: str | None, config: Config | None) -> str:
+    # sourcery skip: assign-if-exp, reintroduce-else
     """
     Determine the log level from multiple sources.
 
-    Priority (highest to lowest):
-    1. Explicit level parameter
-    2. config.LOG_LEVEL (from .env)
-    3. config.DEBUG (sets DEBUG)
-    4. Default "INFO"
+    Priority (highest to lowest): explicit level parameter, config.LOG_LEVEL
+    (from .env), config.DEBUG (sets DEBUG), or default "INFO".
 
     Parameters
     ----------
@@ -237,10 +205,13 @@ def _determine_log_level(level: str | None, config: Config | None) -> str:
     """
     if level:
         return level
+
     if config and config.LOG_LEVEL and config.LOG_LEVEL != "INFO":
         return config.LOG_LEVEL
+
     if config and config.DEBUG:
         return "DEBUG"
+
     return "INFO"
 
 
@@ -248,8 +219,8 @@ def _add_console_handler(log_level: str) -> None:
     """
     Add console handler with custom formatting.
 
-    Uses a dynamic stderr sink for robustness against stream wrapping
-    (e.g., by pytest, IDEs, cloud platforms).
+    Uses a dynamic stderr sink for robustness against stream wrapping (e.g., by
+    pytest, IDEs, cloud platforms).
 
     Parameters
     ----------
@@ -273,17 +244,12 @@ def _add_console_handler(log_level: str) -> None:
     )
 
 
-# =============================================================================
-# CUSTOM LOG FORMATTING
-# =============================================================================
-
-
 def _format_record(record: Any) -> str:
     """
     Format log record with IDE-clickable file paths and proper escaping.
 
-    For tux.* modules: Shows clickable path (src/tux/core/app.py:167)
-    For third-party: Shows module:function (urllib3.connectionpool:_make_request:544)
+    For tux.* modules: shows clickable path (src/tux/core/app.py:167). For
+    third-party: shows module:function (urllib3.connectionpool:_make_request:544).
 
     Parameters
     ----------
@@ -374,36 +340,27 @@ def _escape_format_chars(text: str | Any) -> str:
     return text.replace("<", r"\<").replace(">", r"\>")
 
 
-# =============================================================================
-# THIRD-PARTY LIBRARY LOG INTERCEPTION
-# =============================================================================
-
-
 def _configure_third_party_logging() -> None:
     """
     Configure logging interception for third-party libraries.
 
-    This sets up an InterceptHandler that routes standard library logging
-    calls to loguru, maintaining proper source attribution for all logs.
-
-    Process:
-    1. Create InterceptHandler to bridge logging -> loguru
-    2. Replace root logging handler globally
-    3. Configure specific library loggers with InterceptHandler
-    4. Set appropriate minimum levels for third-party libraries
+    Sets up an InterceptHandler that routes standard library logging calls to
+    loguru, maintaining proper source attribution for all logs. Creates
+    InterceptHandler to bridge logging -> loguru, replaces root logging handler
+    globally, configures specific library loggers with InterceptHandler, and sets
+    appropriate minimum levels for third-party libraries.
     """
 
     class InterceptHandler(logging.Handler):
         """
         Bridge handler that routes standard logging to loguru.
 
-        Preserves original source information (module, function, line)
-        from the logging.LogRecord for accurate log attribution.
+        Preserves original source information (module, function, line) from the
+        logging.LogRecord for accurate log attribution.
         """
 
         def emit(self, record: logging.LogRecord) -> None:
-            """
-            Emit a log record to loguru.
+            """Emit a log record to loguru.
 
             Parameters
             ----------
@@ -459,10 +416,9 @@ def verify_logging_interception() -> None:
     """
     Verify third-party library logging configuration (debug utility).
 
-    Logs the configuration of all known third-party loggers, showing
-    which handlers are attached and their current levels.
-
-    This is automatically called when DEBUG level is active.
+    Logs the configuration of all known third-party loggers, showing which
+    handlers are attached and their current levels. Automatically called when
+    DEBUG level is active.
     """
     # Group libraries by their configured level
     level_groups: dict[str, list[str]] = {}
@@ -486,13 +442,13 @@ def verify_logging_interception() -> None:
         logger.debug(f"  {level_name:8} → {libs}")
 
 
-# =============================================================================
-# STRUCTURED LOGGING HELPERS
-# =============================================================================
-
-
 class StructuredLogger:
-    """Helper class for structured logging with consistent context."""
+    """
+    Helper class for structured logging with consistent context.
+
+    Provides static methods for logging performance metrics, database operations,
+    and API calls with structured context data for better log analysis.
+    """
 
     @staticmethod
     def performance(operation: str, duration: float, **context: Any) -> None:

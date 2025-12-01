@@ -1,22 +1,10 @@
-"""
-Dynamic permission system for guild-specific permission hierarchies.
+"""Dynamic permission system for guild-specific permission hierarchies.
 
 This module provides a database-driven permission system allowing guilds to customize
-their permission ranks and role assignments. Key features:
-
-- Dynamic permission ranks (0-10 hierarchy)
-- Role-based access control
-- Command-specific permission overrides
-- Performance caching
-- Configuration file support for self-hosters
-
-Architecture:
-    - PermissionRank: Defines permission ranks (e.g., Moderator, Admin)
-    - PermissionAssignment: Maps Discord roles to permission ranks
-    - PermissionCommand: Sets command-specific permission requirements
-
-Note:
-    "Rank" refers to permission hierarchy (0-100), "Level" refers to XP/progression.
+their permission ranks and role assignments. Supports dynamic permission ranks (0-10
+hierarchy), role-based access control, command-specific permission overrides, performance
+caching, and configuration file support for self-hosters. Note: "Rank" refers to
+permission hierarchy (0-10), "Level" refers to XP/progression.
 """
 
 from __future__ import annotations
@@ -38,6 +26,17 @@ from tux.database.models.models import (
 if TYPE_CHECKING:
     from tux.core.bot import Tux
 
+__all__ = [
+    # Constants
+    "DEFAULT_RANKS",
+    "RESTRICTED_COMMANDS",
+    # Classes
+    "RankDefinition",
+    "PermissionSystem",
+    # Functions
+    "get_permission_system",
+    "init_permission_system",
+]
 
 # Default permission ranks hierarchy (0-7)
 # This is the authoritative source for default rank definitions
@@ -93,8 +92,9 @@ class PermissionSystem:
     """
     Main permission system service orchestrating guild-specific permission checking.
 
-    This class manages the entire permission lifecycle including rank creation,
-    role assignments, and command permissions.
+    Manages the entire permission lifecycle including rank creation, role assignments,
+    and command permissions. Permission ranks use numeric values (0-10) where higher
+    numbers indicate greater permissions. This is separate from XP-based levels.
 
     Attributes
     ----------
@@ -104,11 +104,6 @@ class PermissionSystem:
         Database coordinator for permission storage and retrieval.
     _default_ranks : dict[int, RankDefinition]
         Default permission rank hierarchy (0-7).
-
-    Notes
-    -----
-    Permission ranks use numeric values (0-10) where higher numbers indicate
-    greater permissions. This is separate from XP-based levels.
     """
 
     def __init__(self, bot: Tux, db: DatabaseCoordinator) -> None:
@@ -134,20 +129,14 @@ class PermissionSystem:
 
         Creates the standard 8-rank hierarchy (0-7) for guilds that don't have them yet.
         This method is idempotent - it only creates ranks that are completely missing
-        and never overwrites user customizations.
+        and never overwrites user customizations. Respects user customizations by
+        creating missing default ranks, never updating existing ranks, and allowing
+        guilds to fully customize their permission hierarchy after initial setup.
 
         Parameters
         ----------
         guild_id : int
             The Discord guild ID to initialize.
-
-        Notes
-        -----
-        This is typically called when a guild needs permission ranks initialized.
-        The method respects user customizations:
-        - Creates missing default ranks (preserves user changes to existing ranks)
-        - Never updates existing ranks to avoid overwriting custom names/descriptions
-        - Allows guilds to fully customize their permission hierarchy after initial setup
         """
         logger.info(f"PermissionSystem.initialize_guild called for guild {guild_id}")
 
@@ -218,6 +207,8 @@ class PermissionSystem:
 
         Checks all of the user's roles and returns the highest permission rank
         assigned to any of them. Returns 0 if the user has no permission ranks.
+        Used internally by permission decorators to check if a user has sufficient
+        permissions to run a command.
 
         Parameters
         ----------
@@ -228,11 +219,6 @@ class PermissionSystem:
         -------
         int
             The highest permission rank (0-10) the user has, or 0 if none.
-
-        Notes
-        -----
-        This method is used internally by permission decorators to check if
-        a user has sufficient permissions to run a command.
         """
         # DM context has no permissions
         if not ctx.guild:
@@ -343,7 +329,7 @@ class PermissionSystem:
         Create a custom permission rank for a guild.
 
         Guilds can create custom ranks or override default ranks with their own
-        names and descriptions. Rank numbers must be between 0-100.
+        names and descriptions. Rank numbers must be between 0-10.
 
         Parameters
         ----------
@@ -529,9 +515,9 @@ class PermissionSystem:
         """
         Load permission configuration from a configuration file.
 
-        This allows self-hosters to define their permission structure via
-        configuration files instead of using commands. The config can include
-        custom ranks, role assignments, and command permissions.
+        Allows self-hosters to define their permission structure via configuration
+        files instead of using commands. The config can include custom ranks, role
+        assignments, and command permissions.
 
         Parameters
         ----------
@@ -553,7 +539,6 @@ class PermissionSystem:
         ...     "command_permissions": [{"command": "ban", "rank": 3}],
         ... }
         >>> await system.load_from_config(guild_id, config)
-
         """
         # Load custom permission ranks
         if "permission_ranks" in config:
@@ -616,6 +601,8 @@ def get_permission_system() -> PermissionSystem:
     """
     Get the global permission system instance.
 
+    Call init_permission_system() during bot startup before using this.
+
     Returns
     -------
     PermissionSystem
@@ -625,10 +612,6 @@ def get_permission_system() -> PermissionSystem:
     ------
     RuntimeError
         If the permission system hasn't been initialized yet.
-
-    Notes
-    -----
-    Call `init_permission_system()` during bot startup before using this.
     """
     if _permission_system is None:
         error_msg = (
@@ -642,7 +625,8 @@ def init_permission_system(bot: Tux, db: DatabaseCoordinator) -> PermissionSyste
     """
     Initialize the global permission system instance.
 
-    This should be called once during bot startup, after database initialization.
+    Should be called once during bot startup, after database initialization.
+    Uses module-level attribute assignment to avoid global statement warning.
 
     Parameters
     ----------
@@ -655,25 +639,8 @@ def init_permission_system(bot: Tux, db: DatabaseCoordinator) -> PermissionSyste
     -------
     PermissionSystem
         The initialized permission system instance.
-
-    Notes
-    -----
-    Uses module-level attribute assignment to avoid global statement warning.
     """
     # Set module-level variable without using global statement
     current_module = sys.modules[__name__]
     current_module._permission_system = PermissionSystem(bot, db)  # type: ignore[attr-defined]
     return current_module._permission_system
-
-
-__all__ = [
-    # Constants
-    "DEFAULT_RANKS",
-    "RESTRICTED_COMMANDS",
-    # Classes
-    "RankDefinition",
-    "PermissionSystem",
-    # Functions
-    "get_permission_system",
-    "init_permission_system",
-]

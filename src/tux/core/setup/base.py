@@ -13,6 +13,8 @@ from tux.services.sentry.tracing import start_span
 if TYPE_CHECKING:
     from tux.core.bot import Tux
 
+__all__ = ["BaseSetupService", "BotSetupService"]
+
 
 class BaseSetupService(ABC):
     """Base class for all setup services with standardized patterns."""
@@ -37,7 +39,8 @@ class BaseSetupService(ABC):
 
         Returns
         -------
-            True if setup succeeded, False if it failed
+        bool
+            True if setup succeeded, False if it failed.
         """
         with start_span(f"bot.setup_{self.name}", f"Setting up {self.name}") as span:
             try:

@@ -5,6 +5,7 @@ This module provides efficient prefix resolution for Discord commands by maintai
 an in-memory cache of guild prefixes, eliminating database hits on every message.
 
 The PrefixManager uses a cache-first approach:
+
 1. Check environment variable override (BOT_INFO__PREFIX)
 2. Check in-memory cache (O(1) lookup)
 3. Load from database on cache miss
@@ -26,17 +27,15 @@ from tux.shared.config import CONFIG
 if TYPE_CHECKING:
     from tux.core.bot import Tux
 
+__all__ = ["PrefixManager"]
+
 
 class PrefixManager:
     """
-    Manages command prefixes with in-memory caching for optimal performance.
+    Manages command prefixes with in-memory caching.
 
-    This class provides:
-    - In-memory cache of guild prefixes
-    - Lazy loading from database
-    - Event-driven cache updates
-    - Graceful fallback to default prefix
-    - Zero database hits per message after initial load
+    Provides O(1) prefix lookups after initial cache load through lazy loading
+    and automatic caching. See module docstring for resolution priority order.
 
     Attributes
     ----------
@@ -50,19 +49,11 @@ class PrefixManager:
         Default prefix from configuration.
     _loading_lock : asyncio.Lock
         Lock to prevent concurrent cache loading.
-
-    Notes
-    -----
-    Prefix resolution follows this priority:
-    1. Environment variable override (BOT_INFO__PREFIX)
-    2. In-memory cache (O(1) lookup)
-    3. Database lookup with automatic caching
-    4. Default prefix fallback
     """
 
     def __init__(self, bot: Tux) -> None:
         """
-        Initialize the prefix manager with empty cache.
+        Initialize the prefix manager.
 
         Parameters
         ----------
@@ -85,17 +76,12 @@ class PrefixManager:
 
         logger.debug("PrefixManager initialized")
 
-    # ---------- Public API ----------
-
     async def get_prefix(self, guild_id: int) -> str:
         """
-        Get the command prefix for a guild with automatic caching.
+        Get the command prefix for a guild.
 
-        Resolution order:
-        1. Check for environment variable override
-        2. Check in-memory cache (O(1))
-        3. Load from database and cache
-        4. Fallback to default prefix
+        Follows the resolution priority documented in the module docstring.
+        Automatically caches results for O(1) subsequent lookups.
 
         Parameters
         ----------
@@ -106,14 +92,8 @@ class PrefixManager:
         -------
         str
             The command prefix for the guild, or default prefix if not found.
-
-        Notes
-        -----
-        This method is called on every message, so it's optimized for speed.
-        After initial cache load, this is an O(1) dictionary lookup.
         """
         # Priority 1: Check if prefix override is enabled by environment variable
-        # This allows forcing a specific prefix across all guilds for testing
         if CONFIG.is_prefix_override_enabled():
             logger.debug(
                 f"Prefix override enabled, using default prefix '{self._default_prefix}' for guild {guild_id}",
@@ -129,10 +109,10 @@ class PrefixManager:
 
     async def set_prefix(self, guild_id: int, prefix: str) -> None:
         """
-        Set the command prefix for a guild with immediate cache update.
+        Set the command prefix for a guild.
 
-        The cache is updated immediately for instant effect, while database
-        persistence happens asynchronously to avoid blocking command execution.
+        Updates cache immediately and persists to database asynchronously.
+        No-op if prefix override is enabled via environment variable.
 
         Parameters
         ----------
@@ -140,11 +120,6 @@ class PrefixManager:
             The Discord guild ID.
         prefix : str
             The new command prefix to set.
-
-        Notes
-        -----
-        If prefix override is enabled via environment variable, this method
-        will log a warning but won't update the prefix (override takes priority).
         """
         # Check if prefix override is enabled - warn but don't update
         # This prevents confusion when BOT_INFO__PREFIX is set
@@ -167,14 +142,12 @@ class PrefixManager:
 
         logger.info(f"Prefix updated for guild {guild_id}: '{prefix}'")
 
-    # ---------- Private Database Operations ----------
-
     async def _load_guild_prefix(self, guild_id: int) -> str:
         """
         Load a guild's prefix from the database and cache it.
 
-        This method is called on cache misses. It ensures the guild exists
-        in the database, loads or creates its config, and caches the result.
+        Called on cache misses. Ensures guild exists, loads or creates config,
+        and caches the result. Always returns a prefix (never raises).
 
         Parameters
         ----------
@@ -185,11 +158,6 @@ class PrefixManager:
         -------
         str
             The guild's prefix, or default prefix if loading fails.
-
-        Notes
-        -----
-        This method always returns a prefix - it never raises. Database
-        errors are logged and the default prefix is returned as fallback.
         """
         try:
             # Get database controller (without fallback to avoid blocking)
@@ -224,11 +192,10 @@ class PrefixManager:
 
     async def _persist_prefix(self, guild_id: int, prefix: str) -> None:
         """
-        Persist a prefix change to the database asynchronously.
+        Persist a prefix change to the database.
 
-        This method runs in the background after set_prefix updates the cache.
-        If persistence fails, the cache entry is removed to maintain consistency
-        between cache and database.
+        Runs as a background task after set_prefix. Removes cache entry on
+        failure to maintain consistency. Never raises.
 
         Parameters
         ----------
@@ -236,11 +203,6 @@ class PrefixManager:
             The Discord guild ID.
         prefix : str
             The prefix to persist.
-
-        Notes
-        -----
-        This method is called as a background task and never raises. Failures
-        are logged and the cache is rolled back to maintain data consistency.
         """
         try:
             # Get database controller
@@ -267,23 +229,13 @@ class PrefixManager:
             # that doesn't exist in the database (could cause issues on restart)
             self._prefix_cache.pop(guild_id, None)
 
-    # ---------- Cache Management ----------
-
     async def load_all_prefixes(self) -> None:
         """
         Load all guild prefixes into cache at startup.
 
-        This method is called once during bot initialization to populate the
-        cache with all existing guild configurations from the database. It uses
-        a lock to prevent concurrent loading and has built-in timeout protection.
-
-        Notes
-        -----
-        - Uses a lock to prevent duplicate loads if called concurrently
-        - Has a 10-second timeout to prevent blocking startup
-        - Loads up to 1000 guild configs (should be more than enough)
-        - Marks cache as loaded even on failure to prevent retry loops
-        - Idempotent - safe to call multiple times
+        Called during bot initialization. Uses a lock to prevent concurrent
+        loading, has a 10-second timeout, and loads up to 1000 configs.
+        Idempotent and safe to call multiple times.
         """
         # Quick check before acquiring lock (fast path)
         if self._cache_loaded:
@@ -336,22 +288,16 @@ class PrefixManager:
         """
         Invalidate prefix cache for a specific guild or all guilds.
 
-        This is useful when guild configs are updated externally or when
-        you need to force a reload from the database.
-
         Parameters
         ----------
         guild_id : int | None, optional
             The guild ID to invalidate, or None to invalidate all.
-            Defaults to None (invalidate all).
+            Defaults to None.
 
         Examples
         --------
-        Invalidate a specific guild:
-        >>> manager.invalidate_cache(123456789)
-
-        Invalidate entire cache:
-        >>> manager.invalidate_cache()
+        >>> manager.invalidate_cache(123456789)  # Specific guild
+        >>> manager.invalidate_cache()  # All guilds
         """
         if guild_id is None:
             # Clear entire cache and reset loaded flag
@@ -370,20 +316,11 @@ class PrefixManager:
         Returns
         -------
         dict[str, int]
-            Dictionary containing:
+            Dictionary with keys:
             - cached_prefixes: Number of guilds in cache
             - cache_loaded: 1 if initial load completed, 0 otherwise
-
-        Examples
-        --------
-        >>> stats = manager.get_cache_stats()
-        >>> print(f"Cached: {stats['cached_prefixes']} guilds")
-        Cached: 42 guilds
         """
         return {
             "cached_prefixes": len(self._prefix_cache),
             "cache_loaded": int(self._cache_loaded),
         }
-
-
-__all__ = ["PrefixManager"]

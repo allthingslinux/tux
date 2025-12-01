@@ -1,9 +1,8 @@
-"""
-Discord.py command converters for Tux bot.
+"""Discord.py command converters for Tux bot.
 
 This module provides custom converters for parsing command arguments,
-including time durations, case types, and utility functions for
-channel resolution and boolean conversion.
+including time durations, case types, and utility functions for channel
+resolution and boolean conversion.
 """
 
 from __future__ import annotations
@@ -19,6 +18,15 @@ from tux.database.models import CaseType
 
 if TYPE_CHECKING:
     from tux.core.bot import Tux
+
+__all__ = [
+    # Converters
+    "TimeConverter",
+    "CaseTypeConverter",
+    # Utility functions
+    "get_channel_safe",
+    "convert_bool",
+]
 
 time_regex = re.compile(r"(\d{1,5}(?:[.,]?\d{1,5})?)([smhd])")
 time_dict = {"h": 3600, "s": 1, "m": 60, "d": 86400}
@@ -86,14 +94,14 @@ class CaseTypeConverter(commands.Converter[CaseType]):
         Parameters
         ----------
         ctx : commands.Context[Any]
-            The context to convert the argument to a CaseType enum.
+            The invocation context.
         argument : str
-            The argument to convert to a CaseType enum.
+            The string to convert.
 
         Returns
         -------
         CaseType
-            The CaseType enum.
+            The CaseType enum value.
 
         Raises
         ------
@@ -162,13 +170,3 @@ def convert_bool(x: str | None) -> bool | None:
 
     msg = f"{x} must be a boolean value (e.g. true/false, yes/no)"
     raise commands.BadArgument(msg)
-
-
-__all__ = [
-    # Converters
-    "TimeConverter",
-    "CaseTypeConverter",
-    # Utility functions
-    "get_channel_safe",
-    "convert_bool",
-]

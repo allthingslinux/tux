@@ -17,6 +17,8 @@ from tux.database.service import DatabaseService
 from tux.shared.config import CONFIG
 from tux.shared.exceptions import TuxDatabaseConnectionError
 
+__all__ = ["DatabaseSetupService"]
+
 
 class DatabaseSetupService(BaseSetupService):
     """Handles complete database initialization during bot setup."""
@@ -52,15 +54,13 @@ class DatabaseSetupService(BaseSetupService):
         """
         Build Alembic configuration with suppressed stdout output.
 
+        Most configuration is read from alembic.ini. Only the database URL
+        is set programmatically as it comes from environment variables.
+
         Returns
         -------
         Config
             The configured Alembic Config object.
-
-        Notes
-        -----
-        Most configuration is read from alembic.ini. Only the database URL
-        is set programmatically as it comes from environment variables.
         """
         root = self._find_project_root()
 
@@ -76,15 +76,12 @@ class DatabaseSetupService(BaseSetupService):
         """
         Run Alembic upgrade to head on startup.
 
-        This call is idempotent and safe to run on startup.
-        If database is unavailable, migrations are skipped with a warning.
-        Runs migration synchronously with a short timeout.
-
-        Note
-        ----
-        Unlike other setup steps, this method does not raise exceptions on failure.
-        If migrations cannot run (e.g., database unavailable), it logs a warning
-        and continues, allowing the bot to start without blocking on migrations.
+        This call is idempotent and safe to run on startup. If database is
+        unavailable, migrations are skipped with a warning. Runs migration
+        synchronously with a short timeout. Unlike other setup steps, this method
+        does not raise exceptions on failure. If migrations cannot run (e.g., database
+        unavailable), it logs a warning and continues, allowing the bot to start
+        without blocking on migrations.
         """
         try:
             cfg = self._build_alembic_config()
