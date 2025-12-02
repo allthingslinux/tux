@@ -169,6 +169,7 @@ exclude = [
     "tests/**",
     "**/tests/**",
     ".kiro/**",
+    "site",
     ".audit/**",
     "**/migrations/**",
 ]
@@ -208,6 +209,7 @@ exclude = [
     "_build",
     "buck-out",
     "build",
+    "site",
     "dist",
     "examples",
     "node_modules",
@@ -290,6 +292,7 @@ exclude = [
     "**/__pycache__",
     "_build",
     "examples",
+    "site",
     ".archive",
     "src/tux/database/migrations/**",
 ]
@@ -343,6 +346,7 @@ omit = [
     "docs/*",
     "scripts/*",
     "assets/*",
+    "site/*",
     "logs/*",
     "*.md",
     "*.toml",
