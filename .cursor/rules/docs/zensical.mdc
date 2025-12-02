@@ -192,7 +192,7 @@ To add new packages to the docs group in `pyproject.toml`:
 
 Documentation is deployed using Cloudflare Workers with the following configuration:
 
-- **Config file**: `docs/wrangler.toml`
+- **Config file**: `wrangler.toml`
 - **Build command**: `uv run zensical build` (executed by GitHub Actions)
 - **Production URL**: `https://tux.atl.dev` (custom domain)
 - **Preview URLs**: Auto-generated `*.workers.dev` URLs for branches/PRs

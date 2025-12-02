@@ -287,9 +287,10 @@ class DocsCLI(BaseCLI):
         """
         self.rich.print_section("Starting Wrangler Dev Server", "blue")
 
-        docs_dir = Path("docs")
-        if not docs_dir.exists():
-            self.rich.print_error("docs directory not found")
+        if not Path("wrangler.toml").exists():
+            self.rich.print_error(
+                "wrangler.toml not found. Please run from the project root.",
+            )
             return
 
         # Build docs first
@@ -303,13 +304,7 @@ class DocsCLI(BaseCLI):
 
         self.rich.print_info(f"Starting Wrangler dev server on port {port}...")
 
-        original_dir = Path.cwd()
         try:
-            # Change to docs directory
-            docs_path = Path("docs")
-            if docs_path.exists():
-                os.chdir(docs_path)
-
             self._run_command(cmd)
             self.rich.print_success(
                 f"Wrangler dev server started at http://localhost:{port}",
@@ -318,8 +313,6 @@ class DocsCLI(BaseCLI):
             self.rich.print_error("Failed to start Wrangler dev server")
         except Exception as e:
             self.rich.print_error(f"Error: {e}")
-        finally:
-            os.chdir(original_dir)
 
     def wrangler_deploy(
         self,
@@ -340,6 +333,12 @@ class DocsCLI(BaseCLI):
         """
         self.rich.print_section("Deploying to Cloudflare Workers", "blue")
 
+        if not Path("wrangler.toml").exists():
+            self.rich.print_error(
+                "wrangler.toml not found. Please run from the project root.",
+            )
+            return
+
         # Build docs first (without strict to allow warnings)
         self.rich.print_info("Building documentation...")
         self.build(strict=False)
@@ -351,21 +350,13 @@ class DocsCLI(BaseCLI):
 
         self.rich.print_info(f"Deploying to {env} environment...")
 
-        original_dir = Path.cwd()
         try:
-            # Change to docs directory
-            docs_path = Path("docs")
-            if docs_path.exists():
-                os.chdir(docs_path)
-
             self._run_command(cmd)
             self.rich.print_success(f"Documentation deployed successfully to {env}")
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to deploy documentation")
         except Exception as e:
             self.rich.print_error(f"Error: {e}")
-        finally:
-            os.chdir(original_dir)
 
     def wrangler_deployments(
         self,
@@ -380,24 +371,23 @@ class DocsCLI(BaseCLI):
         """
         self.rich.print_section("Deployment History", "blue")
 
+        if not Path("wrangler.toml").exists():
+            self.rich.print_error(
+                "wrangler.toml not found. Please run from the project root.",
+            )
+            return
+
         cmd = ["wrangler", "deployments", "list"]
         if limit:
             cmd.extend(["--limit", str(limit)])
 
-        original_dir = Path.cwd()
         try:
-            docs_path = Path("docs")
-            if docs_path.exists():
-                os.chdir(docs_path)
-
             self._run_command(cmd)
             self.rich.print_success("Deployment history retrieved")
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to get deployment history")
         except Exception as e:
             self.rich.print_error(f"Error: {e}")
-        finally:
-            os.chdir(original_dir)
 
     def wrangler_versions(
         self,
@@ -423,6 +413,12 @@ class DocsCLI(BaseCLI):
         """
         self.rich.print_section("Managing Versions", "blue")
 
+        if not Path("wrangler.toml").exists():
+            self.rich.print_error(
+                "wrangler.toml not found. Please run from the project root.",
+            )
+            return
+
         cmd = ["wrangler", "versions", action]
 
         if action == "view" and version_id:
@@ -430,20 +426,13 @@ class DocsCLI(BaseCLI):
         elif action == "upload" and alias:
             cmd.extend(["--preview-alias", alias])
 
-        original_dir = Path.cwd()
         try:
-            docs_path = Path("docs")
-            if docs_path.exists():
-                os.chdir(docs_path)
-
             self._run_command(cmd)
             self.rich.print_success(f"Version {action} completed")
         except subprocess.CalledProcessError:
             self.rich.print_error(f"Failed to {action} versions")
         except Exception as e:
             self.rich.print_error(f"Error: {e}")
-        finally:
-            os.chdir(original_dir)
 
     def wrangler_tail(
         self,
@@ -462,6 +451,12 @@ class DocsCLI(BaseCLI):
         """
         self.rich.print_section("Tailing Logs", "blue")
 
+        if not Path("wrangler.toml").exists():
+            self.rich.print_error(
+                "wrangler.toml not found. Please run from the project root.",
+            )
+            return
+
         cmd = ["wrangler", "tail"]
         if format_output:
             cmd.extend(["--format", format_output])
@@ -470,12 +465,7 @@ class DocsCLI(BaseCLI):
 
         self.rich.print_info("Starting log tail... (Ctrl+C to stop)")
 
-        original_dir = Path.cwd()
         try:
-            docs_path = Path("docs")
-            if docs_path.exists():
-                os.chdir(docs_path)
-
             self._run_command(cmd)
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to tail logs")
@@ -483,8 +473,6 @@ class DocsCLI(BaseCLI):
             self.rich.print_info("\nLog tail stopped")
         except Exception as e:
             self.rich.print_error(f"Error: {e}")
-        finally:
-            os.chdir(original_dir)
 
     def wrangler_rollback(
         self,
@@ -503,6 +491,12 @@ class DocsCLI(BaseCLI):
         """
         self.rich.print_section("Rolling Back Deployment", "blue")
 
+        if not Path("wrangler.toml").exists():
+            self.rich.print_error(
+                "wrangler.toml not found. Please run from the project root.",
+            )
+            return
+
         if not version_id:
             self.rich.print_error(
                 "Version ID is required. Use wrangler-deployments to find version IDs.",
@@ -515,20 +509,13 @@ class DocsCLI(BaseCLI):
 
         self.rich.print_warning(f"Rolling back to version: {version_id}")
 
-        original_dir = Path.cwd()
         try:
-            docs_path = Path("docs")
-            if docs_path.exists():
-                os.chdir(docs_path)
-
             self._run_command(cmd)
             self.rich.print_success(f"Successfully rolled back to version {version_id}")
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to rollback")
         except Exception as e:
             self.rich.print_error(f"Error: {e}")
-        finally:
-            os.chdir(original_dir)
 
 
 # Create the CLI app instance

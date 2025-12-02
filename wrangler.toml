@@ -1,7 +1,7 @@
 # ==============================================================================
 # TUX DOCUMENTATION - CLOUDFLARE WORKERS CONFIGURATION
 # ==============================================================================
-# Deploy: wrangler versions upload + wrangler versions deploy (from docs/ directory)
+# Deploy: wrangler versions upload + wrangler versions deploy (from repo root)
 # Used by GitHub Actions workflow: .github/workflows/docs.yml
 #
 # Based on: https://developers.cloudflare.com/workers/static-assets/
@@ -25,7 +25,7 @@ workers_dev = true
 
 # Static Assets Configuration
 # Optimized for static documentation (Zensical output)
-# Zensical builds to ./site (relative to repo root)
+# Zensical builds to site/ (relative to repo root)
 [assets]
 directory = "./site"
 not_found_handling = "404-page"          # Serve 404.html for missing pages
