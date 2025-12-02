@@ -1,6 +1,6 @@
 ---
 title: Support
-icon: material/chat-outline
+icon: material/forum-outline
 tags:
   - support
 ---

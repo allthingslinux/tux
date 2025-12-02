@@ -1,6 +1,6 @@
 ---
 title: Changelog
-icon: octicons/log-24
+icon: material/script-text-outline
 ---
 
 --8<-- "CHANGELOG.md"

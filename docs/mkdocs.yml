@@ -44,10 +44,8 @@ watch:
 extra:
   # Custom copyright partial: overrides/partials/copyright.html
   footer_links:
-    - text: FAQ
-      href: reference/faq
-    - text: Listings
-      href: reference/listings
+    - text: Sitemap
+      href: sitemap.xml
   social:
     - icon: fontawesome/solid/globe
       link: https://allthingslinux.org
@@ -168,7 +166,6 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
-
   # Keys: Render keyboard shortcuts like ++ctrl+alt+del++
   - pymdownx.keys
   # Tabbed: Content tabs for grouping related content
@@ -232,8 +229,6 @@ plugins:
       enabled: true
       arguments:
         securitylevel: loose
-  - meta:
-      enabled: true
   - tags:
       enabled: true
       # Case-insensitive tag sorting for consistent ordering
@@ -243,6 +238,8 @@ plugins:
       # Export tags to JSON for external tooling
       export: true
       export_file: tags.json
+  - meta:
+      enabled: true
   - mkdocs-backlinks:
       enabled: false
       ignored_pages: [Home, Navigation]

@@ -56,6 +56,6 @@ You'll learn:
 
 - **[Discord Support](https://discord.gg/gpmSjcjQxg)** - Join our community for help
 - **[GitHub Issues](https://github.com/allthingslinux/tux/issues)** - Report bugs or request features
-- **[FAQ](../faq.md)** - Common questions and answers
+- **[FAQ](../faq/index.md)** - Common questions and answers
 
 Choose your path above to continue!
