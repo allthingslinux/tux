@@ -1,10 +1,10 @@
 ---
 title: CLI Reference
-icon: octicons/terminal-24
 tags:
-  - reference
   - cli
-  - api
+  - typer
+  - commands
+  - terminal
 ---
 
 # CLI Reference

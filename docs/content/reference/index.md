@@ -1,6 +1,5 @@
 ---
 title: Reference
-icon: material/book-open-page-variant-outline
 ---
 
 # Reference

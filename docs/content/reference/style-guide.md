@@ -1,10 +1,9 @@
 ---
 title: Style Guide
-icon: octicons/typography-16
 tags:
-  - reference
   - style-guide
-  - documentation
+  - docs
+  - css
 ---
 
 # Style Guide

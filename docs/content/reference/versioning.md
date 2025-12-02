@@ -1,12 +1,14 @@
 ---
-title: Versioning
-icon: octicons/number-16
+title: Versioning System
 tags:
-  - reference
+  - semver
+  - release-cycle
   - versioning
+  - release-process
+  - git-tags
 ---
 
-# Versioning
+# Versioning System
 
 !!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.

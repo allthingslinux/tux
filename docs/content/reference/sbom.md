@@ -1,6 +1,5 @@
 ---
 title: Software Bill of Materials (SBOM)
-icon: material/invoice-text-check
 hide:
   - toc
 tags:

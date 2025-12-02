@@ -509,7 +509,7 @@ enabled = true
 paths = ["docs/content/reference/env.md"]
 enabled = true
 table_only = false
-file_prefix = "# ENV Reference\n\n"
+file_prefix = "# Environment Variables\n\n"
 to_upper_case = true
 region = "config"
 

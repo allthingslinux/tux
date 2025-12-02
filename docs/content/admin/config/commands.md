@@ -1,5 +1,5 @@
 ---
-title: Commands Configuration
+title: Commands
 tags:
   - admin-guide
   - configuration

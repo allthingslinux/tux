@@ -1,11 +1,12 @@
 ---
 title: Coverage
-icon: simple/codecov
 hide:
   - toc
 tags:
-  - reference
   - testing
+  - ci-cd
+  - codecov
+  - pytest
   - coverage
 ---
 

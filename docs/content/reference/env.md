@@ -1,16 +1,18 @@
 ---
-title: ENV Reference
-icon: material/folder-cog
+title: Environment Variables
 hide:
   - toc
 tags:
-  - reference
+  - env
   - configuration
+  - settings
   - environment
----
+  - pydantic-settings
+  - dotenv
+  - env-variables
 ---
 <!-- region:config -->
-# ENV Reference
+# Environment Variables
 
 ## Config
 

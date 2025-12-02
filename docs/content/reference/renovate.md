@@ -1,10 +1,9 @@
 ---
 title: Renovate Configuration
-icon: octicons/package-dependencies-16
 tags:
-  - reference
   - renovate
   - dependencies
+  - ci-cd
 ---
 
 # Renovate Configuration
