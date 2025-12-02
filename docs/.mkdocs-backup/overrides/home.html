@@ -1,0 +1,362 @@
+{% extends "main.html" %}
+
+{% block tabs %}
+  {{ super() }}
+{% endblock %}
+
+{% block content %}
+  {% if page.meta and page.meta.hide %}
+    {% set hidden_class = "hidden" if "navigation" in page.meta.hide %}
+  {% endif %}
+
+  <div class="md-content__inner md-typeset">
+    <div class="tux-home">
+      <!-- Hero Section -->
+      <section class="tux-hero">
+        <h1 class="tux-hero-title">Tux</h1>
+        <p class="tux-hero-description">
+          Tux is an all-in-one open source Discord bot, originally designed for the
+          <a href="https://allthingslinux.org">All Things Linux</a> community.
+          It is designed to provide a variety of features to the server, including
+          moderation, support, utility, and various fun commands.
+        </p>
+      </section>
+
+      <!-- Getting Started Section -->
+      <section class="tux-section">
+        <h2 class="tux-section-title">Getting Started</h2>
+        <p class="tux-section-description">Choose your path to get started with Tux:</p>
+
+        <div class="tux-cards-grid">
+          <article class="tux-card">
+            <div class="tux-card-icon">
+              <span class="twemoji">{% include ".icons/material/linux.svg" %}</span>
+            </div>
+            <h3 class="tux-card-title">Using Tux</h3>
+            <hr class="tux-card-divider">
+            <p class="tux-card-description">
+              Get started with using Tux in your server. View information on commands
+              and learn about all the features Tux offers.
+            </p>
+            <a href="user/index.md" class="md-button md-button--primary tux-card-button">
+              View User Guide
+            </a>
+          </article>
+
+          <article class="tux-card">
+            <div class="tux-card-icon">
+              <span class="twemoji">{% include ".icons/material/crown.svg" %}</span>
+            </div>
+            <h3 class="tux-card-title">Admin Guide</h3>
+            <hr class="tux-card-divider">
+            <p class="tux-card-description">
+              Advanced server administration and moderation. Configure permissions,
+              manage cases, and customize your server.
+            </p>
+            <a href="admin/index.md" class="md-button md-button--primary tux-card-button">
+              View Guide
+            </a>
+          </article>
+
+          <article class="tux-card">
+            <div class="tux-card-icon">
+              <span class="twemoji">{% include ".icons/fontawesome/brands/docker.svg" %}</span>
+            </div>
+            <h3 class="tux-card-title">Self-Hosting</h3>
+            <hr class="tux-card-divider">
+            <p class="tux-card-description">
+              Deploy your own Tux instance with full control. Docker or systemd
+              deployment with all dependencies included.
+            </p>
+            <a href="selfhost/index.md" class="md-button md-button--primary tux-card-button">
+              View Guide
+            </a>
+          </article>
+
+          <article class="tux-card">
+            <div class="tux-card-icon">
+              <span class="twemoji">{% include ".icons/fontawesome/solid/code.svg" %}</span>
+            </div>
+            <h3 class="tux-card-title">Developing</h3>
+            <hr class="tux-card-divider">
+            <p class="tux-card-description">
+              Contribute to the Tux codebase or build custom plugins. Comprehensive
+              developer documentation and API references.
+            </p>
+            <a href="developer/index.md" class="md-button md-button--primary tux-card-button">
+              View Guide
+            </a>
+          </article>
+        </div>
+      </section>
+
+      <hr class="tux-divider">
+
+      <!-- Key Features Section -->
+      <section class="tux-section">
+        <h2 class="tux-section-title">Key Features</h2>
+
+        <div class="tux-features-grid">
+          <div class="tux-feature">
+            <div class="tux-feature-header">
+              <span class="tux-feature-icon twemoji">{% include ".icons/material/shield-half-full.svg" %}</span>
+              <h3 class="tux-feature-title">Advanced Moderation</h3>
+            </div>
+            <p class="tux-feature-description">
+              Case management, jail system, warnings, and audit logs.
+            </p>
+          </div>
+
+          <div class="tux-feature">
+            <div class="tux-feature-header">
+              <span class="tux-feature-icon twemoji">{% include ".icons/material/chart-line.svg" %}</span>
+              <h3 class="tux-feature-title">XP & Leveling</h3>
+            </div>
+            <p class="tux-feature-description">
+              Gamified engagement with leaderboards and role rewards.
+            </p>
+          </div>
+
+          <div class="tux-feature">
+            <div class="tux-feature-header">
+              <span class="tux-feature-icon twemoji">{% include ".icons/material/star.svg" %}</span>
+              <h3 class="tux-feature-title">Starboard</h3>
+            </div>
+            <p class="tux-feature-description">
+              Automatically highlight popular messages.
+            </p>
+          </div>
+
+          <div class="tux-feature">
+            <div class="tux-feature-header">
+              <span class="tux-feature-icon twemoji">{% include ".icons/material/bookmark.svg" %}</span>
+              <h3 class="tux-feature-title">Bookmarks</h3>
+            </div>
+            <p class="tux-feature-description">
+              Save important messages for later reference.
+            </p>
+          </div>
+
+          <div class="tux-feature">
+            <div class="tux-feature-header">
+              <span class="tux-feature-icon twemoji">{% include ".icons/material/cog.svg" %}</span>
+              <h3 class="tux-feature-title">Highly Configurable</h3>
+            </div>
+            <p class="tux-feature-description">
+              TOML/YAML/JSON support with interactive wizard.
+            </p>
+          </div>
+
+          <div class="tux-feature">
+            <div class="tux-feature-header">
+              <span class="tux-feature-icon twemoji">{% include ".icons/fontawesome/solid/plug-circle-check.svg" %}</span>
+              <h3 class="tux-feature-title">Plugin System</h3>
+            </div>
+            <p class="tux-feature-description">
+              Extensible architecture for custom features.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <hr class="tux-divider">
+
+      <!-- Why Tux Section -->
+      <section class="tux-section">
+        <h2 class="tux-section-title">Why Tux?</h2>
+        <h3 class="tux-subsection-title">Built for Linux Communities</h3>
+        <p class="tux-subsection-description">
+          Tux combines powerful moderation tools with engaging features, all built
+          with modern Python and best practices.
+        </p>
+
+        <div class="tux-benefits-grid">
+          <div class="tux-benefit">
+            <div class="tux-benefit-header">
+              <span class="tux-benefit-icon twemoji">{% include ".icons/material/shield-half-full.svg" %}</span>
+              <h3 class="tux-benefit-title">Moderation</h3>
+            </div>
+            <p class="tux-benefit-description">
+              Comprehensive tools with case tracking, jail system, and audit logs
+            </p>
+          </div>
+
+          <div class="tux-benefit">
+            <div class="tux-benefit-header">
+              <span class="tux-benefit-icon twemoji">{% include ".icons/material/lightning-bolt.svg" %}</span>
+              <h3 class="tux-benefit-title">Performance</h3>
+            </div>
+            <p class="tux-benefit-description">
+              Async architecture optimized for large servers with hot-reload
+            </p>
+          </div>
+
+          <div class="tux-benefit">
+            <div class="tux-benefit-header">
+              <span class="tux-benefit-icon twemoji">{% include ".icons/material/gamepad-variant.svg" %}</span>
+              <h3 class="tux-benefit-title">Engagement</h3>
+            </div>
+            <p class="tux-benefit-description">
+              XP system, starboard, bookmarks, and customizable role rewards
+            </p>
+          </div>
+
+          <div class="tux-benefit">
+            <div class="tux-benefit-header">
+              <span class="tux-benefit-icon twemoji">{% include ".icons/material/cog.svg" %}</span>
+              <h3 class="tux-benefit-title">Configuration</h3>
+            </div>
+            <p class="tux-benefit-description">
+              Flexible setup with TOML/YAML/JSON and interactive wizard
+            </p>
+          </div>
+
+          <div class="tux-benefit">
+            <div class="tux-benefit-header">
+              <span class="tux-benefit-icon twemoji">{% include ".icons/material/chart-line.svg" %}</span>
+              <h3 class="tux-benefit-title">Analytics</h3>
+            </div>
+            <p class="tux-benefit-description">
+              Sentry integration, InfluxDB metrics, and detailed logging
+            </p>
+          </div>
+
+          <div class="tux-benefit">
+            <div class="tux-benefit-header">
+              <span class="tux-benefit-icon twemoji">{% include ".icons/material/puzzle.svg" %}</span>
+              <h3 class="tux-benefit-title">Extensible</h3>
+            </div>
+            <p class="tux-benefit-description">
+              Plugin system for custom features and integrations
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <hr class="tux-divider">
+
+      <!-- Built With Section -->
+      <section class="tux-section">
+        <h2 class="tux-section-title">Built With</h2>
+
+        <div class="tux-tech-list">
+          <span class="tux-tech-item"><strong>Python 3.13+</strong></span>
+          <span class="tux-tech-item"><strong>discord.py</strong></span>
+          <span class="tux-tech-item"><strong>PostgreSQL</strong></span>
+          <span class="tux-tech-item"><strong>SQLModel</strong></span>
+          <span class="tux-tech-item"><strong>Alembic</strong></span>
+          <span class="tux-tech-item"><strong>Pydantic</strong></span>
+          <span class="tux-tech-item"><strong>Docker</strong></span>
+          <span class="tux-tech-item"><strong>uv</strong></span>
+          <span class="tux-tech-item"><strong>Sentry</strong></span>
+          <span class="tux-tech-item"><strong>Redis</strong></span>
+          <span class="tux-tech-item"><strong>Loguru</strong></span>
+          <span class="tux-tech-item"><strong>Typer</strong></span>
+          <span class="tux-tech-item"><strong>Pytest</strong></span>
+          <span class="tux-tech-item"><strong>Ruff</strong></span>
+          <span class="tux-tech-item"><strong>Basedpyright</strong></span>
+          <span class="tux-tech-item"><strong>MkDocs</strong></span>
+          <span class="tux-tech-item"><strong>Workers</strong></span>
+          <span class="tux-tech-item"><strong>pre-commit</strong></span>
+          <span class="tux-tech-item"><strong>httpx</strong></span>
+          <span class="tux-tech-item"><strong>codecov</strong></span>
+        </div>
+      </section>
+
+      <hr class="tux-divider">
+
+      <!-- Community Section -->
+      <section class="tux-section">
+        <h2 class="tux-section-title">Community</h2>
+
+        <div class="tux-cards-grid">
+          <article class="tux-card">
+            <div class="tux-card-icon">
+              <span class="twemoji">{% include ".icons/fontawesome/solid/comments.svg" %}</span>
+            </div>
+            <h3 class="tux-card-title">Discord</h3>
+            <hr class="tux-card-divider">
+            <p class="tux-card-description">
+              Join our community for support and discussions.
+            </p>
+            <a href="https://discord.gg/gpmSjcjQxg" class="md-button md-button--primary tux-card-button">
+              Join Discord
+            </a>
+          </article>
+
+          <article class="tux-card">
+            <div class="tux-card-icon">
+              <span class="twemoji">{% include ".icons/octicons/mark-github-16.svg" %}</span>
+            </div>
+            <h3 class="tux-card-title">GitHub</h3>
+            <hr class="tux-card-divider">
+            <p class="tux-card-description">
+              Star, fork, and contribute on GitHub.
+            </p>
+            <a href="https://github.com/allthingslinux/tux" class="md-button md-button--primary tux-card-button">
+              View Repository
+            </a>
+          </article>
+
+          <article class="tux-card">
+            <div class="tux-card-icon">
+              <span class="twemoji">{% include ".icons/material/heart.svg" %}</span>
+            </div>
+            <h3 class="tux-card-title">Contribute</h3>
+            <hr class="tux-card-divider">
+            <p class="tux-card-description">
+              Learn how to contribute to Tux.
+            </p>
+            <a href="developer/contributing.md" class="md-button md-button--primary tux-card-button">
+              Contributing Guide
+            </a>
+          </article>
+        </div>
+      </section>
+
+      <hr class="tux-divider">
+
+      <!-- Project Activity Section -->
+      <section class="tux-section">
+        <h2 class="tux-section-title">Project Activity</h2>
+        <div class="tux-image-container">
+          <a href="https://github.com/allthingslinux/tux/pulse">
+            <img src="https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg" alt="Repository Metrics">
+          </a>
+        </div>
+      </section>
+
+      <!-- Contributors Section -->
+      <section class="tux-section">
+        <h2 class="tux-section-title">Contributors</h2>
+        <p class="tux-contributors-intro">
+          Special thanks to everyone who helps make Tux better!
+        </p>
+        <div class="tux-image-container">
+          <a href="https://github.com/allthingslinux/tux/graphs/contributors">
+            <img src="https://contrib.rocks/image?repo=allthingslinux/tux" alt="Contributors">
+          </a>
+        </div>
+      </section>
+
+      <hr class="tux-divider">
+
+      <!-- Footer -->
+      <footer class="tux-footer">
+        <p class="tux-footer-credit">
+          <em>Made with ❤️ by the <a href="https://allthingslinux.org">All Things Linux</a> community</em>
+        </p>
+        <p class="tux-footer-links">
+          <a href="https://tux.atl.dev/">Documentation</a> ·
+          <a href="https://github.com/allthingslinux/tux">GitHub</a> ·
+          <a href="https://discord.gg/gpmSjcjQxg">Discord</a> ·
+          <a href="https://allthingslinux.org">Community</a>
+        </p>
+      </footer>
+    </div>
+  </div>
+{% endblock %}
+
+{% block footer %}
+  {{ super() }}
+{% endblock %}

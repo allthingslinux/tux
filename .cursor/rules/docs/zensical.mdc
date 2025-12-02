@@ -1,8 +1,8 @@
 ---
-description: MkDocs-Material setup, plugins, extensions, theme configuration, and deployment workflows
+description: Zensical setup, configuration, extensions, theme customization, and deployment workflows
 alwaysApply: false
 ---
-# MkDocs-Material Documentation Rules
+# Zensical Documentation Rules
 
 REMINDER: Do not start the docs website/server unless explicitly told to do so.
 
@@ -47,7 +47,6 @@ Tux follows a modern, modular Python architecture:
 **For Developers:**
 
 - Architecture deep-dives
-- API documentation (auto-generated)
 - Contribution guidelines
 - Plugin development
 - Testing strategies
@@ -86,7 +85,7 @@ When documenting Tux:
 
 ### PyMdown Extensions
 
-- **pymdownx.snippets**: Embed content from external files with base_path and auto_append options
+- **pymdownx.snippets**: Embed content from external files with auto_append (abbreviations glossary)
 - **pymdownx.highlight**: Advanced syntax highlighting with Pygments, auto_title, linenums, and line_spans
 - **pymdownx.inlinehilite**: Syntax highlighting for inline code blocks
 - **pymdownx.superfences**: Enhanced code fences with custom Mermaid diagram support
@@ -100,68 +99,50 @@ When documenting Tux:
 - **pymdownx.caret**: Superscript with `^^text^^` syntax
 - **pymdownx.mark**: Highlight text with `==text==` syntax
 - **pymdownx.tilde**: Strikethrough with `~~text~~` syntax
+- **pymdownx.tasklist**: Convert task lists to checkboxes
+- **pymdownx.betterem**: Enhanced emphasis handling
 
-### CLI Documentation
+## Zensical Built-in Features
 
-- **mkdocs-typer**: CLI documentation generator for Typer applications
+Zensical provides built-in features (no plugins needed):
 
-## Active Plugins
-
-- **search**: Built-in search with custom separator regex for better tokenization
-- **literature-nav**: Navigation handled by SUMMARY.md with wildcard support and implicit indexes
-- **minify**: HTML/CSS/JS minification with custom file patterns and cache safety
-- **ezlinks**: Easy linking between documentation pages
-- **pagetree**: Page tree navigation structure
-- **mermaid2**: Native Mermaid.js diagram support with security settings
-- **meta**: Page metadata handling
-- **mkdocs-breadcrumbs-plugin**: Breadcrumb navigation with customizable delimiter
-- **mkdocs-backlinks**: Digital garden-style backlinks between pages
-- **autorefs**: Automatic cross-references between documentation sections
-- **social**: Automatic social media card generation with custom backgrounds
-- **coverage**: Test coverage reports integrated into documentation
-- **extract_listings**: Code snippet extraction and search functionality
-- **spellcheck**: Multi-backend spell checking (symspellpy + codespell) with custom word lists
-- **section-index**: Automatic section index page generation
-- **mkdocstrings**: Comprehensive Python API documentation with extensive configuration
-- **api-autonav**: Automatic API reference navigation generation
-
-## Available Plugins (Installed but Not Active)
-
-- **mkdocs-git-revision-date-localized-plugin**: Adds revision dates to pages
-- **mkdocs-git-committers-plugin-2**: Shows contributors for each page
-- **mkdocs-typer2**: Alternative Typer CLI documentation plugin
-- **tux**: Custom Tux plugin for enhanced documentation features
+- **Search**: Built-in search functionality with highlighting
+- **Tags**: Built-in tagging system for content organization
+- **Navigation**: Explicit navigation configuration in `zensical.toml` nav array
+- **Mermaid**: Diagram support via PyMdown superfences extension
+- **Social Cards**: Automatic social media card generation
+- **Code Highlighting**: Advanced syntax highlighting via PyMdown extensions
+- **Admonitions**: Call-out blocks with collapsible support (via pymdownx.details)
+- **Content Tabs**: Tabbed content sections (via pymdownx.tabbed)
+- **Footnotes**: Reference-style footnotes
+- **Tooltips**: Interactive tooltips for terms and definitions (via abbr extension)
+- **Breadcrumbs**: Automatic breadcrumb navigation (via navigation.path feature)
+- **Instant Navigation**: Fast page transitions without full reload
 
 ## Theme Configuration
 
-- **Name**: `material`
-- **Custom Directory**: `overrides` for theme customizations with main.html and partial overrides
+- **Variant**: `modern` (Material Design-inspired theme)
+- **Custom Directory**: `overrides` for theme customizations (MiniJinja templates)
 - **Logo**: Custom logo in `assets/images/logo.png`
 - **Favicon**: Custom favicon matching logo
 - **Features**:
   - Content actions (edit, view)
   - Code annotations and copy buttons
   - Content tooltips
-  - Header autohide for more content space
-  - Navigation instant loading, progress, prefetch, tracking
-  - Navigation indexes, top, tabs with sticky behavior, sections, prune, expand, path, footer
+  - Navigation instant loading, prefetch, tracking
+  - Navigation indexes, top, tabs, sections, path, footer
   - Table of contents following
-  - Search suggest, highlight, share
-- **Palette**: Custom tokyo-night theme with light/dark mode switching
+  - Search highlight
+- **Palette**: `slate` (dark) and `default` (light) schemes
 - **Fonts**: Inter (text), JetBrains Mono (code)
 - **Icons**: Material Design icons with FontAwesome support
-- **Copyright**: Custom copyright with 2025 date
+- **Copyright**: Custom copyright footer
 
-## Navigation Features
+## Navigation Configuration
 
-- **Literate Navigation**: Navigation handled by mkdocs-literate-nav plugin using SUMMARY.md
-- **Wildcard Support**: `developer/tutorials/*.md` and `developer/concepts/*.md` patterns
-- **Implicit Indexes**: Automatic index page generation for directories
-- **Breadcrumb Navigation**: Customizable breadcrumb trails with delimiter
-- **Backlinks**: Digital garden-style backlinks between related pages
-- **Auto-references**: Automatic cross-references between documentation sections
-- **Section Indexes**: Automatic section index page generation
-- **API Auto-navigation**: Automatic API reference navigation generation
+- **Explicit Navigation**: Navigation defined in `zensical.toml` `nav` array
+- **No Wildcards**: All pages must be explicitly listed in navigation
+- **Structure**: Hierarchical navigation structure matching directory layout
 
 ## Dependency Management
 
@@ -189,24 +170,21 @@ To add new packages to the docs group in `pyproject.toml`:
 3. **Test the package**: Verify it works with your docs:
 
    ```bash
-   uv run mkdocs serve
+   uv run docs serve
    ```
 
 4. **Update lockfile**: Commit the updated `uv.lock` file
 
 ### Common Documentation Package Sources
 
-- **MkDocs plugins**: Search on PyPI for `mkdocs-*`
-- **Python docstring tools**: `griffe-*` packages for advanced API docs
 - **Markdown extensions**: `pymdownx-*` for enhanced markdown features
-- **Theme extensions**: Check mkdocs-material documentation
+- **Zensical**: Check Zensical documentation for available features
 
 ## Development Workflow
 
-- **Build**: `uv run mkdocs build` (used by Cloudflare Workers)
-- **Serve**: `mkdocs serve` on `127.0.0.1:8080`
-- **CSS watching**: Automatic reload for stylesheet changes
-- **Overrides**: Custom templates in `overrides/` directory
+- **Build**: `uv run zensical build` (used by Cloudflare Workers)
+- **Serve**: `uv run zensical serve` on `localhost:8000` (default)
+- **Overrides**: Custom templates in `overrides/` directory (MiniJinja syntax)
 
 ## Deployment Configuration
 
@@ -215,28 +193,26 @@ To add new packages to the docs group in `pyproject.toml`:
 Documentation is deployed using Cloudflare Workers with the following configuration:
 
 - **Config file**: `docs/wrangler.toml`
-- **Build command**: `uv run mkdocs build` (executed by Workers Builds)
+- **Build command**: `uv run zensical build` (executed by GitHub Actions)
 - **Production URL**: `https://tux.atl.dev` (custom domain)
 - **Preview URLs**: Auto-generated `*.workers.dev` URLs for branches/PRs
-- **Static assets**: Served from `../data/build/docs` directory
+- **Static assets**: Served from `site/` directory
 - **Observability**: Enabled for monitoring and logs
 
-### MkDocs Configuration
+### Zensical Configuration
 
-- **Main config**: `docs/mkdocs.yml` (comprehensive theme and plugin setup)
-- **Theme**: `material` (Material Design theme with tokyo-night palette)
+- **Main config**: `zensical.toml` (comprehensive theme and extension setup)
+- **Theme**: `modern` variant (Material Design-inspired)
 - **Extensions**: Extensive Python Markdown and PyMdown extensions for rich formatting
-- **Plugins**: 16+ active plugins including mkdocstrings, social cards, spellcheck, coverage
-- **Navigation**: Handled by literate-nav plugin using SUMMARY.md with wildcard patterns
+- **Navigation**: Explicit navigation defined in `zensical.toml` `nav` array
 - **Assets**: Custom stylesheets, JavaScript, and images in `content/assets/`
-- **Validation**: Nav and links validation with configurable warning levels
-- **Includes**: Abbreviations file and custom overrides
+- **Includes**: Abbreviations file auto-appended via snippets extension
 
 ### Deployment Process
 
-1. **Local development**: `mkdocs serve` for real-time preview
-2. **Build**: `uv run mkdocs build` generates static site
-3. **Workers Builds**: Automatically builds on git push via wrangler.toml
+1. **Local development**: `uv run docs serve` for real-time preview
+2. **Build**: `uv run docs build` generates static site to `site/` directory
+3. **GitHub Actions**: Automatically builds and deploys on git push
 4. **Production**: Deploys to `tux.atl.dev` when pushed to main branch
 5. **Previews**: Branch/PR deployments get temporary URLs for review
 

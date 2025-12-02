@@ -9,7 +9,6 @@ import os
 import shutil
 import subprocess
 import sys
-import webbrowser
 from pathlib import Path
 from typing import Annotated
 
@@ -26,7 +25,7 @@ from scripts.registry import Command
 class DocsCLI(BaseCLI):
     """Documentation operations management.
 
-    Commands for managing MkDocs documentation, including serving,
+    Commands for managing Zensical documentation, including serving,
     building, deploying, and maintenance operations.
     """
 
@@ -34,7 +33,7 @@ class DocsCLI(BaseCLI):
         """Initialize the DocsCLI application.
 
         Sets up the CLI with documentation-specific commands and configures
-        the command registry for MkDocs operations.
+        the command registry for Zensical operations.
         """
         super().__init__(
             name="docs",
@@ -47,24 +46,14 @@ class DocsCLI(BaseCLI):
         """Set up the command registry with all documentation commands."""
         # All commands directly registered without groups
         all_commands = [
-            # Core MkDocs commands
+            # Core Zensical commands
             Command(
                 "serve",
                 self.serve,
                 "Serve documentation locally",
             ),
             Command("build", self.build, "Build documentation site"),
-            Command("clean", self.clean, "Clean build artifacts"),
-            Command(
-                "validate",
-                self.validate,
-                "Validate documentation structure",
-            ),
-            Command("check", self.check, "Check documentation for issues"),
-            Command("watch", self.watch, "Watch for changes and rebuild"),
             Command("lint", self.lint, "Lint documentation files"),
-            Command("info", self.info, "Show documentation configuration"),
-            Command("list", self.list_pages, "List documentation pages"),
             # Cloudflare Workers deployment commands
             Command(
                 "wrangler-dev",
@@ -111,26 +100,22 @@ class DocsCLI(BaseCLI):
                 help_text=command.help_text,
             )
 
-    def _find_mkdocs_config(self) -> str | None:
-        """Find the mkdocs.yml configuration file.
+    def _find_zensical_config(self) -> str | None:
+        """Find the zensical.toml configuration file.
 
         Returns
         -------
         str | None
-            Path to mkdocs.yml if found, None otherwise.
+            Path to zensical.toml if found, None otherwise.
         """
         current_dir = Path.cwd()
 
-        # Check if we're in the docs directory
-        if (current_dir / "mkdocs.yml").exists():
-            return "mkdocs.yml"
-
-        # Check if we're in the root repo with docs subdirectory
-        if (current_dir / "docs" / "mkdocs.yml").exists():
-            return "docs/mkdocs.yml"
+        # Check if we're in the root repo
+        if (current_dir / "zensical.toml").exists():
+            return "zensical.toml"
 
         self.rich.print_error(
-            "Can't find mkdocs.yml file. Please run from the project root or docs directory.",
+            "Can't find zensical.toml file. Please run from the project root.",
         )
         return None
 
@@ -168,76 +153,50 @@ class DocsCLI(BaseCLI):
 
     def serve(
         self,
-        host: Annotated[
+        dev_addr: Annotated[
             str,
-            Option("--host", "-h", help="Host to serve on"),
-        ] = "127.0.0.1",
-        port: Annotated[int, Option("--port", "-p", help="Port to serve on")] = 8000,
-        dirty: Annotated[
-            bool,
-            Option("--dirty", help="Rebuild only changed files"),
-        ] = False,
-        no_livereload: Annotated[
-            bool,
-            Option("--no-livereload", help="Disable live reload"),
-        ] = False,
-        clean: Annotated[
-            bool,
-            Option("--clean", help="Clean build directory before building"),
-        ] = False,
-        strict: Annotated[bool, Option("--strict", help="Enable strict mode")] = False,
-        watch_theme: Annotated[
-            bool,
-            Option("--watch-theme", help="Watch theme files for changes"),
-        ] = False,
+            Option(
+                "--dev-addr",
+                "-a",
+                help="IP address and port (default: localhost:8000)",
+            ),
+        ] = "localhost:8000",
         open_browser: Annotated[
             bool,
-            Option("--open", help="Open browser automatically"),
+            Option("--open", "-o", help="Open preview in default browser"),
+        ] = False,
+        strict: Annotated[
+            bool,
+            Option("--strict", "-s", help="Strict mode (currently unsupported)"),
         ] = False,
     ) -> None:
-        """Serve documentation locally with live reload.
-
-        Note: Uses click==8.2.1 to fix file watching issue with click>=8.3.0
-        (https://github.com/mkdocs/mkdocs/issues/4032)
-        """
+        """Serve documentation locally with live reload."""
         self.rich.print_section("Serving Documentation", "blue")
 
-        if not (mkdocs_path := self._find_mkdocs_config()):
+        if not self._find_zensical_config():
             return
 
-        # Pin click to 8.2.1 to fix file watching (click>=8.3.0 breaks MkDocs file watching)
         cmd = [
             "uv",
             "run",
-            "--with",
-            "click==8.2.1",
-            "mkdocs",
+            "zensical",
             "serve",
-            f"--dev-addr={host}:{port}",
+            "--dev-addr",
+            dev_addr,
         ]
 
-        if dirty:
-            cmd.append("--dirty")
-        if no_livereload:
-            cmd.append("--no-livereload")
-        if clean:
-            cmd.append("--clean")
+        if open_browser:
+            cmd.append("--open")
+
         if strict:
             cmd.append("--strict")
-        if watch_theme:
-            cmd.append("--watch-theme")
-
-        cmd.extend(["-f", mkdocs_path])
 
         try:
-            if open_browser:
-                self.rich.print_info(f"Opening browser at http://{host}:{port}")
-                webbrowser.open(f"http://{host}:{port}")
-
             # Run server command without capturing output (for real-time streaming)
-            # This allows mkdocs serve to run interactively and stream output
+            # This allows zensical serve to run interactively and stream output
+            # Note: --open flag will automatically open browser if provided
             self.rich.print_info(
-                f"Starting documentation server at http://{host}:{port}",
+                f"Starting documentation server at {dev_addr}",
             )
             subprocess.run(cmd, check=True, env=os.environ.copy())
         except subprocess.CalledProcessError:
@@ -249,52 +208,29 @@ class DocsCLI(BaseCLI):
         self,
         clean: Annotated[
             bool,
-            Option("--clean", help="Remove old files from site_dir before building"),
-        ] = True,
-        strict: Annotated[bool, Option("--strict", help="Enable strict mode")] = False,
-        theme: Annotated[
-            str,
-            Option("--theme", "-t", help="Theme to use"),
-        ] = "",
-        site_dir: Annotated[
-            str,
-            Option(
-                "--site-dir",
-                "--output",
-                "-d",
-                help="Output directory",
-            ),
-        ] = "",
-        use_directory_urls: Annotated[
+            Option("--clean", "-c", help="Clean cache"),
+        ] = False,
+        strict: Annotated[
             bool,
-            Option(
-                "--use-directory-urls",
-                help="Use directory URLs",
-            ),
-        ] = True,
+            Option("--strict", "-s", help="Strict mode (currently unsupported)"),
+        ] = False,
     ) -> None:
         """Build documentation site for production."""
         self.rich.print_section("Building Documentation", "blue")
 
-        if not (mkdocs_path := self._find_mkdocs_config()):
+        if not self._find_zensical_config():
             return
 
-        cmd = ["uv", "run", "mkdocs", "build", "-f", mkdocs_path]
+        cmd = ["uv", "run", "zensical", "build"]
 
         if clean:
             cmd.append("--clean")
         if strict:
             cmd.append("--strict")
-        if theme:
-            cmd.extend(["--theme", theme])
-        if site_dir:
-            cmd.extend(["--site-dir", site_dir])
-        if not use_directory_urls:
-            cmd.append("--no-directory-urls")
 
         try:
             # Run build command without capturing output (for real-time streaming)
-            # This allows mkdocs build to stream output to the terminal
+            # This allows zensical build to stream output to the terminal
             self.rich.print_info("Building documentation...")
             subprocess.run(cmd, check=True, env=os.environ.copy())
             self.rich.print_success("Documentation built successfully")
@@ -302,55 +238,6 @@ class DocsCLI(BaseCLI):
             self.rich.print_error("Failed to build documentation")
         except KeyboardInterrupt:
             self.rich.print_info("\nBuild interrupted")
-
-    def clean(self) -> None:
-        """Clean documentation build artifacts."""
-        self.rich.print_section("Cleaning Documentation", "blue")
-
-        # Clean build directory
-        build_dir = Path("build/docs")
-        self._clean_directory(build_dir, "Build directory")
-
-        # Clean MkDocs cache
-        cache_dir = Path("docs/.cache")
-        self._clean_directory(cache_dir, "MkDocs cache")
-
-    def validate(self) -> None:
-        """Validate documentation structure and links."""
-        self.rich.print_section("Validating Documentation", "blue")
-
-        if not (mkdocs_path := self._find_mkdocs_config()):
-            return
-
-        cmd = ["uv", "run", "mkdocs", "build", "--strict", "-f", mkdocs_path]
-
-        try:
-            self._run_command(cmd)
-            self.rich.print_success("Documentation validation passed")
-        except subprocess.CalledProcessError:
-            self.rich.print_error("Documentation validation failed")
-
-    def check(self) -> None:
-        """Check documentation for issues using MkDocs build validation."""
-        self.rich.print_section("Checking Documentation", "blue")
-
-        if not (mkdocs_path := self._find_mkdocs_config()):
-            return
-
-        # Use MkDocs build with --strict to validate configuration and content
-        try:
-            self._run_command(
-                ["uv", "run", "mkdocs", "build", "--strict", "-f", mkdocs_path],
-            )
-            self.rich.print_success("Documentation validation passed")
-        except subprocess.CalledProcessError:
-            self.rich.print_error("Documentation validation failed")
-
-    def watch(self) -> None:
-        """Watch for changes and rebuild automatically."""
-        self.rich.print_section("Watching Documentation", "blue")
-        self.rich.print_info("Starting documentation server with auto-reload...")
-        self.serve()
 
     def lint(self) -> None:
         """Lint documentation files."""
@@ -384,73 +271,6 @@ class DocsCLI(BaseCLI):
                 self.rich.print_warning(f"  • {issue}")
         else:
             self.rich.print_success("No documentation linting issues found")
-
-    def info(self) -> None:
-        """Show documentation configuration and status."""
-        self.rich.print_section("Documentation Information", "blue")
-
-        # Show mkdocs.yml location
-        if mkdocs_path := self._find_mkdocs_config():
-            self.rich.print_success(f"MkDocs config: {mkdocs_path}")
-        else:
-            return
-
-        # Show docs directory structure
-        docs_dir = Path("docs/content")
-        if docs_dir.exists():
-            self.rich.print_info(f"Content directory: {docs_dir}")
-
-            # Count files
-            md_files = list(docs_dir.rglob("*.md"))
-            self.rich.print_info(f"Markdown files: {len(md_files)}")
-
-            # Show build directory
-            build_dir = Path("build/docs")
-            if build_dir.exists():
-                self.rich.print_info(f"Build directory: {build_dir} (exists)")
-            else:
-                self.rich.print_info(f"Build directory: {build_dir} (not built)")
-        else:
-            self.rich.print_warning("Content directory not found")
-
-    def list_pages(self) -> None:
-        """List all documentation pages."""
-        self.rich.print_section("Documentation Pages", "blue")
-
-        docs_dir = Path("docs/content")
-        if not docs_dir.exists():
-            self.rich.print_error("docs/content directory not found")
-            return
-
-        md_files = list(docs_dir.rglob("*.md"))
-        if not md_files:
-            self.rich.print_warning("No markdown files found")
-            return
-
-        # Create a table of pages
-        table_data: list[tuple[str, str]] = []
-        for md_file in sorted(md_files):
-            rel_path = md_file.relative_to(docs_dir)
-            try:
-                first_line = md_file.read_text().split("\n")[0].strip()
-                title = (
-                    first_line.lstrip("# ")
-                    if first_line.startswith("#")
-                    else "No title"
-                )
-            except Exception:
-                title = "Error reading file"
-
-            table_data.append((str(rel_path), title))
-
-        if table_data:
-            self.rich.print_rich_table(
-                "Documentation Pages",
-                [("Path", "cyan"), ("Title", "green")],
-                table_data,
-            )
-        else:
-            self.rich.print_info("No pages found")
 
     def wrangler_dev(
         self,
@@ -711,7 +531,7 @@ class DocsCLI(BaseCLI):
             os.chdir(original_dir)
 
 
-# Create the CLI app instance for mkdocs-typer
+# Create the CLI app instance
 app = DocsCLI().app
 
 

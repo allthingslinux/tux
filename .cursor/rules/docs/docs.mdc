@@ -28,9 +28,9 @@ This documentation rules system is organized into focused, modular guides:
 |------|---------|-------------|
 | **[`principals.mdc`](principals.mdc)** | Documentation frameworks and methodologies | Planning documentation structure, choosing content types |
 | **[`style.mdc`](style.mdc)** | Writing standards and formatting | Writing new content, ensuring consistency |
-| **[`syntax.mdc`](syntax.mdc)** | MkDocs-Material features and syntax | Using advanced formatting, interactive elements |
+| **[`syntax.mdc`](syntax.mdc)** | Zensical features and syntax | Using advanced formatting, interactive elements |
 | **[`structure.mdc`](structure.mdc)** | Organization and navigation | Adding new pages, understanding hierarchy |
-| **[`mkdocs.mdc`](mkdocs.mdc)** | Technical setup and deployment | Configuring plugins, deploying changes |
+| **[`zensical.mdc`](zensical.mdc)** | Technical setup and deployment | Configuring extensions, deploying changes |
 | **[`patterns.mdc`](patterns.mdc)** | Practical examples and decision guides | Documenting specific features, troubleshooting |
 
 ## 🚀 **Quick Start Workflow**
@@ -43,14 +43,14 @@ This documentation rules system is organized into focused, modular guides:
 4. **Apply Writing Standards** → Follow [`style.mdc`](style.mdc) guidelines
 5. **Use Appropriate Syntax** → Leverage [`syntax.mdc`](syntax.mdc) features
 6. **Follow Patterns** → Use [`patterns.mdc`](patterns.mdc) examples
-7. **Configure Technical Setup** → Reference [`mkdocs.mdc`](mkdocs.mdc) for deployment
+7. **Configure Technical Setup** → Reference [`zensical.mdc`](zensical.mdc) for Zensical setup and deployment
 
 ### For Documentation Maintenance
 
 1. **Update Content** → Apply writing standards from [`style.mdc`](style.mdc)
 2. **Use New Features** → Check [`syntax.mdc`](syntax.mdc) for available enhancements
 3. **Maintain Structure** → Follow organization rules in [`structure.mdc`](structure.mdc)
-4. **Deploy Changes** → Use workflows from [`mkdocs.mdc`](mkdocs.mdc)
+4. **Deploy Changes** → Use workflows from [`zensical.mdc`](zensical.mdc) for Zensical deployment
 
 ## 📋 **Essential Decision Guides**
 
@@ -98,20 +98,19 @@ This documentation rules system is organized into focused, modular guides:
 
 ### Current Documentation Features
 
-**From [`mkdocs.mdc`](mkdocs.mdc):**
+**From [`zensical.mdc`](zensical.mdc):**
 
-- **16+ Active Plugins**: Social cards, spellcheck, coverage reports, backlinks
-- **Literate Navigation**: SUMMARY.md with wildcard patterns
+- **Built-in Features**: Search, tags, social cards, navigation
+- **Explicit Navigation**: Defined in `zensical.toml` `nav` array
 - **Enhanced Syntax**: Mermaid diagrams, advanced highlighting, annotations
-- **Quality Assurance**: Multi-backend spellcheck, link validation
-- **Modern UI**: Tokyo Night theme, custom fonts and branding
+- **Modern UI**: Slate/default theme, custom fonts and branding
 
 ### Development Workflow
 
-**Reference [`mkdocs.mdc`](mkdocs.mdc) for:**
+**Reference [`zensical.mdc`](zensical.mdc) for:**
 
-- Local development with `mkdocs serve`
-- Building with `uv run mkdocs build`
+- Local development with `uv run docs serve`
+- Building with `uv run docs build`
 - Deployment via Cloudflare Workers
 - Conventional commit standards
 
@@ -123,7 +122,7 @@ This documentation rules system is organized into focused, modular guides:
 2. **Follow Pattern**: Use command template from [`patterns.mdc`](patterns.mdc)
 3. **Apply Style**: Active voice, second person from [`style.mdc`](style.mdc)
 4. **Add Syntax**: Code blocks, admonitions from [`syntax.mdc`](syntax.mdc)
-5. **Update Navigation**: Add to SUMMARY.md per [`structure.mdc`](structure.mdc)
+5. **Update Navigation**: Add to `zensical.toml` nav array per [`structure.mdc`](structure.mdc)
 
 ### Adding Configuration Documentation
 
@@ -139,7 +138,7 @@ This documentation rules system is organized into focused, modular guides:
 2. **Select Structure**: `developer/guides/` or `developer/concepts/`
 3. **Apply Standards**: Technical writing guidelines from [`style.mdc`](style.mdc)
 4. **Use Features**: Code annotations, diagrams from [`syntax.mdc`](syntax.mdc)
-5. **Add Navigation**: Wildcard patterns in SUMMARY.md
+5. **Add Navigation**: Explicit entries in `zensical.toml` nav array
 
 ## ✅ **Quality Assurance Checklist**
 
@@ -160,37 +159,33 @@ This documentation rules system is organized into focused, modular guides:
 
 ### Before Deployment
 
-- [ ] **Navigation**: Updated SUMMARY.md? (Check [`structure.mdc`](structure.mdc))
+- [ ] **Navigation**: Updated `zensical.toml` nav array? (Check [`structure.mdc`](structure.mdc))
 - [ ] **Links**: All cross-references working?
-- [ ] **Validation**: Passes MkDocs build? (Check [`mkdocs.mdc`](mkdocs.mdc))
-- [ ] **Spellcheck**: Passes automated spellcheck?
+- [ ] **Validation**: Passes Zensical build? (Check [`zensical.mdc`](zensical.mdc))
+- [ ] **Spellcheck**: Use external tools (not available in Zensical)
 - [ ] **Mobile**: Content works on mobile devices?
 
 ## 🔧 **Advanced Features & Automation**
 
 ### Available Automation
 
-- **Spellcheck**: Multi-backend with custom dictionaries
-- **Social Cards**: Auto-generated previews for all pages
-- **Coverage Reports**: Test coverage visualization
-- **Snippet Search**: Code example search functionality
-- **Backlinks**: Digital garden-style content relationships
-- **API Auto-generation**: Automatic API documentation
+- **Social Cards**: Auto-generated previews for all pages (built into Zensical)
+- **Abbreviations**: Auto-appended to all pages via snippets extension
+- **Mermaid Diagrams**: Rendered client-side via superfences extension
+- **GitHub Links**: Auto-linked via magiclink extension
 
 ### When to Use Advanced Features
 
-- **Spellcheck**: Always enabled, add new terms to `assets/known_words.txt`
 - **Social Cards**: Automatic, customize via page meta or global config
-- **Coverage Reports**: For technical documentation sections
-- **Snippet Search**: For code examples that need cross-referencing
-- **Backlinks**: For complex, interconnected content
-- **API Docs**: For all Python modules (auto-generated)
+- **Abbreviations**: Add to `includes/abbreviations.md` for auto-append
+- **Mermaid Diagrams**: Use in code fences with `mermaid` language
+- **GitHub Links**: Auto-links issues, commits, users via magiclink extension
 
 ## 🎯 **Key Resources**
 
 - **Existing Documentation**: Study `docs/content/` for patterns and style
-- **Navigation Structure**: Review `docs/content/SUMMARY.md` for literate navigation
-- **MkDocs Config**: Review `docs/mkdocs.yml` for plugin and theme configuration
+- **Navigation Structure**: Review `zensical.toml` for navigation configuration
+- **Zensical Config**: Review `zensical.toml` for theme and extension configuration
 - **Tux Codebase**: Reference actual implementation for accuracy
 - **Assets**: Check `docs/content/assets/` for images, styles, and customizations
 - **Community**: Join Discord for user questions and feedback

@@ -2,7 +2,7 @@
 """
 Unified CLI Entry Point for Documentation.
 
-This module provides a unified entry point for all CLI commands to be used with mkdocs-typer.
+This module provides a unified entry point for all CLI commands.
 It combines all CLI modules into a single Typer application for documentation generation.
 """
 

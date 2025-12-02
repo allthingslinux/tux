@@ -5,7 +5,7 @@
 ## Tech Stack
 
 **Core:** Python 3.13+ • discord.py • PostgreSQL • SQLModel • Docker
-**Tools:** uv • ruff • basedpyright • pytest • loguru • sentry-sdk • httpx • MkDocs-Material
+**Tools:** uv • ruff • basedpyright • pytest • loguru • sentry-sdk • httpx • Zensical
 
 ## Quick Setup
 
@@ -31,7 +31,7 @@ tux/
 │   └── main.py                 # Entry point
 ├── scripts/                    # CLI scripts
 ├── tests/                      # Tests (unit/integration/e2e)
-├── docs/                       # MkDocs documentation
+├── docs/                       # Zensical documentation
 ├── docker/                     # Docker related files
 └── config/                     # Config examples
 ```

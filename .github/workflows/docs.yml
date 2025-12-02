@@ -6,19 +6,21 @@ on:
     paths:
       - docs/**
       - src/**
-      - tests/**
       - pyproject.toml
       - uv.lock
       - .github/workflows/docs.yml
+      - scripts/docs.py
+      - zensical.toml
   pull_request:
     branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
     paths:
       - docs/**
       - src/**
-      - tests/**
       - pyproject.toml
       - uv.lock
       - .github/workflows/docs.yml
+      - scripts/docs.py
+      - zensical.toml
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -26,7 +28,6 @@ concurrency:
 env:
   PYTHON_VERSION: 3.13.8
   ARTIFACT_RETENTION_DAYS: 7
-  WAIT_INTERVAL_SECONDS: 30
 jobs:
   changes:
     name: File Detection
@@ -48,6 +49,8 @@ jobs:
         with:
           files: |
             docs/**
+            zensical.toml
+            scripts/docs.py
             .github/workflows/docs.yml
       - name: Check Code
         uses: tj-actions/changed-files@v46
@@ -55,33 +58,12 @@ jobs:
         with:
           files: |
             src/**
-            tests/**
             pyproject.toml
             uv.lock
-  wait:
-    name: Wait for Tests
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    timeout-minutes: 15
-    if: needs.changes.outputs.any || github.event_name == 'workflow_dispatch'
-    needs: [changes]
-    steps:
-      # Wait for tests workflow to complete before building docs
-      # Note: This step requires GitHub API access and won't work with act (local testing)
-      # It will fail gracefully in act, allowing manual testing of docs build steps
-      - name: Wait for Tests Workflow
-        uses: lewagon/wait-on-check-action@v1.4.1
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          check-regexp: ^Run All Tests.*
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: ${{ env.WAIT_INTERVAL_SECONDS }}
-          allowed-conclusions: success
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [changes, wait]
+    needs: [changes]
     if: needs.changes.outputs.any || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
@@ -100,50 +82,28 @@ jobs:
             .github/actions
             .github/workflows
             .github/scripts
+            zensical.toml
+            pyproject.toml
+            uv.lock
       - name: Setup Python
         uses: ./.github/actions/setup-python
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           enable-cache: true
-      - name: Install System Dependencies
-        run: |
-          echo "Installing system dependencies for image optimization..."
-          sudo apt-get update
-          sudo apt-get install -y pngquant
       - name: Install Dependencies
         run: |
           echo "Installing documentation dependencies..."
           uv sync
-
-      # Download coverage from tests workflow (requires GitHub API)
-      # Note: This step requires GitHub API access and won't work with act (local testing)
-      # For local testing with act, coverage will need to be generated manually or skipped
-      - name: Download Coverage from Tests Workflow
-        uses: dawidd6/action-download-artifact@v11
-        continue-on-error: true
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: tests.yml
-          name: coverage-html
-          path: docs/htmlcov
-          if_no_artifact_found: ignore
-          search_artifacts: true
-          allow_forks: false
-          repo: ${{ github.repository }}
-          commit: ${{ github.event.pull_request.head.sha || github.sha }}
-      - name: Build MkDocs Documentation
-        working-directory: docs
-        env:
-          MKDOCS_GIT_COMMITTERS_APIKEY: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Zensical Documentation
         run: |
-          echo "Building MkDocs documentation..."
-          uv run mkdocs build
+          echo "Building Zensical documentation..."
+          uv run zensical build
           echo "Documentation build completed successfully"
       - name: Upload Documentation Artifact
         uses: actions/upload-artifact@v4
         with:
           name: docs
-          path: docs/site
+          path: site
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
           if-no-files-found: warn
   deploy:
@@ -163,8 +123,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docs
-          path: docs/site
-
+          path: site
       # Deploy to Cloudflare (requires Cloudflare API)
       # Note: These steps require Cloudflare API access and won't work with act (local testing)
       # They will fail gracefully in act, allowing manual testing of docs build steps

@@ -3,7 +3,11 @@
   <div class="md-footer-links">
     {% for link in config.extra.footer_links %}
     {% if link.text and link.href %}
-    {% set is_external = link.href.startswith(('http://', 'https://')) %}
+    {% set href_str = link.href | string %}
+    {% set is_external = false %}
+    {% if "://" in href_str %}
+      {% set is_external = true %}
+    {% endif %}
     <a href="{% if is_external %}{{ link.href }}{% else %}{{ link.href | url }}{% endif %}" {% if is_external %}
       target="_blank" rel="noopener" {% endif %}>{{ link.text }}</a>
     {% if not loop.last %}•{% endif %}

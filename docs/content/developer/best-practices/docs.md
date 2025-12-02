@@ -83,7 +83,7 @@ docs/content/
 - [ ] **Prerequisites listed**: Required knowledge/software upfront
 - [ ] **Examples tested**: Code examples are functional
 - [ ] **Links validated**: All references work
-- [ ] **Builds cleanly**: `uv run mkdocs build --strict` passes
+- [ ] **Builds cleanly**: `uv run zensical build --strict` passes
 
 ### Maintenance
 
@@ -97,17 +97,17 @@ docs/content/
 
 ```bash
 # Local development
-uv run mkdocs serve
+uv run docs serve
 
 # Build for production
-uv run mkdocs build
+uv run docs build
 ```
 
 ### Quality Checks
 
 - **Spellcheck**: Multi-backend validation
 - **Link validation**: Automated cross-reference checking
-- **Build validation**: Strict MkDocs build requirements
+- **Build validation**: Strict Zensical build requirements
 - **Accessibility**: Semantic HTML and alt text validation
 
 ## Contributing to Documentation
@@ -121,8 +121,8 @@ uv run mkdocs build
 
 ### Pull Request Process
 
-1. **Test locally**: `uv run mkdocs serve` to preview
-2. **Build cleanly**: `uv run mkdocs build --strict` passes
+1. **Test locally**: `uv run docs serve` to preview
+2. **Build cleanly**: `uv run docs build --strict` passes
 3. **Follow conventions**: Use conventional commit format
 4. **Update navigation**: Modify SUMMARY.md if needed
 
@@ -131,4 +131,4 @@ uv run mkdocs build
 - [Diátaxis Framework](https://diataxis.fr/) - Documentation methodology
 - [Write the Docs](https://www.writethedocs.org/) - Community and standards
 - [Google Developer Style Guide](https://developers.google.com/style) - Technical writing
-- [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) - Platform documentation
+- [Zensical](https://zensical.org/) - Documentation platform

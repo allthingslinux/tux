@@ -44,9 +44,7 @@ alwaysApply: true
 
 **Documentation:**
 
-- `mkdocs` + `mkdocs-material`
-- `mkdocstrings` + `mkdocstrings-python`
-- `griffe` + plugins (API docs generation)
+- `zensical` (Documentation platform)
 - `pymdown-extensions` (Markdown extensions)
 
 **Type Stubs:**
@@ -114,7 +112,7 @@ tux/
 │   └── help/                  # Help system
 ├── scripts/                   # CLI scripts (typer-based)
 ├── tests/                     # Test suite (unit/integration/e2e)
-├── docs/                      # MkDocs documentation
+├── docs/                      # Zensical documentation
 ├── config/                    # Configuration examples
 └── docker/                    # Docker-related files
 ```

@@ -452,7 +452,7 @@ class DevCLI(BaseCLI):
             sys.exit(1)
 
 
-# Create the CLI app instance for mkdocs-typer
+# Create the CLI app instance
 app = DevCLI().app
 
 

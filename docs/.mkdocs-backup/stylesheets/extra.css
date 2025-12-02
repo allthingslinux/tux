@@ -59,6 +59,20 @@
   max-width: 1800px;
 }
 
+/* Override for home page to prevent overflow */
+.md-main__inner.md-grid:has(.tux-home-page),
+.md-grid:has(.tux-home-page),
+.md-main__inner.md-grid:has(.tux-home),
+.md-grid:has(.tux-home) {
+  max-width: 100% !important;
+  width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
 /* Or, to stretch all grid elements (including header and footer if they use .md-grid) */
 /* .md-grid {
     max-width: initial;
@@ -146,6 +160,10 @@
   /* Prevent layout shifts from font loading */
   contain: layout style;
   min-height: 0;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 /* Stabilize grid items to prevent width recalculation */
@@ -169,6 +187,8 @@
   margin: 2rem auto !important;
   width: 100% !important;
   max-width: 100% !important;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 /* Key Features section - 3 columns */
@@ -187,6 +207,13 @@
   text-align: center !important;
   height: auto !important;
   gap: 0.5rem !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .custom-card:hover {
@@ -279,15 +306,32 @@
 @media screen and (max-width: 76.25em) {
   .custom-cards-grid:not(.key-features-grid) {
     grid-template-columns: repeat(2, 1fr) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
   }
   .custom-cards-grid.key-features-grid {
     grid-template-columns: repeat(2, 1fr) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
   }
 }
 
 @media screen and (max-width: 48em) {
   .custom-cards-grid {
     grid-template-columns: 1fr !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    padding: 0 0.5rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .custom-card {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }
 
@@ -337,301 +381,7 @@
   flex-shrink: 0 !important;
 }
 
-/* Home page content centering - Landing page layout */
-.home-page-content {
-  margin: 0 auto;
-  padding: 3rem 2rem;
-  max-width: 1400px;
-  width: 100%;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* Ensure all direct children are centered and full width */
-.home-page-content > * {
-  width: 100%;
-  max-width: 100%;
-}
-
-/* But paragraphs should have max-width for readability */
-.home-page-content > p {
-  max-width: 800px !important;
-}
-
-.home-page-content > p:first-of-type {
-  max-width: 800px !important;
-}
-
-/* Override Material's content width constraints for home page */
-.md-content__inner:has(.home-page-content),
-.md-typeset:has(.home-page-content),
-.home-page-content .md-typeset {
-  max-width: 100% !important;
-  width: 100% !important;
-}
-
-/* Home page typography */
-.home-page-content h1 {
-  font-size: 3.5rem !important;
-  font-weight: 700 !important;
-  line-height: 1.2 !important;
-  margin: 0 0 1.5rem 0 !important;
-  padding: 0 !important;
-  text-align: center !important;
-  letter-spacing: -0.02em !important;
-}
-
-.home-page-content h2 {
-  font-size: 2.25rem !important;
-  font-weight: 600 !important;
-  line-height: 1.3 !important;
-  margin: 4rem 0 1.5rem 0 !important;
-  padding: 0 !important;
-  text-align: center !important;
-  letter-spacing: -0.01em !important;
-}
-
-.home-page-content h3 {
-  font-size: 1.5rem !important;
-  font-weight: 600 !important;
-  line-height: 1.4 !important;
-  margin: 2rem 0 1rem 0 !important;
-  padding: 0 !important;
-  text-align: center !important;
-}
-
-/* Main intro paragraph */
-.home-page-content > p:first-of-type {
-  font-size: 1.25rem !important;
-  line-height: 1.65 !important;
-  margin: 0 auto 2rem auto !important;
-  max-width: 800px !important;
-  text-align: center !important;
-  color: var(--md-default-fg-color--light) !important;
-}
-
-/* Regular paragraphs */
-.home-page-content > p {
-  font-size: 1.125rem !important;
-  line-height: 1.65 !important;
-  margin: 0 auto 1.5rem auto !important;
-  max-width: 800px !important;
-  text-align: center !important;
-  color: var(--md-default-fg-color--light) !important;
-}
-
-/* Paragraphs within sections */
-.home-page-content section > p,
-.home-page-content div > p:not(:has(a)):not(:first-of-type) {
-  font-size: 1rem !important;
-  line-height: 1.55 !important;
-  margin: 0 auto 1.2rem auto !important;
-  max-width: 700px !important;
-  text-align: center !important;
-}
-
-/* Horizontal rules */
-.home-page-content hr {
-  margin: 2rem auto !important;
-  max-width: 600px !important;
-  border-color: var(--md-border-color) !important;
-}
-
-/* Images and media - centered */
-.home-page-content img {
-  display: block !important;
-  margin: 1.5rem auto !important;
-  max-width: 100% !important;
-}
-
-/* Links in paragraphs */
-.home-page-content p a {
-  color: var(--md-primary-fg-color) !important;
-  text-decoration: underline !important;
-}
-
-.home-page-content p a:hover {
-  color: var(--md-accent-fg-color) !important;
-}
-
-/* Footer links at bottom */
-.home-page-content > p:last-child {
-  margin-top: 3rem !important;
-  font-size: 0.95rem !important;
-  color: var(--md-default-fg-color--light) !important;
-}
-
-.home-page-content > p:last-child a {
-  margin: 0 0.5rem !important;
-}
-
-/* Italic text (Made with ❤️) */
-.home-page-content > p:nth-last-child(2) {
-  font-size: 1rem !important;
-  font-style: italic !important;
-  margin: 2rem auto !important;
-}
-
-/* Responsive typography for home page */
-@media screen and (max-width: 76.25em) {
-  .home-page-content h1 {
-    font-size: 2.5rem !important;
-  }
-
-  .home-page-content h2 {
-    font-size: 1.875rem !important;
-  }
-
-  .home-page-content > p:first-of-type {
-    font-size: 1.125rem !important;
-  }
-}
-
-@media screen and (max-width: 48em) {
-  .home-page-content {
-    padding: 2rem 1rem !important;
-  }
-
-  .home-page-content h1 {
-    font-size: 2rem !important;
-  }
-
-  .home-page-content h2 {
-    font-size: 1.5rem !important;
-  }
-
-  .home-page-content h3 {
-    font-size: 1.25rem !important;
-  }
-
-  .home-page-content > p:first-of-type {
-    font-size: 1rem !important;
-  }
-}
-
-/* Ensure why-tux-grid breaks out of any width constraints */
-.home-page-content .why-tux-grid,
-.home-page-content .why-tux-grid > ul {
-  max-width: 100% !important;
-  width: 100% !important;
-}
-
-/* Why Tux feature grid */
-.why-tux-grid {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 2.5rem auto !important;
-}
-
-.why-tux-grid > ul {
-  display: grid !important;
-  grid-template-columns: repeat(3, 1fr) !important;
-  gap: 1.5rem !important;
-  list-style: none !important;
-  padding: 0 !important;
-  margin: 0 auto !important;
-  align-items: stretch !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  justify-items: stretch !important;
-}
-
-/* Responsive: 2 columns on medium screens, 1 on small */
-@media screen and (max-width: 76.25em) {
-  .why-tux-grid,
-  .why-tux-grid > ul {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-}
-
-@media screen and (max-width: 48em) {
-  .why-tux-grid,
-  .why-tux-grid > ul {
-    grid-template-columns: 1fr !important;
-  }
-}
-
-.why-tux-grid > ul > li {
-  display: flex !important;
-  flex-direction: column !important;
-  padding: 1.5rem !important;
-  border-radius: 0.5rem !important;
-  background-color: var(--md-default-bg-color--light) !important;
-  border: 1px solid var(--md-border-color) !important;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
-  min-height: 100% !important;
-  height: 100% !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-}
-
-.why-tux-grid > ul > li:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-}
-
-.why-tux-grid > ul > li > p:first-child {
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.75rem !important;
-  margin: 0 0 0.75rem 0 !important;
-  font-size: 1rem !important;
-  font-weight: 600 !important;
-  width: 100% !important;
-}
-
-.why-tux-grid > ul > li > p:first-child strong {
-  font-size: 1.125rem !important;
-  font-weight: 600 !important;
-  line-height: 1.4 !important;
-}
-
-.why-tux-grid > ul > li > p:first-child i,
-.why-tux-grid > ul > li > p:first-child [class*="material-"],
-.why-tux-grid > ul > li > p:first-child [class*="fa-"],
-.why-tux-grid > ul > li > p:first-child svg,
-.why-tux-grid > ul > li > p:first-child .md-icon,
-.why-tux-grid > ul > li > p:first-child .twemoji {
-  font-size: 2rem !important;
-  color: var(--md-primary-fg-color) !important;
-  flex-shrink: 0 !important;
-  width: 2rem !important;
-  height: 2rem !important;
-  min-width: 2rem !important;
-  min-height: 2rem !important;
-  display: inline-block !important;
-  vertical-align: middle !important;
-}
-
-.why-tux-grid > ul > li > p:first-child svg {
-  width: 2rem !important;
-  height: 2rem !important;
-  min-width: 2rem !important;
-  min-height: 2rem !important;
-  display: block !important;
-}
-
-.why-tux-grid > ul > li > p:not(:first-child) {
-  margin: 0 !important;
-  color: var(--md-default-fg-color--light) !important;
-  line-height: 1.6 !important;
-  flex: 1 !important;
-  width: 100% !important;
-}
-
-/* Dark mode styling for why-tux cards */
-[data-md-color-scheme="tokyo-night"] .why-tux-grid > ul > li {
-  background-color: rgba(26, 27, 38, 0.54) !important;
-  border: 1px solid #787c99 !important;
-}
-
-[data-md-color-scheme="tokyo-night"] .why-tux-grid > ul > li:hover {
-  background-color: rgba(26, 27, 38, 0.7) !important;
-  border-color: #7aa2f7 !important;
-  box-shadow: 0 4px 12px rgba(122, 162, 247, 0.2) !important;
-}
+/* Home page styles moved to home.css */
 
 /* Tech stack grid - custom implementation */
 .tech-stack-grid {
@@ -715,6 +465,17 @@
 @media screen and (max-width: 48em) {
   .grards {
     grid-template-columns: repeat(1, 1fr) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    padding: 0 0.5rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .grards > * {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }
 

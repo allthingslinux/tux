@@ -24,8 +24,8 @@ preview_urls = true
 workers_dev = true
 
 # Static Assets Configuration
-# Optimized for static documentation (MkDocs output)
-# MkDocs builds to ./site (docs/site relative to repo root)
+# Optimized for static documentation (Zensical output)
+# Zensical builds to ./site (relative to repo root)
 [assets]
 directory = "./site"
 not_found_handling = "404-page"          # Serve 404.html for missing pages
@@ -75,9 +75,8 @@ mode = "smart"
 
 # Note: Build configuration is handled by GitHub Actions CI/CD
 # Build process (in .github/workflows/docs.yml):
-# 1. Run tests and generate coverage reports
-# 2. Build MkDocs documentation with coverage included
-# 3. Upload Worker version and deploy to appropriate environment
+# 1. Build Zensical documentation
+# 2. Upload Worker version and deploy to appropriate environment
 #
 # Deployment uses Wrangler v4 with Versions API:
 # - Production: wrangler versions upload --env production + wrangler versions deploy

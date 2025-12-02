@@ -8,6 +8,5 @@ tags:
   - testing
   - coverage
 ---
----
 
 # Coverage

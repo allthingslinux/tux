@@ -197,7 +197,7 @@ jobs:
 
 ## Documentation Automation
 
-### MkDocs Pipeline
+### Zensical Pipeline
 
 Tux automates documentation deployment:
 
@@ -207,7 +207,7 @@ jobs:
   build:
     steps:
       - name: Build Documentation
-        run: uv run mkdocs build --strict --verbose
+        run: uv run zensical build --strict
       - name: Check Links
         run: npm install -g markdown-link-check
 ```

@@ -18,23 +18,23 @@ The documentation follows a role-based structure organized around user needs:
 - **FAQ**: Frequently asked questions (linked from footer)
 - **Tags**: Content tagging and categorization
 
-Navigation is handled by the `mkdocs-literate-nav` plugin using `navigation.md` with wildcard patterns.
+Navigation is explicitly defined in `zensical.toml` using the `nav` array.
 
 ## Content Organization and Structure
 
 ### Directory Structure
 
 - **Source directory**: `docs/content/` (all markdown source files)
-- **Build directory**: `docs/site/` (MkDocs output, served by development server)
-- **Navigation file**: `docs/content/navigation.md` (literate navigation with wildcards)
+- **Build directory**: `site/` (Zensical output, served by development server)
+- **Navigation**: Defined in `zensical.toml` using explicit `nav` array
 - **Home page**: `docs/content/index.md` (main landing page)
 - **Includes**: `docs/includes/` directory for shared content (abbreviations)
-- **Overrides**: `docs/overrides/` directory for theme customizations
-- **Config file**: `docs/mkdocs.yml` (MkDocs configuration)
+- **Overrides**: `docs/overrides/` directory for theme customizations (MiniJinja templates)
+- **Config file**: `zensical.toml` (Zensical configuration)
 
-### Literate Navigation Organization
+### Navigation Organization
 
-Content follows a user-centric structure with Diátaxis principles and is organized using `navigation.md`:
+Content follows a user-centric structure with Diátaxis principles and is organized using explicit navigation in `zensical.toml`:
 
 #### Core Sections
 
@@ -43,25 +43,22 @@ Content follows a user-centric structure with Diátaxis principles and is organi
 - **`admin/`**: Server administration with setup/ and config/ subdirectories
 - **`selfhost/`**: Self-hosting with install/, config/, and manage/ subdirectories
 - **`developer/`**: Development resources with tutorials/, guides/, concepts/, and best-practices/ subdirectories
-- **`reference/`**: Technical specifications, API docs (src/tux/), CLI, environment variables, coverage, SBOM
+- **`reference/`**: Technical specifications, CLI, environment variables
 - **`support/`**: Support channels and troubleshooting guides (troubleshooting/ subdirectory)
-- **Root level**: `changelog.md`, `faq.md`, `tags.md`, `navigation.md`
+- **`changelog/`**: Version history and release notes (index.md)
+- **`faq/`**: Frequently asked questions (index.md)
+- **`tags/`**: Content tagging and categorization (index.md)
+- **Root level**: `index.md` (home page)
 
 #### Special Directories
 
-- **`content/assets/`**: Static files organized by type (images/, stylesheets/, javascript/, known_words.txt)
-- **`overrides/`**: MkDocs theme customizations (main.html, home.html, partials/)
-- **`plugins/`**: Custom MkDocs plugins (mkdocs_auto_index/, mkdocs_sbom/, mkdocs_tux_plugin/)
+- **`content/assets/`**: Static files organized by type (images/, stylesheets/, javascript/)
+- **`overrides/`**: Zensical theme customizations (MiniJinja templates)
 
 ### Automation Integration
 
-- **Auto-generated API docs**: `reference/src/tux/` (mkdocstrings + mkdocs-api-autonav)
-- **Coverage reports**: `reference/coverage.md` (integrated test coverage from htmlcov/)
-- **Listings search**: `reference/listings.md` (extract-listings plugin for code search)
-- **SBOM**: `reference/sbom.md` (mkdocs-sbom plugin for dependency listing)
-- **Social cards**: Auto-generated for all pages with custom backgrounds (mkdocs-social plugin)
-- **Spell checking**: Multi-backend spellcheck with custom word lists (`assets/known_words.txt`)
-- **Custom plugins**: Tux plugin, auto-index plugin, SBOM plugin
+- **Social cards**: Auto-generated for all pages with custom backgrounds (built into Zensical)
+- **Abbreviations**: Auto-appended to all pages via pymdownx.snippets extension (`includes/abbreviations.md`)
 
 ### File Naming Conventions
 
@@ -69,11 +66,11 @@ Content follows a user-centric structure with Diátaxis principles and is organi
 - **Directories**: `kebab-case/` (e.g., `getting-started/`, `developer/`, `best-practices/`)
 - **Index files**: `index.md` in every directory (provides section overview, auto-indexed)
 - **Assets**: Organized by type in subdirectories (`assets/images/`, `assets/stylesheets/`, `assets/javascript/`)
-- **Special files**: `changelog.md`, `faq.md`, `tags.md`, `navigation.md` at root level
+- **Special directories**: `changelog/`, `faq/`, `tags/` (each with index.md)
 
 ### Content Hierarchy
 
-Each major section follows this pattern with literate navigation wildcards:
+Each major section follows this pattern:
 
 ```text
 section-name/
@@ -99,8 +96,8 @@ section-name/
 - `selfhost/install/` → Requirements, Docker, systemd, database, first run (index.md, docker.md, systemd.md, database.md, first-run.md)
 - `selfhost/config/` → Bot token, environment variables, database setup (bot-token.md, environment.md, database.md)
 - `selfhost/manage/` → Monitoring, backups, updates, operations (database.md, operations.md)
-- `developer/tutorials/` → Step-by-step development guides (wildcard: `developer/tutorials/*.md`)
-- `developer/concepts/` → Complex architectural topics with nested subdirectories (wildcard: `developer/concepts/*/*.md`)
+- `developer/tutorials/` → Step-by-step development guides
+- `developer/concepts/` → Complex architectural topics with nested subdirectories
 - `developer/best-practices/` → Code review, documentation, git workflow, CI/CD, testing (includes sentry/ subdirectory)
 - `support/troubleshooting/` → User, admin, selfhost, developer specific issues (user.md, admin.md, selfhost.md, developer.md)
 
@@ -119,23 +116,19 @@ section-name/
 
 - `reference/cli.md` → CLI command reference
 - `reference/env.md` → Environment variables reference
-- `reference/coverage.md` → Test coverage report (auto-generated)
 - `reference/versioning.md` → Versioning and release information
-- `reference/sbom.md` → Software Bill of Materials (auto-generated)
 - `reference/renovate.md` → Renovate bot configuration
-- `reference/listings.md` → Code listing search (auto-generated)
 - `reference/style-guide.md` → Documentation style guide
-- `reference/src/tux/` → Auto-generated API documentation (mkdocstrings)
-- `faq.md` → Frequently asked questions (root level)
+- `faq/index.md` → Frequently asked questions
 - `support/index.md` → Support and contact information
-- `changelog.md` → Version history and release notes (root level)
-- `tags.md` → Content tagging and categorization (root level)
+- `changelog/index.md` → Version history and release notes
+- `tags/index.md` → Content tagging and categorization
 
 ### Adding New Content
 
 1. **Choose location**: Determine target audience and topic based on Diátaxis principles
-2. **Create structure**: Add `index.md` for new sections/subsections (auto-indexed by mkdocs-auto-index plugin)
-3. **Update navigation**: Modify `docs/content/navigation.md` to include new pages using wildcards where appropriate
+2. **Create structure**: Add `index.md` for new sections/subsections
+3. **Update navigation**: Modify `zensical.toml` `nav` array to include new pages explicitly
 4. **Add assets**: Place images in `docs/content/assets/images/`, styles in `docs/content/assets/stylesheets/`
 5. **Follow naming**: Use kebab-case for files and directories
 6. **Add frontmatter**: Include title, description, and tags in YAML frontmatter
@@ -143,19 +136,15 @@ section-name/
 ### Asset Organization
 
 - **Images**: `docs/content/assets/images/` (logos, screenshots, diagrams - hero-bg.png, logo.png)
-- **Stylesheets**: `docs/content/assets/stylesheets/` (custom CSS: extra.css, material.css, mkdocstrings.css, pymdownx.css, coverage.css, home.css, reset.css, typography.css)
-- **JavaScript**: `docs/content/assets/javascript/` (custom JS: extra.js, coverage.js)
-- **Known Words**: `docs/content/assets/known_words.txt` (spellcheck dictionary)
+- **Stylesheets**: `docs/content/assets/stylesheets/` (custom CSS: extra.css)
+- **JavaScript**: `docs/content/assets/javascript/` (custom JS: extra.js)
 
 ### Navigation Structure
 
-Navigation is handled by the `mkdocs-literate-nav` plugin using `docs/content/navigation.md`:
+Navigation is explicitly defined in `zensical.toml` using the `nav` array:
 
-- **Wildcard patterns**: `developer/tutorials/*.md` automatically includes all tutorial files
-- **Implicit indexes**: Disabled (`implicit_index: false`) - explicit index.md files required
-- **Auto-index plugin**: `mkdocs-auto-index` plugin auto-generates index content below `<!-- AUTO_INDEX_START -->` markers
+- **Explicit listing**: All pages must be explicitly listed in the `nav` array
+- **No wildcards**: Wildcard patterns are not supported - list all files explicitly
 - **Hierarchical structure**: Top-level sections with nested subsections
 - **User journey ordering**: Getting Started → User → Admin → Self-Host → Developer → Reference → Support → Changelog → Tags
 - **Breadcrumb navigation**: Automatic breadcrumb trails via navigation.path feature
-- **Backlinks**: Digital garden-style linking via mkdocs-backlinks plugin (currently disabled)
-- **Tab length**: 2 spaces for indentation in navigation.md

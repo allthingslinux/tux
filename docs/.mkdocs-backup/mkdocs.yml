@@ -127,11 +127,11 @@ markdown_extensions:
       permalink: true  # Add ¶ anchor links to headings on hover
   # PYMDOWNX EXTENSIONS (Python Markdown Extensions) ---------------
   # Snippets: Embed content from external files
-  - pymdownx.snippets:
-      base_path:
-        - !relative $config_dir  # Relative to docs/ directory
-        - !relative $config_dir/..  # Relative to project root (for CHANGELOG.md)
-      check_paths: true  # Validate file paths exist
+  # - pymdownx.snippets:
+  #     base_path:
+  #       - !relative $config_dir  # Relative to docs/ directory
+  #       - !relative $config_dir/..  # Relative to project root (for CHANGELOG.md)
+      # check_paths: true  # Validate file paths exist
   # Highlight: Advanced syntax highlighting for code blocks
   - pymdownx.highlight:
       use_pygments: true  # Use Pygments for build-time highlighting

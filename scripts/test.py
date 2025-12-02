@@ -357,7 +357,7 @@ class TestCLI(BaseCLI):
         )
 
 
-# Create the CLI app instance for mkdocs-typer
+# Create the CLI app instance
 app = TestCLI().app
 
 

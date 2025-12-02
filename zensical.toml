@@ -1,0 +1,665 @@
+# ============================================================================
+#
+# The configuration produced by default is meant to highlight the features
+# that Zensical provides and to serve as a starting point for your own
+# projects.
+#
+# ============================================================================
+
+[project]
+
+# The site_name is shown in the page header and the browser window title
+#
+# Read more: https://zensical.org/docs/setup/basics/#site_name
+site_name = "Tux"
+
+# The site_description is included in the HTML head and should contain a
+# meaningful description of the site content for use by search engines.
+#
+# Read more: https://zensical.org/docs/setup/basics/#site_description
+site_description = "The all-in-one open source Discord bot for the All Things Linux community."
+
+# The site_author attribute. This is used in the HTML head element.
+#
+# Read more: https://zensical.org/docs/setup/basics/#site_author
+site_author = "All Things Linux"
+
+# The site_url is the canonical URL for your site. When building online
+# documentation you should set this.
+# Read more: https://zensical.org/docs/setup/basics/#site_url
+site_url = "https://tux.atl.dev"
+
+# Repository URL for displaying repository information and code actions
+# Read more: https://zensical.org/docs/setup/repository/#configuration
+repo_url = "https://github.com/allthingslinux/tux"
+
+# Repository name (optional, auto-inferred from repo_url if not set)
+# Read more: https://zensical.org/docs/setup/repository/#repository-name
+repo_name = "allthingslinux/tux"
+
+# Edit URI template for code action buttons (edit/view source)
+# Resolves to the subfolder where your documentation is hosted
+# Read more: https://zensical.org/docs/setup/repository/#code-actions
+edit_uri = "edit/main/docs/"
+
+# The docs_dir setting specifies the path to the directory that contains your source files.
+# This must be a relative path, which is resolved relative to the configuration file.
+# Read more: https://zensical.org/docs/setup/basics/#docs_dir
+docs_dir = "docs/content/"
+
+# The site_dir specifies the path to the directory your site will be written to.
+# This must be a relative path, which is resolved relative to the configuration file.
+# Read more: https://zensical.org/docs/setup/basics/#site_dir
+# site_dir = "docs/site"  # Already set below in theme section
+
+# The copyright notice appears in the page footer and can contain an HTML
+# fragment.
+#
+# Read more: https://zensical.org/docs/setup/basics/#copyright
+copyright = """
+Copyright &copy; 2025 All Things Linux
+"""
+
+# Navigation structure - converted from navigation.md
+# Paths are relative to docs_dir (docs/content/)
+# Read more: https://zensical.org/docs/setup/navigation/
+nav = [
+    { "Home" = "index.md" },
+    { "User Guide" = [
+        "user/index.md",
+        { "Features" = [
+            "user/features/index.md",
+            "user/features/bookmarks.md",
+            "user/features/gif-limiter.md",
+            "user/features/leveling.md",
+            "user/features/starboard.md",
+            "user/features/status-roles.md",
+            "user/features/temp-vc.md",
+        ] },
+        { "Modules" = [
+            "user/modules/index.md",
+            "user/modules/fun.md",
+            "user/modules/info.md",
+            "user/modules/levels.md",
+            "user/modules/moderation.md",
+            "user/modules/snippets.md",
+            "user/modules/tools.md",
+            "user/modules/utility.md",
+        ] },
+    ] },
+    { "Admin Guide" = [
+        "admin/index.md",
+        { "Setup" = "admin/setup/index.md" },
+        { "Configuration" = [
+            "admin/config/index.md",
+            "admin/config/logs.md",
+            "admin/config/roles.md",
+            "admin/config/ranks.md",
+            "admin/config/commands.md",
+            "admin/config/jail.md",
+        ] },
+    ] },
+    { "Self-Hoster Guide" = [
+        "selfhost/index.md",
+        { "Installation" = [
+            "selfhost/install/index.md",
+            "selfhost/install/database.md",
+            "selfhost/install/docker.md",
+            "selfhost/install/systemd.md",
+            "selfhost/install/first-run.md",
+        ] },
+        { "Configuration" = [
+            "selfhost/config/index.md",
+            "selfhost/config/bot-token.md",
+            "selfhost/config/database.md",
+            "selfhost/config/environment.md",
+        ] },
+        { "Management" = [
+            "selfhost/manage/index.md",
+            "selfhost/manage/database.md",
+            "selfhost/manage/operations.md",
+        ] },
+    ] },
+    { "Developer Guide" = [
+        "developer/index.md",
+        "developer/contributing.md",
+        { "Tutorials" = [
+            "developer/tutorials/index.md",
+            "developer/tutorials/creating-first-cog.md",
+            "developer/tutorials/creating-first-command.md",
+            "developer/tutorials/database-integration.md",
+            "developer/tutorials/development-setup.md",
+            "developer/tutorials/first-contribution.md",
+            "developer/tutorials/project-structure.md",
+            "developer/tutorials/testing-setup.md",
+        ] },
+        { "Guides" = [
+            "developer/guides/index.md",
+            "developer/guides/components-v2.md",
+            "developer/guides/extending-cli.md",
+        ] },
+        { "Concepts" = [
+            "developer/concepts/index.md",
+            { "Core" = [
+                "developer/concepts/core/index.md",
+                "developer/concepts/core/app.md",
+                "developer/concepts/core/base-cog.md",
+                "developer/concepts/core/bot.md",
+                "developer/concepts/core/cog-loader.md",
+                "developer/concepts/core/lifecycle.md",
+                "developer/concepts/core/logging.md",
+                "developer/concepts/core/main.md",
+                "developer/concepts/core/modules.md",
+                "developer/concepts/core/permission-system.md",
+                "developer/concepts/core/plugins.md",
+            ] },
+            { "Database" = [
+                "developer/concepts/database/index.md",
+                "developer/concepts/database/architecture.md",
+                "developer/concepts/database/service.md",
+                "developer/concepts/database/models.md",
+                "developer/concepts/database/controllers.md",
+                "developer/concepts/database/migrations.md",
+                "developer/concepts/database/testing.md",
+                "developer/concepts/database/utilities.md",
+            ] },
+            { "UI" = [
+                "developer/concepts/ui/index.md",
+                "developer/concepts/ui/buttons.md",
+                "developer/concepts/ui/components.md",
+                "developer/concepts/ui/embeds.md",
+                "developer/concepts/ui/modals.md",
+                "developer/concepts/ui/views.md",
+            ] },
+            { "Shared" = [
+                "developer/concepts/shared/index.md",
+            ] },
+            { "Handlers" = [
+                "developer/concepts/handlers/index.md",
+                "developer/concepts/handlers/hot-reload.md",
+            ] },
+            { "Services" = [
+                "developer/concepts/services/index.md",
+            ] },
+            { "Wrappers" = [
+                "developer/concepts/wrappers/index.md",
+            ] },
+            { "Tasks" = [
+                "developer/concepts/tasks/index.md",
+                "developer/concepts/tasks/task-monitor.md",
+            ] },
+        ] },
+        { "Best Practices" = [
+            "developer/best-practices/index.md",
+            "developer/best-practices/namespace.md",
+            "developer/best-practices/git.md",
+            "developer/best-practices/branch-naming.md",
+            "developer/best-practices/ci-cd.md",
+            "developer/best-practices/async.md",
+            "developer/best-practices/error-handling.md",
+            { "Sentry" = [
+                "developer/best-practices/sentry/index.md",
+                "developer/best-practices/sentry/choosing-instrumentation.md",
+                "developer/best-practices/sentry/context-data.md",
+                "developer/best-practices/sentry/metrics.md",
+                "developer/best-practices/sentry/sampling.md",
+                "developer/best-practices/sentry/transactions-spans.md",
+            ] },
+            "developer/best-practices/logging.md",
+            "developer/best-practices/caching.md",
+            "developer/best-practices/code-review.md",
+            "developer/best-practices/debugging.md",
+            "developer/best-practices/docs.md",
+            { "Testing" = [
+                "developer/best-practices/testing/index.md",
+                "developer/best-practices/testing/fixtures.md",
+                "developer/best-practices/testing/unit.md",
+                "developer/best-practices/testing/integration.md",
+                "developer/best-practices/testing/e2e.md",
+            ] },
+        ] },
+    ] },
+    { "Reference" = [
+        "reference/index.md",
+        "reference/versioning.md",
+        "reference/src/tux/",
+        # "reference/cli.md",
+        "reference/env.md",
+        # "reference/coverage.md",
+        # "reference/sbom.md",
+        "reference/renovate.md",
+        # "reference/listings.md",
+        # "reference/style-guide.md",
+    ] },
+    { "Support" = [
+        "support/index.md",
+        { "Troubleshooting" = [
+            "support/troubleshooting/index.md",
+            "support/troubleshooting/user.md",
+            "support/troubleshooting/admin.md",
+            "support/troubleshooting/selfhost.md",
+            "support/troubleshooting/developer.md",
+        ] },
+    ] },
+    "changelog/index.md",
+    # "tags/index.md",
+    "faq/index.md",
+]
+
+# With the "extra_css" option you can add your own CSS styling to customize
+# your Zensical project according to your needs. You can add any number of
+# CSS files.
+#
+# The path provided should be relative to the "docs_dir".
+#
+# Read more: https://zensical.org/docs/customization/#additional-css
+extra_css = [
+    "https://rsms.me/inter/inter.css",
+    # "assets/stylesheets/reset.css",
+    # "assets/stylesheets/extra.css",
+    # "assets/stylesheets/material.css",
+    # "assets/stylesheets/typography.css",
+    # "assets/stylesheets/mkdocstrings.css",
+    # "assets/stylesheets/pymdownx.css",
+    # "assets/stylesheets/coverage.css",
+]
+
+# With the `extra_javascript` option you can add your own JavaScript to your
+# project to customize the behavior according to your needs.
+#
+# The path provided should be relative to the "docs_dir".
+#
+# Read more: https://zensical.org/docs/customization/#additional-javascript
+extra_javascript = [
+    # "assets/javascript/extra.js",
+    # "assets/javascript/coverage.js",
+]
+
+# ----------------------------------------------------------------------------
+# Section for configuring theme options
+# ----------------------------------------------------------------------------
+[project.theme]
+
+# change this to "classic" to use the traditional Material for MkDocs look.
+variant = "modern"
+
+# Zensical allows you to override specific blocks, partials, or whole
+# templates as well as to define your own templates. To do this, uncomment
+# the custom_dir setting below and set it to a directory in which you
+# keep your template overrides.
+#
+# Read more:
+# - https://zensical.org/docs/customization/#extending-the-theme
+# custom_dir = "docs/overrides"
+
+
+site_dir = "site"
+
+# With the "favicon" option you can set your own image to use as the icon
+# browsers will use in the browser title bar or tab bar. The path provided
+# must be relative to the "docs_dir".
+#
+# Read more:
+# - https://zensical.org/docs/setup/logo-and-icons/#favicon
+# - https://developer.mozilla.org/en-US/docs/Glossary/Favicon
+#
+# Logo shown in header and sidebar
+# Can be an image file (relative to docs_dir) or an icon from bundled icon sets
+# Read more: https://zensical.org/docs/setup/logo-and-icons/#logo
+logo = "assets/images/logo.png"
+
+# Favicon shown in browser tab
+# Must be an image file located in the docs_dir
+# Read more: https://zensical.org/docs/setup/logo-and-icons/#favicon
+favicon = "assets/images/logo.png"
+
+# Zensical supports more than 60 different languages. This means that the
+# labels and tooltips that Zensical's templates produce are translated.
+# The "language" option allows you to set the language used. This language
+# is also indicated in the HTML head element to help with accessibility
+# and guide search engines and translation tools.
+#
+# The default language is "en" (English). It is possible to create
+# sites with multiple languages and configure a language selector. See
+# the documentation for details.
+#
+# Read more:
+# - https://zensical.org/docs/setup/language/
+#
+language = "en"
+
+# Zensical provides a number of feature toggles that change the behavior
+# of the documentation site.
+features = [
+    # Zensical includes an announcement bar. This feature allows users to
+    # dismiss it then they have read the announcement.
+    # https://zensical.org/docs/setup/header/#announcement-bar
+    "announce.dismiss",
+
+    # If you have a repository configured and turn feature this on, Zensical
+    # will generate an edit button for the page. This works for common
+    # repository hosting services.
+    # https://zensical.org/docs/setup/repository/#code-actions
+    "content.action.edit",
+
+    # If you have a repository configured and turn feature this on, Zensical
+    # will generate a button that allows the user to view the Markdown
+    # code for the current page.
+    # https://zensical.org/docs/setup/repository/#code-actions
+    "content.action.view",
+
+    # Code annotations allow you to add an icon with a tooltip to your
+    # code blocks to provide explanations at crucial points.
+    # https://zensical.org/docs/authoring/code-blocks/#code-annotations
+    "content.code.annotate",
+
+    # This feature turns on a button in code blocks that allow users to
+    # copy the content to their clipboard without first selecting it.
+    # https://zensical.org/docs/authoring/code-blocks/#code-copy-button
+    "content.code.copy",
+
+    # Code blocks can include a button to allow for the selection of line
+    # ranges by the user.
+    # https://zensical.org/docs/authoring/code-blocks/#code-selection-button
+    "content.code.select",
+
+    # Zensical can render footnotes as inline tooltips, so the user can read
+    # the footnote without leaving the context of the document.
+    # https://zensical.org/docs/authoring/footnotes/#footnote-tooltips
+    "content.footnote.tooltips",
+
+    # If you have many content tabs that have the same titles (e.g., "Python",
+    # "JavaScript", "Cobol"), this feature causes all of them to switch to
+    # at the same time when the user chooses their language in one.
+    # https://zensical.org/docs/authoring/content-tabs/#linked-content-tabs
+    "content.tabs.link",
+
+    # TODO: not sure I understand this one? Is there a demo of this in the docs?
+    # https://zensical.org/docs/authoring/tooltips/#improved-tooltips
+    "content.tooltips",
+
+    # With this feature enabled, Zensical will automatically hide parts
+    # of the header when the user scrolls past a certain point.
+    # https://zensical.org/docs/setup/header/#automatic-hiding
+    # "header.autohide",
+
+    # Turn on this feature to expand all collapsible sections in the
+    # navigation sidebar by default.
+    # https://zensical.org/docs/setup/navigation/#navigation-expansion
+    # "navigation.expand",
+
+    # This feature turns on navigation elements in the footer that allow the
+    # user to navigate to a next or previous page.
+    # https://zensical.org/docs/setup/footer/#navigation
+    "navigation.footer",
+
+    # When section index pages are enabled, documents can be directly attached
+    # to sections, which is particularly useful for providing overview pages.
+    # https://zensical.org/docs/setup/navigation/#section-index-pages
+    "navigation.indexes",
+
+    # When instant navigation is enabled, clicks on all internal links will be
+    # intercepted and dispatched via XHR without fully reloading the page.
+    # https://zensical.org/docs/setup/navigation/#instant-navigation
+    "navigation.instant",
+
+    # With instant prefetching, your site will start to fetch a page once the
+    # user hovers over a link. This will reduce the perceived loading time
+    # for the user.
+    # https://zensical.org/docs/setup/navigation/#instant-prefetching
+    "navigation.instant.prefetch",
+
+    # In order to provide a better user experience on slow connections when
+    # using instant navigation, a progress indicator can be enabled.
+    # https://zensical.org/docs/setup/navigation/#progress-indicator
+    "navigation.instant.progress",
+
+    # When navigation paths are activated, a breadcrumb navigation is rendered
+    # above the title of each page
+    # https://zensical.org/docs/setup/navigation/#navigation-path
+    "navigation.path",
+
+    # When pruning is enabled, only the visible navigation items are included
+    # in the rendered HTML, reducing the size of the built site by 33% or more.
+    # https://zensical.org/docs/setup/navigation/#navigation-pruning
+    #"navigation.prune",
+
+    # When sections are enabled, top-level sections are rendered as groups in
+    # the sidebar for viewports above 1220px, but remain as-is on mobile.
+    # https://zensical.org/docs/setup/navigation/#navigation-sections
+    "navigation.sections",
+
+    # When tabs are enabled, top-level sections are rendered in a menu layer
+    # below the header for viewports above 1220px, but remain as-is on mobile.
+    # https://zensical.org/docs/setup/navigation/#navigation-tabs
+    "navigation.tabs",
+
+    # When sticky tabs are enabled, navigation tabs will lock below the header
+    # and always remain visible when scrolling down.
+    # https://zensical.org/docs/setup/navigation/#sticky-navigation-tabs
+    #"navigation.tabs.sticky",
+
+    # A back-to-top button can be shown when the user, after scrolling down,
+    # starts to scroll up again.
+    # https://zensical.org/docs/setup/navigation/#back-to-top-button
+    "navigation.top",
+
+    # When anchor tracking is enabled, the URL in the address bar is
+    # automatically updated with the active anchor as highlighted in the table
+    # of contents.
+    # https://zensical.org/docs/setup/navigation/#anchor-tracking
+    "navigation.tracking",
+
+    # When search highlighting is enabled and a user clicks on a search result,
+    # Zensical will highlight all occurrences after following the link.
+    # https://zensical.org/docs/setup/search/#search-highlighting
+    "search.highlight",
+
+    # When anchor following for the table of contents is enabled, the sidebar
+    # is automatically scrolled so that the active anchor is always visible.
+    # https://zensical.org/docs/setup/navigation/#anchor-following
+    "toc.follow",
+
+    # When navigation integration for the table of contents is enabled, it is
+    # always rendered as part of the navigation sidebar on the left.
+    # https://zensical.org/docs/setup/navigation/#navigation-integration
+    #"toc.integrate",
+]
+
+# ----------------------------------------------------------------------------
+# In the "palette" subsection you can configure options for the color scheme.
+# You can configure different color schemes, e.g., to turn on dark mode,
+# that the user can switch between. Each color scheme can be further
+# customized.
+#
+# Zensical supports two built-in schemes: "default" (light) and "slate" (dark)
+# If you want to use Material for MkDocs schemes like "tokyo-night" or
+# "catppuccin-latte", you'll need to create custom color schemes via CSS.
+#
+# Read more:
+# - https://zensical.org/docs/setup/colors/
+# ----------------------------------------------------------------------------
+# Dark mode (default)
+[[project.theme.palette]]
+scheme = "slate"
+toggle.icon = "fontawesome/solid/sun"
+toggle.name = "Switch to light mode"
+
+# Light mode
+[[project.theme.palette]]
+scheme = "default"
+toggle.icon = "fontawesome/solid/moon"
+toggle.name = "Switch to dark mode"
+
+# ----------------------------------------------------------------------------
+# In the "font" subsection you can configure the fonts used. By default, fonts
+# are loaded from Google Fonts, giving you a wide range of choices from a set
+# of suitably licensed fonts. There are options for a normal text font and for
+# a monospaced font used in code blocks.
+#
+# Note: Inter is loaded via extra_css (https://rsms.me/inter/inter.css)
+# If you want Zensical to load Inter from Google Fonts instead, set:
+# font.text = "Inter"
+# and remove the Inter CSS from extra_css.
+# ----------------------------------------------------------------------------
+[project.theme.font]
+# Monospaced font for code blocks
+code = "JetBrains Mono"
+
+# ----------------------------------------------------------------------------
+# You can configure icons used in the theme, including the repository icon.
+#
+# Read more:
+# - https://zensical.org/docs/setup/logo-and-icons
+# - https://zensical.org/docs/authoring/icons-emojis/#search
+# ----------------------------------------------------------------------------
+[project.theme.icon]
+repo = "fontawesome/brands/github"
+
+# ----------------------------------------------------------------------------
+# The "extra" section contains miscellaneous settings.
+# ----------------------------------------------------------------------------
+[project.extra]
+# Hide generator credit
+generator = false
+
+# Social links
+[[project.extra.social]]
+icon = "fontawesome/solid/globe"
+link = "https://allthingslinux.org"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/allthingslinux/tux"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/discord"
+link = "https://discord.gg/gpmSjcjQxg"
+
+# ----------------------------------------------------------------------------
+# Markdown Extensions Configuration
+# ----------------------------------------------------------------------------
+# Core Python Markdown Extensions
+# Read more: https://zensical.org/docs/setup/extensions/python-markdown/
+
+# Abbreviations: Add tooltips to text with <abbr> HTML tags (plain text only)
+[project.markdown_extensions.abbr]
+
+# Attribute Lists: Add HTML attributes/CSS classes to almost any Markdown element
+# Essential for annotations, grids, buttons, tooltips, icons with colors/animations, image alignment
+[project.markdown_extensions.attr_list]
+
+# Admonition: Call-out blocks (notes, warnings, tips) with customizable titles
+# Made collapsible with pymdownx.details extension
+[project.markdown_extensions.admonition]
+
+# Definition Lists: Description lists (<dl>, <dt>, <dd>) via Markdown syntax
+[project.markdown_extensions.def_list]
+
+# Footnotes: Inline footnote references rendered below document content
+[project.markdown_extensions.footnotes]
+
+# Markdown in HTML: Parse Markdown inside HTML block elements with markdown="1" attribute
+# Useful for annotations, grids, and image captions
+[project.markdown_extensions.md_in_html]
+
+# Tables: GitHub Flavored Markdown table syntax support
+[project.markdown_extensions.tables]
+
+# Table of Contents: Auto-generates TOC from document headings
+[project.markdown_extensions.toc]
+permalink = true # Add ¶ anchor links to headings on hover
+
+# Sane Lists: Better list handling
+[project.markdown_extensions.sane_lists]
+
+# ----------------------------------------------------------------------------
+# PyMdown Extensions (Python Markdown Extensions)
+# Read more: https://zensical.org/docs/setup/extensions/pymdown-extensions/
+# ----------------------------------------------------------------------------
+
+# Highlight: Advanced syntax highlighting for code blocks
+[project.markdown_extensions.pymdownx.highlight]
+use_pygments = true                # Use Pygments for build-time highlighting
+pygments_lang_class = true         # Add language CSS classes (required for annotations)
+auto_title = true                  # Auto-add language titles to code blocks
+linenums = true                    # Enable line numbers on all code blocks
+linenums_style = "pymdownx-inline" # Inline line numbers (not table)
+line_spans = "__span"              # Wrap lines in spans for highlighting
+anchor_linenums = false            # Don't make line numbers clickable
+
+# InlineHilite: Syntax highlighting for inline code blocks
+[project.markdown_extensions.pymdownx.inlinehilite]
+
+# SuperFences: Enhanced code fences with custom support
+[project.markdown_extensions.pymdownx.superfences]
+# Mermaid diagram support - preserves content for browser rendering
+# Note: The format uses pymdownx.superfences.fence_code_format instead of mermaid2
+# This prevents syntax highlighting and allows browser-side rendering
+custom_fences = [
+    { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+]
+
+# Snippets: Embed content from external files
+# Allows embedding content from other files using --8<-- notation
+[project.markdown_extensions.pymdownx.snippets]
+# Auto-append abbreviations glossary to all pages
+# Note: Path is relative to docs_dir (docs/content/)
+auto_append = ["../includes/abbreviations.md"]
+
+# Details: Makes admonitions collapsible
+[project.markdown_extensions.pymdownx.details]
+
+# SmartSymbols: Auto-convert (c), (r), fractions, etc. to symbols
+[project.markdown_extensions.pymdownx.smartsymbols]
+
+# MagicLink: Auto-link GitHub issues, commits, users
+[project.markdown_extensions.pymdownx.magiclink]
+repo_url_shortener = true      # Shorten GitHub URLs
+repo_url_shorthand = true      # Recognize repo/name#123 syntax
+provider = "github"            # GitHub as provider
+user = "allthingslinux"        # Repository owner
+repo = "tux"                   # Repository name
+normalize_issue_symbols = true # Normalize issue/PR symbols
+
+# Emoji: Convert :emoji: syntax to SVG icons
+[project.markdown_extensions.pymdownx.emoji]
+emoji_index = "zensical.extensions.emoji.twemoji"
+emoji_generator = "zensical.extensions.emoji.to_svg"
+options.custom_icons = ["overrides/.icons"]
+
+# Keys: Render keyboard shortcuts like ++ctrl+alt+del++
+[project.markdown_extensions.pymdownx.keys]
+
+# Tabbed: Content tabs for grouping related content
+[project.markdown_extensions.pymdownx.tabbed]
+alternate_style = true # Better mobile behavior
+
+# Slugify configuration for tabbed content (lowercase slugs)
+[project.markdown_extensions.pymdownx.tabbed.slugify]
+object = "pymdownx.slugs.slugify"
+kwds = { case = "lower" }
+
+# EscapeAll: Enhanced character escaping
+[project.markdown_extensions.pymdownx.escapeall]
+hardbreak = true # Respect hard line breaks
+nbsp = true      # Preserve non-breaking spaces
+
+# Caret: Superscript with ^^text^^ syntax
+[project.markdown_extensions.pymdownx.caret]
+
+# Mark: Highlight text with ==text== syntax
+[project.markdown_extensions.pymdownx.mark]
+
+# Tilde: Strikethrough with ~~text~~ syntax
+[project.markdown_extensions.pymdownx.tilde]
+
+# Tasklist: Convert task lists to checkboxes
+[project.markdown_extensions.pymdownx.tasklist]
+custom_checkbox = true
+
+# BetterEm: Enhanced emphasis handling
+[project.markdown_extensions.pymdownx.betterem]
+
+# Note: mkdocs-typer extension may not be available in Zensical
+# Check Zensical documentation for CLI documentation generation alternatives

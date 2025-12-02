@@ -314,30 +314,17 @@ src/tux/modules/
 
 ### When to Use New Documentation Features
 
-**USE SPELLCHECK** for:
-- All documentation content (automatically enabled)
-- Custom word lists in `assets/known_words.txt`
-- Technical terms, brand names, proper nouns
-
 **USE SOCIAL CARDS** for:
-- All pages automatically generate beautiful previews
+- All pages automatically generate beautiful previews (built into Zensical)
 - Custom backgrounds and branding
 - Open Graph and Twitter Card support
 
-**USE COVERAGE REPORTS** for:
-- Test coverage visualization in documentation
-- Code quality metrics display
-- CI/CD pipeline integration
-
-**USE SNIPPET EXTRACTION** for:
-- Code examples that need searching
-- Reusable code patterns
-- Cross-referenced examples
-
-**USE BACKLINKS** for:
-- Related content discovery
-- Digital garden-style navigation
-- Content relationship mapping
+**Note**: The following features are not currently available in Zensical:
+- **Spellcheck**: Use external tools for spell checking
+- **Coverage Reports**: Not available
+- **Snippet Extraction**: Not available
+- **Backlinks**: Not available
+- **API Auto-generation**: Not available
 
 ### Error Message Guidelines
 
@@ -433,7 +420,7 @@ src/tux/modules/
 - Document database impact and error scenarios
 - Use Tux's branded elements and terminology
 
-**4. Use MkDocs-Material Features Effectively**
+**4. Use Zensical Features Effectively**
 
 - Choose appropriate admonitions for different types of information
 - Use tabs for alternatives, expandable sections for optional details
@@ -457,19 +444,19 @@ src/tux/modules/
 ### Key Resources
 
 - **Existing Documentation**: Study `docs/content/` for patterns and style
-- **Navigation Structure**: Review `docs/content/SUMMARY.md` for literate navigation
-- **MkDocs Config**: Review `docs/mkdocs.yml` for plugin and theme configuration
+- **Navigation Structure**: Review `zensical.toml` for navigation configuration
+- **Zensical Config**: Review `zensical.toml` for theme and extension configuration
 - **Tux Codebase**: Reference actual implementation for accuracy
 - **Assets**: Check `docs/content/assets/` for images, styles, and customizations
 - **Community**: Join Discord for user questions and feedback
 
 ### Current Documentation Features
 
-- **16+ Active Plugins**: Search, social cards, spellcheck, coverage, backlinks, etc.
-- **Literate Navigation**: SUMMARY.md with wildcard patterns and implicit indexes
+- **Built-in Features**: Search, social cards, tags, navigation (no plugins needed)
+- **Explicit Navigation**: `zensical.toml` nav array with explicit page listings
 - **Enhanced Syntax**: Mermaid diagrams, advanced code highlighting, annotations
-- **Automation**: Auto-generated API docs, coverage reports, social previews
-- **Quality Assurance**: Multi-backend spellcheck, link validation, minification
-- **Modern UI**: Tokyo Night theme, Inter/JetBrains fonts, custom branding
+- **Automation**: Social previews (auto-generated)
+- **Quality Assurance**: Link validation, minification (built-in)
+- **Modern UI**: Slate/default theme, Inter/JetBrains fonts, custom branding
 
 Remember: Good documentation serves users first. Always ask "How will this help someone using Tux?" before writing.

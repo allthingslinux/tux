@@ -233,8 +233,7 @@
 /* Navigation - active state for dark mode - remove border */
 [data-md-color-scheme="tokyo-night"] .md-nav__link--active {
   border-left: none;
-  padding-left: 0;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 /* Navigation - sidebar hover for dark mode - only when hovering the link itself */

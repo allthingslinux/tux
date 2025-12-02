@@ -974,7 +974,7 @@ class DatabaseCLI(BaseCLI):
             self.rich.print_error("Failed to get version information")
 
 
-# Create the CLI app instance for mkdocs-typer
+# Create the CLI app instance
 app = DatabaseCLI().app
 
 

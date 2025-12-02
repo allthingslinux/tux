@@ -255,7 +255,7 @@ class ConfigCLI(BaseCLI):
             raise typer.Exit(code=1) from e
 
 
-# Create the CLI app instance for mkdocs-typer
+# Create the CLI app instance
 app = ConfigCLI().app
 
 
