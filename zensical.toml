@@ -255,10 +255,12 @@ nav = [
 # Read more: https://zensical.org/docs/customization/#additional-css
 extra_css = [
     "https://rsms.me/inter/inter.css",
+    "assets/stylesheets/typography.css",
+    "assets/stylesheets/catppuccin-latte.css",
+    "assets/stylesheets/tokyo-night.css",
+    "assets/stylesheets/extra.css",
     # "assets/stylesheets/reset.css",
-    # "assets/stylesheets/extra.css",
     # "assets/stylesheets/material.css",
-    # "assets/stylesheets/typography.css",
     # "assets/stylesheets/mkdocstrings.css",
     # "assets/stylesheets/pymdownx.css",
     # "assets/stylesheets/coverage.css",
