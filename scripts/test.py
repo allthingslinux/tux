@@ -68,6 +68,7 @@ class TestCLI(BaseCLI):
             Command("quick", self.quick_tests, "Run tests without coverage"),
             Command("plain", self.plain_tests, "Run tests with plain output"),
             Command("parallel", self.parallel_tests, "Run tests in parallel"),
+            Command("file", self.file_tests, "Run specific test files or paths"),
             Command("html", self.html_report, "Generate HTML report"),
             Command(
                 "coverage",
@@ -91,35 +92,17 @@ class TestCLI(BaseCLI):
             )
 
     def _setup_default_command(self) -> None:
-        """Set up default command to handle test file paths."""
+        """Set up default command - runs quick tests if no command specified."""
 
         @self.app.callback(invoke_without_command=True)
         def _default_callback(  # pyright: ignore[reportUnusedFunction]
             ctx: typer.Context,
-            test_paths: Annotated[
-                list[str] | None,
-                Argument(help="Test file paths or test identifiers"),
-            ] = None,
-            coverage: Annotated[
-                bool,
-                Option("--coverage", "-c", help="Enable coverage collection"),
-            ] = False,
         ) -> None:
-            """Run tests with optional file paths.
-
-            If no test paths are provided and no command is specified,
-            runs all tests. By default, coverage is disabled for faster execution.
-            Use --coverage to enable coverage collection.
-            Test paths can be files, directories, or pytest node IDs.
-            """
+            """Run quick tests if no command specified."""
+            # Only run if no subcommand was invoked
             if ctx.invoked_subcommand is None:
-                self.rich.print_section("Running Tests", "blue")
-                cmd = ["uv", "run", "pytest"]
-                if not coverage:
-                    cmd.append("--no-cov")
-                if test_paths:
-                    cmd.extend(test_paths)
-                self._run_test_command(cmd, "Test run")
+                # Default to quick tests (no coverage, faster)
+                self.quick_tests()
 
     def _run_test_command(self, command: list[str], description: str) -> bool:
         """Run a test command and return success status.
@@ -195,54 +178,52 @@ class TestCLI(BaseCLI):
     # TEST COMMANDS
     # ============================================================================
 
-    def all_tests(
-        self,
-        test_paths: Annotated[
-            list[str] | None,
-            Argument(help="Test file paths or test identifiers"),
-        ] = None,
-    ) -> None:
+    def all_tests(self) -> None:
         """Run all tests with coverage."""
         self.rich.print_section("Running Tests", "blue")
         cmd = ["uv", "run", "pytest"]
-        if test_paths:
-            cmd.extend(test_paths)
         self._run_test_command(cmd, "Test run")
 
-    def quick_tests(
-        self,
-        test_paths: Annotated[
-            list[str] | None,
-            Argument(help="Test file paths or test identifiers"),
-        ] = None,
-    ) -> None:
+    def quick_tests(self) -> None:
         """Run tests without coverage (faster)."""
         self.rich.print_section("Quick Tests", "blue")
         cmd = ["uv", "run", "pytest", "--no-cov"]
-        if test_paths:
-            cmd.extend(test_paths)
         self._run_test_command(cmd, "Quick test run")
 
-    def plain_tests(
+    def file_tests(
         self,
         test_paths: Annotated[
-            list[str] | None,
-            Argument(help="Test file paths or test identifiers"),
-        ] = None,
+            list[str],
+            Argument(help="Test file paths, directories, or pytest node IDs"),
+        ],
+        coverage: Annotated[
+            bool,
+            Option("--coverage", "-c", help="Enable coverage collection"),
+        ] = False,
     ) -> None:
+        """Run specific test files or paths.
+
+        Examples
+        --------
+            uv run test file tests/unit/test_models.py
+            uv run test file tests/integration/ tests/unit/
+            uv run test file tests/unit/test_models.py::TestModel::test_create
+        """
+        self.rich.print_section("Running Tests", "blue")
+        cmd = ["uv", "run", "pytest"]
+        if not coverage:
+            cmd.append("--no-cov")
+        cmd.extend(test_paths)
+        self._run_test_command(cmd, "Test run")
+
+    def plain_tests(self) -> None:
         """Run tests with plain output."""
         self.rich.print_section("Plain Tests", "blue")
         cmd = ["uv", "run", "pytest", "-p", "no:sugar"]
-        if test_paths:
-            cmd.extend(test_paths)
         self._run_test_command(cmd, "Plain test run")
 
     def parallel_tests(
         self,
-        test_paths: Annotated[
-            list[str] | None,
-            Argument(help="Test file paths or test identifiers"),
-        ] = None,
         workers: Annotated[
             int | None,
             Option(
@@ -266,8 +247,6 @@ class TestCLI(BaseCLI):
 
         Parameters
         ----------
-        test_paths : list[str] | None
-            Test file paths or test identifiers.
         workers : int | None
             Number of parallel workers. If None, uses 'auto' (CPU count).
         load_scope : str | None
@@ -286,10 +265,6 @@ class TestCLI(BaseCLI):
         # Add load balancing scope if specified
         if load_scope:
             cmd.extend(["--dist", load_scope])
-
-        # Add test paths if provided
-        if test_paths:
-            cmd.extend(test_paths)
 
         self._run_test_command(cmd, "Parallel test run")
 
