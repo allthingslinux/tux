@@ -3,8 +3,18 @@ name: Tests
 on:
   push:
     branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
+    paths-ignore:
+      - '**.md'
+      - docs/**
+      - assets/**
+      - .github/workflows/docs.yml
   pull_request:
     branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
+    paths-ignore:
+      - '**.md'
+      - docs/**
+      - assets/**
+      - .github/workflows/docs.yml
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
