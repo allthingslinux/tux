@@ -29,8 +29,8 @@
     semanticCommitScope: 'deps',
     fetchChangeLogs: 'pr',
     commitBodyTable: true,
-    prConcurrentLimit: 10,
-    prHourlyLimit: 10,
+    prConcurrentLimit: 0,
+    prHourlyLimit: 0,
     prCreation: 'not-pending',
     prNotPendingHours: 24,
     vulnerabilityAlerts: {
