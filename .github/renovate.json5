@@ -263,64 +263,57 @@
             "prPriority": 5
         },
         {
-            // Python version updates in Dockerfiles - patch/minor within 3.13.x can auto-merge
+            // Group all Python version updates together (runtime, workflows, .python-version)
+            // This ensures .python-version, pyproject.toml, and workflow files update in sync
             "matchManagers": [
-                "dockerfile"
+                "dockerfile",
+                "github-actions",
+                "regex"
             ],
             "matchPackageNames": [
                 "python"
             ],
-            "matchCurrentVersion": "/^3\\.13\\.",
-            "matchUpdateTypes": [
-                "patch",
-                "minor"
-            ],
-            "automerge": true,
-            "automergeType": "branch",
+            "groupName": "python runtime",
             "addLabels": [
-                "deps: python",
-                "deps: docker"
-            ],
-            "prPriority": 5
-        },
-        {
-            // Python version updates in Dockerfiles - major updates need review
-            "matchManagers": [
-                "dockerfile"
-            ],
-            "matchPackageNames": [
-                "python"
-            ],
-            "matchUpdateTypes": [
-                "major"
-            ],
-            "automerge": false,
-            "addLabels": [
-                "deps: python",
-                "deps: docker",
-                "deps: needs-review"
+                "deps: python"
             ],
             "prPriority": 10
         },
         {
-            // Python version updates in Dockerfiles - minor updates outside 3.13.x need review
+            // Python patch updates (e.g., 3.14.0 -> 3.14.1) can auto-merge
             "matchManagers": [
-                "dockerfile"
+                "dockerfile",
+                "github-actions",
+                "regex"
             ],
             "matchPackageNames": [
                 "python"
             ],
-            "matchCurrentVersion": "!/^3\\.13\\.",
             "matchUpdateTypes": [
-                "minor"
+                "patch"
+            ],
+            "automerge": true,
+            "automergeType": "branch",
+            "minimumReleaseAge": "3 days"
+        },
+        {
+            // Python minor/major updates need review
+            "matchManagers": [
+                "dockerfile",
+                "github-actions",
+                "regex"
+            ],
+            "matchPackageNames": [
+                "python"
+            ],
+            "matchUpdateTypes": [
+                "minor",
+                "major"
             ],
             "automerge": false,
             "addLabels": [
-                "deps: python",
-                "deps: docker",
                 "deps: needs-review"
-            ],
-            "prPriority": 8
+            ]
         },
         {
             // Python packages - use update-lockfile strategy for ranges
@@ -354,8 +347,19 @@
         "enabled": true
     },
     "constraints": {
-        "python": ">=3.13.2,<3.14"
+        "python": ">=3.14,<3.15"
     },
+    "customManagers": [
+        {
+            // Manage Python version in .python-version file
+            "customType": "regex",
+            "fileMatch": ["^\\.python-version$"],
+            "matchStrings": ["(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+            "datasourceTemplate": "python-version",
+            "depNameTemplate": "python",
+            "versioningTemplate": "pep440"
+        }
+    ],
     "suppressNotifications": [
         "prIgnoreNotification"
     ],
