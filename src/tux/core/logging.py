@@ -48,9 +48,7 @@ INTERCEPTED_LIBRARIES = [
     "alembic",
     "asyncpg",
     "psycopg",
-    "aiosqlite",
     "sentry_sdk",
-    "redis",
     "docker",
     "githubkit",
     "influxdb_client",
@@ -72,7 +70,6 @@ THIRD_PARTY_LOG_LEVELS = {
     "httpx": logging.WARNING,
     "aiohttp": logging.WARNING,
     # Infrastructure - Rarely needed
-    "redis": logging.WARNING,
     "docker": logging.WARNING,
     # Database - Fine-grained control per subsystem
     "sqlalchemy.engine": logging.WARNING,  # SQL queries and parameters (not result sets)
@@ -82,7 +79,6 @@ THIRD_PARTY_LOG_LEVELS = {
     "alembic": logging.INFO,
     "asyncpg": logging.INFO,
     "psycopg": logging.INFO,
-    "aiosqlite": logging.INFO,
     # Use global level (no override needed, just for explicitness)
     "asyncio": logging.NOTSET,
     "discord": logging.NOTSET,  # Parent logger, children have specific levels
