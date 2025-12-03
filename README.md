@@ -35,28 +35,28 @@
 
 Choose your path to get started with Tux:
 
-<table border="0" cellpadding="10" cellspacing="0">
+<table border="0" cellpadding="10" cellspacing="0" style="margin: 0;">
   <tr>
     <td width="50%" valign="top">
       <a href="https://tux.atl.dev/getting-started/for-users/">
-        <img src="assets/readme/quickstart-users.svg" alt="Users - Using Tux in your server" width="100%">
+        <img src="assets/readme/quickstart-users.svg" alt="Users - Using Tux in your server" width="100%" style="display: block; margin: 0;">
       </a>
     </td>
     <td width="50%" valign="top">
       <a href="https://tux.atl.dev/getting-started/for-admins/">
-        <img src="assets/readme/quickstart-admins.svg" alt="Admins - Configuring Tux for your server" width="100%">
+        <img src="assets/readme/quickstart-admins.svg" alt="Admins - Configuring Tux for your server" width="100%" style="display: block; margin: 0;">
       </a>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
       <a href="https://tux.atl.dev/getting-started/for-self-hosters/">
-        <img src="assets/readme/quickstart-selfhosters.svg" alt="Self-Hosters - Running your own Tux instance" width="100%">
+        <img src="assets/readme/quickstart-selfhosters.svg" alt="Self-Hosters - Running your own Tux instance" width="100%" style="display: block; margin: 0;">
       </a>
     </td>
     <td width="50%" valign="top">
       <a href="https://tux.atl.dev/getting-started/for-developers/">
-        <img src="assets/readme/quickstart-developers.svg" alt="Developers - Contributing to Tux" width="100%">
+        <img src="assets/readme/quickstart-developers.svg" alt="Developers - Contributing to Tux" width="100%" style="display: block; margin: 0;">
       </a>
     </td>
   </tr>
