@@ -65,7 +65,9 @@
                 'psycopg',
             ],
             groupName: 'critical',
-            addLabels: ['deps: critical'],
+            addLabels: [
+                'deps: critical'
+            ],
             minimumReleaseAge: '7 days',
             prPriority: 10,
         },
@@ -208,28 +210,55 @@
         },
         {
             // Python runtime - groups .python-version, workflows, and Dockerfile
-            matchManagers: ['dockerfile', 'github-actions', 'custom.regex'],
-            matchPackageNames: ['python'],
+            matchManagers: [
+                'dockerfile',
+                'github-actions',
+                'custom.regex'
+            ],
+            matchPackageNames: [
+                'python'
+            ],
             groupName: 'python runtime',
-            addLabels: ['deps: python'],
+            addLabels: [
+                'deps: python'
+            ],
             prPriority: 10,
         },
         {
             // Python patch updates auto-merge
-            matchManagers: ['dockerfile', 'github-actions', 'custom.regex'],
-            matchPackageNames: ['python'],
-            matchUpdateTypes: ['patch'],
+            matchManagers: [
+                'dockerfile',
+                'github-actions',
+                'custom.regex'
+            ],
+            matchPackageNames: [
+                'python'
+            ],
+            matchUpdateTypes: [
+                'patch'
+            ],
             automerge: true,
             automergeType: 'branch',
             minimumReleaseAge: '3 days',
         },
         {
             // Python minor/major need review
-            matchManagers: ['dockerfile', 'github-actions', 'custom.regex'],
-            matchPackageNames: ['python'],
-            matchUpdateTypes: ['minor', 'major'],
+            matchManagers: [
+                'dockerfile',
+                'github-actions',
+                'custom.regex'
+            ],
+            matchPackageNames: [
+                'python'
+            ],
+            matchUpdateTypes: [
+                'minor',
+                'major'
+            ],
             automerge: false,
-            addLabels: ['deps: needs-review'],
+            addLabels: [
+                'deps: needs-review'
+            ],
         },
         {
             matchManagers: [
@@ -261,7 +290,7 @@
         enabled: true,
     },
     constraints: {
-        python: '>=3.14,<3.15',
+        python: '>=3.13.2,<3.14',
     },
     customManagers: [
         {
