@@ -26,6 +26,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
+  # renovate: datasource=python-version depName=python
   PYTHON_VERSION: 3.13.8
   ARTIFACT_RETENTION_DAYS: 7
 jobs:

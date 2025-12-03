@@ -16,6 +16,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   DOCKER_BUILD_SUMMARY: true
   DOCKER_BUILD_CHECKS_ANNOTATIONS: true
+  # renovate: datasource=python-version depName=python
   PYTHON_VERSION: 3.13.8
   SHA_PREFIX_LENGTH: 7
   VALIDATE_TIMEOUT_MINUTES: 10
