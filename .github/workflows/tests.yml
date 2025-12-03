@@ -95,15 +95,10 @@ jobs:
           echo "Pytest version: $(uv run pytest --version || echo 'pytest not found')"
 
           # Run all test types with combined coverage
-          # Generate htmlcov in docs/ directory for direct use by MkDocs
+          # Coverage report formats are defined in pyproject.toml (xml, json, lcov, term-missing)
           # Use junit_family=legacy for pretty-printed test names in Codecov UI
-          # Explicitly specify --cov=src/tux for clarity (also in pyproject.toml addopts)
           # Note: --cov-fail-under may cause pytest to exit with error, but coverage.xml should still be generated
           uv run pytest \
-            --cov=src/tux \
-            --cov-report=xml:coverage.xml \
-            --cov-report=html:docs/htmlcov \
-            --cov-report=term-missing:skip-covered \
             --junitxml=junit.xml \
             -o junit_family=legacy \
             --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} \
@@ -178,11 +173,3 @@ jobs:
           # Note: If this step fails with authentication errors, the action may not support OIDC.
           # In that case, uncomment the token line below and add CODECOV_TOKEN to repository secrets.
           # token: ${{ secrets.CODECOV_TOKEN }}
-      - name: Upload Coverage HTML Artifact
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-html
-          path: docs/htmlcov
-          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-          if-no-files-found: warn

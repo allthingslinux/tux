@@ -377,8 +377,7 @@ exclude_lines = [
 ]
 
 [tool.coverage.html]
-directory = "docs/htmlcov"
-extra_css = "docs/content/assets/stylesheets/coverage.css"
+directory = "htmlcov"
 
 [tool.coverage.xml]
 output = "coverage.xml"
