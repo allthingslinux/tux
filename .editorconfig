@@ -15,12 +15,12 @@ indent_size = 4
 # Python files
 [*.py]
 indent_size = 4
-max_line_length = 120
+max_line_length = 88
 
 # Python stub files
 [*.pyi]
 indent_size = 4
-max_line_length = 120
+max_line_length = 88
 
 # Configuration files (YAML, TOML, JSON)
 [*.{yaml,yml}]
@@ -33,15 +33,23 @@ indent_size = 4
 indent_size = 2
 
 # Docker files
-[{Dockerfile,*.dockerfile}]
-indent_size = 4
+[Containerfile]
+indent_size = 8
 
-[docker-compose*.yml]
+[compose.yaml]
 indent_size = 2
 
 # Shell scripts
+# shfmt configuration matches pre-commit hook: -ln bash -i 2 -ci -bn -sr -kp -s
 [*.{sh,bash,zsh,fish}]
+indent_style = space
 indent_size = 2
+# shfmt-specific properties (shfmt 3.8.0+)
+shell_variant = bash
+binary_next_line = true
+switch_case_indent = true
+space_redirects = true
+keep_padding = true
 
 # Nix files
 [*.nix]
@@ -65,7 +73,7 @@ indent_size = 4
 indent_size = 4
 
 # Lock files (read-only, preserve formatting)
-[{poetry.lock,package-lock.json,yarn.lock,Pipfile.lock}]
+[{uv.lock,package-lock.json,yarn.lock,Pipfile.lock}]
 insert_final_newline = false
 trim_trailing_whitespace = false
 

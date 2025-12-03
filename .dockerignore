@@ -50,8 +50,8 @@ logs/
 .gitattributes
 
 # Docker files (prevent recursive inclusion)
-Dockerfile*
-docker-compose*.yml
+Containerfile*
+compose.yaml
 .dockerignore
 
 # Cache directories

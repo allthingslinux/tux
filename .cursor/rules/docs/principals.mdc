@@ -1,0 +1,119 @@
+---
+description: Documentation frameworks, methodologies, and principles (Diátaxis, Write the Docs)
+alwaysApply: false
+---
+# Documentation Principles & Frameworks
+
+This section covers the fundamental principles and methodologies that guide Tux documentation.
+
+## Diátaxis Documentation Framework
+
+Follow the [Diátaxis](https://diataxis.fr/) framework for organizing documentation by user needs:
+
+### Four Documentation Types
+
+- **Tutorials**: Learning-oriented guides that teach users step-by-step
+  - Purpose: Help users learn and gain competence
+  - Focus: Learning experience, not real work
+  - Example: "Getting started with Tux"
+
+- **How-to Guides**: Goal-oriented instructions for specific tasks
+  - Purpose: Guide users through problems/tasks they need to solve
+  - Focus: Practical solutions, actionable steps
+  - Example: "How to configure Tux permissions"
+
+- **Reference**: Information-oriented technical descriptions
+  - Purpose: Describe machinery and how to operate it
+  - Focus: Factual, authoritative descriptions
+  - Example: "Tux API reference", "Configuration schema"
+
+- **Explanation/Concepts**: Understanding-oriented discussions
+  - Purpose: Deepen understanding, provide context
+  - Focus: Why things work the way do
+  - Example: "Why Tux uses this architecture"
+
+### Key Diátaxis Principles
+
+- **User-first**: Address user needs, not just machinery capabilities
+- **Clear separation**: Don't mix tutorial, how-to, reference, and explanation content
+- **Focus on goals**: How-to guides solve specific user problems
+- **Neutral description**: Reference material describes without instructing
+- **Flow and sequence**: Structure content for logical user progression
+- **Pay attention to naming**: Titles should clearly indicate what/how/why content covers
+
+## Write the Docs Principles
+
+### Content Quality Principles
+
+- **ARID**: Accept (some) repetition - documentation inevitably repeats code logic
+- **Skimmable**: Structure for quick scanning - descriptive headings, meaningful link text
+- **Exemplary**: Include practical examples for common use cases
+- **Consistent**: Use uniform language, formatting, and terminology
+- **Current**: Keep documentation updated - outdated docs are worse than missing docs
+- **Beautiful**: Intentional visual design and formatting
+
+### Writing Guidelines
+
+- **Participatory**: Include all stakeholders in documentation process
+- **Precursory**: Start documenting before development begins
+- **Nearby sources**: Store docs close to code they document
+- **Unique sources**: Avoid content overlap between different documentation sources
+- **Comprehensive**: Cover all likely user questions across all publications
+
+### Content Types
+
+#### FAQs
+
+- **Reflect audience needs**: Base on actual user questions from search/support data
+- **Regular updates**: Keep current with user behavior changes
+- **Drive to detailed content**: Link to comprehensive guides, not just answer briefly
+- **Maintenance plan**: Avoid FAQs becoming outdated parking lots
+
+#### Release Notes
+
+- **Specific changes**: Clearly state what changed
+- **Why important**: Explain impact on users (workflow, UI, security, etc.)
+- **User goals**: Describe benefits for users
+- **Complete information**: Ensure users have everything needed to proceed
+- **Visual aids**: Include images when helpful for understanding
+
+#### Error Messages
+
+- **Explicit indication**: Clearly show something went wrong
+- **Human voice**: Write conversationally, not robotically
+- **No blame**: Be humble, focus on solutions not faults
+- **Short & meaningful**: Concise but informative
+- **Precise descriptions**: Exactly what went wrong
+- **Constructive advice**: Clear steps to fix the problem
+
+### API Documentation
+
+- **Documentation-driven design**: Design APIs through documentation first
+- **Test-driven documentation**: Use API tests to generate accurate snippets
+- **Machine-readable formats**: Enable interactive docs, mock servers, testing
+- **Complete coverage**: Undocumented features don't exist
+- **Accurate examples**: Working code samples with expected outputs
+
+### Style Guide Resources
+
+- **Google Developer Style**: <https://developers.google.com/style>
+- **Microsoft Writing Guide**: <https://docs.microsoft.com/en-us/style-guide/>
+- **Apple Style Guide**: <https://help.apple.com/applestyleguide/>
+- **Red Hat Style Guide**: <https://redhat-documentation.github.io/supplementary-style-guide/>
+- **Write the Docs Guide**: <https://www.writethedocs.org/guide/>
+
+### Accessibility Guidelines
+
+- **Semantic HTML**: Use proper heading hierarchy (h1→h2→h3)
+- **Alt text**: Describe images meaningfully for screen readers
+- **Color contrast**: Ensure readable text contrast ratios
+- **Keyboard navigation**: All interactive elements keyboard accessible
+- **Plain language**: Avoid jargon, explain technical terms
+- **Consistent navigation**: Predictable page layouts and navigation
+
+### Bias Reduction
+
+- **Inclusive language**: Use gender-neutral terms, avoid stereotypes
+- **Geographic neutrality**: Don't assume US-centric perspectives
+- **Cultural sensitivity**: Respect diverse backgrounds and experiences
+- **Ability-inclusive**: Avoid assumptions about user capabilities

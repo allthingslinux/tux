@@ -1,0 +1,68 @@
+{
+  "debug": false,
+  "log_level": "INFO",
+  "bot_token": "",
+  "postgres_host": "localhost",
+  "postgres_port": 5432,
+  "postgres_db": "tuxdb",
+  "postgres_user": "tuxuser",
+  "postgres_password": "ChangeThisToAStrongPassword123!",
+  "database_url": "",
+  "allow_sysadmins_eval": false,
+  "bot_info": {
+    "bot_name": "Tux",
+    "activities": [],
+    "hide_bot_owner": false,
+    "prefix": "$"
+  },
+  "user_ids": {
+    "bot_owner_id": 0,
+    "sysadmins": []
+  },
+  "status_roles": {
+    "mappings": []
+  },
+  "temp_vc": {
+    "tempvc_channel_id": "null",
+    "tempvc_category_id": "null"
+  },
+  "gif_limiter": {
+    "recent_gif_age": 60,
+    "gif_limits_user": {},
+    "gif_limits_channel": {},
+    "gif_limit_exclude": []
+  },
+  "xp": {
+    "xp_blacklist_channels": [],
+    "xp_roles": [],
+    "xp_multipliers": [],
+    "xp_cooldown": 1,
+    "levels_exponent": 2,
+    "show_xp_progress": true,
+    "enable_xp_cap": false
+  },
+  "snippets": {
+    "limit_to_role_ids": false,
+    "access_role_ids": []
+  },
+  "irc": {
+    "bridge_webhook_ids": []
+  },
+  "external_services": {
+    "sentry_dsn": "",
+    "github_app_id": "",
+    "github_installation_id": "",
+    "github_private_key": "",
+    "github_client_id": "",
+    "github_client_secret": "",
+    "github_repo_url": "",
+    "github_repo_owner": "",
+    "github_repo": "",
+    "mailcow_api_key": "",
+    "mailcow_api_url": "",
+    "wolfram_app_id": "",
+    "influxdb_token": "",
+    "influxdb_url": "",
+    "influxdb_org": ""
+  }
+}

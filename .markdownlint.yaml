@@ -1,3 +1,4 @@
+---
 # Example markdownlint configuration with all properties set to their default value
 
 # Default state for all rules
@@ -55,7 +56,7 @@ MD013:
   # Number of characters for code blocks
   code_block_line_length: 100
   # Include code blocks
-  code_blocks: true
+  code_blocks: false
   # Include tables
   tables: true
   # Include headings
@@ -95,7 +96,7 @@ MD025:
   # Heading level
   level: 1
   # RegExp for matching title in front matter
-  front_matter_title: ^\s*title\s*[:=]
+  front_matter_title: ''
 # MD026/no-trailing-punctuation : Trailing punctuation in heading : https://github.com/DavidAnson/markdownlint/blob/v0.34.0/doc/md026.md
 MD026:
   # Punctuation characters
@@ -222,3 +223,15 @@ MD055:
   style: consistent
 # MD056/table-column-count : Table column count : https://github.com/DavidAnson/markdownlint/blob/v0.34.0/doc/md056.md
 MD056: true
+# MD058/blanks-around-tables : Tables should be surrounded by blank lines : https://github.com/DavidAnson/markdownlint/blob/v0.39.0/doc/md058.md
+MD058: true
+# MD059/descriptive-link-text : Link text should be descriptive : https://github.com/DavidAnson/markdownlint/blob/v0.39.0/doc/md059.md
+MD059:
+  # Prohibited link texts
+  prohibited_texts:
+    - click here
+    - here
+    - link
+    - more
+# MD060/table-column-style : Table column style : https://github.com/DavidAnson/markdownlint/blob/v0.39.0/doc/md060.md
+MD060: false

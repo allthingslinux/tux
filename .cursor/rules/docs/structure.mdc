@@ -1,0 +1,150 @@
+---
+description: Documentation organization, navigation structure, and content hierarchy guidelines
+alwaysApply: false
+---
+# Documentation Structure & Organization
+
+The documentation follows a role-based structure organized around user needs:
+
+- **Home**: Main landing page with overview
+- **Getting Started**: Onboarding guides for different user types (users, admins, self-hosters, developers)
+- **User Guide**: Complete user experience with commands and features
+- **Admin Guide**: Server administration and configuration
+- **Self-Hoster Guide**: Installation, configuration, and management
+- **Developer Guide**: Complete development resources and best practices
+- **Reference**: Technical specifications, API docs, CLI, environment variables
+- **Support**: Support channels, troubleshooting guides, and help resources
+- **Changelog**: Version history and release notes
+- **FAQ**: Frequently asked questions (linked from footer)
+- **Tags**: Content tagging and categorization
+
+Navigation is explicitly defined in `zensical.toml` using the `nav` array.
+
+## Content Organization and Structure
+
+### Directory Structure
+
+- **Source directory**: `docs/content/` (all markdown source files)
+- **Build directory**: `site/` (Zensical output, served by development server)
+- **Navigation**: Defined in `zensical.toml` using explicit `nav` array
+- **Home page**: `docs/content/index.md` (main landing page)
+- **Includes**: `docs/includes/` directory for shared content (abbreviations)
+- **Overrides**: `docs/overrides/` directory for theme customizations (MiniJinja templates)
+- **Config file**: `zensical.toml` (Zensical configuration)
+
+### Navigation Organization
+
+Content follows a user-centric structure with Diátaxis principles and is organized using explicit navigation in `zensical.toml`:
+
+#### Core Sections
+
+- **`getting-started/`**: Onboarding guides for different user types (for-users.md, for-admins.md, for-self-hosters.md, for-developers.md)
+- **`user/`**: Complete user guide with commands (modules/) and features (features/)
+- **`admin/`**: Server administration with setup/ and config/ subdirectories
+- **`selfhost/`**: Self-hosting with install/, config/, and manage/ subdirectories
+- **`developer/`**: Development resources with tutorials/, guides/, concepts/, and best-practices/ subdirectories
+- **`reference/`**: Technical specifications, CLI, environment variables
+- **`support/`**: Support channels and troubleshooting guides (troubleshooting/ subdirectory)
+- **`changelog/`**: Version history and release notes (index.md)
+- **`faq/`**: Frequently asked questions (index.md)
+- **`tags/`**: Content tagging and categorization (index.md)
+- **Root level**: `index.md` (home page)
+
+#### Special Directories
+
+- **`content/assets/`**: Static files organized by type (images/, stylesheets/, javascript/)
+- **`overrides/`**: Zensical theme customizations (MiniJinja templates)
+
+### Automation Integration
+
+- **Social cards**: Auto-generated for all pages with custom backgrounds (built into Zensical)
+- **Abbreviations**: Auto-appended to all pages via pymdownx.snippets extension (`includes/abbreviations.md`)
+
+### File Naming Conventions
+
+- **Files**: `kebab-case.md` (e.g., `moderation.md`, `first-run.md`, `bot-lifecycle.md`)
+- **Directories**: `kebab-case/` (e.g., `getting-started/`, `developer/`, `best-practices/`)
+- **Index files**: `index.md` in every directory (provides section overview, auto-indexed)
+- **Assets**: Organized by type in subdirectories (`assets/images/`, `assets/stylesheets/`, `assets/javascript/`)
+- **Special directories**: `changelog/`, `faq/`, `tags/` (each with index.md)
+
+### Content Hierarchy
+
+Each major section follows this pattern:
+
+```text
+section-name/
+├── index.md              # Section overview and navigation
+├── subtopic-1/
+│   ├── index.md         # Subtopic overview
+│   ├── specific-page.md # Detailed content
+│   └── another-page.md
+├── subtopic-2/
+│   ├── index.md         # Subtopic overview
+│   ├── nested-page.md   # Detailed content
+│   └── another-nested.md
+├── standalone-page.md   # Direct content (no subfolder needed)
+└── another-standalone.md
+```
+
+### Hierarchy Examples
+
+**With subdirectories** (admin, selfhost, developer):
+
+- `admin/setup/` → Inviting bot, initial setup (index.md)
+- `admin/config/` → Bot settings, permissions, features (logs.md, roles.md, ranks.md, commands.md, jail.md)
+- `selfhost/install/` → Requirements, Docker, systemd, database, first run (index.md, docker.md, systemd.md, database.md, first-run.md)
+- `selfhost/config/` → Bot token, environment variables, database setup (bot-token.md, environment.md, database.md)
+- `selfhost/manage/` → Monitoring, backups, updates, operations (database.md, operations.md)
+- `developer/tutorials/` → Step-by-step development guides
+- `developer/concepts/` → Complex architectural topics with nested subdirectories
+- `developer/best-practices/` → Code review, documentation, git workflow, CI/CD, testing (includes sentry/ subdirectory)
+- `support/troubleshooting/` → User, admin, selfhost, developer specific issues (user.md, admin.md, selfhost.md, developer.md)
+
+**With nested subdirectories** (developer concepts):
+
+- `developer/concepts/core/` → Bot lifecycle, cog system, command system, permission system, plugins (app.md, bot.md, base-cog.md, cog-loader.md, lifecycle.md, modules.md, permission-system.md, plugins.md, logging.md, main.md)
+- `developer/concepts/database/` → Database architecture, models, controllers, migrations, service layer, testing (architecture.md, models.md, controllers.md, migrations.md, service.md, testing.md, utilities.md)
+- `developer/concepts/ui/` → Buttons, embeds, modals, views, components (buttons.md, embeds.md, modals.md, views.md, components.md)
+- `developer/concepts/handlers/` → Hot reload system (hot-reload.md)
+- `developer/concepts/services/` → Service layer architecture (index.md)
+- `developer/concepts/shared/` → Shared utilities and constants (index.md)
+- `developer/concepts/wrappers/` → Service wrappers and utilities (index.md)
+- `developer/concepts/tasks/` → Task monitor integration (task-monitor.md)
+
+**With standalone pages** (reference, root level):
+
+- `reference/cli.md` → CLI command reference
+- `reference/env.md` → Environment variables reference
+- `reference/versioning.md` → Versioning and release information
+- `reference/renovate.md` → Renovate bot configuration
+- `reference/style-guide.md` → Documentation style guide
+- `faq/index.md` → Frequently asked questions
+- `support/index.md` → Support and contact information
+- `changelog/index.md` → Version history and release notes
+- `tags/index.md` → Content tagging and categorization
+
+### Adding New Content
+
+1. **Choose location**: Determine target audience and topic based on Diátaxis principles
+2. **Create structure**: Add `index.md` for new sections/subsections
+3. **Update navigation**: Modify `zensical.toml` `nav` array to include new pages explicitly
+4. **Add assets**: Place images in `docs/content/assets/images/`, styles in `docs/content/assets/stylesheets/`
+5. **Follow naming**: Use kebab-case for files and directories
+6. **Add frontmatter**: Include title, description, and tags in YAML frontmatter
+
+### Asset Organization
+
+- **Images**: `docs/content/assets/images/` (logos, screenshots, diagrams - hero-bg.png, logo.png)
+- **Stylesheets**: `docs/content/assets/stylesheets/` (custom CSS: extra.css)
+- **JavaScript**: `docs/content/assets/javascript/` (custom JS: extra.js)
+
+### Navigation Structure
+
+Navigation is explicitly defined in `zensical.toml` using the `nav` array:
+
+- **Explicit listing**: All pages must be explicitly listed in the `nav` array
+- **No wildcards**: Wildcard patterns are not supported - list all files explicitly
+- **Hierarchical structure**: Top-level sections with nested subsections
+- **User journey ordering**: Getting Started → User → Admin → Self-Host → Developer → Reference → Support → Changelog → Tags
+- **Breadcrumb navigation**: Automatic breadcrumb trails via navigation.path feature

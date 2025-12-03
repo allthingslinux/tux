@@ -1,0 +1,420 @@
+/**
+ * Tokyo Night Theme (Dark Mode)
+ *
+ * A clean, dark color scheme inspired by the lights of downtown Tokyo at night.
+ * Maps Tokyo Night palette to Zensical CSS variables for dark mode.
+ *
+ * Color palette references:
+ * - VSCode theme: https://github.com/tokyo-night/tokyo-night-vscode-theme
+ * - GTKSourceView5 theme: Tokyo Night style scheme
+ * - Discord theme: Tokyo Night Discord port
+ */
+
+@media screen {
+  [data-md-color-scheme="slate"] {
+    /* ==========================================================================
+       Color Hue
+       ========================================================================== */
+
+    /* Tokyo Night uses a blue-purple tone */
+    --md-hue: 230deg;
+
+
+    /* ==========================================================================
+       Primary Colors
+       ========================================================================== */
+
+    /* Use Tokyo Night blue for primary color */
+    --md-primary-fg-color: #7aa2f7;
+    --md-primary-fg-color--light: #7dcfff;
+    --md-primary-fg-color--dark: #3d59a1;
+    --md-primary-bg-color: #1a1b26;
+    --md-primary-bg-color--light: #1f2335;
+
+
+    /* ==========================================================================
+       Accent Colors
+       ========================================================================== */
+
+    /* Use Tokyo Night purple for accent */
+    --md-accent-fg-color: #bb9af7;
+    --md-accent-fg-color--transparent: rgba(187, 154, 247, 0.1);
+    --md-accent-bg-color: #1a1b26;
+    --md-accent-bg-color--light: #1f2335;
+
+
+    /* ==========================================================================
+       Default Colors (Dark Mode)
+       ========================================================================== */
+
+    /* Text colors */
+    /* Main foreground uses #c0caf5, but editor uses #a9b1d6 */
+    --md-default-fg-color: #c0caf5;
+    --md-default-fg-color--light: #a9b1d6;
+    --md-default-fg-color--lighter: #414868;
+    --md-default-fg-color--lightest: #51597d;
+
+    /* Background colors */
+    --md-default-bg-color: #1a1b26;
+    --md-default-bg-color--light: #1f2335;
+    --md-default-bg-color--lighter: rgba(31, 35, 53, 0.5);
+    --md-default-bg-color--lightest: rgba(31, 35, 53, 0.2);
+
+
+    /* ==========================================================================
+       Code Colors
+       ========================================================================== */
+
+    /* Code block colors */
+    /* Editor foreground should be #a9b1d6 per reference */
+    --md-code-fg-color: #a9b1d6;
+    --md-code-bg-color: #1f2335;
+    --md-code-bg-color--light: rgba(31, 35, 53, 0.9);
+    --md-code-bg-color--lighter: rgba(31, 35, 53, 0.7);
+
+    /* Code highlighting */
+    --md-code-hl-color: #7dcfff;
+    --md-code-hl-color--light: rgba(125, 207, 255, 0.1);
+
+    /* Syntax highlighting colors - matching Tokyo Night token colors */
+    --md-code-hl-number-color: #ff9e64;
+    --md-code-hl-special-color: #ff5370; /* Invalid/error color */
+    --md-code-hl-function-color: #7aa2f7; /* Functions are blue */
+    --md-code-hl-constant-color: #bb9af7; /* Constants are purple */
+    --md-code-hl-keyword-color: #bb9af7; /* Keywords are purple */
+    --md-code-hl-string-color: #9ece6a;
+    --md-code-hl-name-color: var(--md-code-fg-color);
+    --md-code-hl-operator-color: #89ddff; /* Operators are cyan */
+    --md-code-hl-punctuation-color: #89ddff;
+    --md-code-hl-comment-color: #51597d;
+    --md-code-hl-generic-color: #a9b1d6;
+    --md-code-hl-variable-color: #c0caf5; /* Variables use foreground */
+
+
+    /* ==========================================================================
+       Typeset Colors
+       ========================================================================== */
+
+    /* Main content text */
+    --md-typeset-color: var(--md-default-fg-color);
+
+    /* Links */
+    --md-typeset-a-color: var(--md-primary-fg-color);
+
+    /* Deletion and insertion */
+    --md-typeset-del-color: rgba(247, 118, 142, 0.15);
+    --md-typeset-ins-color: rgba(158, 206, 106, 0.15);
+
+    /* Keyboard keys */
+    --md-typeset-kbd-color: rgba(192, 202, 245, 0.12);
+    --md-typeset-kbd-accent-color: rgba(192, 202, 245, 0.2);
+    --md-typeset-kbd-border-color: #1f2335;
+
+    /* Mark/highlight */
+    --md-typeset-mark-color: rgba(224, 175, 104, 0.3);
+
+    /* Tables */
+    --md-typeset-table-color: rgba(192, 202, 245, 0.12);
+    --md-typeset-table-color--light: rgba(192, 202, 245, 0.035);
+
+
+    /* ==========================================================================
+       Admonition Colors
+       ========================================================================== */
+
+    /* Base admonition colors */
+    --md-admonition-fg-color: var(--md-default-fg-color);
+    --md-admonition-bg-color: var(--md-default-bg-color);
+
+
+    /* ==========================================================================
+       Warning Colors
+       ========================================================================== */
+
+    /* Warning foreground and background */
+    --md-warning-fg-color: #c0caf5;
+    --md-warning-bg-color: rgba(224, 175, 104, 0.2);
+
+
+    /* ==========================================================================
+       Footer Colors
+       ========================================================================== */
+
+    --md-footer-bg-color: rgba(31, 35, 53, 0.87);
+    --md-footer-bg-color--dark: #15161e;
+
+
+    /* ==========================================================================
+       Shadows
+       ========================================================================== */
+
+    /* Dark mode shadows */
+    --md-shadow-z1:
+      0 0.25rem 0.625rem rgba(0, 0, 0, 0.3),
+      0 0 0.0625rem rgba(192, 202, 245, 0.1);
+
+    --md-shadow-z2:
+      0 0.25rem 0.625rem rgba(0, 0, 0, 0.4),
+      0 0 0.0625rem rgba(192, 202, 245, 0.15);
+
+    --md-shadow-z3:
+      0 0.625rem 2.5rem rgba(0, 0, 0, 0.5),
+      0 0 0.0625rem rgba(0, 0, 0, 0.4);
+
+
+    /* ==========================================================================
+       Search Colors
+       ========================================================================== */
+
+    --color-foreground: 192 202 245;
+    --color-background: 26 27 38;
+    --color-background-subtle: 31 35 53;
+    --color-backdrop: 21 22 30;
+
+
+    /* ==========================================================================
+       Headline Colors
+       ========================================================================== */
+
+    /* Headlines use white for better contrast in dark mode */
+    :is(h1, h2, h3, h4, h5, h6) {
+      color: #c0caf5;
+    }
+
+    /* Header title */
+    .md-header__title {
+      color: #c0caf5;
+    }
+
+    /* ==========================================================================
+       Image Visibility
+       ========================================================================== */
+
+    /* Hide images marked for light mode only */
+    img[src$="#only-light"],
+    img[src$="#gh-light-mode-only"] {
+      display: none;
+    }
+
+    /* ==========================================================================
+       Color Scheme Indicator
+       ========================================================================== */
+
+    color-scheme: dark;
+  }
+}
+
+
+/* ==========================================================================
+   Footer Meta Background
+   ========================================================================== */
+
+/* Footer meta matches header background */
+@media screen {
+  [data-md-color-scheme="slate"] {
+    .md-footer-meta {
+      background-color: var(--md-default-bg-color--light);
+    }
+  }
+}
+
+
+/* ==========================================================================
+   Admonition Type Styles (Tokyo Night)
+   ========================================================================== */
+
+@media screen {
+  [data-md-color-scheme="slate"] {
+    /* Note: Blue */
+    .md-typeset .admonition.note,
+    .md-typeset details.note {
+      background-color: rgba(122, 162, 247, 0.1);
+    }
+
+    .md-typeset .note > .admonition-title::before,
+    .md-typeset details.note > summary::before {
+      background-color: #7aa2f7;
+    }
+
+    .md-typeset .note > .admonition-title::after,
+    .md-typeset details.note > summary::after {
+      color: #7aa2f7;
+    }
+
+    /* Abstract: Cyan */
+    .md-typeset .admonition.abstract,
+    .md-typeset details.abstract {
+      background-color: rgba(125, 207, 255, 0.1);
+    }
+
+    .md-typeset .abstract > .admonition-title::before,
+    .md-typeset details.abstract > summary::before {
+      background-color: #7dcfff;
+    }
+
+    .md-typeset .abstract > .admonition-title::after,
+    .md-typeset details.abstract > summary::after {
+      color: #7dcfff;
+    }
+
+    /* Info: Teal/Cyan (matches editorInfo.foreground) */
+    .md-typeset .admonition.info,
+    .md-typeset details.info {
+      background-color: rgba(13, 160, 186, 0.1);
+    }
+
+    .md-typeset .info > .admonition-title::before,
+    .md-typeset details.info > summary::before {
+      background-color: #0da0ba;
+    }
+
+    .md-typeset .info > .admonition-title::after,
+    .md-typeset details.info > summary::after {
+      color: #0da0ba;
+    }
+
+    /* Tip: Teal Green */
+    .md-typeset .admonition.tip,
+    .md-typeset details.tip {
+      background-color: rgba(115, 218, 202, 0.1);
+    }
+
+    .md-typeset .tip > .admonition-title::before,
+    .md-typeset details.tip > summary::before {
+      background-color: #73daca;
+    }
+
+    .md-typeset .tip > .admonition-title::after,
+    .md-typeset details.tip > summary::after {
+      color: #73daca;
+    }
+
+    /* Success: Teal (matches charts.green and git added) */
+    .md-typeset .admonition.success,
+    .md-typeset details.success {
+      background-color: rgba(65, 166, 181, 0.1);
+    }
+
+    .md-typeset .success > .admonition-title::before,
+    .md-typeset details.success > summary::before {
+      background-color: #41a6b5;
+    }
+
+    .md-typeset .success > .admonition-title::after,
+    .md-typeset details.success > summary::after {
+      color: #41a6b5;
+    }
+
+    /* Question: Cyan */
+    .md-typeset .admonition.question,
+    .md-typeset details.question {
+      background-color: rgba(125, 207, 255, 0.1);
+    }
+
+    .md-typeset .question > .admonition-title::before,
+    .md-typeset details.question > summary::before {
+      background-color: #7dcfff;
+    }
+
+    .md-typeset .question > .admonition-title::after,
+    .md-typeset details.question > summary::after {
+      color: #7dcfff;
+    }
+
+    /* Warning: Yellow */
+    .md-typeset .admonition.warning,
+    .md-typeset details.warning {
+      background-color: rgba(224, 175, 104, 0.1);
+    }
+
+    .md-typeset .warning > .admonition-title::before,
+    .md-typeset details.warning > summary::before {
+      background-color: #e0af68;
+    }
+
+    .md-typeset .warning > .admonition-title::after,
+    .md-typeset details.warning > summary::after {
+      color: #e0af68;
+    }
+
+    /* Failure: Red */
+    .md-typeset .admonition.failure,
+    .md-typeset details.failure {
+      background-color: rgba(247, 118, 142, 0.1);
+    }
+
+    .md-typeset .failure > .admonition-title::before,
+    .md-typeset details.failure > summary::before {
+      background-color: #f7768e;
+    }
+
+    .md-typeset .failure > .admonition-title::after,
+    .md-typeset details.failure > summary::after {
+      color: #f7768e;
+    }
+
+    /* Danger: Darker Red */
+    .md-typeset .admonition.danger,
+    .md-typeset details.danger {
+      background-color: rgba(219, 75, 75, 0.1);
+    }
+
+    .md-typeset .danger > .admonition-title::before,
+    .md-typeset details.danger > summary::before {
+      background-color: #db4b4b;
+    }
+
+    .md-typeset .danger > .admonition-title::after,
+    .md-typeset details.danger > summary::after {
+      color: #db4b4b;
+    }
+
+    /* Bug: Purple */
+    .md-typeset .admonition.bug,
+    .md-typeset details.bug {
+      background-color: rgba(187, 154, 247, 0.1);
+    }
+
+    .md-typeset .bug > .admonition-title::before,
+    .md-typeset details.bug > summary::before {
+      background-color: #bb9af7;
+    }
+
+    .md-typeset .bug > .admonition-title::after,
+    .md-typeset details.bug > summary::after {
+      color: #bb9af7;
+    }
+
+    /* Example: Purple */
+    .md-typeset .admonition.example,
+    .md-typeset details.example {
+      background-color: rgba(157, 124, 216, 0.1);
+    }
+
+    .md-typeset .example > .admonition-title::before,
+    .md-typeset details.example > summary::before {
+      background-color: #9d7cd8;
+    }
+
+    .md-typeset .example > .admonition-title::after,
+    .md-typeset details.example > summary::after {
+      color: #9d7cd8;
+    }
+
+    /* Quote: Comment Grey */
+    .md-typeset .admonition.quote,
+    .md-typeset details.quote {
+      background-color: rgba(86, 95, 137, 0.1);
+    }
+
+    .md-typeset .quote > .admonition-title::before,
+    .md-typeset details.quote > summary::before {
+      background-color: #51597d;
+    }
+
+    .md-typeset .quote > .admonition-title::after,
+    .md-typeset details.quote > summary::after {
+      color: #51597d;
+    }
+  }
+}

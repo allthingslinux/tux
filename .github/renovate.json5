@@ -1,41 +1,398 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     "extends": [
-        "config:best-practices"
+        "config:best-practices",
+        ":semanticCommits",
+        ":separateMultipleMajorReleases"
     ],
     "schedule": [
-        "* */12 * * *"
+        "before 4am on Monday"
     ],
-    "ignoreDeps": [
-        "basedpyright" // see pyproject.toml
+    "timezone": "America/New_York",
+    "dependencyDashboard": true,
+    "dependencyDashboardOSVVulnerabilitySummary": "unresolved",
+    "enabledManagers": [
+        "github-actions",
+        "pep621",
+        "docker-compose",
+        "dockerfile",
+        "custom.regex",
+        "devcontainer",
+        "pre-commit",
+        "nix"
     ],
-    "lockFileMaintenance": {
+    "platformAutomerge": true,
+    "rebaseWhen": "auto",
+    "osvVulnerabilityAlerts": true,
+    "fetchChangeLogs": "pr",
+    "commitBodyTable": true,
+    "prConcurrentLimit": 3,
+    "prHourlyLimit": 2,
+    "prCreation": "not-pending",
+    "prNotPendingHours": 24,
+    "vulnerabilityAlerts": {
         "enabled": true,
-        "automerge": true
+        "labels": [
+            "deps: security"
+        ],
+        "automerge": false
     },
     "packageRules": [
         {
-            // these will fail tests if they are broken
-            // idk if this works with python, either way it doesnt matter
-            //"matchDepTypes": [
-            //    "devDependencies"
-            //],
+            // Group all patch updates together with branch automerge (silent when passing)
+            "matchUpdateTypes": [
+                "patch"
+            ],
+            "groupName": "patch dependencies",
+            "automerge": true,
+            "automergeType": "branch",
+            "minimumReleaseAge": "14 days",
+            "addLabels": [
+                "deps: patch"
+            ]
+        },
+        {
+            // Group all minor updates together (non-breaking) with branch automerge
+            "matchUpdateTypes": [
+                "minor"
+            ],
+            "matchCurrentVersion": "!/^0/",
+            "groupName": "minor dependencies",
+            "automerge": true,
+            "automergeType": "branch",
+            "minimumReleaseAge": "14 days",
+            "addLabels": [
+                "deps: minor"
+            ]
+        },
+        {
+            // Major updates need review
+            "matchUpdateTypes": [
+                "major"
+            ],
+            "groupName": "major dependencies",
+            "automerge": false,
+            "addLabels": [
+                "deps: major",
+                "deps: needs-review"
+            ]
+        },
+        {
+            // Dev dependencies auto-merge with branch automerge (silent when passing)
+            "matchDepTypes": [
+                "dev"
+            ],
+            "automerge": true,
+            "automergeType": "branch",
+            "groupName": "dev dependencies",
+            "addLabels": [
+                "deps: dev"
+            ],
+            "prPriority": -1
+        },
+        {
+            // Test dependencies auto-merge with branch automerge (silent when passing)
+            "matchDepTypes": [
+                "test"
+            ],
+            "automerge": true,
+            "automergeType": "branch",
+            "groupName": "test dependencies",
+            "addLabels": [
+                "deps: test"
+            ],
+            "prPriority": -1
+        },
+        {
+            // Documentation dependencies auto-merge with branch automerge (silent when passing)
+            "matchDepTypes": [
+                "docs"
+            ],
+            "automerge": true,
+            "automergeType": "branch",
+            "groupName": "documentation dependencies",
+            "addLabels": [
+                "deps: docs"
+            ],
+            "prPriority": -2
+        },
+        {
+            // Type stubs auto-merge with branch automerge (silent when passing)
+            "matchDepTypes": [
+                "types"
+            ],
+            "automerge": true,
+            "automergeType": "branch",
+            "groupName": "type stubs",
+            "addLabels": [
+                "deps: types"
+            ],
+            "prPriority": -2
+        },
+        {
+            // Group pytest plugins together for better noise reduction
+            "matchPackageNames": [
+                "/^pytest/",
+                "py-pglite"
+            ],
+            "groupName": "pytest plugins",
+            "automerge": true,
+            "automergeType": "branch",
+            "addLabels": [
+                "deps: test"
+            ]
+        },
+        {
+            // Group mkdocs plugins together for better noise reduction
+            "matchPackageNames": [
+                "/^mkdocs-/",
+                "/^griffe/",
+                "mkdocstrings",
+                "mkdocstrings-python",
+                "pymdown-extensions"
+            ],
+            "groupName": "mkdocs plugins",
+            "automerge": true,
+            "automergeType": "branch",
+            "addLabels": [
+                "deps: docs"
+            ],
+            "schedule": [
+                "before 4am on the first day of the month"
+            ]
+        },
+        {
+            // Group dev tools together
             "matchPackageNames": [
                 "pre-commit",
                 "ruff",
-                "poetry",
-                "pytest"
+                "basedpyright",
+                "yamllint",
+                "yamlfix",
+                "pydoclint",
+                "docstr-coverage",
+                "pydantic-settings-export"
             ],
-            "automerge": true
+            "groupName": "dev tools",
+            "automerge": true,
+            "automergeType": "branch",
+            "addLabels": [
+                "deps: dev"
+            ]
         },
         {
-            // no breaking changes
+            // Group type stubs together
+            "matchPackageNames": [
+                "/^types-/",
+                "annotated-types",
+                "asyncpg-stubs"
+            ],
+            "groupName": "type stubs",
+            "automerge": true,
+            "automergeType": "branch",
+            "addLabels": [
+                "deps: types"
+            ],
+            "schedule": [
+                "before 4am on the first day of the month"
+            ]
+        },
+        {
+            // Critical runtime dependencies - require review for major updates
+            "matchPackageNames": [
+                "discord-py",
+                "sqlmodel",
+                "sqlalchemy",
+                "pydantic",
+                "alembic",
+                "asyncpg",
+                "psycopg"
+            ],
+            "matchUpdateTypes": [
+                "major"
+            ],
+            "automerge": false,
+            "groupName": "critical major updates",
+            "labels": [
+                "deps: critical",
+                "deps: needs-review"
+            ],
+            "prPriority": 10
+        },
+        {
+            // Critical runtime dependencies - allow minor/patch with higher priority (keep as PR for visibility)
+            "matchPackageNames": [
+                "discord-py",
+                "sqlmodel",
+                "sqlalchemy",
+                "pydantic",
+                "alembic",
+                "asyncpg",
+                "psycopg"
+            ],
             "matchUpdateTypes": [
                 "minor",
                 "patch"
             ],
-            "matchCurrentVersion": "!/^0/",
-            "automerge": true
+            "automerge": true,
+            "minimumReleaseAge": "14 days",
+            "prPriority": 5,
+            "addLabels": [
+                "deps: critical"
+            ]
+        },
+        {
+            // Pinned basedpyright - allow minor/patch updates with branch automerge
+            "matchPackageNames": [
+                "basedpyright"
+            ],
+            "matchUpdateTypes": [
+                "minor",
+                "patch"
+            ],
+            "automerge": true,
+            "automergeType": "branch"
+        },
+        {
+            // GitHub Actions updates with branch automerge
+            "matchManagers": [
+                "github-actions"
+            ],
+            "groupName": "GitHub Actions",
+            "automerge": true,
+            "automergeType": "branch",
+            "addLabels": [
+                "deps: github-actions"
+            ],
+            "commitMessageTopic": "{{depName}}"
+        },
+        {
+            // Docker Compose updates with branch automerge
+            "matchManagers": [
+                "docker-compose"
+            ],
+            "groupName": "Docker Compose",
+            "automerge": true,
+            "automergeType": "branch",
+            "addLabels": [
+                "deps: docker"
+            ]
+        },
+        {
+            // Dockerfile updates with branch automerge
+            "matchManagers": [
+                "dockerfile"
+            ],
+            "groupName": "Dockerfile",
+            "automerge": true,
+            "automergeType": "branch",
+            "addLabels": [
+                "deps: docker"
+            ]
+        },
+        {
+            // Python version updates in Dockerfiles - patch/minor within 3.13.x can auto-merge
+            "matchManagers": [
+                "dockerfile"
+            ],
+            "matchPackageNames": [
+                "python"
+            ],
+            "matchCurrentVersion": "/^3\\.13\\.",
+            "matchUpdateTypes": [
+                "patch",
+                "minor"
+            ],
+            "automerge": true,
+            "automergeType": "branch",
+            "addLabels": [
+                "deps: python",
+                "deps: docker"
+            ],
+            "prPriority": 5
+        },
+        {
+            // Python version updates in Dockerfiles - major/minor outside 3.13.x need review
+            "matchManagers": [
+                "dockerfile"
+            ],
+            "matchPackageNames": [
+                "python"
+            ],
+            "matchUpdateTypes": [
+                "major"
+            ],
+            "automerge": false,
+            "addLabels": [
+                "deps: python",
+                "deps: docker",
+                "deps: needs-review"
+            ],
+            "prPriority": 10
+        },
+        {
+            // Python version updates in Dockerfiles - minor updates outside current major need review
+            "matchManagers": [
+                "dockerfile"
+            ],
+            "matchPackageNames": [
+                "python"
+            ],
+            "matchCurrentVersion": "!/^3\\.13\\.",
+            "matchUpdateTypes": [
+                "minor"
+            ],
+            "automerge": false,
+            "addLabels": [
+                "deps: python",
+                "deps: docker",
+                "deps: needs-review"
+            ],
+            "prPriority": 8
+        },
+        {
+            // Python packages - use update-lockfile strategy for ranges
+            "matchManagers": [
+                "pep621"
+            ],
+            "rangeStrategy": "update-lockfile"
+        },
+        {
+            // Lock file maintenance for uv.lock
+            "matchManagers": [
+                "pep621"
+            ],
+            "matchDepTypes": [
+                "lockFileMaintenance"
+            ],
+            "automerge": true,
+            "schedule": [
+                "before 4am on Monday"
+            ]
         }
+    ],
+    "lockFileMaintenance": {
+        "enabled": true,
+        "automerge": true,
+        "schedule": [
+            "before 4am on Monday"
+        ]
+    },
+    "constraints": {
+        "python": ">=3.13.2,<3.14"
+    },
+    "suppressNotifications": [
+        "prIgnoreNotification"
+    ],
+    "recreateWhen": "auto",
+    "separateMinorPatch": false,
+    "separateMajorMinor": true,
+    "updateNotScheduled": true,
+    "prBodyColumns": [
+        "Package",
+        "Update",
+        "Type",
+        "Change",
+        "References"
     ]
 }

@@ -1,0 +1,438 @@
+/**
+ * Catppuccin Latte Theme (Light Mode)
+ *
+ * A soothing pastel color scheme for light mode.
+ * Maps Catppuccin Latte palette to Zensical CSS variables.
+ *
+ * This theme follows the official Catppuccin style guide:
+ * - Keywords: Mauve
+ * - Strings: Green
+ * - Operators: Sky
+ * - Comments: Overlay 2
+ * - Constants/Numbers: Peach
+ * - Methods/Functions: Blue
+ * - Links: Blue
+ * - Body Copy: Text
+ * - Sub-headlines: Subtext 0-1
+ *
+ * Color palette reference: https://catppuccin.com/palette
+ * Style guide: https://github.com/catppuccin/catppuccin/blob/main/docs/style-guide.md
+ */
+
+:root {
+  /* ==========================================================================
+     Color Hue
+     ========================================================================== */
+
+  /* Catppuccin Latte uses a blue-purple tone */
+  --md-hue: 220deg;
+
+
+  /* ==========================================================================
+     Primary Colors
+     ========================================================================== */
+
+  /* Use Catppuccin blue for primary color */
+  --md-primary-fg-color: #1e66f5;
+  --md-primary-fg-color--light: #209fb5;
+  --md-primary-fg-color--dark: #1a56d4;
+  --md-primary-bg-color: #eff1f5;
+  --md-primary-bg-color--light: #e6e9ef;
+
+
+  /* ==========================================================================
+     Accent Colors
+     ========================================================================== */
+
+  /* Use Catppuccin lavender for accent */
+  --md-accent-fg-color: #7287fd;
+  --md-accent-fg-color--transparent: rgba(114, 135, 253, 0.1);
+  --md-accent-bg-color: #eff1f5;
+  --md-accent-bg-color--light: #e6e9ef;
+
+
+  /* ==========================================================================
+     Default Colors (Light Mode)
+     ========================================================================== */
+
+  /* Text colors - following Catppuccin style guide */
+  /* Body Copy, Main Headline: Text */
+  --md-default-fg-color: #4c4f69;
+  /* Sub-Headlines, Labels: Subtext 1 */
+  --md-default-fg-color--light: #5c5f77;
+  /* Sub-Headlines, Labels: Subtext 0 */
+  --md-default-fg-color--lighter: #6c6f85;
+  /* Borders, outlines: Subtext 1 (darker for better visibility on cards) */
+  --md-default-fg-color--lightest: #5c5f77;
+
+  /* Background colors */
+  --md-default-bg-color: #eff1f5;
+  --md-default-bg-color--light: #e6e9ef;
+  --md-default-bg-color--lighter: #dce0e8;
+  --md-default-bg-color--lightest: #ccd0da;
+
+
+  /* ==========================================================================
+     Code Colors
+     ========================================================================== */
+
+  /* Code block colors */
+  /* Editor foreground: Text */
+  --md-code-fg-color: #4c4f69;
+  /* Code background: Surface 0 (matches Kate editor CurrentLine) */
+  --md-code-bg-color: #ccd0da;
+  --md-code-bg-color--light: #bcc0cc;
+  --md-code-bg-color--lighter: #acb0be;
+
+  /* Code highlighting */
+  --md-code-hl-color: #04a5e5;
+  --md-code-hl-color--light: rgba(4, 165, 229, 0.1);
+
+  /* Syntax highlighting colors - following Catppuccin style guide */
+  /* Constants, Numbers: Peach */
+  --md-code-hl-number-color: #fe640b;
+  /* Symbols, Atoms, Builtins: Red */
+  --md-code-hl-special-color: #d20f39;
+  /* Methods, Functions: Blue */
+  --md-code-hl-function-color: #1e66f5;
+  /* Constants: Peach (same as numbers) */
+  --md-code-hl-constant-color: #fe640b;
+  /* Keywords: Mauve (per style guide) */
+  --md-code-hl-keyword-color: #8839ef;
+  /* Strings: Green */
+  --md-code-hl-string-color: #40a02b;
+  /* Names: Text color */
+  --md-code-hl-name-color: var(--md-code-fg-color);
+  /* Operators: Sky (per style guide) */
+  --md-code-hl-operator-color: #04a5e5;
+  /* Braces, Delimiters: Overlay 0 (softer than Overlay 2 for better readability) */
+  --md-code-hl-punctuation-color: #9ca0b0;
+  /* Comments: Overlay 0 (softer, better readability - matches Kate editor config) */
+  --md-code-hl-comment-color: #9ca0b0;
+  /* Generic: Subtext 1 */
+  --md-code-hl-generic-color: #5c5f77;
+  /* Variables: Pink (more distinctive than text color - matches Kate editor config) */
+  --md-code-hl-variable-color: #ea76cb;
+
+
+  /* ==========================================================================
+     Typeset Colors
+     ========================================================================== */
+
+  /* Main content text */
+  --md-typeset-color: var(--md-default-fg-color);
+
+  /* Links - Blue per style guide (normal links) */
+  /* Hover links would use Sky, but we'll use Blue for consistency */
+  --md-typeset-a-color: #1e66f5;
+
+  /* Deletion and insertion */
+  --md-typeset-del-color: rgba(210, 15, 57, 0.15);
+  --md-typeset-ins-color: rgba(64, 160, 43, 0.15);
+
+  /* Keyboard keys */
+  --md-typeset-kbd-color: #ccd0da;
+  --md-typeset-kbd-accent-color: #eff1f5;
+  --md-typeset-kbd-border-color: #acb0be;
+
+  /* Mark/highlight - using Yellow with appropriate opacity */
+  --md-typeset-mark-color: rgba(223, 142, 29, 0.5);
+
+  /* Tables */
+  --md-typeset-table-color: rgba(76, 79, 105, 0.12);
+  --md-typeset-table-color--light: rgba(76, 79, 105, 0.035);
+
+
+  /* ==========================================================================
+     Admonition Colors
+     ========================================================================== */
+
+  /* Base admonition colors */
+  --md-admonition-fg-color: var(--md-default-fg-color);
+  --md-admonition-bg-color: var(--md-default-bg-color);
+
+
+  /* ==========================================================================
+     Warning Colors
+     ========================================================================== */
+
+  /* Warning foreground and background */
+  --md-warning-fg-color: #4c4f69;
+  --md-warning-bg-color: rgba(223, 142, 29, 0.2);
+
+
+  /* ==========================================================================
+     Footer Colors
+     ========================================================================== */
+
+  /* Footer background colors for light mode */
+  --md-footer-bg-color: rgba(220, 224, 232, 0.87);
+  --md-footer-bg-color--dark: #ccd0da;
+
+
+  /* ==========================================================================
+     Shadows
+     ========================================================================== */
+
+  /* Subtle shadows with Catppuccin colors */
+  --md-shadow-z1:
+    0 0.25rem 0.625rem rgba(76, 79, 105, 0.05),
+    0 0 0.0625rem rgba(76, 79, 105, 0.1);
+
+  --md-shadow-z2:
+    0 0.25rem 0.625rem rgba(76, 79, 105, 0.1),
+    0 0 0.0625rem rgba(76, 79, 105, 0.25);
+
+  --md-shadow-z3:
+    0 0.25rem 0.625rem rgba(76, 79, 105, 0.2),
+    0 0 0.0625rem rgba(76, 79, 105, 0.35);
+
+
+  /* ==========================================================================
+     Search Colors
+     ========================================================================== */
+
+  --color-foreground: 76 79 105;
+  --color-background: 239 241 245;
+  --color-background-subtle: 220 224 232;
+  --color-backdrop: 239 241 245;
+
+
+  /* ==========================================================================
+     Headline Colors
+     ========================================================================== */
+
+  /* Headlines use the default text color for light mode */
+  :is(h1, h2, h3, h4, h5, h6) {
+    color: var(--md-default-fg-color);
+  }
+
+  /* Header title */
+  .md-header__title {
+    color: var(--md-default-fg-color);
+  }
+
+  /* ==========================================================================
+     Image Visibility
+     ========================================================================== */
+
+  /* Hide images marked for dark mode only */
+  img[src$="#only-dark"],
+  img[src$="#gh-dark-mode-only"] {
+    display: none;
+  }
+
+  /* ==========================================================================
+     Color Scheme Indicator
+     ========================================================================== */
+
+  color-scheme: light;
+}
+
+
+/* ==========================================================================
+   Card Background
+   ========================================================================== */
+
+/* Cards use a slightly different background for better visual distinction (light mode only) */
+[data-md-color-scheme="default"] .md-typeset .grid.cards > :is(ul, ol) > li,
+[data-md-color-scheme="default"] .md-typeset .grid > .card {
+  background-color: var(--md-default-bg-color--light);
+}
+
+
+/* ==========================================================================
+   Admonition Type Styles (Catppuccin Latte)
+   ========================================================================== */
+
+/* Note: Blue */
+.md-typeset .admonition.note,
+.md-typeset details.note {
+  background-color: rgba(30, 102, 245, 0.1);
+}
+
+.md-typeset .note > .admonition-title::before,
+.md-typeset details.note > summary::before {
+  background-color: #1e66f5;
+}
+
+.md-typeset .note > .admonition-title::after,
+.md-typeset details.note > summary::after {
+  color: #1e66f5;
+}
+
+/* Abstract: Sapphire (light blue) */
+.md-typeset .admonition.abstract,
+.md-typeset details.abstract {
+  background-color: rgba(32, 159, 181, 0.1);
+}
+
+.md-typeset .abstract > .admonition-title::before,
+.md-typeset details.abstract > summary::before {
+  background-color: #209fb5;
+}
+
+.md-typeset .abstract > .admonition-title::after,
+.md-typeset details.abstract > summary::after {
+  color: #209fb5;
+}
+
+/* Info: Sky/Cyan */
+.md-typeset .admonition.info,
+.md-typeset details.info {
+  background-color: rgba(4, 165, 229, 0.1);
+}
+
+.md-typeset .info > .admonition-title::before,
+.md-typeset details.info > summary::before {
+  background-color: #04a5e5;
+}
+
+.md-typeset .info > .admonition-title::after,
+.md-typeset details.info > summary::after {
+  color: #04a5e5;
+}
+
+/* Tip: Teal */
+.md-typeset .admonition.tip,
+.md-typeset details.tip {
+  background-color: rgba(23, 146, 153, 0.1);
+}
+
+.md-typeset .tip > .admonition-title::before,
+.md-typeset details.tip > summary::before {
+  background-color: #179299;
+}
+
+.md-typeset .tip > .admonition-title::after,
+.md-typeset details.tip > summary::after {
+  color: #179299;
+}
+
+/* Success: Green */
+.md-typeset .admonition.success,
+.md-typeset details.success {
+  background-color: rgba(64, 160, 43, 0.1);
+}
+
+.md-typeset .success > .admonition-title::before,
+.md-typeset details.success > summary::before {
+  background-color: #40a02b;
+}
+
+.md-typeset .success > .admonition-title::after,
+.md-typeset details.success > summary::after {
+  color: #40a02b;
+}
+
+/* Question: Teal (closest to light green) */
+.md-typeset .admonition.question,
+.md-typeset details.question {
+  background-color: rgba(23, 146, 153, 0.1);
+}
+
+.md-typeset .question > .admonition-title::before,
+.md-typeset details.question > summary::before {
+  background-color: #179299;
+}
+
+.md-typeset .question > .admonition-title::after,
+.md-typeset details.question > summary::after {
+  color: #179299;
+}
+
+/* Warning: Yellow */
+.md-typeset .admonition.warning,
+.md-typeset details.warning {
+  background-color: rgba(223, 142, 29, 0.1);
+}
+
+.md-typeset .warning > .admonition-title::before,
+.md-typeset details.warning > summary::before {
+  background-color: #df8e1d;
+}
+
+.md-typeset .warning > .admonition-title::after,
+.md-typeset details.warning > summary::after {
+  color: #df8e1d;
+}
+
+/* Failure: Red */
+.md-typeset .admonition.failure,
+.md-typeset details.failure {
+  background-color: rgba(210, 15, 57, 0.1);
+}
+
+.md-typeset .failure > .admonition-title::before,
+.md-typeset details.failure > summary::before {
+  background-color: #d20f39;
+}
+
+.md-typeset .failure > .admonition-title::after,
+.md-typeset details.failure > summary::after {
+  color: #d20f39;
+}
+
+/* Danger: Maroon (darker red) */
+.md-typeset .admonition.danger,
+.md-typeset details.danger {
+  background-color: rgba(230, 69, 83, 0.1);
+}
+
+.md-typeset .danger > .admonition-title::before,
+.md-typeset details.danger > summary::before {
+  background-color: #e64553;
+}
+
+.md-typeset .danger > .admonition-title::after,
+.md-typeset details.danger > summary::after {
+  color: #e64553;
+}
+
+/* Bug: Pink */
+.md-typeset .admonition.bug,
+.md-typeset details.bug {
+  background-color: rgba(234, 118, 203, 0.1);
+}
+
+.md-typeset .bug > .admonition-title::before,
+.md-typeset details.bug > summary::before {
+  background-color: #ea76cb;
+}
+
+.md-typeset .bug > .admonition-title::after,
+.md-typeset details.bug > summary::after {
+  color: #ea76cb;
+}
+
+/* Example: Mauve */
+.md-typeset .admonition.example,
+.md-typeset details.example {
+  background-color: rgba(136, 57, 239, 0.1);
+}
+
+.md-typeset .example > .admonition-title::before,
+.md-typeset details.example > summary::before {
+  background-color: #8839ef;
+}
+
+.md-typeset .example > .admonition-title::after,
+.md-typeset details.example > summary::after {
+  color: #8839ef;
+}
+
+/* Quote: Overlay 2 (grey) */
+.md-typeset .admonition.quote,
+.md-typeset details.quote {
+  background-color: rgba(124, 127, 147, 0.1);
+}
+
+.md-typeset .quote > .admonition-title::before,
+.md-typeset details.quote > summary::before {
+  background-color: #7c7f93;
+}
+
+.md-typeset .quote > .admonition-title::after,
+.md-typeset details.quote > summary::after {
+  color: #7c7f93;
+}

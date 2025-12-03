@@ -1,74 +1,85 @@
+---
 default_language_version:
   python: python3.13
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
-      - id: check-yaml
       - id: check-json
       - id: check-toml
       - id: end-of-file-fixer
       - id: trailing-whitespace
         exclude: \.md$
+  # - repo: https://github.com/renovatebot/pre-commit-hooks
+  #   rev: 42.6.1
+  #   hooks:
+  #     - id: renovate-config-validator
+  #       args: [--strict]
+  #       files: .*\\.json5$
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.24.1
     hooks:
       - id: validate-pyproject
-        additional_dependencies:
-          - validate-pyproject-schema-store[all]
+        additional_dependencies: ['validate-pyproject-schema-store[all]']
   - repo: https://github.com/lyz-code/yamlfix
-    rev: 1.17.0
+    rev: 1.19.0
     hooks:
       - id: yamlfix
-        exclude: \.(commitlintrc|pre-commit-hooks)\.yaml$
+        exclude: \.(commitlintrc|pre-commit-hooks)\.yaml$|docker-compose.*\.yml$
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.37.1
     hooks:
       - id: yamllint
-        args:
-          - -c=.yamllint.yml
+        exclude: compose.*\.yaml$
+        args: [-c=.yamllint.yml]
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.7
+    rev: v1.7.9
     hooks:
       - id: actionlint
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.45.0
+    rev: v0.46.0
     hooks:
-      - id: markdownlint
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.20.0
-    hooks:
-      - id: pyupgrade
-        args:
-          - --py313-plus
+      - id: markdownlint-fix
   - repo: https://github.com/asottile/add-trailing-comma
-    rev: v3.2.0
+    rev: v4.0.0
     hooks:
       - id: add-trailing-comma
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.7
+    rev: v0.14.7
     hooks:
       - id: ruff-check
-        args:
-          - --fix
+        args: [--fix]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.7
+    rev: v0.14.7
     hooks:
       - id: ruff-format
+  - repo: https://github.com/jsh9/pydoclint
+    rev: 0.8.3
+    hooks:
+      - id: pydoclint
+        args: [--config=pyproject.toml]
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.12.0-2
+    hooks:
+      - id: shfmt
+        args: [-ln, bash, -i, '2', -ci, -bn, -sr, -kp, -s]
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.28.0
+    rev: v8.30.0
     hooks:
       - id: gitleaks
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
-    rev: v9.22.0
+    rev: v9.23.0
     hooks:
       - id: commitlint
-        stages:
-          - commit-msg
+        stages: [commit-msg]
         additional_dependencies:
           - '@commitlint/cli'
           - '@commitlint/config-conventional'
-exclude: ^(\.archive/|.*typings/|node_modules/|\.venv/).*$
+exclude: ^(\.archive/|.*typings/|node_modules/|\.venv/|\.kiro/|src/tux/database/migrations/versions/).*$
 ci:
   autofix_commit_msg: 'style: auto fixes from pre-commit hooks'
   autoupdate_commit_msg: 'chore: update pre-commit hook versions'

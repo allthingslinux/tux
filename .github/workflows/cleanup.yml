@@ -1,0 +1,86 @@
+---
+name: Registry Cleanup
+on:
+  workflow_dispatch:
+    inputs:
+      cleanup_type:
+        description: Type of cleanup to perform
+        required: true
+        default: standard
+        type: choice
+        options: [standard, aggressive, build-cache-only]
+      keep_versions:
+        description: Number of versions to keep
+        required: false
+        default: '10'
+      dry_run:
+        description: Dry run (don't actually delete)
+        type: boolean
+        default: false
+  schedule:
+    - cron: 0 1 1 * *  # Monthly: Aggressive cleanup (1st at 1 AM UTC)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  PACKAGE_NAME: tux
+  PACKAGE_TYPE: container
+  REGISTRY_SIZE_WARNING_GB: 5
+  BUILD_CACHE_CLEANUP_DAYS: 7
+  STANDARD_KEEP_VERSIONS: 15
+  AGGRESSIVE_KEEP_VERSIONS: 5
+  BUILD_CACHE_ONLY_KEEP_VERSIONS: 999
+  REGISTRY_ANALYSIS_VERSION_LIMIT: 20
+jobs:
+  cleanup:
+    name: Registry Cleanup
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Setup Cleanup Parameters
+        id: params
+        run: ./.github/scripts/cleanup.sh setup-cleanup-params \ "${{ github.event.inputs.cleanup_type || 'standard' }}"
+          \ "${{ github.event.inputs.keep_versions || '' }}" \ "${{ github.event.inputs.dry_run || 'false' }}"
+          \ "${{ env.STANDARD_KEEP_VERSIONS }}" \ "${{ env.AGGRESSIVE_KEEP_VERSIONS }}"
+          \ "${{ env.BUILD_CACHE_ONLY_KEEP_VERSIONS }}"
+      - name: Registry Analysis
+        id: analysis
+        run: |
+          {
+            echo "## Registry Analysis"
+            echo "**Cleanup Type**: ${{ steps.params.outputs.cleanup_type }}"
+            echo "**Keep Versions**: ${{ steps.params.outputs.keep_versions }}"
+            echo "**Dry Run**: ${{ steps.params.outputs.dry_run }}"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+          ./.github/scripts/cleanup.sh registry-analysis \
+            "${{ env.PACKAGE_TYPE }}" \
+            "${{ env.PACKAGE_NAME }}" \
+            "${{ env.REGISTRY_ANALYSIS_VERSION_LIMIT }}" \
+            "${{ env.REGISTRY_SIZE_WARNING_GB }}" \
+            "${{ env.REGISTRY_SIZE_WARNING_GB }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Clean Old Versions
+        if: steps.params.outputs.cleanup_type != 'build-cache-only'
+        run: ./.github/scripts/cleanup.sh clean-old-versions \ "${{ env.PACKAGE_TYPE }}"
+          \ "${{ env.PACKAGE_NAME }}" \ "${{ steps.params.outputs.keep_versions }}"
+          \ "${{ steps.params.outputs.remove_untagged }}" \ "${{ steps.params.outputs.dry_run }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Clean Build Cache
+        if: steps.params.outputs.clean_build_cache == 'true'
+        run: ./.github/scripts/cleanup.sh clean-build-cache \ "${{ env.PACKAGE_TYPE }}"
+          \ "${{ env.PACKAGE_NAME }}" \ "${{ env.BUILD_CACHE_CLEANUP_DAYS }}" \ "${{ steps.params.outputs.dry_run }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cleanup Summary
+        run: ./.github/scripts/cleanup.sh cleanup-summary \ "${{ steps.params.outputs.cleanup_type }}"
+          \ "${{ steps.params.outputs.keep_versions }}" \ "${{ steps.params.outputs.remove_untagged }}"
+          \ "${{ steps.params.outputs.clean_build_cache }}" \ "${{ steps.params.outputs.dry_run }}"
+          \ "${{ env.STANDARD_KEEP_VERSIONS }}" \ "${{ env.BUILD_CACHE_CLEANUP_DAYS }}"

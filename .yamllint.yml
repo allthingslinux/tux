@@ -1,57 +1,40 @@
+---
 extends: default
 rules:
+  document-start: enable
+
+  # Allow longer lines for readability in configuration files
+  line-length:
+    max: 185
+    level: warning
+
+  # Allow empty values in mappings (common in Docker Compose)
+  empty-values:
+    forbid-in-block-mappings: false
+    forbid-in-flow-mappings: false
+
+  # Be more lenient with indentation for nested structures
   indentation:
     spaces: 2
     indent-sequences: true
     check-multi-line-strings: false
-  comments:
-    min-spaces-from-content: 1
-    require-starting-space: true
-  comments-indentation: disable
-  document-start:
-    present: false
-  document-end:
-    present: false
-  new-line-at-end-of-file: enable
-  trailing-spaces: enable
-  line-length: disable
-  brackets:
-    min-spaces-inside: 0
-    max-spaces-inside: 1
-  braces:
-    min-spaces-inside: 0
-    max-spaces-inside: 1
   truthy:
-    allowed-values:
-      - 'true'
-      - 'false'
-      - 'yes'
-      - 'no'
-      - 'on'
-      - 'off'
     check-keys: false
-  empty-values:
-    forbid-in-block-mappings: false
-    forbid-in-flow-mappings: false
+
+  # Allow comments to start anywhere
+  comments-indentation: disable
+
+  # Allow trailing spaces in empty lines
+  empty-lines:
+    max-start: 1
+    max-end: 1
+    max: 2
+
+  # Allow dashes in key names (common in GitHub Actions)
   key-duplicates: enable
-  key-ordering: disable
-  float-values: disable
-  octal-values: disable
-ignore: |-
-  .venv/
-  .pytest_cache/
-  .ruff_cache/
-  __pycache__/
-  .cache/
-  htmlcov/
-  .archive/
-  logs/
-  .devcontainer/
-  .vscode/
-  .cursor/
-  poetry.lock
-  flake.lock
-  prisma/
-  typings/
-  docs/
-  tests/fixtures/
+
+  # Allow brackets in flow sequences
+  brackets: enable
+
+  # Allow braces in flow mappings
+  braces: enable

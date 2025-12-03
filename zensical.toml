@@ -1,0 +1,358 @@
+[project]
+site_name = "Tux"
+site_description = "The all-in-one open source Discord bot for the All Things Linux community."
+site_author = "All Things Linux"
+site_url = "https://tux.atl.dev"
+
+repo_url = "https://github.com/allthingslinux/tux"
+repo_name = "allthingslinux/tux"
+edit_uri = "edit/main/docs/"
+
+docs_dir = "docs/content/"
+site_dir = "site/"
+
+copyright = """
+Copyright &copy; 2025 All Things Linux
+"""
+
+nav = [
+    { "Home" = "index.md" },
+    { "User Guide" = [
+        "user/index.md",
+        { "Features" = [
+            "user/features/index.md",
+            "user/features/bookmarks.md",
+            "user/features/gif-limiter.md",
+            "user/features/leveling.md",
+            "user/features/starboard.md",
+            "user/features/status-roles.md",
+            "user/features/temp-vc.md",
+        ] },
+        { "Modules" = [
+            "user/modules/index.md",
+            "user/modules/fun.md",
+            "user/modules/info.md",
+            "user/modules/levels.md",
+            "user/modules/moderation.md",
+            "user/modules/snippets.md",
+            "user/modules/tools.md",
+            "user/modules/utility.md",
+        ] },
+    ] },
+    { "Admin Guide" = [
+        "admin/index.md",
+        { "Setup" = "admin/setup/index.md" },
+        { "Configuration" = [
+            "admin/config/index.md",
+            "admin/config/logs.md",
+            "admin/config/roles.md",
+            "admin/config/ranks.md",
+            "admin/config/commands.md",
+            "admin/config/jail.md",
+        ] },
+    ] },
+    { "Self-Hoster Guide" = [
+        "selfhost/index.md",
+        { "Installation" = [
+            "selfhost/install/index.md",
+            "selfhost/install/database.md",
+            "selfhost/install/docker.md",
+            "selfhost/install/systemd.md",
+            "selfhost/install/first-run.md",
+        ] },
+        { "Configuration" = [
+            "selfhost/config/index.md",
+            "selfhost/config/bot-token.md",
+            "selfhost/config/database.md",
+            "selfhost/config/environment.md",
+        ] },
+        { "Management" = [
+            "selfhost/manage/index.md",
+            "selfhost/manage/database.md",
+            "selfhost/manage/operations.md",
+        ] },
+    ] },
+    { "Developer Guide" = [
+        "developer/index.md",
+        "developer/contributing.md",
+        { "Tutorials" = [
+            "developer/tutorials/index.md",
+            "developer/tutorials/creating-first-cog.md",
+            "developer/tutorials/creating-first-command.md",
+            "developer/tutorials/creating-first-migration.md",
+            "developer/tutorials/database-integration.md",
+            "developer/tutorials/development-setup.md",
+            "developer/tutorials/first-contribution.md",
+            "developer/tutorials/project-structure.md",
+            "developer/tutorials/testing-setup.md",
+        ] },
+        { "Guides" = [
+            "developer/guides/index.md",
+            "developer/guides/components-v2.md",
+            "developer/guides/extending-cli.md",
+        ] },
+        { "Concepts" = [
+            "developer/concepts/index.md",
+            { "Core" = [
+                "developer/concepts/core/index.md",
+                "developer/concepts/core/app.md",
+                "developer/concepts/core/base-cog.md",
+                "developer/concepts/core/bot.md",
+                "developer/concepts/core/cog-loader.md",
+                "developer/concepts/core/lifecycle.md",
+                "developer/concepts/core/logging.md",
+                "developer/concepts/core/main.md",
+                "developer/concepts/core/modules.md",
+                "developer/concepts/core/permission-system.md",
+                "developer/concepts/core/plugins.md",
+            ] },
+            { "Database" = [
+                "developer/concepts/database/index.md",
+                "developer/concepts/database/architecture.md",
+                "developer/concepts/database/service.md",
+                "developer/concepts/database/models.md",
+                "developer/concepts/database/controllers.md",
+                "developer/concepts/database/migrations.md",
+                "developer/concepts/database/testing.md",
+                "developer/concepts/database/utilities.md",
+            ] },
+            { "UI" = [
+                "developer/concepts/ui/index.md",
+                "developer/concepts/ui/buttons.md",
+                "developer/concepts/ui/components.md",
+                "developer/concepts/ui/embeds.md",
+                "developer/concepts/ui/modals.md",
+                "developer/concepts/ui/views.md",
+            ] },
+            { "Shared" = [
+                "developer/concepts/shared/index.md",
+            ] },
+            { "Handlers" = [
+                "developer/concepts/handlers/index.md",
+                "developer/concepts/handlers/hot-reload.md",
+            ] },
+            { "Services" = [
+                "developer/concepts/services/index.md",
+            ] },
+            { "Wrappers" = [
+                "developer/concepts/wrappers/index.md",
+            ] },
+            { "Tasks" = [
+                "developer/concepts/tasks/index.md",
+                "developer/concepts/tasks/task-monitor.md",
+            ] },
+        ] },
+        { "Best Practices" = [
+            "developer/best-practices/index.md",
+            "developer/best-practices/namespace.md",
+            "developer/best-practices/git.md",
+            "developer/best-practices/branch-naming.md",
+            "developer/best-practices/ci-cd.md",
+            "developer/best-practices/async.md",
+            "developer/best-practices/error-handling.md",
+            { "Sentry" = [
+                "developer/best-practices/sentry/index.md",
+                "developer/best-practices/sentry/choosing-instrumentation.md",
+                "developer/best-practices/sentry/context-data.md",
+                "developer/best-practices/sentry/metrics.md",
+                "developer/best-practices/sentry/sampling.md",
+                "developer/best-practices/sentry/transactions-spans.md",
+            ] },
+            "developer/best-practices/logging.md",
+            "developer/best-practices/caching.md",
+            "developer/best-practices/code-review.md",
+            "developer/best-practices/debugging.md",
+            "developer/best-practices/docs.md",
+            { "Testing" = [
+                "developer/best-practices/testing/index.md",
+                "developer/best-practices/testing/fixtures.md",
+                "developer/best-practices/testing/unit.md",
+                "developer/best-practices/testing/integration.md",
+                "developer/best-practices/testing/e2e.md",
+            ] },
+        ] },
+    ] },
+    { "Reference" = [
+        "reference/index.md",
+        "reference/versioning.md",
+        # "reference/src/tux/",
+        # "reference/cli.md",
+        "reference/env.md",
+        # "reference/coverage.md",
+        # "reference/sbom.md",
+        "reference/renovate.md",
+        # "reference/listings.md",
+        # "reference/style-guide.md",
+    ] },
+    { "Support" = [
+        "support/index.md",
+        { "Troubleshooting" = [
+            "support/troubleshooting/index.md",
+            "support/troubleshooting/user.md",
+            "support/troubleshooting/admin.md",
+            "support/troubleshooting/selfhost.md",
+            "support/troubleshooting/developer.md",
+        ] },
+    ] },
+    "changelog/index.md",
+    # "tags/index.md",
+    "faq/index.md",
+]
+
+extra_css = [
+    "https://rsms.me/inter/inter.css",
+    "assets/stylesheets/typography.css",
+    "assets/stylesheets/catppuccin-latte.css",
+    "assets/stylesheets/tokyo-night.css",
+    "assets/stylesheets/extra.css",
+]
+
+extra_javascript = [
+    # "assets/javascript/extra.js",
+    # "assets/javascript/coverage.js",
+]
+
+[project.theme]
+variant = "modern"
+
+# custom_dir = "docs/overrides"
+
+logo = "assets/images/logo.png"
+favicon = "assets/images/logo.png"
+
+language = "en"
+
+features = [
+    "announce.dismiss",
+    "content.action.edit",
+    "content.action.view",
+    "content.code.annotate",
+    "content.code.copy",
+    "content.code.select",
+    "content.footnote.tooltips",
+    "content.tabs.link",
+    "content.tooltips",
+    "navigation.expand",
+    "navigation.footer",
+    "navigation.indexes",
+    "navigation.instant",
+    "navigation.instant.prefetch",
+    "navigation.instant.progress",
+    "navigation.path",
+    "navigation.sections",
+    "navigation.tabs",
+    "navigation.top",
+    "navigation.tracking",
+    "search.highlight",
+    "toc.follow",
+]
+
+[[project.theme.palette]]
+scheme = "slate"
+toggle.icon = "fontawesome/solid/sun"
+toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+scheme = "default"
+toggle.icon = "fontawesome/solid/moon"
+toggle.name = "Switch to dark mode"
+
+[project.theme.font]
+text = "InterVariable"
+code = "JetBrains Mono"
+
+[project.theme.icon]
+repo = "fontawesome/brands/github"
+
+[project.extra]
+generator = false
+
+[[project.extra.social]]
+icon = "fontawesome/solid/globe"
+link = "https://allthingslinux.org"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/allthingslinux/tux"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/discord"
+link = "https://discord.gg/gpmSjcjQxg"
+
+[project.markdown_extensions.abbr]
+
+[project.markdown_extensions.attr_list]
+
+[project.markdown_extensions.admonition]
+
+[project.markdown_extensions.def_list]
+
+[project.markdown_extensions.footnotes]
+
+[project.markdown_extensions.md_in_html]
+
+[project.markdown_extensions.tables]
+
+[project.markdown_extensions.toc]
+permalink = true
+
+[project.markdown_extensions.sane_lists]
+
+[project.markdown_extensions.pymdownx.highlight]
+use_pygments = true
+pygments_lang_class = true
+auto_title = true
+linenums = true
+linenums_style = "pymdownx-inline"
+line_spans = "__span"
+anchor_linenums = false
+
+[project.markdown_extensions.pymdownx.inlinehilite]
+
+[project.markdown_extensions.pymdownx.superfences]
+custom_fences = [
+    { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+]
+
+[project.markdown_extensions.pymdownx.snippets]
+
+[project.markdown_extensions.pymdownx.details]
+
+[project.markdown_extensions.pymdownx.smartsymbols]
+
+[project.markdown_extensions.pymdownx.magiclink]
+repo_url_shortener = true
+repo_url_shorthand = true
+provider = "github"
+user = "allthingslinux"
+repo = "tux"
+normalize_issue_symbols = true
+
+[project.markdown_extensions.pymdownx.emoji]
+emoji_index = "zensical.extensions.emoji.twemoji"
+emoji_generator = "zensical.extensions.emoji.to_svg"
+options.custom_icons = ["overrides/.icons"]
+
+[project.markdown_extensions.pymdownx.keys]
+
+[project.markdown_extensions.pymdownx.tabbed]
+alternate_style = true
+
+[project.markdown_extensions.pymdownx.tabbed.slugify]
+object = "pymdownx.slugs.slugify"
+kwds = { case = "lower" }
+
+[project.markdown_extensions.pymdownx.escapeall]
+hardbreak = true
+nbsp = true
+
+[project.markdown_extensions.pymdownx.caret]
+
+[project.markdown_extensions.pymdownx.mark]
+
+[project.markdown_extensions.pymdownx.tilde]
+
+[project.markdown_extensions.pymdownx.tasklist]
+custom_checkbox = true
+
+[project.markdown_extensions.pymdownx.betterem]

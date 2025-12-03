@@ -1,0 +1,83 @@
+# ==============================================================================
+# TUX DOCUMENTATION - CLOUDFLARE WORKERS CONFIGURATION
+# ==============================================================================
+# Deploy: wrangler versions upload + wrangler versions deploy (from repo root)
+# Used by GitHub Actions workflow: .github/workflows/docs.yml
+#
+# Based on: https://developers.cloudflare.com/workers/static-assets/
+#           https://developers.cloudflare.com/workers/configuration/previews/
+#           https://developers.cloudflare.com/workers/configuration/routing/custom-domains/
+# ==============================================================================
+
+account_id = "53d9d9e6ebc5a0dddeeb59477445ea0c"
+name = "tux-docs"
+compatibility_date = "2025-09-24"  # Latest stable compatibility date
+
+# Enable Preview URLs for all non-production deployments
+# Each version gets a unique URL: <version-id>-tux-docs.<subdomain>.workers.dev
+# Branch deployments can use aliases: <alias>-tux-docs.<subdomain>.workers.dev
+# Available for versions uploaded after 2024-09-25 (Wrangler 3.74.0+)
+preview_urls = true
+
+# Enable workers.dev subdomain (required for preview URLs)
+# This allows preview URLs to be accessible at *.workers.dev domains
+workers_dev = true
+
+# Static Assets Configuration
+# Optimized for static documentation (Zensical output)
+# Zensical builds to site/ (relative to repo root)
+[assets]
+directory = "./site"
+not_found_handling = "404-page"          # Serve 404.html for missing pages
+html_handling = "auto-trailing-slash"    # Auto-handle trailing slashes (recommended for docs)
+
+# Production deployment (main branch only)
+# URL: https://tux.atl.dev (custom domain)
+# GitHub Actions workflow: uploads + deploys when pushed to main branch
+[env.production]
+name = "tux-docs"
+routes = [
+  { pattern = "tux.atl.dev", custom_domain = true }
+]
+
+# Preview environment (all non-production branches/PRs)
+# How it works:
+# 1. GitHub Actions workflow uploads new version: wrangler versions upload --env preview
+#    Output includes: "Version Preview URL: https://<version-id>-tux-docs.<subdomain>.workers.dev"
+# 2. Version gets deployed to 100% traffic: wrangler versions deploy <version-id> --env preview
+#    Note: Deploy output does NOT include preview URL (action limitation)
+# 3. Preview URLs posted automatically in GitHub PR comments
+#
+# CURRENT STATUS: Preview deployments work perfectly, but PR comments show limited info
+# due to action not parsing preview URLs from wrangler output.
+#
+# FUTURE IMPROVEMENT: Action should be enhanced to parse "Version Preview URL:" from upload output
+#
+# Branch aliases (optional): wrangler versions upload --preview-alias <alias> --env preview
+# Creates persistent URL: <alias>-tux-docs.<subdomain>.workers.dev (Wrangler 4.21.0+)
+#
+# IMPORTANT: GitHub Actions workflow handles deployment:
+# - Production (main branch): uploads + deploys to tux.atl.dev
+# - Preview (other branches): uploads + deploys to *.workers.dev URLs
+[env.preview]
+name = "tux-docs"  # Same worker name as production (avoids separate tux-docs-preview worker)
+# No custom domain - uses auto-generated preview URLs on *.workers.dev
+
+# Observability - provides logs and metrics
+[observability]
+enabled = true
+
+# Smart Placement - automatically routes requests to optimal location
+# Analyzes your Worker and routes requests to the best location for performance
+# May take up to 15 minutes to analyze after first deployment
+[placement]
+mode = "smart"
+
+# Note: Build configuration is handled by GitHub Actions CI/CD
+# Build process (in .github/workflows/docs.yml):
+# 1. Build Zensical documentation
+# 2. Upload Worker version and deploy to appropriate environment
+#
+# Deployment uses Wrangler v4 with Versions API:
+# - Production: wrangler versions upload --env production + wrangler versions deploy
+# - Preview: wrangler versions upload --env preview + wrangler versions deploy

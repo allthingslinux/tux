@@ -1,361 +1,256 @@
-# ==============================================================================
-# TUX DISCORD BOT - CONTINUOUS INTEGRATION WORKFLOW
-# ==============================================================================
-#
-# This workflow handles code quality checks, linting, and validation for the
-# Tux Discord bot project. It runs on every push to main and pull requests to
-# ensure code quality standards are maintained across the codebase.
-#
-# WORKFLOW FEATURES:
-# ------------------
-# 1. Smart file change detection to skip unnecessary jobs
-# 2. Parallel execution for different linting categories
-# 3. Comprehensive Python static analysis with basedpyright
-# 4. Infrastructure validation (Docker, GitHub Actions, Shell)
-# 5. Markdown linting for documentation quality
-# 6. Efficient caching to reduce execution time
-#
-# SECURITY FEATURES:
-# ------------------
-# - Minimal permissions following principle of least privilege
-# - Read-only operations except for PR annotations
-# - Dependency caching with content-based keys
-# - No sensitive data exposure in logs
-#
-# PERFORMANCE OPTIMIZATIONS:
-# --------------------------
-# - Conditional job execution based on file changes
-# - Parallel job execution across categories
-# - Multi-level caching (Poetry, npm, pip)
-# - Early termination for unchanged file types
-# - Fail-fast disabled to see all issues at once
-#
-# MAINTENANCE NOTES:
-# ------------------
-# - Update action versions regularly for security patches
-# - Monitor cache hit rates and adjust keys if needed
-# - Keep Python version in sync with Dockerfile
-# - Review ignore patterns as project evolves
-#
-# ==============================================================================
+---
 name: CI
-# TRIGGER CONFIGURATION
-# Runs on pushes to main branch, all pull requests, and manual triggers
-# Concurrency control prevents multiple runs on the same branch
 on:
+  # Only trigger push on main and version branches to avoid duplicates with PR events
+  # PR events will handle all pull requests (including forks)
   push:
-    branches:
-      - main
+    branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
   pull_request:
-    branches:
-      - main
-  # Manual trigger for debugging and testing workflow changes
+    branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
   workflow_dispatch:
-# CONCURRENCY CONTROL
-# Prevents multiple CI runs on the same branch to save resources
-# Cancels in-progress runs for PRs but allows main branch runs to complete
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+env:
+  PYTHON_VERSION: 3.13.8
+  REVIEWDOG_LEVEL: warning
+  REVIEWDOG_REPORTER: github-pr-review
+  REVIEWDOG_FILTER_MODE: file
+  REVIEWDOG_FAIL_LEVEL: none
+  HADOLINT_IGNORE: DL3008 DL3009
 jobs:
-  # ============================================================================
-  # PYTHON QUALITY CHECKS - Static Analysis and Type Checking
-  # ============================================================================
-  # Purpose: Ensures Python code quality through static analysis and type checking
-  # Tools: Basedpyright type checker with Poetry dependency management
-  # Optimization: Only runs when Python files or dependencies change
-  # ============================================================================
-  python:
-    name: Python Type Checking
+  changes:
+    name: File Detection
     runs-on: ubuntu-latest
     permissions:
-      contents: read          # Required for checkout
-      pull-requests: write   # Required for basedpyright annotations
+      contents: read
+    outputs:
+      python: ${{ steps.python_changes.outputs.any_changed }}
+      markdown: ${{ steps.markdown_changes.outputs.any_changed }}
+      shell: ${{ steps.shell_changes.outputs.any_changed }}
+      workflows: ${{ steps.workflow_changes.outputs.any_changed }}
+      docker: ${{ steps.docker_changes.outputs.any_changed }}
+      yaml: ${{ steps.yaml_changes.outputs.any_changed }}
+      any: ${{ steps.python_changes.outputs.any_changed == 'true' || steps.markdown_changes.outputs.any_changed == 'true' || steps.shell_changes.outputs.any_changed == 'true' || steps.workflow_changes.outputs.any_changed == 'true' || steps.docker_changes.outputs.any_changed == 'true' || steps.yaml_changes.outputs.any_changed == 'true' }}
     steps:
-      # REPOSITORY CHECKOUT
-      # Full history needed for accurate change detection
-      - name: Checkout Repository
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - name: Checkout
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
-
-      # SMART CHANGE DETECTION
-      # Detects Python file changes to skip unnecessary runs
-      # Includes Python source, config files, and dependencies
-      - name: Detect Python changes
-        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
+      - name: Check Python
+        uses: tj-actions/changed-files@v46
         id: python_changes
         with:
           files: |
             **/*.py
             pyproject.toml
-            poetry.lock
-
-      # EARLY TERMINATION FOR UNCHANGED FILES
-      # Skips expensive Python setup if no relevant files changed
-      # workflow_dispatch always runs for manual testing
-      - name: Skip if no Python changes
-        if: steps.python_changes.outputs.any_changed != 'true' && github.event_name
-          != 'workflow_dispatch'
-        run: |
-          echo "✅ No Python files changed, skipping Python quality checks"
-          echo "💡 To force run checks, use workflow_dispatch trigger"
-
-      # PYTHON ENVIRONMENT SETUP (COMPOSITE ACTION)
-      # Uses centralized Python setup for consistency and maintainability
-      # Configured for CI/linting with dev and types dependency groups
-      - name: Setup Python Environment
-        if: steps.python_changes.outputs.any_changed == 'true' || github.event_name
-          == 'workflow_dispatch'
-        uses: ./.github/actions/setup-python
-        with:
-          python-version: '3.13'
-          install-groups: dev,types
-          cache-suffix: ci
-          generate-prisma: 'true'
-
-      # STATIC TYPE CHECKING
-      # basedpyright provides comprehensive type checking for Python
-      # Annotations appear directly in PR for developer feedback
-      - name: Run basedpyright type checker
-        if: steps.python_changes.outputs.any_changed == 'true' || github.event_name
-          == 'workflow_dispatch'
-        run: poetry run basedpyright
-
-  # ============================================================================
-  # MARKDOWN DOCUMENTATION LINTING
-  # ============================================================================
-  # Purpose: Ensures consistent documentation formatting across the project
-  # Tools: markdownlint-cli with custom rule configuration
-  # Scope: All .md files excluding dependencies and build artifacts
-  # ============================================================================
-  markdown-lint:
-    name: Markdown Linting
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      # REPOSITORY CHECKOUT
-      # Shallow clone sufficient for linting current state
-      - name: Checkout Repository
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
-
-      # SMART CHANGE DETECTION
-      # Only runs when documentation files change
-      # Improves CI performance for code-only changes
-      - name: Detect Markdown changes
-        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
+            uv.lock
+          files_ignore: |
+            tests/**/*.py
+            **/tests/**/*.py
+            **/migrations/**/*.py
+            src/tux/database/migrations/**/*.py
+      - name: Check Markdown
+        uses: tj-actions/changed-files@v46
         id: markdown_changes
         with:
           files: '**/*.md'
-
-      # EARLY TERMINATION FOR UNCHANGED DOCS
-      # Skips Node.js setup and linting if no docs changed
-      - name: Skip if no Markdown changes
-        if: steps.markdown_changes.outputs.any_changed != 'true'
-        run: |
-          echo "✅ No Markdown files changed, skipping Markdown linting"
-
-      # NODE.JS ENVIRONMENT SETUP WITH MARKDOWNLINT
-      # Sets up Node.js and installs markdownlint-cli with caching
-      - name: Setup Node.js and markdownlint
-        if: steps.markdown_changes.outputs.any_changed == 'true'
-        uses: ./.github/actions/setup-nodejs-markdown
-
-      # MARKDOWN LINTING EXECUTION
-      # Custom rule configuration balances strictness with practicality
-      # Disabled rules: MD013 (line length), MD033 (HTML), MD041 (first line)
-      - name: Run Markdown linting
-        if: steps.markdown_changes.outputs.any_changed == 'true'
-        run: |
-          npx markdownlint \
-            --disable MD013 MD033 MD041 \
-            --ignore node_modules \
-            --ignore .venv \
-            --ignore .archive \
-            "**/*.md"
-
-  # ============================================================================
-  # INFRASTRUCTURE VALIDATION - Multi-Category Linting Matrix
-  # ============================================================================
-  # Purpose: Validates infrastructure code (Docker, CI/CD, Shell scripts)
-  # Strategy: Matrix execution for parallel validation of different file types
-  # Performance: Only runs on push/dispatch to avoid PR overhead
-  # ============================================================================
-  infrastructure:
-    name: Infrastructure Linting
+      - name: Check Shell
+        uses: tj-actions/changed-files@v46
+        id: shell_changes
+        with:
+          files: |
+            **/*.sh
+            **/*.bash
+            **/*.zsh
+            scripts/**
+      - name: Check Workflows
+        uses: tj-actions/changed-files@v46
+        id: workflow_changes
+        with:
+          files: .github/workflows/**
+      - name: Check Docker
+        uses: tj-actions/changed-files@v46
+        id: docker_changes
+        with:
+          files: |
+            Containerfile
+            compose.yaml
+            .dockerignore
+      - name: Check YAML
+        uses: tj-actions/changed-files@v46
+        id: yaml_changes
+        with:
+          files: |
+            **/*.yml
+            **/*.yaml
+            .github/**
+  quality:
+    name: Python
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.python == 'true' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
-    # EXECUTION CONTROL
-    # Skip for PRs to reduce noise unless explicitly triggered
-    # Infrastructure changes are typically reviewed separately
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
-
-    # MATRIX STRATEGY
-    # Parallel execution of different infrastructure categories
-    # fail-fast disabled to see all infrastructure issues at once
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # DOCKER VALIDATION
-          # Validates Dockerfile syntax and Docker Compose configuration
-          - type: Docker
-            files: Dockerfile*,docker-compose*.yml
-
-          # GITHUB ACTIONS VALIDATION
-          # Validates workflow syntax and actionlint rules
-          - type: GitHub Actions
-            files: .github/workflows/**
-
-          # SHELL SCRIPT VALIDATION
-          # Validates shell scripts for syntax and best practices
-          - type: Shell Scripts
-            files: '**/*.sh,**/*.bash,scripts/**'
+      pull-requests: write
     steps:
-      # REPOSITORY CHECKOUT
-      # Shallow clone sufficient for infrastructure validation
-      - name: Checkout Repository
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
-
-      # SMART CHANGE DETECTION
-      # Each matrix job only runs if relevant files changed
-      # Improves efficiency by skipping unchanged categories
-      - name: Detect ${{ matrix.type }} changes
-        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
-        id: infra_changes
+      - name: Checkout
+        uses: actions/checkout@v5
         with:
-          files: ${{ matrix.files }}
-
-      # EARLY TERMINATION FOR UNCHANGED CATEGORIES
-      # Skips expensive validation setup if no files changed
-      - name: Skip if no ${{ matrix.type }} changes
-        if: steps.infra_changes.outputs.any_changed != 'true'
+          fetch-depth: 0
+      - name: Setup Python
+        uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+      - name: Setup Reviewdog
+        uses: reviewdog/action-setup@d8edfce3dd5e1ec6978745e801f9c50b5ef80252
+        with:
+          reviewdog_version: latest
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Type Check
+        uses: ./.github/actions/action-basedpyright
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          level: ${{ env.REVIEWDOG_LEVEL }}
+          reporter: ${{ env.REVIEWDOG_REPORTER }}
+          filter_mode: ${{ env.REVIEWDOG_FILTER_MODE }}
+          fail_level: ${{ env.REVIEWDOG_FAIL_LEVEL }}
+      - name: Run ruff with reviewdog
         run: |
-          echo "✅ No ${{ matrix.type }} files changed, skipping ${{ matrix.type }} linting"
-
-      # DOCKER COMPOSE ENVIRONMENT SETUP
-      # Verifies Docker Compose v2 availability on GitHub runners
-      # Handles both v1 and v2 for compatibility
-      - name: Set up Docker Compose v2
-        if: matrix.type == 'Docker' && steps.infra_changes.outputs.any_changed ==
-          'true'
-        run: |
-          # Docker Compose v2 is pre-installed on GitHub runners
-          # Just verify it's available and supports the develop configuration
-          docker compose version
-          echo "✅ Docker Compose v2 is available"
-
-      # DOCKER COMPOSE VALIDATION ENVIRONMENT
-      # Creates minimal .env file required for compose config validation
-      # Contains placeholder values that satisfy syntax requirements
-      - name: Create test environment for Docker Compose validation
-        if: matrix.type == 'Docker' && steps.infra_changes.outputs.any_changed ==
-          'true'
-        uses: ./.github/actions/create-test-env
+          echo "Running ruff with reviewdog..."
+          uv run ruff check --config pyproject.toml --output-format rdjson . | \
+          reviewdog -f=rdjson \
+            -name=ruff \
+            -reporter=${{ env.REVIEWDOG_REPORTER }} \
+            -level=${{ env.REVIEWDOG_LEVEL }} \
+            -filter-mode=${{ env.REVIEWDOG_FILTER_MODE }} \
+            -fail-level=${{ env.REVIEWDOG_FAIL_LEVEL }}
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  markdown:
+    name: Markdown
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.markdown == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Lint
+        uses: reviewdog/action-markdownlint@v0.26.2
         with:
-          additional-vars: |
-            PROD_DATABASE_URL=sqlite:///tmp/test.db
-            PROD_BOT_TOKEN=test_token_for_ci_validation
-
-      # DOCKER VALIDATION EXECUTION
-      # Runs Hadolint for Dockerfile best practices
-      # Validates Docker Compose syntax with version compatibility
-      - name: Run Docker linting
-        if: matrix.type == 'Docker' && steps.infra_changes.outputs.any_changed ==
-          'true'
-        run: |
-          # DOCKERFILE LINTING WITH HADOLINT
-          # Ignores specific rules that conflict with our multi-stage build
-          # DL3008: Pin versions in apt (handled by explicit version specs)
-          # DL3009: Delete apt cache (handled by multi-line RUN optimization)
-          docker run --rm -i hadolint/hadolint hadolint \
-            --ignore DL3008 \
-            --ignore DL3009 \
-            - < Dockerfile
-
-          # DOCKER COMPOSE SYNTAX VALIDATION
-          # Supports both v1 and v2 for maximum compatibility
-          # Uses config --quiet to validate without exposing secrets
-          if command -v docker compose >/dev/null 2>&1; then
-            echo "Using Docker Compose v2"
-            docker compose -f docker-compose.yml config --quiet
-            docker compose -f docker-compose.dev.yml config --quiet
-          elif command -v docker-compose >/dev/null 2>&1; then
-            echo "Using Docker Compose v1"
-            docker-compose -f docker-compose.yml config --quiet
-            docker-compose -f docker-compose.dev.yml config --quiet
-          else
-            echo "Neither docker compose nor docker-compose found"
-            exit 1
-          fi
-
-      # GITHUB ACTIONS VALIDATION
-      # Uses actionlint for comprehensive workflow validation
-      # Checks syntax, job dependencies, and GitHub Actions best practices
-      - name: Run GitHub Actions linting
-        if: matrix.type == 'GitHub Actions' && steps.infra_changes.outputs.any_changed
-          == 'true'
-        uses: raven-actions/actionlint@3a24062651993d40fed1019b58ac6fbdfbf276cc # v2
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          level: ${{ env.REVIEWDOG_LEVEL }}
+          reporter: ${{ env.REVIEWDOG_REPORTER }}
+          filter_mode: ${{ env.REVIEWDOG_FILTER_MODE }}
+          fail_level: ${{ env.REVIEWDOG_FAIL_LEVEL }}
+          markdownlint_flags: -c .markdownlint.yaml
+  shell:
+    name: Shell
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.shell == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Lint
+        uses: reviewdog/action-shellcheck@v1.31
         with:
-          files: .github/workflows/*.yml
-
-      # SHELL SCRIPT VALIDATION
-      # Uses ShellCheck for comprehensive shell script analysis
-      # Focuses on scripts directory for project-specific scripts
-      - name: Run Shell linting
-        if: matrix.type == 'Shell Scripts' && steps.infra_changes.outputs.any_changed
-          == 'true'
-        uses: ludeeus/action-shellcheck@master
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          level: ${{ env.REVIEWDOG_LEVEL }}
+          reporter: ${{ env.REVIEWDOG_REPORTER }}
+          filter_mode: ${{ env.REVIEWDOG_FILTER_MODE }}
+          fail_level: ${{ env.REVIEWDOG_FAIL_LEVEL }}
+      - name: Format
+        uses: reviewdog/action-shfmt@v1.0.4
         with:
-          scandir: ./scripts
-# ==============================================================================
-# CI WORKFLOW BEST PRACTICES IMPLEMENTED
-# ==============================================================================
-#
-# 1. PERFORMANCE OPTIMIZATION:
-#    - Smart change detection to skip unnecessary work
-#    - Parallel job execution across categories
-#    - Multi-level caching for dependencies
-#    - Early termination for unchanged files
-#
-# 2. SECURITY & PERMISSIONS:
-#    - Minimal required permissions for each job
-#    - No sensitive data exposure in validation
-#    - Read-only operations where possible
-#    - Secure dependency installation practices
-#
-# 3. MAINTAINABILITY:
-#    - Clear job names and step descriptions
-#    - Consistent error handling and reporting
-#    - Comprehensive documentation for each section
-#    - Version pinning for reproducible builds
-#
-# 4. DEVELOPER EXPERIENCE:
-#    - Clear skip messages explaining why jobs didn't run
-#    - Direct PR annotations for type checking errors
-#    - Fail-fast disabled to see all issues at once
-#    - Manual trigger option for debugging
-#
-# 5. RELIABILITY:
-#    - Robust error handling and fallbacks
-#    - Compatible with both Docker Compose v1 and v2
-#    - Comprehensive validation across file types
-#    - Proper cache invalidation strategies
-#
-# USAGE EXAMPLES:
-# ---------------
-# Manual trigger:
-#   GitHub UI → Actions → CI → Run workflow
-#
-# Force run all checks:
-#   Uses workflow_dispatch trigger to bypass change detection
-#
-# View job results:
-#   Check Actions tab for detailed logs and annotations
-#
-# Troubleshoot cache issues:
-#   Clear cache keys if dependencies get corrupted
-#
-# ==============================================================================
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          level: ${{ env.REVIEWDOG_LEVEL }}
+          filter_mode: ${{ env.REVIEWDOG_FILTER_MODE }}
+          shfmt_flags: -ln bash -i 2 -ci -bn -sr -kp -w -s
+  workflows:
+    name: Workflows
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.workflows == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Validate
+        uses: reviewdog/action-actionlint@v1.66.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          level: ${{ env.REVIEWDOG_LEVEL }}
+          reporter: ${{ env.REVIEWDOG_REPORTER }}
+          filter_mode: ${{ env.REVIEWDOG_FILTER_MODE }}
+          fail_level: ${{ env.REVIEWDOG_FAIL_LEVEL }}
+  docker:
+    name: Docker
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.docker == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Lint
+        uses: reviewdog/action-hadolint@v1.50.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          level: ${{ env.REVIEWDOG_LEVEL }}
+          reporter: ${{ env.REVIEWDOG_REPORTER }}
+          filter_mode: ${{ env.REVIEWDOG_FILTER_MODE }}
+          fail_level: ${{ env.REVIEWDOG_FAIL_LEVEL }}
+          hadolint_ignore: ${{ env.HADOLINT_IGNORE }}
+          include: Containerfile
+  yaml:
+    name: YAML
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.yaml == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Lint
+        uses: reviewdog/action-yamllint@v1.21.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          level: ${{ env.REVIEWDOG_LEVEL }}
+          reporter: ${{ env.REVIEWDOG_REPORTER }}
+          filter_mode: ${{ env.REVIEWDOG_FILTER_MODE }}
+          fail_level: ${{ env.REVIEWDOG_FAIL_LEVEL }}
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: always()
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Scan
+        uses: reviewdog/action-gitleaks@v1.7
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          level: error
+          reporter: ${{ env.REVIEWDOG_REPORTER }}
+          filter_mode: ${{ env.REVIEWDOG_FILTER_MODE }}
+          fail_level: error
+          gitleaks_flags: --verbose

@@ -1,0 +1,12 @@
+---
+blank_issues_enabled: false
+contact_links:
+  - name: Discord Community Support
+    url: https://discord.gg/gpmSjcjQxg
+    about: Get help from the community in real-time
+  - name: Documentation
+    url: https://tux.atl.dev
+    about: Check the documentation for guides and API reference
+  - name: Feature Requests
+    url: https://github.com/allthingslinux/tux/issues/new?template=feature_request.md
+    about: Suggest a new feature or enhancement

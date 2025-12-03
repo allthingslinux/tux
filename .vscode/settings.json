@@ -9,34 +9,36 @@
     "editor.codeActionsOnSave": {
       "source.fixAll.ruff": "explicit",
       "source.organizeImports.ruff": "explicit"
+    },
+    "editor.formatOnSave": true
+  },
+  "[shellscript]": {
+    "editor.defaultFormatter": "mkhl.shfmt",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.shellcheck": "explicit"
     }
   },
-  "python.analysis.typeCheckingMode": "off",
-  "cursorpyright.analysis.typeCheckMode": "off",
-  "python.languageServer": "None",
-  "python.analysis.autoFormatStrings": true,
-  "python.analysis.completeFunctionParens": true,
-  "python.analysis.autoImportCompletions": true,
-  "python.analysis.inlayHints.functionReturnTypes": true,
-  "python.analysis.inlayHints.variableTypes": true,
-  "python.analysis.inlayHints.callArgumentNames": "all",
-  "python.terminal.activateEnvInCurrentTerminal": true,
-  "python.analysis.exclude": [
-    ".archive/**",
-    "build/**"
+  "shfmt.executablePath": "",
+  "shfmt.executableArgs": [
+    "-ln", "bash",
+    "-i", "2",
+    "-ci",
+    "-bn",
+    "-sr",
+    "-kp",
+    "-s"
   ],
-  "python.analysis.diagnosticSeverityOverrides": {
-    "reportIncompatibleMethodOverride": "none",
-    "reportGeneralTypeIssues": "information"
-  },
-  "python.poetryPath": "poetry",
-  "python.testing.pytestEnabled": true,
-  "python.testing.unittestEnabled": true,
-  "python.testing.cwd": "${workspaceFolder}",
-  "python.testing.autoTestDiscoverOnSaveEnabled": true,
+  "shfmt.formatIgnored": true,
+  "python.languageServer": "None",
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python3",
+  "python.terminal.activateEnvInCurrentTerminal": true,
+  "python.terminal.executeInFileDir": false,
+  "python.testing.autoTestDiscoverOnSaveEnabled": false,
   "coverage-gutters.coverageFileNames": [
     "coverage.xml",
     "coverage.lcov",
+    "coverage.json",
     "cov.xml",
     "gcov.out",
     "jacoco.xml",
@@ -45,14 +47,11 @@
   "coverage-gutters.showGutterCoverage": false,
   "coverage-gutters.showLineCoverage": true,
   "coverage-gutters.showRulerCoverage": true,
-  "python.terminal.executeInFileDir": false,
-  "python.terminal.launchArgs": [],
   "files.exclude": {
     "**/__pycache__": true,
     "**/*.pyc": true,
     "**/pycache": true,
     "**/.pytest_cache": true,
-    "**/htmlcov": true,
     "**/.coverage": true
   },
   "search.exclude": {
@@ -67,28 +66,26 @@
   "git.pruneOnFetch": true,
   "git.showProgress": true,
   "git.fetchOnPull": true,
+  "gitlens.advanced.blame.customArguments": [
+    "--ignore-revs-file",
+    ".git-blame-ignore-revs"
+  ],
   "[markdown]": {
     "files.trimTrailingWhitespace": false,
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
   },
-  "markdownlint.config": {
-    "extends": ".markdownlint.yaml"
-  },
-  "markdownlint.run": "onType",
+  "markdownlint.configFile": ".markdownlint.yaml",
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
   "[yaml]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml",
+    "editor.defaultFormatter": null,
     "editor.tabSize": 2,
     "editor.formatOnType": false,
     "editor.formatOnSave": false,
     "editor.codeLens": true
   },
   "yaml.format.enable": false,
-  "yaml.format.singleQuote": true,
-  "yaml.format.bracketSpacing": true,
-  "yaml.format.printWidth": 80,
   "yaml.validate": true,
   "yaml.hover": true,
   "yaml.completion": true,
@@ -104,5 +101,72 @@
   "yaml.schemas": {
     "https://squidfunk.github.io/mkdocs-material/schema.json": "mkdocs.yml"
   },
-  "autoDocstring.docstringFormat": "numpy"
+  "yaml.customTags": [
+    "!ENV scalar",
+    "!ENV sequence",
+    "!relative scalar",
+    "tag:yaml.org,2002:python/name:material.extensions.emoji.to_svg",
+    "tag:yaml.org,2002:python/name:material.extensions.emoji.twemoji",
+    "tag:yaml.org,2002:python/name:pymdownx.superfences.fence_code_format",
+    "tag:yaml.org,2002:python/name:mermaid2.fence_mermaid_custom",
+    "tag:yaml.org,2002:python/object/apply:pymdownx.slugs.slugify",
+    "tag:yaml.org,2002:python/object/apply:pymdownx.slugs.slugify mapping",
+    "tag:yaml.org,2002:python/name:material.plugins.tags.tag_name_casefold"
+  ],
+  "markdown.validate.enabled": true,
+  "editor.wordWrap": "off",
+  "editor.tabSize": 4,
+  "editor.detectIndentation": false,
+  "editor.trimAutoWhitespace": true,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.suggestSelection": "first",
+  "editor.acceptSuggestionOnCommitCharacter": false,
+  "editor.snippetSuggestions": "top",
+  "files.associations": {
+    "*.mdc": "markdown",
+    "*.mako": "mako",
+    "*.yml": "yaml",
+    "*.yaml": "yaml"
+  },
+  "terminal.integrated.cwd": "${workspaceFolder}",
+  "terminal.integrated.env.linux": {
+    "PYTHONPATH": "${workspaceFolder}/src"
+  },
+  "terminal.integrated.env.osx": {
+    "PYTHONPATH": "${workspaceFolder}/src"
+  },
+  "terminal.integrated.env.windows": {
+    "PYTHONPATH": "${workspaceFolder}/src"
+  },
+  "python.testing.pytestArgs": [
+    "tests"
+  ],
+  "python.testing.cwd": "${workspaceFolder}",
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.ruff_cache/**": true,
+    "**/__pycache__/**": true,
+    "**/.pytest_cache/**": true,
+    "**/htmlcov/**": true,
+    "**/.coverage": true,
+    "**/uv.lock": true,
+    "**/site/**": true
+  },
+  "search.useIgnoreFiles": true,
+  "search.useGlobalIgnoreFiles": true,
+  "search.followSymlinks": false,
+  "[toml]": {
+    "editor.defaultFormatter": "tamasfe.even-better-toml",
+    "editor.tabSize": 4,
+    "files.trimTrailingWhitespace": true
+  },
+  "autoDocstring.docstringFormat": "numpy",
+  "shellcheck.enable": true,
+  "shellcheck.enableQuickFix": true,
+  "shellcheck.run": "onType"
 }

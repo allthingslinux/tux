@@ -45,8 +45,11 @@ htmlcov/
 .coverage.*
 .coverage-*
 .cache
+junit.xml
 nosetests.xml
 coverage.xml
+coverage.json
+lcov.info
 *.cover
 *.py,cover
 .hypothesis/
@@ -87,6 +90,9 @@ ipython_config.py
 # Pipenv
 Pipfile.lock
 
+# uv
+uv.lock
+
 # Poetry
 poetry.lock
 
@@ -102,10 +108,6 @@ celerybeat.pid
 
 # SageMath parsed files
 *.sage.py
-
-# Spyder
-.spyderproject
-.spyproject
 
 # Rope
 .ropeproject
@@ -138,6 +140,31 @@ tux/logs/
 # PyCharm
 .idea/
 
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+# Eclipse
+.project
+.pydevproject
+.settings/
+# Spyder
+.spyderproject
+.spyproject
+
 # Prisma
 .binaries/
 prisma/database.db
@@ -155,11 +182,24 @@ github-private-key.pem
 
 # Miscellaneous
 /debug.csv
-config/settings*
-!config/settings.yml.example
 
+
+
+# OS-specific
 # MacOS
 .DS_Store
+.AppleDouble
+.LSOverride
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+# Linux
+*~
+.directory
+.Trash-*
 
 build/
 docs-build/
@@ -181,3 +221,21 @@ prisma_binaries/
 .archive/
 
 reports/
+
+.kiro
+.audit
+
+.prisma-archive
+sqlmodel-refactor
+.database-archive
+data/
+examples/
+.amazonq/cli-todo-lists/
+
+# config files
+config/*
+!config/*.example
+docs/node_modules/.mf/cf.json
+
+# Docker Compose override (for local development/customization)
+compose.override.yaml

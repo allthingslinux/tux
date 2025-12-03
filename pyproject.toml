@@ -1,118 +1,243 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "tux"
-description = "Tux is an all in one bot for the All Things Linux discord server."
-authors = [{ name = "All Things Linux", email = "tux@allthingslinux.org" }]
+version = "0.1.0"
 requires-python = ">=3.13.2,<3.14"
+description = "Tux is an all in one bot for the All Things Linux discord server."
 readme = "README.md"
-urls = { repository = "https://github.com/allthingslinux/tux" }
-version = "0.0.0"
+license = "GPL-3.0-or-later"
+authors = [{ name = "All Things Linux", email = "tux@allthingslinux.org" }]
+
+dependencies = [
+    "aiocache>=0.12.3",
+    "aiofiles>=24.1.0",
+    "cairosvg>=2.7.1",
+    "dateparser>=1.2.0",
+    "discord-py>=2.6.0",
+    "influxdb-client>=1.48.0",
+    "emojis>=0.7.0",
+    "githubkit[auth-app]>=0.12.0",
+    "httpx>=0.28.0",
+    "jishaku>=2.5.2",
+    "loguru>=0.7.2",
+    "pillow>=10.2.0,<12.0.0",
+    "psutil>=7.1.0",
+    "pynacl>=1.5.0",
+    "python-dotenv>=1.0.1",
+    "pytz>=2025.2",
+    "pyyaml>=6.0.2",
+    "reactionmenu>=3.1.7",
+    "rsa>=4.9",
+    "sentry-sdk[httpx, loguru]>=2.7.0",
+    "audioop-lts>=0.2.2",
+    "rich>=14.0.0",
+    "watchdog>=6.0.0",
+    "arrow>=1.3.0",
+    "levenshtein>=0.27.1",
+    "jinja2>=3.1.6",
+    "sqlmodel>=0.0.24",
+    "sqlalchemy>=2.0.14",
+    "alembic>=1.16.5",
+    "alembic-postgresql-enum>=1.8.0",
+    "asyncpg>=0.30.0",
+    "aiosqlite>=0.21.0",
+    "redis>=6.4.0",
+    "alembic-utils>=0.8.8",
+    "psycopg[binary,pool]>=3.2.9",
+    "pydantic>=2.11.7",
+    "h2>=4.1.0",
+    "docker>=7.0.0",
+    "pydantic-settings>=2.10.1",
+    "typer>=0.17.3",
+    "semver>=3.0.4",
+    "tomli-w>=1.0.0",
+    "tomlkit>=0.13.3",
+]
+
+[project.urls]
+repository = "https://github.com/allthingslinux/tux"
 
 [project.scripts]
-tux = "tux.cli:main"
+cli = "scripts.cli:main"
+tux = "scripts.tux:main"
+db = "scripts.db:main"
+dev = "scripts.dev:main"
+test = "scripts.test:main"
+tests = "scripts.test:main"
+docker = "scripts.docker_cli:main"
+docs = "scripts.docs:main"
+config = "scripts.config:main"
 
-[build-system]
-requires = ["poetry-core>=2.0"]
-build-backend = "poetry.core.masonry.api"
+[dependency-groups]
+dev = [
+    "pre-commit>=4.3.0",
+    "basedpyright==1.29.5",
+    "ruff>=0.12.4",
+    "yamllint>=1.37.1",
+    "yamlfix>=1.18.0",
+    "pydoclint>=0.7.3",
+    "docstr-coverage>=2.3.2",
+    "pydantic-settings-export[email,regions,toml] @ git+https://github.com/jag-k/pydantic-settings-export.git@73a558a329541954a583001a88151cd8c2355fa0",
+]
+test = [
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+    "pytest-mock>=3.15.1",
+    "pytest-cov>=7.0.0",
+    "pytest-sugar>=1.1.1",
+    "pytest-randomly>=4.0.1",
+    "pytest-timeout>=2.4.0",
+    "pytest-html>=4.1.1",
+    "pytest-benchmark>=5.1.0",
+    "pytest-alembic>=0.12.1",
+    "pytest-loguru>=0.4.0",
+    "pytest-parallel>=0.1.1",
+    "pytest-httpx>=0.35.0",
+    "py-pglite[all]>=0.5.3",
+    "pytest-xdist>=3.8.0",
+]
+docs = [
+    # "mkdocs>=1.6.1",
+    # "mkdocs-material[imaging]>=9.6.22",
+    # "pymdown-extensions>=10.14.3",
+    # "mkdocstrings>=0.30.1",
+    # "mkdocstrings-python>=1.18.2",
+    # "griffe>=1.5.6",
+    # "griffe-typingdoc>=0.2.7",
+    # "griffe-generics>=1.0.13",
+    # "griffe-inherited-method-crossrefs>=0.0.1.4",
+    # "griffe-inherited-docstrings>=1.1.1",
+    # "griffe-pydantic>=1.1.8",
+    # "griffe-warnings-deprecated>=1.1.0",
+    # "griffe-modernized-annotations>=1.0.8",
+    # "mkdocs-git-revision-date-localized-plugin>=1.3.0",
+    # "mkdocs-git-committers-plugin-2>=2.5.0",
+    # "mkdocs-api-autonav>=0.4.0",
+    # "mkdocs-minify-plugin>=0.8.0",
+    # "mkdocs-typer>=0.0.3",
+    # "mkdocs-mermaid2-plugin>=1.2.3",
+    # "mkdocs-unused-files>=0.2.0",
+    # "mkdocs-coverage>=2.0.0",
+    # "mkdocs-pagetree-plugin>=0.0.17",
+    # "mkdocs-extract-listings-plugin>=0.2.1",
+    # "mkdocs-spellcheck[all]>=1.1.2",
+    # "mkdocs-breadcrumbs-plugin>=0.1.14",
+    # "mkdocs-ezlinks-plugin>=0.1.14",
+    # "mkdocs-section-index>=0.3.10",
+    # "mkdocs-backlinks>=0.9.1",
+    # "mkdocs-literate-nav>=0.6.1",
+    # "mkdocs-glightbox>=0.5.2",
+    # "mkdocs-redirects>=1.2.2",
+    # "licensecheck>=2025.1.0",
+    "zensical",
+]
+types = [
+    "types-pytz>=2025.2.0.20250326",
+    "types-click>=7.1.8",
+    "types-psutil>=7.0.0.20250401",
+    "types-dateparser>=1.2.0.20250408",
+    "types-pillow>=10.2.0.20240822",
+    "types-pyyaml>=6.0.12.20250402",
+    "types-aiofiles>=24.1.0.20250326",
+    "types-influxdb-client>=1.45.0.20241221",
+    "types-jinja2>=2.11.9",
+    "annotated-types>=0.7.0",
+    "asyncpg-stubs>=0.30.2",
+    "types-mock>=5.2.0.20250924",
+]
 
+[tool.uv]
+default-groups = ["dev", "test", "docs", "types"]
 
-[tool.poetry]
-packages = [{ include = "tux" }]
+[tool.hatch.build.targets.sdist]
+packages = ["src/tux", "scripts"]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/tux", "scripts"]
 
-[tool.poetry.dependencies]
-python = ">=3.13.2,<3.14"
-aiocache = ">=0.12.2"
-aioconsole = ">=0.8.0"
-aiofiles = ">=24.1.0"
-asynctempfile = ">=0.5.0"
-cairosvg = ">=2.7.1"
-dateparser = ">=1.2.0"
-"discord-py" = ">=2.4.0"
-"influxdb-client" = ">=1.48.0"
-emojis = ">=0.7.0"
-githubkit = { version = ">=0.12.0", extras = ["auth-app"] }
-httpx = ">=0.28.0"
-jishaku = ">=2.5.2"
-loguru = ">=0.7.2"
-pillow = ">=11.3.0,<11.4.0"
-prisma = ">=0.15.0"
-psutil = ">=6.0.0"
-pynacl = ">=1.5.0"
-python-dotenv = ">=1.0.1"
-pytz = ">=2024.1"
-pyyaml = ">=6.0.2"
-reactionmenu = ">=3.1.7"
-rsa = ">=4.9"
-sentry-sdk = { version = ">=2.7.0", extras = ["httpx", "loguru"] }
-audioop-lts = "^0.2.1"
-colorama = "^0.4.6"
-rich = "^14.0.0"
-watchdog = "^6.0.0"
-arrow = "^1.3.0"
-click = "^8.1.8"
-levenshtein = "^0.27.1"
-jinja2 = "^3.1.6"
-
-[tool.poetry.group.dev.dependencies]
-pre-commit = "==4.3.0"
-basedpyright = "==1.29.5" # currently downgraded due to https://github.com/DetachHead/basedpyright/issues/1395
-ruff = "==0.12.10"
-poetry-types = "0.6.0"
-yamllint = "1.37.1"
-yamlfix = "1.17.0"
-
-[tool.poetry.group.test.dependencies]
-pytest = "^8.0.0"
-pytest-asyncio = "^1.0.0"
-pytest-mock = "^3.14.0"
-pytest-cov = "^6.0.0"
-pytest-sugar = "^1.0.0"
-pytest-xdist = "^3.6.0"
-pytest-randomly = "^3.15.0"
-pytest-timeout = "^2.3.1"
-pytest-html = "^4.1.1"
-pytest-benchmark = "^5.1.0"
-
-[tool.poetry.group.docs.dependencies]
-mkdocs-material = "^9.5.30"
-mkdocstrings-python = "^1.14.3"
-mkdocs-git-revision-date-localized-plugin = "^1.3.0"
-mkdocs-git-committers-plugin-2 = "^2.5.0"
-pymdown-extensions = "^10.14.3"
-mkdocstrings = "^0.30.0"
-mkdocs = "^1.6.1"
-griffe = "^1.5.6"
-griffe-typingdoc = "^0.2.7"
-griffe-generics = "^1.0.13"
-griffe-inherited-method-crossrefs = "^0.0.1.4"
-griffe-inherited-docstrings = "^1.1.1"
-mkdocs-api-autonav = "^0.3.0"
-mkdocs-click = "^0.9.0"
-mkdocs-minify-plugin = "^0.8.0"
-
-[tool.poetry.group.types.dependencies]
-types-pytz = "^2025.2.0.20250326"
-types-click = "^7.1.8"
-types-psutil = "^7.0.0.20250401"
-types-dateparser = "^1.2.0.20250408"
-types-pillow = "^10.2.0.20240822"
-types-colorama = "^0.4.15.20240311"
-types-pyyaml = "^6.0.12.20250402"
-types-aiofiles = "^24.1.0.20250326"
-types-influxdb-client = "^1.45.0.20241221"
-types-jinja2 = "^2.11.9"
-
+[tool.pydoclint]
+style = "numpy"
+exclude = [
+    ".venv",
+    "examples",
+    ".archive",
+    "typings/**",
+    "tests",
+    "tests/**",
+    "**/tests/**",
+    ".kiro/**",
+    "site",
+    ".audit/**",
+    "**/migrations/**",
+]
+arg-type-hints-in-docstring = true
+arg-type-hints-in-signature = true
+check-return-types = true
+check-yield-types = true
+allow-init-docstring = true
+skip-checking-short-docstrings = true
+require-return-section-when-returning-nothing = false
+check-style-mismatch = true
 
 [tool.ruff]
-exclude = [".venv", "examples", ".archive", "typings/**"]
+exclude = [
+    ".archive",
+    ".audit/**",
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".kiro/**",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "site",
+    "dist",
+    "examples",
+    "node_modules",
+    "site-packages",
+    "src/tux/database/migrations/versions/**",
+    # Exclude all Python files in tests, but allow conftest.py to be linted
+    "tests/fixtures/**",
+    "tests/e2e/**",
+    "tests/integration/**",
+    "tests/unit/**",
+    "typings/**",
+    "venv",
+]
 indent-width = 4
-line-length = 120
+line-length = 88
 target-version = "py313"
 
 [tool.ruff.lint]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 fixable = ["ALL"]
-ignore = ["E501", "N814", "PLR0913", "PLR2004"]
+ignore = [
+    "E501",    # line-too-long
+    "N814",    # camelcase-imported-as-constant
+    "PLR0913", # too-many-arguments
+    "PLR2004", # magic-value-comparison
+    "E402",    # module-import-not-at-top-of-file
+    "RUF022",  # unsorted-dunder-all
+]
 select = [
     "I",     # isort
     "E",     # pycodestyle-error
@@ -138,9 +263,15 @@ select = [
     "INP",   # flake8-no-pep420
     "RSE",   # flake8-raise
     "ICN",   # flake8-import-conventions
-    "RUF",   # ruff
+    # "DOC",  # pydoclint (not implemented yet, see https://github.com/astral-sh/ruff/issues/12434 for progress)
+    "D", # pydocstyle
+    #"ERA",  # eradicate
+    "RUF", # ruff
 ]
 unfixable = []
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
 [tool.ruff.format]
 docstring-code-format = true
@@ -148,78 +279,253 @@ docstring-code-line-length = "dynamic"
 indent-style = "space"
 line-ending = "lf"
 quote-style = "double"
-skip-magic-trailing-comma = false
+
+[tool.yamlfix]
+# Preserve original sequence style (flow vs block) to prevent single-item
+# lists from being converted between [item] and - item formats
+sequence_style = "keep_style"
 
 [tool.basedpyright]
 defineConstant = { DEBUG = true }
-enableReachabilityAnalysis = true
-exclude = ["__pypackages__", "_build", "examples", ".archive", "typings/**"]
-ignore = [".venv"]
-include = ["tux", "tests"]
+exclude = [
+    "__pypackages__",
+    "**/__pycache__",
+    "_build",
+    "examples",
+    "site",
+    ".archive",
+    "src/tux/database/migrations/**",
+]
+include = ["src", "scripts", "tests"]
 stubPath = "typings"
 pythonPlatform = "Linux"
 pythonVersion = "3.13"
-reportImportCycles = true
-reportRedeclaration = false
-strictDictionaryInference = true
-strictListInference = true
-strictSetInference = true
 typeCheckingMode = "strict"
-venv = ".venv"
-venvPath = "."
+reportUnnecessaryTypeIgnoreComment = "warning"
+
+# Execution environments - strict for src/scripts, relaxed for tests
+[[tool.basedpyright.executionEnvironments]]
+root = "tests"
+reportUnknownMemberType = "none"
+reportUnknownArgumentType = "none"
+reportUnknownParameterType = "none"
+reportMissingParameterType = "none"
+reportUnknownVariableType = "none"
+reportPrivateUsage = "none"
+reportUnusedImport = "none"
+reportAttributeAccessIssue = "none"
+reportUnknownLambdaType = "none"
+reportMissingTypeStubs = "none"
+reportWildcardImportFromLibrary = "none"
+
+[[tool.basedpyright.executionEnvironments]]
+root = "src"
+
+[[tool.basedpyright.executionEnvironments]]
+root = "scripts"
+reportMissingTypeStubs = "none"
 
 [tool.coverage.run]
-source = ["tux"]
+source = ["src/tux"]
 branch = true
 parallel = true
+relative_files = true
+concurrency = ["thread", "multiprocessing"]
+sigterm = true
 omit = [
     "*/tests/*",
     "*/test_*",
+    "conftest.py",
     "*/__pycache__/*",
-    "*/migrations/*",
+    ".pytest_cache/*",
+    ".ruff_cache/*",
+    "htmlcov/*",
     "*/venv/*",
     "*/.venv/*",
+    "typings/*",
+    "docs/*",
+    "scripts/*",
+    "assets/*",
+    "site/*",
+    "logs/*",
+    "*.md",
+    "*.toml",
+    "*.lock",
+    "*.nix",
+    "flake.*",
+    "shell.nix",
+    "prisma/*",
 ]
 
 [tool.coverage.report]
 precision = 2
 show_missing = true
 skip_covered = false
+skip_empty = false
+sort = "name"
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
     "raise AssertionError",
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
-    "@abstract",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+    "if TYPE_CHECKING:",
 ]
 
 [tool.coverage.html]
-directory = "htmlcov"
+directory = "docs/htmlcov"
+extra_css = "docs/content/assets/stylesheets/coverage.css"
 
 [tool.coverage.xml]
 output = "coverage.xml"
 
+[tool.coverage.json]
+output = "coverage.json"
+
+[tool.coverage.lcov]
+output = "lcov.info"
+
 [tool.pytest.ini_options]
+# Test discovery
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = [
-    "--cov=tux",
-    "--cov-report=term-missing",
-    "--cov-report=html",
-    "--cov-report=xml",
-    "--cov-branch",
-    "-v",
-]
-asyncio_mode = "auto"
 
-[tool.yamlfix]
-comments_min_spaces_from_content = 1
-explicit_start = false
-indent_mapping = 2
-indent_sequence = 4
-line_length = 80
-preserve_quotes = false
-sequence_style = "block_style"
+# Default options for all pytest runs
+addopts = [
+    # Coverage
+    "--cov=src/tux",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--cov-report=json",
+    "--cov-report=lcov",
+    "--cov-branch",
+    # Output formatting
+    "--strict-markers",
+    "--tb=short",
+    "--randomly-seed=last",
+    # Verbose logging
+    "-v",
+    "--color=yes",
+    "--capture=no",
+    "--log-cli-level=DEBUG",
+    "--log-cli-format=%(asctime)s [%(levelname)8s] %(name)s: %(message)s",
+    "--log-cli-date-format=%H:%M:%S",
+    "--log-file=logs/pytest.log",
+    "--log-file-level=DEBUG",
+    "--log-file-format=%(asctime)s [%(levelname)8s] %(filename)s:%(lineno)d %(funcName)s(): %(message)s",
+    "--log-file-date-format=%Y-%m-%d %H:%M:%S",
+    # Async support
+    "--asyncio-mode=auto",
+]
+
+# Markers
+markers = [
+    "unit: Unit tests (uses py-pglite)",
+    "integration: Integration tests (uses py-pglite)",
+    "slow: Slow tests (>5 seconds)",
+    "database: Tests requiring database access",
+    "async: Async tests",
+]
+
+# Filter warnings
+filterwarnings = [
+    "ignore::sqlalchemy.exc.SAWarning",
+    "ignore::ResourceWarning",
+    "ignore::RuntimeWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+# Minimum version
+minversion = "7.0"
+
+# Test timeout (in seconds)
+timeout = 300
+
+# AsyncIO configuration
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "function"
+
+# Python path for imports
+pythonpath = ["src"]
+
+# Directories to skip during test discovery
+norecursedirs = [
+    ".git",
+    ".venv",
+    "venv",
+    "node_modules",
+    "build",
+    "dist",
+    "__pycache__",
+    ".pytest_cache",
+]
+
+# Console output style
+console_output_style = "progress"
+
+# Test result logging
+# Note: log_cli_level is set in addopts as --log-cli-level=DEBUG
+# These settings are for file logging (log_file_*)
+log_cli = true
+log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+# JUnit XML output for CI
+junit_family = "xunit2"
+junit_logging = "no"
+
+# pytest-alembic configuration
+[tool.pytest-alembic]
+script_location = "src/tux/database/migrations"
+version_locations = ["src/tux/database/migrations/versions"]
+
+# Note: pytest-xdist options are configured via command-line arguments
+# (e.g., -n auto, --dist=loadfile) or in addopts, not as a separate config section
+
+# Legacy MkDocs plugin entry points (kept for reference, may not be used with Zensical)
+[project.entry-points."mkdocs.plugins"]
+tux = "docs.plugins.mkdocs_tux_plugin:TuxPlugin"
+mkdocs_sbom = "docs.plugins.mkdocs_sbom:SbomPlugin"
+mkdocs_auto_index = "docs.plugins.mkdocs_auto_index:IndexGeneratorPlugin"
+
+# pydantic-settings-export configuration
+[tool.pydantic_settings_export]
+project_dir = "."
+default_settings = ["tux.shared.config.settings:Config"]
+
+[[tool.pydantic_settings_export.generators.dotenv]]
+paths = [".env.example"]
+enabled = true
+
+[[tool.pydantic_settings_export.generators.markdown]]
+paths = ["docs/content/reference/env.md"]
+enabled = true
+table_only = false
+file_prefix = "# Environment Variables\n\n"
+to_upper_case = true
+region = "config"
+
+# Built-in TOML generator (from pydantic-settings-export)
+[[tool.pydantic_settings_export.generators.toml]]
+paths = ["config/config.toml.example"]
+enabled = true
+
+# Custom generators for YAML and JSON (stored in config/ directory)
+
+[[tool.pydantic_settings_export.generators."tux.shared.config.generators:YamlGenerator"]]
+paths = ["config/config.yaml.example"]
+include_comments = true
+enabled = true
+
+[[tool.pydantic_settings_export.generators."tux.shared.config.generators:JsonGenerator"]]
+paths = ["config/config.json.example"]
+indent = 2
+enabled = true

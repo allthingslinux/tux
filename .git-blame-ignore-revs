@@ -1,0 +1,5 @@
+# Ignore bulk formatting changes in git blame
+# Usage: git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Line length change from 120 to 88 characters
+a74591ab342bd3e49cb80cada4a9656b1bf5ca1e  # Line length formatting change

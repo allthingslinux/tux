@@ -4,8 +4,11 @@
 # Exclude other configuration files that might have markdown-like syntax
 .codecov.yml
 .pre-commit-config.yaml
-docker-compose*.yml
+compose.yaml
 *.lock
+
+# Exclude auto-generated files
+CONFIG.md
 
 # Exclude build and cache directories
 .venv/
@@ -29,3 +32,17 @@ prisma/
 typings/
 
 .github/
+
+.kiro/
+
+.audit/
+
+# Project-specific ignores
+sqlmodel-refactor/**
+docs/db/README.md
+
+.archive
+.archive/**
+
+docs/content/reference/configuration.md
+docs/includes/abbreviations.md

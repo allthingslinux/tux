@@ -1,450 +1,335 @@
-# ==============================================================================
-# TUX DISCORD BOT - DOCKER BUILD & DEPLOYMENT WORKFLOW
-# ==============================================================================
-#
-# This workflow handles Docker image building, testing, and deployment for the
-# Tux Discord bot. It provides secure, multi-platform container builds with
-# comprehensive security scanning and optimized caching strategies for
-# production deployment and container registry management.
-#
-# WORKFLOW FEATURES:
-# ------------------
-# 1. Multi-platform builds (AMD64, ARM64) for broad compatibility
-# 2. Comprehensive security scanning with Trivy vulnerability detection
-# 3. Advanced build caching for faster subsequent builds
-# 4. Production image validation and smoke testing
-# 5. Automated registry cleanup to prevent storage bloat
-# 6. Secure container registry authentication and management
-#
-# BUILD STRATEGY:
-# ---------------
-# - PR Validation: Quick syntax/build validation without push
-# - Tag Builds: Full multi-platform builds with security scanning
-# - Main Branch: Single-platform builds for development
-# - Scheduled: Monthly cleanup of unused images and cache
-#
-# SECURITY FEATURES:
-# ------------------
-# - SLSA provenance and SBOM generation for releases
-# - Trivy vulnerability scanning with SARIF upload
-# - Secure registry authentication via GitHub tokens
-# - Minimal image permissions and isolation
-# - Container content verification through smoke tests
-#
-# PERFORMANCE OPTIMIZATIONS:
-# --------------------------
-# - GitHub Actions cache for build layers
-# - Multi-stage Dockerfile optimization
-# - Platform-conditional builds (ARM64 only for releases)
-# - Build timeout controls to prevent hanging
-# - Efficient layer caching with cache-from/cache-to
-#
-# ==============================================================================
+---
 name: Docker
-# TRIGGER CONFIGURATION
-# Comprehensive triggering for different build scenarios
-# Includes pull request validation, tag-based releases, and maintenance
 on:
-  # VERSION RELEASES
-  # Triggered by semantic version tags (v1.0.0, v1.2.3-beta, etc.)
   push:
-    tags:
-      - v*
-
-  # PULL REQUEST VALIDATION
-  # Validates Docker builds without pushing to registry
+    tags: [v*]
   pull_request:
-    branches:
-      - main
-
-  # MANUAL TRIGGER
-  # Allows manual builds for testing and debugging
+    branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
   workflow_dispatch:
-
-  # SCHEDULED MAINTENANCE
-  # Monthly cleanup spread across different days to avoid resource conflicts
   schedule:
-    - cron: 0 2 15 * *   # Monthly cleanup on the 15th (spread from maintenance.yml)
-# CONCURRENCY MANAGEMENT
-# Prevents resource conflicts and manages parallel builds efficiently
+    - cron: 0 2 15 * *  # Monthly: Test build (15th at 2 AM UTC)
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-# GLOBAL ENVIRONMENT VARIABLES
-# Centralized configuration for registry settings and build options
 env:
-  REGISTRY: ghcr.io                                 # GitHub Container Registry
-  IMAGE_NAME: ${{ github.repository }}              # Repository-based image name
-  DOCKER_BUILD_SUMMARY: true                       # Enable build summaries
-  DOCKER_BUILD_CHECKS_ANNOTATIONS: true            # Enable build annotations
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  DOCKER_BUILD_SUMMARY: true
+  DOCKER_BUILD_CHECKS_ANNOTATIONS: true
+  PYTHON_VERSION: 3.13.8
+  SHA_PREFIX_LENGTH: 7
+  VALIDATE_TIMEOUT_MINUTES: 10
+  BUILD_TIMEOUT_MINUTES: 15
+  DOCKER_IMAGE_TITLE: Tux
+  DOCKER_IMAGE_DESCRIPTION: Tux - The all in one discord bot for the All Things Linux
+    Community
+  DOCKER_IMAGE_SOURCE: https://github.com/allthingslinux/tux
+  DOCKER_IMAGE_LICENSE: GPL-3.0
+  DOCKER_IMAGE_AUTHORS: All Things Linux
+  DOCKER_IMAGE_VENDOR: All Things Linux
+  DOCKER_IMAGE_DOCS: https://github.com/allthingslinux/tux/blob/main/README.md
 jobs:
-  # ============================================================================
-  # DOCKER BUILD VALIDATION - Pull Request Verification
-  # ============================================================================
-  # Purpose: Validates Docker builds on pull requests without registry push
-  # Strategy: Fast validation with caching to ensure buildability
-  # Scope: Syntax validation, dependency resolution, build completion
-  # Performance: Optimized for quick feedback in PR reviews
-  # ============================================================================
-  validate:
-    name: Validate Build
-    # EXECUTION CONDITIONS
-    # Only runs on pull requests to validate changes without deployment
-    if: github.event_name == 'pull_request'
+  changes:
+    name: File Detection
     runs-on: ubuntu-latest
     permissions:
-      contents: read    # Required for repository checkout
-    steps:
-      # DOCKER BUILDX SETUP
-      # Advanced Docker builder with enhanced caching and multi-platform support
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
-
-      # VERSION INFORMATION PREPARATION
-      # Generates PR-specific version information for build context
-      - name: Prepare version info
-        id: version
-        run: |
-          # For PR validation, use PR number and short SHA for version
-          VERSION="pr-${{ github.event.number }}-$(echo "${{ github.sha }}" | cut -c1-7)"
-          {
-            echo "version=$VERSION"
-            echo "git_sha=${{ github.sha }}"
-            echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-          } >> "$GITHUB_OUTPUT"
-
-      # VALIDATION BUILD EXECUTION
-      # Builds production image without pushing to validate build process
-      # Uses GitHub Actions cache for improved performance
-      - name: Build for validation (Git context)
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
-        timeout-minutes: 10
-        with:
-          target: production        # Build production target for realistic validation
-          push: false              # Don't push to registry during validation
-          load: false             # Don't load image unless testing required
-          cache-from: type=gha    # Use GitHub Actions cache for faster builds
-          cache-to: type=gha,mode=max    # Update cache for future builds
-          tags: tux:pr-${{ github.event.number }}
-          build-args: |
-            VERSION=${{ steps.version.outputs.version }}
-            GIT_SHA=${{ steps.version.outputs.git_sha }}
-            BUILD_DATE=${{ steps.version.outputs.build_date }}
-          # CONTAINER METADATA ANNOTATIONS
-          # OCI-compliant image annotations for proper registry metadata
-          annotations: |
-            org.opencontainers.image.title="Tux"
-            org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community"
-            org.opencontainers.image.source="https://github.com/allthingslinux/tux"
-            org.opencontainers.image.licenses="GPL-3.0"
-            org.opencontainers.image.authors="All Things Linux"
-            org.opencontainers.image.vendor="All Things Linux"
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
-
-      # VALIDATION COMPLETION STATUS
-      # Provides clear feedback on validation success
-      - name: Validation complete
-        run: |
-          echo "✅ Docker build validation completed successfully"
-          echo "🔍 Build cache updated for faster future builds"
-
-  # ============================================================================
-  # PRODUCTION BUILD & DEPLOYMENT - Multi-Platform Container Images
-  # ============================================================================
-  # Purpose: Builds and deploys production-ready container images
-  # Strategy: Multi-platform builds with security scanning and testing
-  # Targets: GitHub Container Registry with proper versioning
-  # Security: Vulnerability scanning, provenance, and SBOM generation
-  # ============================================================================
-  build:
-    name: Build & Push
-    # EXECUTION CONDITIONS
-    # Skips pull requests to prevent unnecessary deployments
-    # Waits for validation to complete before proceeding
-    if: github.event_name != 'pull_request'
-    needs:             # Always wait for validation
-      - validate
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read           # Repository access for build context
-      packages: write         # Container registry push permissions
-      security-events: write  # Security scanning result upload
-      actions: read          # Actions cache access
-      id-token: write        # OIDC token for SLSA provenance
-
-    # OUTPUT CONFIGURATION
-    # Provides build outputs for downstream jobs (security scanning, cleanup)
+      contents: read
     outputs:
-      image: ${{ steps.meta.outputs.tags }}
-      digest: ${{ steps.build.outputs.digest }}
+      docker: ${{ steps.docker_changes.outputs.any_changed }}
     steps:
-      # REPOSITORY CHECKOUT
-      # Full history needed for accurate version determination
       - name: Checkout
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
-
-      # INTELLIGENT VERSION DETERMINATION
-      # Robust version resolution with multiple fallback strategies
-      - name: Prepare version info
-        id: version
-        run: |
-          # Try to get version from git tags, fallback to SHA (consistent with Dockerfile)
-          # Execute git commands only once and store results to avoid transient failures
-          if EXACT_TAG=$(git describe --tags --exact-match 2>/dev/null); then
-            VERSION=${EXACT_TAG#v}
-          elif TAG_DESC=$(git describe --tags --always 2>/dev/null); then
-            VERSION=${TAG_DESC#v}
-          else
-            VERSION="$(date +'%Y%m%d')-$(echo "${{ github.sha }}" | cut -c1-7)"
-          fi
-          {
-            echo "version=$VERSION"
-            echo "git_sha=${{ github.sha }}"
-            echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-          } >> "$GITHUB_OUTPUT"
-          echo "Using version: $VERSION"
-
-      # MULTI-PLATFORM EMULATION SETUP
-      # QEMU enables building ARM64 images on AMD64 runners
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3
+      - name: Check Docker
+        uses: tj-actions/changed-files@v46
+        id: docker_changes
         with:
-          platforms: linux/amd64,linux/arm64
+          files: |
+            Containerfile
+            compose.yaml
+            .dockerignore
+            docker/**
+  validate:
+    name: Validate
+    needs: [changes]
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request'
+      && needs.changes.outputs.docker == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      # ADVANCED DOCKER BUILDX CONFIGURATION
-      # Enhanced builder with latest BuildKit features
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
+      # Set up Docker Buildx for advanced build features
+      # Uses docker/setup-buildx-action@v3 to create and boot a builder
+      # Docs: https://github.com/docker/setup-buildx-action
+      #
+      # Default behavior (no explicit config needed):
+      # - Creates builder with docker-container driver (enables BuildKit features)
+      # - Supports GitHub Actions cache (type=gha) for faster builds
+      # - Caches buildx binary to GitHub Actions cache backend
+      # - Automatically cleans up builder and temp files at end of job
+      # - Switches to this builder instance for subsequent build steps
+      #
+      # Why we use Buildx:
+      # - Required for docker/build-push-action@v6 advanced features
+      # - Enables GitHub Actions cache (cache-from/cache-to type=gha)
+      # - Supports build-time features (secrets, remote cache, etc.)
+      # - Future-proof for multi-platform builds if needed
+      #
+      # Optional enhancements (not currently needed):
+      # - Multi-platform: Add docker/setup-qemu-action@v3 for ARM support
+      # - Version pinning: Add version: v0.x.x to pin Buildx version
+      # - Custom builder name: Add name: my-builder for persistent builders
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Extract Docker image metadata for PR validation builds
+      # Uses docker/metadata-action@v5 to generate tags and labels
+      # Docs: https://github.com/docker/metadata-action
+      #
+      # Purpose: Generate consistent metadata (tags/labels) for PR validation builds
+      # - PR builds use simple tags (pr-123) for identification
+      # - Full OCI labels for image metadata and traceability
+      # - Labels follow Open Containers Initiative (OCI) specification
+      #
+      # Tag strategy for PR builds:
+      # - type=ref,event=pr: Auto-generates pr-<number> tag from PR event
+      #
+      # Label strategy:
+      # - Custom OCI labels using environment variables
+      # - Overrides default generated labels with our custom values
+      # - Includes: title, description, source, license, authors, vendor, revision, docs
+      #
+      # Note: Image name is local-only (tux) since PR builds don't push to registry
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          driver-opts: |
-            image=moby/buildkit:buildx-stable-1
+          # Local image name (no registry prefix needed for validation builds)
+          images: tux
+          tags: |
+            type=ref,event=pr
+          labels: |
+            org.opencontainers.image.title=${{ env.DOCKER_IMAGE_TITLE }}
+            org.opencontainers.image.description=${{ env.DOCKER_IMAGE_DESCRIPTION }}
+            org.opencontainers.image.source=${{ env.DOCKER_IMAGE_SOURCE }}
+            org.opencontainers.image.licenses=${{ env.DOCKER_IMAGE_LICENSE }}
+            org.opencontainers.image.authors=${{ env.DOCKER_IMAGE_AUTHORS }}
+            org.opencontainers.image.vendor=${{ env.DOCKER_IMAGE_VENDOR }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.documentation=${{ env.DOCKER_IMAGE_DOCS }}
+      - name: Generate PR Version
+        id: pr_version
+        run: ./.github/scripts/docker.sh generate-pr-version \ "${{ github.event.number }}"
+          \ "${{ github.sha }}" \ "${{ env.SHA_PREFIX_LENGTH }}"
 
-      # SECURE REGISTRY AUTHENTICATION
-      # GitHub token-based authentication for container registry
-      - name: Log in to Container Registry
-        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3
+      # Build Docker image for validation (does not push to registry)
+      # Uses docker/build-push-action@v6 with Buildx for advanced features
+      # Docs: https://github.com/docker/build-push-action
+      # Features used:
+      # - GitHub Actions cache (type=gha) for faster builds
+      # - Load into Docker daemon (load: true) for image scanning
+      # - Build metadata (tags/labels) for image identification
+      # - Build-time variables for versioning and traceability
+      - name: Build
+        uses: docker/build-push-action@v6
+        timeout-minutes: 10
+        with:
+          # Build context directory (current directory)
+          context: .
+          # Path to Containerfile (Dockerfile)
+          file: Containerfile
+          # Target stage to build (production stage in Containerfile)
+          target: production
+          # Don't push to registry (validation builds only)
+          push: false
+          # Load image into Docker daemon for scanning with Trivy
+          load: true
+          # Use GitHub Actions cache for faster builds
+          # Cache strategy: read from previous builds, write with max mode for future builds
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Image tags for identification (from metadata extraction step)
+          tags: ${{ steps.meta.outputs.tags }}
+          # OCI labels for image metadata (title, description, source, etc.)
+          labels: ${{ steps.meta.outputs.labels }}
+          # Build-time variables passed to Containerfile
+          build-args: |
+            VERSION=${{ steps.pr_version.outputs.version }}
+            GIT_SHA=${{ github.sha }}
+            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+      # Run Trivy scans in parallel for faster validation
+      # Both scans are independent and can run simultaneously
+      - name: Scan Containerfile
+        uses: reviewdog/action-trivy@v1
+        continue-on-error: true
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          trivy_command: config
+          trivy_target: ./Containerfile
+          trivy_version: v0.63.0
+          level: error
+          reporter: github-pr-review
+          tool_name: trivy-dockerfile
+          filter_mode: added
+          trivy_flags: --severity HIGH,CRITICAL --no-progress --quiet --skip-db-update
+      - name: Scan Image
+        uses: reviewdog/action-trivy@v1
+        continue-on-error: true
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          trivy_command: image
+          trivy_target: ${{ steps.meta.outputs.tags }}
+          trivy_version: v0.63.0
+          level: error
+          reporter: github-pr-review
+          tool_name: trivy-image
+          filter_mode: added
+          trivy_flags: --severity HIGH,CRITICAL --no-progress --quiet --skip-db-update
+  build:
+    name: Build & Push
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # Set up Docker Buildx for advanced build features
+      # Uses docker/setup-buildx-action@v3 to create and boot a builder
+      # Docs: https://github.com/docker/setup-buildx-action
+      #
+      # Default behavior (no explicit config needed):
+      # - Creates builder with docker-container driver (enables BuildKit features)
+      # - Supports GitHub Actions cache (type=gha) for faster builds
+      # - Caches buildx binary to GitHub Actions cache backend
+      # - Automatically cleans up builder and temp files at end of job
+      # - Switches to this builder instance for subsequent build steps
+      #
+      # Why we use Buildx:
+      # - Required for docker/build-push-action@v6 advanced features
+      # - Enables GitHub Actions cache (cache-from/cache-to type=gha)
+      # - Supports build-time features (secrets, remote cache, etc.)
+      # - Future-proof for multi-platform builds if needed
+      #
+      # Optional enhancements (not currently needed):
+      # - Multi-platform: Add docker/setup-qemu-action@v3 for ARM support
+      # - Version pinning: Add version: v0.x.x to pin Buildx version
+      # - Custom builder name: Add name: my-builder for persistent builders
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Registry
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # METADATA EXTRACTION AND TAG GENERATION
-      # Generates appropriate tags and labels based on git context
+      # Extract Docker image metadata for production release builds
+      # Uses docker/metadata-action@v5 to generate tags and labels
+      # Docs: https://github.com/docker/metadata-action
+      #
+      # Purpose: Generate consistent metadata (tags/labels) for production images
+      # - Semantic versioning tags from Git tags (v1.2.3 → 1.2.3, 1.2, latest)
+      # - Full OCI labels for image metadata and traceability
+      # - Labels follow Open Containers Initiative (OCI) specification
+      #
+      # Tag strategy for release builds:
+      # - type=semver,pattern={{version}}: Full version tag (e.g., 1.2.3)
+      # - type=semver,pattern={{major}}.{{minor}}: Minor version tag (e.g., 1.2)
+      # - type=raw,value=latest,enable={{is_default_branch}}: Latest tag only for default branch
+      #
+      # Semver tag behavior:
+      # - Git tag v1.2.3 generates: 1.2.3 (full version), 1.2 (minor), latest (if default branch)
+      # - Pre-release tags (alpha, beta, rc) only generate full version tag (not minor/major)
+      # - Tags are automatically sanitized to comply with Docker tag specifications
+      #
+      # Label strategy:
+      # - Custom OCI labels using environment variables
+      # - Overrides default generated labels with our custom values
+      # - Includes: title, description, source, license, authors, vendor, revision, docs
+      # - Auto-generated by metadata-action: created (build timestamp), version (from semver)
+      #
+      # Best practices:
+      # - Full registry path (ghcr.io/owner/repo) for production images
+      # - Multiple tags for flexibility (full version, minor version, latest)
+      # - Comprehensive OCI labels for traceability and compliance
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5
+        uses: docker/metadata-action@v5
         with:
+          # Full registry path for production images (ghcr.io/owner/repo)
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          flavor: |
-            latest=${{ github.ref == 'refs/heads/main' }}
           tags: |
-            type=ref,event=branch    # Branch-based tags for development
-            type=ref,event=tag       # Version tags for releases
-            type=sha                 # SHA-based tags for traceability
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
           labels: |
-            org.opencontainers.image.title="Tux"
-            org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community"
-            org.opencontainers.image.source="https://github.com/${{ github.repository }}"
+            org.opencontainers.image.title=${{ env.DOCKER_IMAGE_TITLE }}
+            org.opencontainers.image.description=${{ env.DOCKER_IMAGE_DESCRIPTION }}
+            org.opencontainers.image.source=${{ env.DOCKER_IMAGE_SOURCE }}
+            org.opencontainers.image.licenses=${{ env.DOCKER_IMAGE_LICENSE }}
+            org.opencontainers.image.authors=${{ env.DOCKER_IMAGE_AUTHORS }}
+            org.opencontainers.image.vendor=${{ env.DOCKER_IMAGE_VENDOR }}
             org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.licenses="GPL-3.0"
-            org.opencontainers.image.authors="All Things Linux"
-            org.opencontainers.image.vendor="All Things Linux"
-            org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
+            org.opencontainers.image.documentation=${{ env.DOCKER_IMAGE_DOCS }}
+      - name: Generate Release Version
+        id: release_version
+        run: ./.github/scripts/docker.sh generate-release-version \ "${{ github.ref }}"
+          \ "${{ env.SHA_PREFIX_LENGTH }}"
 
-      # PRODUCTION BUILD AND DEPLOYMENT
-      # Multi-platform build with advanced security and performance features
-      - name: Build and push
-        id: build
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
-        timeout-minutes: 20
+      # Build and push Docker image to GitHub Container Registry (GHCR)
+      # Uses docker/build-push-action@v6 with Buildx for advanced features
+      # Docs: https://github.com/docker/build-push-action
+      # Features used:
+      # - GitHub Actions cache (type=gha) for faster builds
+      # - Push to registry (push: true) for production images
+      # - Build metadata (tags/labels) for image identification
+      # - Build-time variables for versioning and traceability
+      # - Multi-tag support (semver versions + latest tag)
+      - name: Build & Push
+        uses: docker/build-push-action@v6
+        timeout-minutes: 15
         with:
+          # Build context directory (current directory)
           context: .
+          # Path to Containerfile (Dockerfile)
+          file: Containerfile
+          # Target stage to build (production stage in Containerfile)
           target: production
+          # Push image to GitHub Container Registry (ghcr.io)
           push: true
+          # Use GitHub Actions cache for faster builds
+          # Cache strategy: read from previous builds, write with max mode for future builds
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Image tags for identification (semver versions + latest from metadata extraction)
+          # Multiple tags created: v1.2.3, 1.2, 1, latest (for default branch)
           tags: ${{ steps.meta.outputs.tags }}
+          # OCI labels for image metadata (title, description, source, license, etc.)
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha     # Use GitHub Actions cache
-          cache-to: type=gha,mode=max    # Update cache comprehensively
-          # CONDITIONAL MULTI-PLATFORM BUILDS
-          # ARM64 builds only for tagged releases to save resources
-          platforms: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && contains(github.ref, 'v')) && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
-          # SECURITY ATTESTATIONS
-          # SLSA provenance and SBOM only for releases
-          provenance: ${{ startsWith(github.ref, 'refs/tags/') }}
-          sbom: ${{ startsWith(github.ref, 'refs/tags/') }}
-          annotations: ${{ steps.meta.outputs.annotations }}
+          # Build-time variables passed to Containerfile
           build-args: |
-            BUILDKIT_INLINE_CACHE=1
-            VERSION=${{ steps.version.outputs.version }}
-            GIT_SHA=${{ steps.version.outputs.git_sha }}
-            BUILD_DATE=${{ steps.version.outputs.build_date }}
-
-      # PRODUCTION IMAGE VERIFICATION
-      # Smoke test to verify image functionality and dependency availability
-      - name: Test pushed image
-        run: |
-          docker run --rm --name tux-prod-test \
-            --entrypoint python \
-            "$(echo '${{ steps.meta.outputs.tags }}' | head -1)" \
-            -c "import tux; import sqlite3; import asyncio; print('🔍 Testing production image...'); print('✅ Bot imports successfully'); print('✅ Dependencies available'); conn = sqlite3.connect(':memory:'); conn.close(); print('✅ Database connectivity working'); print('🎉 Production image verified!')"
-
-  # ============================================================================
-  # SECURITY SCANNING - Vulnerability Detection and Reporting
-  # ============================================================================
-  # Purpose: Comprehensive security scanning of built container images
-  # Tools: Trivy vulnerability scanner with SARIF output
-  # Integration: GitHub Security tab for centralized vulnerability management
-  # Scope: Critical and high severity vulnerabilities
-  # ============================================================================
-  security:
-    name: Security Scan
-    # EXECUTION CONDITIONS
-    # Runs after successful build, skips pull requests
-    if: github.event_name != 'pull_request'
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write    # Required for SARIF upload
-    steps:
-      # REPOSITORY CHECKOUT
-      # Required for Dockerfile analysis and security context
-      - name: Checkout repository
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+            VERSION=${{ steps.release_version.outputs.version }}
+            GIT_SHA=${{ github.sha }}
+            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+      - name: Scan Final Image
+        if: always()
+        uses: reviewdog/action-trivy@v1
         with:
-          fetch-depth: 0
-
-      # IMAGE REFERENCE EXTRACTION
-      # Gets the first (primary) image tag for security scanning
-      - name: Get first image tag
-        id: first_tag
-        run: echo "image=$(echo '${{ needs.build.outputs.image }}' | head -1)" >>
-          "$GITHUB_OUTPUT"
-
-      # TRIVY CACHE OPTIMIZATION
-      # Caches vulnerability database for faster subsequent scans
-      - name: Cache Trivy
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
-        with:
-          path: ~/.cache/trivy
-          key: cache-trivy-${{ hashFiles('Dockerfile') }}-${{ github.run_id }}
-          restore-keys: |
-            cache-trivy-${{ hashFiles('Dockerfile') }}-
-            cache-trivy-
-
-      # VULNERABILITY SCANNING EXECUTION
-      # Comprehensive container image security analysis
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ steps.first_tag.outputs.image }}
-          format: sarif              # GitHub Security compatible format
-          output: trivy-results.sarif
-          severity: CRITICAL,HIGH    # Focus on actionable vulnerabilities
-          scanners: vuln            # Vulnerability scanning only
-
-      # SECURITY RESULTS INTEGRATION
-      # Uploads scan results to GitHub Security tab for centralized management
-      - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3
-        with:
-          sarif_file: trivy-results.sarif
-
-  # ============================================================================
-  # CONTAINER REGISTRY CLEANUP - Automated Storage Management
-  # ============================================================================
-  # Purpose: Automated cleanup of old container images and build artifacts
-  # Schedule: Monthly cleanup to prevent registry storage bloat
-  # Strategy: Retains recent versions while removing older, unused images
-  # Safety: Conservative retention policy to prevent accidental data loss
-  # ============================================================================
-  cleanup:
-    name: Registry Cleanup
-    # EXECUTION CONDITIONS
-    # Runs on scheduled maintenance or manual trigger only
-    if: github.event_name != 'pull_request' && (github.event_name == 'schedule' ||
-      github.event_name == 'workflow_dispatch')
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write    # Required for container registry management
-    steps:
-      # AUTOMATED VERSION CLEANUP
-      # Removes old container versions while preserving recent releases
-      - name: Delete old container versions
-        uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5
-        with:
-          package-name: tux                         # Target package name
-          package-type: container                   # Container images only
-          min-versions-to-keep: 10                 # Safety buffer for rollbacks
-          delete-only-untagged-versions: false     # Clean tagged versions too
-
-      # LEGACY BUILDCACHE CLEANUP
-      # Cleans up any remaining build cache artifacts from previous configurations
-      - name: Delete buildcache images
-        continue-on-error: true    # Non-critical cleanup operation
-        run: |
-          echo "Cleaning up any remaining buildcache images..."
-          # This will help clean up existing buildcache images
-          # After our fix, no new buildcache images should be created
-# ==============================================================================
-# DOCKER WORKFLOW BEST PRACTICES IMPLEMENTED
-# ==============================================================================
-#
-# 1. SECURITY & COMPLIANCE:
-#    - Comprehensive vulnerability scanning with Trivy
-#    - SLSA provenance and SBOM generation for releases
-#    - Secure registry authentication with minimal permissions
-#    - Container content verification through smoke tests
-#    - SARIF integration for centralized security management
-#
-# 2. PERFORMANCE OPTIMIZATION:
-#    - Multi-level caching (GitHub Actions, BuildKit inline cache)
-#    - Conditional multi-platform builds to save resources
-#    - Build timeout controls to prevent resource waste
-#    - Efficient layer caching with cache-from/cache-to
-#    - Platform-specific optimizations (ARM64 only for releases)
-#
-# 3. RELIABILITY & MAINTAINABILITY:
-#    - Robust version determination with multiple fallback strategies
-#    - Comprehensive error handling and status reporting
-#    - Automated registry cleanup to prevent storage issues
-#    - Build validation on pull requests without deployment
-#    - Production image verification with functional testing
-#
-# 4. DEPLOYMENT STRATEGY:
-#    - Pull Request: Build validation only (no registry push)
-#    - Main Branch: Single-platform development builds
-#    - Tagged Releases: Multi-platform production builds with security attestations
-#    - Scheduled: Automated cleanup and maintenance operations
-#
-# CONTAINER REGISTRY STRUCTURE:
-# ------------------------------
-# ghcr.io/allthingslinux/tux:
-#   ├── latest                    # Latest main branch build
-#   ├── main                      # Main branch builds
-#   ├── v1.0.0, v1.1.0, etc.    # Release versions
-#   ├── sha-abcd1234             # Commit-based tags
-#   └── pr-123                   # Pull request builds (validation only)
-#
-# SUPPORTED PLATFORMS:
-# --------------------
-# - linux/amd64: All builds (development, testing, production)
-# - linux/arm64: Tagged releases only (v*.* patterns)
-#
-# SECURITY SCANNING:
-# ------------------
-# - Trivy vulnerability scanner (Critical + High severity)
-# - SARIF output integration with GitHub Security tab
-# - Automated security advisory notifications
-# - Container provenance and SBOM for supply chain security
-#
-# CACHE STRATEGY:
-# ---------------
-# - GitHub Actions cache: Build layer caching across workflow runs
-# - BuildKit inline cache: Container layer caching within builds
-# - Trivy cache: Vulnerability database caching for faster scans
-# - Multi-level fallback: Hierarchical cache keys for optimal hit rates
-#
-# ==============================================================================
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          trivy_command: image
+          trivy_target: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          trivy_version: v0.63.0
+          level: error
+          reporter: github-pr-review
+          tool_name: trivy-final
+          filter_mode: nofilter
+          trivy_flags: --severity HIGH,CRITICAL
