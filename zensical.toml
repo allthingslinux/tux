@@ -79,6 +79,7 @@ nav = [
             "developer/tutorials/index.md",
             "developer/tutorials/creating-first-cog.md",
             "developer/tutorials/creating-first-command.md",
+            "developer/tutorials/creating-first-migration.md",
             "developer/tutorials/database-integration.md",
             "developer/tutorials/development-setup.md",
             "developer/tutorials/first-contribution.md",
