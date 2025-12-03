@@ -9,13 +9,15 @@ from pathlib import Path
 from alembic import command
 from alembic.config import Config
 from loguru import logger
-from sqlalchemy import create_engine, text
 from sqlmodel import SQLModel
 
 from tux.core.setup.base import BaseSetupService
 from tux.database.service import DatabaseService
 from tux.shared.config import CONFIG
-from tux.shared.exceptions import TuxDatabaseConnectionError
+from tux.shared.exceptions import (
+    TuxDatabaseConnectionError,
+    TuxDatabaseMigrationError,
+)
 
 __all__ = ["DatabaseSetupService"]
 
@@ -76,89 +78,69 @@ class DatabaseSetupService(BaseSetupService):
         """
         Run Alembic upgrade to head on startup.
 
-        This call is idempotent and safe to run on startup. If database is
-        unavailable, migrations are skipped with a warning. Runs migration
-        synchronously with a short timeout. Unlike other setup steps, this method
-        does not raise exceptions on failure. If migrations cannot run (e.g., database
-        unavailable), it logs a warning and continues, allowing the bot to start
-        without blocking on migrations.
+        This call is idempotent and safe to run on startup. Runs migration
+        synchronously with a timeout. If migrations fail for any reason (database
+        unavailable, migration errors, timeout), this method raises an exception
+        to prevent the bot from starting with an inconsistent database state.
+
+        Raises
+        ------
+        TuxDatabaseMigrationError
+            If database is unavailable, migrations fail, or migration check times out.
         """
-        try:
-            cfg = self._build_alembic_config()
-            logger.info("Checking database migrations...")
+        cfg = self._build_alembic_config()
+        logger.info("Checking database migrations...")
 
-            # First check if we can connect to the database quickly
-            # If not, skip migrations entirely to avoid blocking startup
-            loop = asyncio.get_event_loop()
+        loop = asyncio.get_event_loop()
 
-            def _check_db_available():
-                try:
-                    # Convert async URL to sync for this check
-                    db_url = CONFIG.database_url
-                    if db_url.startswith("postgresql+psycopg_async://"):
-                        db_url = db_url.replace(
-                            "postgresql+psycopg_async://",
-                            "postgresql+psycopg://",
-                            1,
-                        )
+        # Database is available (already connected in setup()), run migrations with a timeout
+        def _run_migration_sync():
+            try:
+                # Check current revision first (stdout already suppressed via Config)
+                current_rev = command.current(cfg)
+                logger.debug(f"Current database revision: {current_rev}")
 
-                    engine = create_engine(db_url, connect_args={"connect_timeout": 2})
-                    with engine.connect() as conn:
-                        conn.execute(text("SELECT 1"))
-                except Exception:
-                    return False
+                # Check if we need to upgrade
+                head_rev = command.heads(cfg)
+                logger.debug(f"Head revision: {head_rev}")
+
+                # Only run upgrade if we're not already at head
+                if current_rev != head_rev:
+                    logger.info("Running database migrations...")
+                    # Run the upgrade
+                    command.upgrade(cfg, "head")
+                    logger.info("Database migrations completed")
                 else:
-                    return True
+                    logger.info("Database is already up to date")
+            except Exception as e:
+                error_msg = f"Failed to run database migrations: {e}"
+                logger.error(error_msg)
+                raise TuxDatabaseMigrationError(error_msg) from e
 
-            # Quick database availability check
-            db_available = await loop.run_in_executor(None, _check_db_available)
-
-            if not db_available:
-                logger.warning(
-                    "Database not available - skipping migrations during startup",
-                )
-                logger.info("Run migrations manually when database is available")
-                return
-
-            # Database is available, run migrations with a reasonable timeout
-            def _run_migration_sync():
-                try:
-                    # Check current revision first (stdout already suppressed via Config)
-                    current_rev = command.current(cfg)
-                    logger.debug(f"Current database revision: {current_rev}")
-
-                    # Check if we need to upgrade
-                    head_rev = command.heads(cfg)
-                    logger.debug(f"Head revision: {head_rev}")
-
-                    # Only run upgrade if we're not already at head
-                    if current_rev != head_rev:
-                        logger.info("Running database migrations...")
-                        # Run the upgrade
-                        command.upgrade(cfg, "head")
-                        logger.info("Database migrations completed")
-                    else:
-                        logger.info("Database is already up to date")
-                except Exception as e:
-                    logger.warning(f"Could not run migrations: {e}")
-                    logger.info(
-                        "Database may be unavailable - migrations skipped for now",
-                    )
-                    logger.info("Run migrations manually when database is available")
-
+        try:
             # Run migrations with a timeout
             await asyncio.wait_for(
                 loop.run_in_executor(None, _run_migration_sync),
                 timeout=30.0,  # 30 second timeout for actual migrations
             )
-
-        except TimeoutError:
-            logger.warning("Migration check timed out - skipping migrations")
-            logger.info("Run migrations manually when database is available")
+        except TimeoutError as e:
+            error_msg = (
+                "Migration check timed out after 30 seconds. "
+                "Database may be slow or migrations may be blocking. "
+                "Run migrations manually with 'uv run db push'"
+            )
+            logger.error(error_msg)
+            raise TuxDatabaseMigrationError(error_msg) from e
+        except TuxDatabaseMigrationError:
+            # Re-raise migration errors as-is
+            raise
         except Exception as e:
-            logger.warning(f"Migration check failed: {e}")
-            logger.info("Database may be unavailable - migrations skipped for now")
-            logger.info("Run migrations manually when database is available")
+            error_msg = (
+                f"Unexpected error during migration check: {e}. "
+                "Run migrations manually with 'uv run db push'"
+            )
+            logger.error(error_msg)
+            raise TuxDatabaseMigrationError(error_msg) from e
 
     async def setup(self) -> None:
         """

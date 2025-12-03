@@ -60,8 +60,9 @@ class BotSetupOrchestrator:
             # The underlying error is already logged and captured by safe_setup()
             # This error provides context that database setup failed at the orchestrator level
             msg = (
-                "Database setup failed. Check logs and Sentry for the underlying connection error. "
-                "Common causes: database not running, incorrect connection string, or network issues."
+                "Database setup failed. Check logs and Sentry for the underlying error. "
+                "Common causes: database not running, incorrect connection string, network issues, "
+                "or migration failures. Run migrations manually with 'uv run db push' if needed."
             )
             raise TuxDatabaseConnectionError(msg)
         set_setup_phase_tag(span, "database", "finished")

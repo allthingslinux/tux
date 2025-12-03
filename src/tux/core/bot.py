@@ -156,9 +156,10 @@ class Tux(commands.Bot):
                 await orchestrator.setup(span)
 
         except TuxDatabaseConnectionError as e:
-            # Database connection failure is critical - provide helpful error message
+            # Database connection or migration failure is critical - provide helpful error message
             # Error details already logged by database service, just provide hint
             logger.info("To start the database, run: uv run docker up")
+            logger.info("To run migrations manually, run: uv run db push")
             capture_database_error(e, operation="connection")
             # Re-raise the original exception to preserve error type
             raise
