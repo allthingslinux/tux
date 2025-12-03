@@ -53,9 +53,7 @@ RUN apt-get update && \
         && apt-get clean \
         && rm -rf /var/lib/apt/lists/*
 
-ENV UV_VERSION=0.8.0
-
-RUN pip install uv==$UV_VERSION
+RUN pip install uv==0.8.0
 
 WORKDIR /app
 
@@ -201,6 +199,8 @@ USER nonroot
 
 USER root
 
+# TODO: Replace hardcoded python3.13 paths with dynamic version detection
+# These paths need manual updates when upgrading to Python 3.14+
 RUN set -eux; \
         find /app/.venv -name "*.pyc" -delete; \
         find /app/.venv -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true; \
