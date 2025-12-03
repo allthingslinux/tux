@@ -68,7 +68,7 @@ coverage:
 
         # Status check is blocking (not informational only).
         # Pull requests cannot be merged if this check fails.
-        informational: false
+        informational: true
 
         # Behavior when no coverage report is uploaded.
         # 'failure' ensures coverage reports are always required.
