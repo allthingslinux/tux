@@ -36,25 +36,49 @@ The Renovate configuration is located at `.github/renovate.json5` and uses JSON5
     "extends": [
         "config:best-practices",
         ":semanticCommits",
-        ":separateMultipleMajorReleases"
+        ":separateMultipleMajorReleases",
+        "customManagers:githubActionsVersions",
+        "security:openssf-scorecard"
     ],
     "schedule": ["before 4am on Monday"],
     "timezone": "America/New_York",
     "dependencyDashboard": true,
-    "dependencyDashboardOSVVulnerabilitySummary": "unresolved"
+    "dependencyDashboardOSVVulnerabilitySummary": "unresolved",
+    "nix": {
+        "enabled": true
+    }
 }
 ```
 
+**Presets Explained**:
+
+- **`config:best-practices`**: Includes recommended settings, Docker digest pinning, GitHub Actions digest pinning, config migration, dev dependency pinning, and abandonment detection
+- **`:semanticCommits`**: Uses conventional commits format (`chore(deps): update ...`)
+- **`:separateMultipleMajorReleases`**: Separates sequential major versions (v1→v2, v2→v3 as separate PRs)
+- **`customManagers:githubActionsVersions`**: Detects and updates `_VERSION` environment variables in GitHub Actions workflows
+- **`security:openssf-scorecard`**: Adds OpenSSF security score badges to PRs for GitHub-hosted packages
+
 **Key Settings**:
 
-- Uses Renovate's best practices preset with semantic commits
-- Separates multiple major releases into individual PRs
 - Runs weekly on Monday mornings before 4am ET
+- Uses America/New_York timezone for scheduling
 - Dependency dashboard shows unresolved OSV vulnerabilities
+- Nix flake support explicitly enabled (beta feature)
 
 ### Enabled Managers
 
-Renovate monitors: `github-actions`, `pep621` (Python dependencies), `docker-compose`, `dockerfile`, `custom.regex`, `devcontainer`, `pre-commit`, and `nix` files.
+Renovate monitors these file types:
+
+| Manager | Files Monitored | Purpose |
+|---------|----------------|---------|
+| `github-actions` | `.github/workflows/*.yml` | GitHub Actions workflow dependencies |
+| `pep621` | `pyproject.toml`, `uv.lock` | Python dependencies and lock file |
+| `docker-compose` | `compose.yaml` | Docker Compose service images |
+| `dockerfile` | `Containerfile` | Dockerfile base images and dependencies |
+| `custom.regex` | Various (via custom patterns) | Custom version variables (e.g., `PYTHON_VERSION`) |
+| `devcontainer` | `.devcontainer/devcontainer.json` | Dev container images and features |
+| `pre-commit` | `.pre-commit-config.yaml` | Pre-commit hook versions |
+| `nix` | `flake.nix`, `flake.lock` | Nix flake inputs and lock file |
 
 ### PR Limits and Behavior
 
@@ -121,6 +145,10 @@ Security updates are detected via OSV, labeled with `deps: security`, and requir
 | **test** | All packages in `test` dependency group (pytest, pytest-*, py-pglite) | ✅ Branch | `deps: test` | Weekly |
 | **docs** | `zensical` | 🚩 Manual | `deps: docs`, `deps: needs-review` | Monthly |
 | **types** | `/^types-/`, `annotated-types`, `asyncpg-stubs` | ✅ Branch | `deps: types` | Monthly |
+| **actions** | All GitHub Actions | ✅ Branch | `deps: github-actions` | Weekly |
+| **docker-compose** | All Docker Compose images | ✅ Branch | `deps: docker` | Weekly |
+| **dockerfile** | All Dockerfile dependencies | ✅ Branch | `deps: docker` | Weekly |
+| **nix** | All Nix flake inputs | ✅ Branch | `deps: nix` | Weekly |
 
 ### Critical Runtime Dependencies
 
@@ -137,14 +165,13 @@ These packages are critical to Tux's core functionality. Major version updates r
 
 | Package/Manager | Update Type | Auto-merge | Priority | Labels | Notes |
 |----------------|-------------|------------|----------|--------|-------|
-| `basedpyright` | Minor/Patch | ✅ Branch | — | `deps: dev` | Pinned package (`==1.29.5`), individual PR |
-| `zensical` | All | 🚩 Manual | — | `deps: docs`, `deps: needs-review` | Individual PR, monthly schedule |
-| GitHub Actions | All | ✅ Branch | — | `deps: github-actions` | Grouped as "actions" |
-| Docker Compose | All | ✅ Branch | — | `deps: docker` | Grouped as "docker-compose" |
-| Dockerfile | All | ✅ Branch | — | `deps: docker` | Grouped as "dockerfile" |
-| Python (Dockerfile) | Patch/Minor (`3.13.x`) | ✅ Branch | `5` | `deps: python`, `deps: docker` | Within version series |
-| Python (Dockerfile) | Major | 🚩 Manual | `10` | `deps: python`, `deps: docker`, `deps: needs-review` | Individual PR |
-| Python (Dockerfile) | Minor (outside `3.13.x`) | 🚩 Manual | `8` | `deps: python`, `deps: docker`, `deps: needs-review` | Individual PR |
+| `basedpyright` | Minor/Patch | ✅ Branch | — | `deps: dev` | Pinned version (`==1.29.5`), only minor/patch allowed |
+| `uv` | All | 🚩 Manual | `5` | `deps: docker`, `deps: needs-review` | Package manager, requires review |
+| `zensical` | All | 🚩 Manual | — | `deps: docs`, `deps: needs-review` | Documentation tool, monthly schedule |
+| Python (Dockerfile) | Patch/Minor (`3.13.x`) | ✅ Branch | `5` | `deps: python`, `deps: docker` | Within version series, auto-merge |
+| Python (Dockerfile) | Major | 🚩 Manual | `10` | `deps: python`, `deps: docker`, `deps: needs-review` | Requires review |
+| Python (Dockerfile) | Minor (outside `3.13.x`) | 🚩 Manual | `8` | `deps: python`, `deps: docker`, `deps: needs-review` | Requires review |
+| `PYTHON_VERSION` (workflows) | All | Follows Dockerfile rules | — | `deps: python` | Detected via custom manager, updated with Dockerfile |
 
 ### Lock File Maintenance
 
@@ -158,7 +185,12 @@ These packages are critical to Tux's core functionality. Major version updates r
 }
 ```
 
-Automatically maintains `uv.lock` file weekly with auto-merge enabled.
+Automatically maintains lock files weekly with auto-merge enabled:
+
+- **`uv.lock`**: Python dependency lock file
+- **`flake.lock`**: Nix flake lock file
+
+Lock file updates are silent (branch automerge) if tests pass, creating a PR only if tests fail.
 
 ## PR Configuration
 
@@ -166,21 +198,40 @@ Automatically maintains `uv.lock` file weekly with auto-merge enabled.
 {
     "fetchChangeLogs": "pr",
     "commitBodyTable": true,
-    "prBodyColumns": ["Package", "Update", "Type", "Change", "References"],
+    "prBodyColumns": [
+        "Package",
+        "Update",
+        "Type",
+        "Change",
+        "Age",
+        "Confidence",
+        "OpenSSF",
+        "References"
+    ],
     "suppressNotifications": ["prIgnoreNotification"]
 }
 ```
 
-PRs include changelogs, commit body tables, custom columns, and suppressed ignore notifications.
+**PR Features**:
+
+- **Changelogs**: Fetched and displayed in PR body
+- **Commit Body Table**: Structured table in commit messages
+- **Age Badge**: Shows how old the release is (🟢 >3 days, 🟡 1-3 days, 🔴 <1 day)
+- **Confidence Badge**: Merge confidence score (🟢 High, 🟡 Medium, 🔴 Low)
+- **OpenSSF Badge**: Security scorecard for GitHub-hosted packages (score 0-10)
+- **Suppressed Notifications**: No notifications when PRs are ignored/closed
 
 ## Workflow
 
 1. **Weekly Schedule**: Runs every Monday before 4am ET (most updates)
-2. **Monthly Schedule**: Types and docs updates run on the first of the month at 4am ET
+2. **Monthly Schedule**: Type stubs and documentation tools run on the first of the month at 4am ET
 3. **PR Creation**: Creates PRs after CI checks complete (24 hour wait)
-4. **Auto-merge**: Automatically merges PRs that pass CI (for enabled rules) using branch automerge
-5. **Manual Review**: Major updates, critical dependencies, and zensical updates require manual review
-6. **Grouping**: Related dependencies are grouped to reduce PR noise
+4. **Branch Automerge**: Automatically merges passing updates directly to main branch (silent, no PR)
+5. **PR Automerge**: Creates PR only if tests fail (for visibility)
+6. **Manual Review**: Major updates, critical dependencies, UV, and Zensical require manual review
+7. **Grouping**: Related dependencies grouped to reduce noise
+8. **Stability Waiting**: Waits 14 days after release before automerging (lets community find bugs)
+9. **Digest Pinning**: All Docker images and GitHub Actions pinned to commit digests for security
 
 ## PR Examples
 
@@ -226,35 +277,157 @@ PRs include changelogs, commit body tables, custom columns, and suppressed ignor
 - **Labels**: `deps: types`
 - **Behavior**: All type stubs grouped together, auto-merged, monthly schedule
 
+### Nix Flake Inputs
+
+- **Title**: `chore(deps): update nix`
+- **Labels**: `deps: nix`
+- **Behavior**: All Nix flake inputs grouped together, auto-merged
+
+### Lock File Updates
+
+- **Title**: `chore(deps): lock file maintenance`
+- **Labels**: None (default)
+- **Behavior**: Updates `uv.lock` and `flake.lock`, auto-merged, weekly schedule
+
 ## PR Labels
 
 | Label | Description |
 |-------|-------------|
-| `deps: patch` | Patch updates |
-| `deps: minor` | Minor updates |
-| `deps: major` | Major updates |
-| `deps: security` | Security updates |
-| `deps: critical` | Critical runtime dependencies |
-| `deps: dev` | Development dependencies |
-| `deps: test` | Test dependencies |
-| `deps: docs` | Documentation dependencies |
-| `deps: types` | Type stubs |
+| `deps: patch` | Patch updates (grouped) |
+| `deps: minor` | Minor updates (grouped) |
+| `deps: major` | Major updates (grouped) |
+| `deps: security` | Security/vulnerability updates |
+| `deps: critical` | Critical runtime dependencies (discord-py, sqlmodel, pydantic, etc.) |
+| `deps: dev` | Development dependencies (ruff, basedpyright, yamllint, etc.) |
+| `deps: test` | Test dependencies (pytest, pytest-*, py-pglite) |
+| `deps: docs` | Documentation dependencies (zensical) |
+| `deps: types` | Type stubs (types-*, annotated-types, asyncpg-stubs) |
 | `deps: github-actions` | GitHub Actions updates |
-| `deps: docker` | Docker-related updates |
-| `deps: python` | Python version updates |
-| `deps: needs-review` | Requires manual review |
+| `deps: docker` | Docker-related updates (images, compose, containers) |
+| `deps: python` | Python version updates (Dockerfile, workflows) |
+| `deps: nix` | Nix flake inputs |
+| `deps: needs-review` | Requires manual review before merging |
+
+## Security Features
+
+Tux's Renovate configuration includes comprehensive security measures:
+
+### Vulnerability Detection
+
+- **GitHub Vulnerability Alerts**: Native GitHub security advisories
+- **OSV Vulnerability Alerts**: Open Source Vulnerabilities database (broader coverage)
+- **Dashboard Summary**: Unresolved vulnerabilities shown in dependency dashboard
+- **Security Labels**: All vulnerability PRs labeled with `deps: security`
+- **Manual Review**: Security updates never auto-merge (always require review)
+
+### Digest Pinning
+
+- **Docker Images**: All Docker images pinned to SHA256 digests (prevents tag hijacking)
+- **GitHub Actions**: All actions pinned to commit SHA digests (prevents supply chain attacks)
+- **Automatic Updates**: Digests updated when tags change
+
+### Release Stability
+
+- **14-Day Minimum Age**: Waits 14 days before automerging updates (lets community find issues)
+- **Abandonment Detection**: Warns when packages haven't released in 1 year
+- **OpenSSF Scorecard**: Shows security scores for GitHub-hosted packages
+
+### Example Pinned Dependencies
+
+**Before Renovate:**
+
+```yaml
+image: postgres:17-alpine
+uses: actions/checkout@v5
+```
+
+**After Renovate:**
+
+```yaml
+image: postgres:17-alpine@sha256:abc123...
+uses: actions/checkout@abc123def456...abc123def456 # v5
+```
 
 ## Monitoring
 
-The dependency dashboard issue provides an overview of all dependencies, unresolved OSV vulnerabilities, update status, and links to open PRs.
+The dependency dashboard issue provides:
+
+- Overview of all pending updates
+- Unresolved OSV vulnerabilities
+- Update status and approval workflow
+- Links to open PRs
+- Ability to request immediate updates (bypassing schedule)
 
 ## Related Documentation
 
 - **[SBOM](./sbom.md)** - Software Bill of Materials with all dependencies
 - **[Versioning](./versioning.md)** - Version management and semantic versioning
 
+## Noise Reduction Strategy
+
+Tux's configuration implements advanced noise reduction:
+
+### Silent Updates (Branch Automerge)
+
+Most updates merge **silently** without creating PRs:
+
+- ✅ Patch updates (after 14 days)
+- ✅ Minor updates (after 14 days)
+- ✅ Critical minor/patch (after 14 days)
+- ✅ Dev tools
+- ✅ Test dependencies
+- ✅ Type stubs (monthly)
+- ✅ GitHub Actions
+- ✅ Docker images
+- ✅ Nix inputs
+- ✅ Lock file maintenance
+
+**Result**: You only see PRs when something needs review or tests fail.
+
+### Rate Limiting
+
+- **Max 3 concurrent PRs**: Prevents overwhelming your review queue
+- **Max 2 PRs per hour**: Slow rollout for easier management
+- **24-hour wait**: PRs created only after tests complete (branch automerge has time to work)
+
+### Smart Scheduling
+
+- **Weekly**: Most updates (Monday 4am ET, outside work hours)
+- **Monthly**: Low-priority updates (types, docs - 1st of month, 4am ET)
+- **Urgent**: Security updates bypass schedule
+
+### Expected Weekly Noise
+
+- **Best case**: 0 PRs (everything auto-merged silently)
+- **Typical case**: 1-2 PRs (major updates requiring review)
+- **Worst case**: 3 PRs (concurrent limit reached)
+
+## Advanced Features
+
+### Custom Version Detection
+
+Renovate detects and updates version variables in GitHub Actions workflows:
+
+```yaml
+env:
+  # renovate: datasource=python-version depName=python
+  PYTHON_VERSION: 3.13.8
+```
+
+This keeps Python versions synchronized across Dockerfile and all workflows.
+
+### Automated Fixes
+
+Includes community-sourced workarounds for known package issues:
+
+- Alpine edge build prevention
+- Docker versioning quirks
+- Package-specific compatibility handling
+
 ## Resources
 
 - **[Renovate Documentation](https://docs.renovatebot.com/)** - Official Renovate documentation
 - **[Renovate Presets](https://docs.renovatebot.com/presets-config/)** - Available configuration presets
 - **[Renovate GitHub App](https://github.com/apps/renovate)** - Install Renovate GitHub App
+- **[OpenSSF Scorecard](https://securityscorecards.dev/)** - Security scorecard information
+- **[OSV Database](https://osv.dev/)** - Open Source Vulnerabilities database
