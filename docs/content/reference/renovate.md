@@ -20,7 +20,7 @@ Renovate helps maintain Tux by:
 
 - **Security Updates**: Automatically detects OSV vulnerabilities, labels security PRs, and shows unresolved vulnerabilities in the dependency dashboard
 - **Dependency Maintenance**: Keeps dependencies current with weekly scheduled updates, grouped PRs to reduce noise, and automatic lock file maintenance
-- **Quality Assurance**: All PRs must pass CI checks before auto-merge, waits 14 days after release for stability, uses semantic commits, and includes changelogs in PR descriptions
+- **Quality Assurance**: All PRs must pass CI checks before auto-merge, waits 7 days after release for stability, uses semantic commits, and includes changelogs in PR descriptions
 
 ## Configuration File
 
@@ -44,6 +44,9 @@ The Renovate configuration is located at `.github/renovate.json5` and uses JSON5
     "timezone": "America/New_York",
     "dependencyDashboard": true,
     "dependencyDashboardOSVVulnerabilitySummary": "unresolved",
+    "platformAutomerge": true,
+    "rebaseWhen": "conflicted",
+    "semanticCommitScope": "deps",
     "nix": {
         "enabled": true
     }
@@ -84,11 +87,11 @@ Renovate monitors these file types:
 
 | Setting | Value | Description |
 |---------|-------|-------------|
-| `prConcurrentLimit` | `3` | Maximum open PRs at once |
-| `prHourlyLimit` | `2` | Maximum PRs created per hour |
+| `prConcurrentLimit` | `10` | Maximum open PRs at once |
+| `prHourlyLimit` | `10` | Maximum PRs created per hour |
 | `prCreation` | `not-pending` | Waits 24 hours after CI completes before creating PR |
 | `platformAutomerge` | `true` | Uses GitHub's native auto-merge |
-| `rebaseWhen` | `auto` | Automatically rebases PRs when base branch updates |
+| `rebaseWhen` | `conflicted` | Rebases PRs only when conflicted (more efficient) |
 | `recreateWhen` | `auto` | Recreates PRs when needed |
 
 ### Vulnerability Alerts
@@ -114,7 +117,7 @@ Security updates are detected via OSV, labeled with `deps: security`, and requir
 | `separateMajorMinor` | `true` | Major updates are separated |
 | `updateNotScheduled` | `true` | Allows updates outside schedule for urgent fixes |
 | `rangeStrategy` | `update-lockfile` | Updates lock file when version ranges change |
-| `constraints.python` | `>=3.13.2,<3.14` | Constrained to Python 3.13.x |
+| `constraints.python` | `>=3.14,<3.15` | Constrained to Python 3.14.x |
 
 ## Package Rules
 
@@ -122,11 +125,11 @@ Security updates are detected via OSV, labeled with `deps: security`, and requir
 
 | Update Type | Grouping | Auto-merge | Release Age | Labels |
 |-------------|----------|------------|-------------|--------|
-| **Patch** | Grouped | ✅ Branch | 14 days | `deps: patch` |
-| **Minor** | Grouped | ✅ Branch | 14 days | `deps: minor` |
-| **Major** | Grouped | 🚩 Manual | — | `deps: major`, `deps: needs-review` |
+| **Patch** | Grouped | ✅ Branch | 7 days | `deps: patch` |
+| **Minor** | Grouped | ✅ Branch | 7 days | `deps: minor` |
+| **Major** | Grouped | 🚩 Manual | — | `deps: major`, `deps: needs-review`, `breaking` |
 
-**Notes**: Minor updates exclude `0.x.x` versions (unstable). Major updates require manual review.
+**Notes**: Minor updates exclude `0.x.x` versions (unstable). Major updates require manual review and are marked with `breaking` label.
 
 ### Dependency Group Rules
 
@@ -146,8 +149,8 @@ Security updates are detected via OSV, labeled with `deps: security`, and requir
 | **docs** | `zensical` | 🚩 Manual | `deps: docs`, `deps: needs-review` | Monthly |
 | **types** | `/^types-/`, `annotated-types`, `asyncpg-stubs` | ✅ Branch | `deps: types` | Monthly |
 | **actions** | All GitHub Actions | ✅ Branch | `deps: github-actions` | Weekly |
-| **docker-compose** | All Docker Compose images | ✅ Branch | `deps: docker` | Weekly |
-| **dockerfile** | All Dockerfile dependencies | ✅ Branch | `deps: docker` | Weekly |
+| **docker** | Docker Compose + Dockerfile dependencies | ✅ Branch | `deps: docker` | Weekly |
+| **python runtime** | `.python-version`, workflows, Dockerfile Python version | See below | `deps: python` | Weekly |
 | **nix** | All Nix flake inputs | ✅ Branch | `deps: nix` | Weekly |
 
 ### Critical Runtime Dependencies
@@ -158,20 +161,20 @@ These packages are critical to Tux's core functionality. Major version updates r
 
 | Update Type | Auto-merge | Priority | Labels | Notes |
 |-------------|------------|----------|--------|-------|
-| **Major** | 🚩 Manual | `10` | `deps: critical`, `deps: needs-review` | All critical packages grouped together |
-| **Minor/Patch** | ✅ Branch | `5` | `deps: critical` | 14 day wait, all critical packages grouped together |
+| **All** | Inherits from global rules | `10` | `deps: critical` | 7 day wait, grouped together |
+
+Critical packages inherit behavior from global update type rules (patch/minor auto-merge, major needs review).
 
 ### Special Cases
 
 | Package/Manager | Update Type | Auto-merge | Priority | Labels | Notes |
 |----------------|-------------|------------|----------|--------|-------|
-| `basedpyright` | Minor/Patch | ✅ Branch | — | `deps: dev` | Pinned version (`==1.29.5`), only minor/patch allowed |
 | `uv` | All | 🚩 Manual | `5` | `deps: docker`, `deps: needs-review` | Package manager, requires review |
 | `zensical` | All | 🚩 Manual | — | `deps: docs`, `deps: needs-review` | Documentation tool, monthly schedule |
-| Python (Dockerfile) | Patch/Minor (`3.13.x`) | ✅ Branch | `5` | `deps: python`, `deps: docker` | Within version series, auto-merge |
-| Python (Dockerfile) | Major | 🚩 Manual | `10` | `deps: python`, `deps: docker`, `deps: needs-review` | Requires review |
-| Python (Dockerfile) | Minor (outside `3.13.x`) | 🚩 Manual | `8` | `deps: python`, `deps: docker`, `deps: needs-review` | Requires review |
-| `PYTHON_VERSION` (workflows) | All | Follows Dockerfile rules | — | `deps: python` | Detected via custom manager, updated with Dockerfile |
+| **Python runtime** | Patch | ✅ Branch | `10` | `deps: python` | Auto-merge after 3 days |
+| **Python runtime** | Minor/Major | 🚩 Manual | `10` | `deps: python`, `deps: needs-review`, `breaking` | Requires review |
+
+**Python Runtime**: Groups updates to `.python-version`, `PYTHON_VERSION` in workflows, and Dockerfile Python version. All files update together in one PR.
 
 ### Lock File Maintenance
 
@@ -205,7 +208,6 @@ Lock file updates are silent (branch automerge) if tests pass, creating a PR onl
         "Change",
         "Age",
         "Confidence",
-        "OpenSSF",
         "References"
     ],
     "suppressNotifications": ["prIgnoreNotification"]
@@ -216,9 +218,8 @@ Lock file updates are silent (branch automerge) if tests pass, creating a PR onl
 
 - **Changelogs**: Fetched and displayed in PR body
 - **Commit Body Table**: Structured table in commit messages
-- **Age Badge**: Shows how old the release is (🟢 >3 days, 🟡 1-3 days, 🔴 <1 day)
+- **Age Badge**: Shows how old the release is (🟢 >7 days, 🟡 3-7 days, 🔴 <3 days)
 - **Confidence Badge**: Merge confidence score (🟢 High, 🟡 Medium, 🔴 Low)
-- **OpenSSF Badge**: Security scorecard for GitHub-hosted packages (score 0-10)
 - **Suppressed Notifications**: No notifications when PRs are ignored/closed
 
 ## Workflow
@@ -228,10 +229,11 @@ Lock file updates are silent (branch automerge) if tests pass, creating a PR onl
 3. **PR Creation**: Creates PRs after CI checks complete (24 hour wait)
 4. **Branch Automerge**: Automatically merges passing updates directly to main branch (silent, no PR)
 5. **PR Automerge**: Creates PR only if tests fail (for visibility)
-6. **Manual Review**: Major updates, critical dependencies, UV, and Zensical require manual review
+6. **Manual Review**: Major updates, Python minor/major, uv, and Zensical require manual review
 7. **Grouping**: Related dependencies grouped to reduce noise
-8. **Stability Waiting**: Waits 14 days after release before automerging (lets community find bugs)
+8. **Stability Waiting**: Waits 7 days after release before automerging (3 days for Python patches)
 9. **Digest Pinning**: All Docker images and GitHub Actions pinned to commit digests for security
+10. **Breaking Labels**: All major updates automatically labeled as `breaking`
 
 ## PR Examples
 
@@ -296,6 +298,7 @@ Lock file updates are silent (branch automerge) if tests pass, creating a PR onl
 | `deps: patch` | Patch updates (grouped) |
 | `deps: minor` | Minor updates (grouped) |
 | `deps: major` | Major updates (grouped) |
+| `breaking` | Major version updates (potentially breaking changes) |
 | `deps: security` | Security/vulnerability updates |
 | `deps: critical` | Critical runtime dependencies (discord-py, sqlmodel, pydantic, etc.) |
 | `deps: dev` | Development dependencies (ruff, basedpyright, yamllint, etc.) |
@@ -304,7 +307,7 @@ Lock file updates are silent (branch automerge) if tests pass, creating a PR onl
 | `deps: types` | Type stubs (types-*, annotated-types, asyncpg-stubs) |
 | `deps: github-actions` | GitHub Actions updates |
 | `deps: docker` | Docker-related updates (images, compose, containers) |
-| `deps: python` | Python version updates (Dockerfile, workflows) |
+| `deps: python` | Python version updates (.python-version, workflows, Dockerfile) |
 | `deps: nix` | Nix flake inputs |
 | `deps: needs-review` | Requires manual review before merging |
 
@@ -328,7 +331,8 @@ Tux's Renovate configuration includes comprehensive security measures:
 
 ### Release Stability
 
-- **14-Day Minimum Age**: Waits 14 days before automerging updates (lets community find issues)
+- **7-Day Minimum Age**: Waits 7 days before automerging updates (lets community find issues)
+- **Python Patch**: 3-day minimum for Python patch updates (faster security fixes)
 - **Abandonment Detection**: Warns when packages haven't released in 1 year
 - **OpenSSF Scorecard**: Shows security scores for GitHub-hosted packages
 
@@ -371,9 +375,10 @@ Tux's configuration implements advanced noise reduction:
 
 Most updates merge **silently** without creating PRs:
 
-- ✅ Patch updates (after 14 days)
-- ✅ Minor updates (after 14 days)
-- ✅ Critical minor/patch (after 14 days)
+- ✅ Patch updates (after 7 days)
+- ✅ Minor updates (after 7 days)
+- ✅ Critical packages (after 7 days, inherits patch/minor behavior)
+- ✅ Python patch updates (after 3 days)
 - ✅ Dev tools
 - ✅ Test dependencies
 - ✅ Type stubs (monthly)
@@ -386,8 +391,8 @@ Most updates merge **silently** without creating PRs:
 
 ### Rate Limiting
 
-- **Max 3 concurrent PRs**: Prevents overwhelming your review queue
-- **Max 2 PRs per hour**: Slow rollout for easier management
+- **Max 10 concurrent PRs**: Allows parallel updates while preventing overwhelm
+- **Max 10 PRs per hour**: Controlled rollout for stability
 - **24-hour wait**: PRs created only after tests complete (branch automerge has time to work)
 
 ### Smart Scheduling
@@ -400,7 +405,7 @@ Most updates merge **silently** without creating PRs:
 
 - **Best case**: 0 PRs (everything auto-merged silently)
 - **Typical case**: 1-2 PRs (major updates requiring review)
-- **Worst case**: 3 PRs (concurrent limit reached)
+- **Worst case**: 10 PRs (concurrent limit reached)
 
 ## Advanced Features
 
@@ -411,10 +416,24 @@ Renovate detects and updates version variables in GitHub Actions workflows:
 ```yaml
 env:
   # renovate: datasource=python-version depName=python
-  PYTHON_VERSION: 3.13.8
+  PYTHON_VERSION: 3.14.0
 ```
 
-This keeps Python versions synchronized across Dockerfile and all workflows.
+**Custom Manager for `.python-version`**:
+
+Renovate also tracks the `.python-version` file using a custom regex manager:
+
+```json5
+{
+    "customType": "regex",
+    "fileMatch": ["^\\.python-version$"],
+    "matchStrings": ["(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+    "datasourceTemplate": "python-version",
+    "depNameTemplate": "python"
+}
+```
+
+This ensures `.python-version`, `PYTHON_VERSION` in workflows, and Dockerfile Python versions all update together in one PR.
 
 ### Automated Fixes
 

@@ -24,8 +24,9 @@
         'nix',
     ],
     platformAutomerge: true,
-    rebaseWhen: 'auto',
+    rebaseWhen: 'conflicted',
     osvVulnerabilityAlerts: true,
+    semanticCommitScope: 'deps',
     fetchChangeLogs: 'pr',
     commitBodyTable: true,
     prConcurrentLimit: 10,
@@ -41,30 +42,16 @@
     },
     packageRules: [
         {
-            matchPackageNames: [
-                'discord-py',
-                'sqlmodel',
-                'sqlalchemy',
-                'pydantic',
-                'pydantic-settings',
-                'alembic',
-                'alembic-postgresql-enum',
-                'alembic-utils',
-                'asyncpg',
-                'psycopg',
-            ],
+            // Mark major version bumps with breaking label
             matchUpdateTypes: [
                 'major',
             ],
-            automerge: false,
-            groupName: 'critical',
             addLabels: [
-                'deps: critical',
-                'deps: needs-review',
+                'breaking',
             ],
-            prPriority: 10,
         },
         {
+            // Critical packages - core dependencies
             matchPackageNames: [
                 'discord-py',
                 'sqlmodel',
@@ -77,16 +64,10 @@
                 'asyncpg',
                 'psycopg',
             ],
-            matchUpdateTypes: [
-                'minor',
-                'patch',
-            ],
-            automerge: true,
-            minimumReleaseAge: '14 days',
-            prPriority: 5,
-            addLabels: [
-                'deps: critical',
-            ],
+            groupName: 'critical',
+            addLabels: ['deps: critical'],
+            minimumReleaseAge: '7 days',
+            prPriority: 10,
         },
         {
             matchUpdateTypes: [
@@ -95,7 +76,7 @@
             groupName: 'patch',
             automerge: true,
             automergeType: 'branch',
-            minimumReleaseAge: '14 days',
+            minimumReleaseAge: '7 days',
             addLabels: [
                 'deps: patch',
             ],
@@ -108,7 +89,7 @@
             groupName: 'minor',
             automerge: true,
             automergeType: 'branch',
-            minimumReleaseAge: '14 days',
+            minimumReleaseAge: '7 days',
             addLabels: [
                 'deps: minor',
             ],
@@ -187,20 +168,6 @@
             prPriority: -2,
         },
         {
-            matchPackageNames: [
-                'basedpyright',
-            ],
-            matchUpdateTypes: [
-                'minor',
-                'patch',
-            ],
-            automerge: true,
-            automergeType: 'branch',
-            addLabels: [
-                'deps: dev',
-            ],
-        },
-        {
             matchManagers: [
                 'github-actions',
             ],
@@ -213,21 +180,12 @@
             commitMessageTopic: '{{depName}}',
         },
         {
+            // Docker updates (Dockerfile and docker-compose)
             matchManagers: [
                 'docker-compose',
-            ],
-            groupName: 'docker-compose',
-            automerge: true,
-            automergeType: 'branch',
-            addLabels: [
-                'deps: docker',
-            ],
-        },
-        {
-            matchManagers: [
                 'dockerfile',
             ],
-            groupName: 'dockerfile',
+            groupName: 'docker',
             automerge: true,
             automergeType: 'branch',
             addLabels: [
@@ -249,53 +207,29 @@
             prPriority: 5,
         },
         {
-            matchManagers: [
-                'dockerfile',
-                'github-actions',
-                'custom.regex',
-            ],
-            matchPackageNames: [
-                'python',
-            ],
+            // Python runtime - groups .python-version, workflows, and Dockerfile
+            matchManagers: ['dockerfile', 'github-actions', 'custom.regex'],
+            matchPackageNames: ['python'],
             groupName: 'python runtime',
-            addLabels: [
-                'deps: python',
-            ],
+            addLabels: ['deps: python'],
             prPriority: 10,
         },
         {
-            matchManagers: [
-                'dockerfile',
-                'github-actions',
-                'custom.regex',
-            ],
-            matchPackageNames: [
-                'python',
-            ],
-            matchUpdateTypes: [
-                'patch',
-            ],
+            // Python patch updates auto-merge
+            matchManagers: ['dockerfile', 'github-actions', 'custom.regex'],
+            matchPackageNames: ['python'],
+            matchUpdateTypes: ['patch'],
             automerge: true,
             automergeType: 'branch',
             minimumReleaseAge: '3 days',
         },
         {
-            matchManagers: [
-                'dockerfile',
-                'github-actions',
-                'custom.regex',
-            ],
-            matchPackageNames: [
-                'python',
-            ],
-            matchUpdateTypes: [
-                'minor',
-                'major',
-            ],
+            // Python minor/major need review
+            matchManagers: ['dockerfile', 'github-actions', 'custom.regex'],
+            matchPackageNames: ['python'],
+            matchUpdateTypes: ['minor', 'major'],
             automerge: false,
-            addLabels: [
-                'deps: needs-review',
-            ],
+            addLabels: ['deps: needs-review'],
         },
         {
             matchManagers: [
