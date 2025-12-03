@@ -1,379 +1,362 @@
 {
-    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": [
-        "config:best-practices",
-        ":semanticCommits",
-        ":separateMultipleMajorReleases",
-        "customManagers:githubActionsVersions",
-        "security:openssf-scorecard"
+    $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+    extends: [
+        'config:best-practices',
+        ':semanticCommits',
+        ':separateMultipleMajorReleases',
+        'customManagers:githubActionsVersions',
+        'security:openssf-scorecard',
     ],
-    "schedule": [
-        "before 4am on Monday"
+    schedule: [
+        'before 4am on Monday',
     ],
-    "timezone": "America/New_York",
-    "dependencyDashboard": true,
-    "dependencyDashboardOSVVulnerabilitySummary": "unresolved",
-    "enabledManagers": [
-        "github-actions",
-        "pep621",
-        "docker-compose",
-        "dockerfile",
-        "custom.regex",
-        "devcontainer",
-        "pre-commit",
-        "nix"
+    timezone: 'America/New_York',
+    dependencyDashboard: true,
+    dependencyDashboardOSVVulnerabilitySummary: 'unresolved',
+    enabledManagers: [
+        'github-actions',
+        'pep621',
+        'docker-compose',
+        'dockerfile',
+        'custom.regex',
+        'devcontainer',
+        'pre-commit',
+        'nix',
     ],
-    "platformAutomerge": true,
-    "rebaseWhen": "auto",
-    "osvVulnerabilityAlerts": true,
-    "fetchChangeLogs": "pr",
-    "commitBodyTable": true,
-    "prConcurrentLimit": 3,
-    "prHourlyLimit": 2,
-    "prCreation": "not-pending",
-    "prNotPendingHours": 24,
-    "vulnerabilityAlerts": {
-        "enabled": true,
-        "labels": [
-            "deps: security"
+    platformAutomerge: true,
+    rebaseWhen: 'auto',
+    osvVulnerabilityAlerts: true,
+    fetchChangeLogs: 'pr',
+    commitBodyTable: true,
+    prConcurrentLimit: 3,
+    prHourlyLimit: 2,
+    prCreation: 'not-pending',
+    prNotPendingHours: 24,
+    vulnerabilityAlerts: {
+        enabled: true,
+        labels: [
+            'deps: security',
         ],
-        "automerge": false
+        automerge: false,
     },
-    "packageRules": [
+    packageRules: [
         {
-            // Critical runtime dependencies - require review for major updates
-            "matchPackageNames": [
-                "discord-py",
-                "sqlmodel",
-                "sqlalchemy",
-                "pydantic",
-                "pydantic-settings",
-                "alembic",
-                "alembic-postgresql-enum",
-                "alembic-utils",
-                "asyncpg",
-                "psycopg"
+            matchPackageNames: [
+                'discord-py',
+                'sqlmodel',
+                'sqlalchemy',
+                'pydantic',
+                'pydantic-settings',
+                'alembic',
+                'alembic-postgresql-enum',
+                'alembic-utils',
+                'asyncpg',
+                'psycopg',
             ],
-            "matchUpdateTypes": [
-                "major"
+            matchUpdateTypes: [
+                'major',
             ],
-            "automerge": false,
-            "groupName": "critical",
-            "addLabels": [
-                "deps: critical",
-                "deps: needs-review"
+            automerge: false,
+            groupName: 'critical',
+            addLabels: [
+                'deps: critical',
+                'deps: needs-review',
             ],
-            "prPriority": 10
+            prPriority: 10,
         },
         {
-            // Critical runtime dependencies - allow minor/patch with higher priority
-            "matchPackageNames": [
-                "discord-py",
-                "sqlmodel",
-                "sqlalchemy",
-                "pydantic",
-                "pydantic-settings",
-                "alembic",
-                "alembic-postgresql-enum",
-                "alembic-utils",
-                "asyncpg",
-                "psycopg"
+            matchPackageNames: [
+                'discord-py',
+                'sqlmodel',
+                'sqlalchemy',
+                'pydantic',
+                'pydantic-settings',
+                'alembic',
+                'alembic-postgresql-enum',
+                'alembic-utils',
+                'asyncpg',
+                'psycopg',
             ],
-            "matchUpdateTypes": [
-                "minor",
-                "patch"
+            matchUpdateTypes: [
+                'minor',
+                'patch',
             ],
-            "automerge": true,
-            "minimumReleaseAge": "14 days",
-            "prPriority": 5,
-            "addLabels": [
-                "deps: critical"
-            ]
+            automerge: true,
+            minimumReleaseAge: '14 days',
+            prPriority: 5,
+            addLabels: [
+                'deps: critical',
+            ],
         },
         {
-            // Group all patch updates together with branch automerge
-            "matchUpdateTypes": [
-                "patch"
+            matchUpdateTypes: [
+                'patch',
             ],
-            "groupName": "patch",
-            "automerge": true,
-            "automergeType": "branch",
-            "minimumReleaseAge": "14 days",
-            "addLabels": [
-                "deps: patch"
-            ]
+            groupName: 'patch',
+            automerge: true,
+            automergeType: 'branch',
+            minimumReleaseAge: '14 days',
+            addLabels: [
+                'deps: patch',
+            ],
         },
         {
-            // Group all minor updates together (non-breaking) with branch automerge
-            "matchUpdateTypes": [
-                "minor"
+            matchUpdateTypes: [
+                'minor',
             ],
-            "matchCurrentVersion": "!/^0/",
-            "groupName": "minor",
-            "automerge": true,
-            "automergeType": "branch",
-            "minimumReleaseAge": "14 days",
-            "addLabels": [
-                "deps: minor"
-            ]
+            matchCurrentVersion: '!/^0/',
+            groupName: 'minor',
+            automerge: true,
+            automergeType: 'branch',
+            minimumReleaseAge: '14 days',
+            addLabels: [
+                'deps: minor',
+            ],
         },
         {
-            // Major updates need review
-            "matchUpdateTypes": [
-                "major"
+            matchUpdateTypes: [
+                'major',
             ],
-            "groupName": "major",
-            "automerge": false,
-            "addLabels": [
-                "deps: major",
-                "deps: needs-review"
-            ]
+            groupName: 'major',
+            automerge: false,
+            addLabels: [
+                'deps: major',
+                'deps: needs-review',
+            ],
         },
         {
-            // Group dev tools together
-            "matchPackageNames": [
-                "pre-commit",
-                "ruff",
-                "basedpyright",
-                "yamllint",
-                "yamlfix",
-                "pydoclint",
-                "docstr-coverage",
-                "pydantic-settings-export"
+            matchPackageNames: [
+                'pre-commit',
+                'ruff',
+                'basedpyright',
+                'yamllint',
+                'yamlfix',
+                'pydoclint',
+                'docstr-coverage',
+                'pydantic-settings-export',
             ],
-            "groupName": "dev",
-            "automerge": true,
-            "automergeType": "branch",
-            "addLabels": [
-                "deps: dev"
+            groupName: 'dev',
+            automerge: true,
+            automergeType: 'branch',
+            addLabels: [
+                'deps: dev',
             ],
-            "prPriority": -1
+            prPriority: -1,
         },
         {
-            // Test dependencies auto-merge with branch automerge
-            "matchDepTypes": [
-                "test"
+            matchDepTypes: [
+                'test',
             ],
-            "automerge": true,
-            "automergeType": "branch",
-            "groupName": "test",
-            "addLabels": [
-                "deps: test"
+            automerge: true,
+            automergeType: 'branch',
+            groupName: 'test',
+            addLabels: [
+                'deps: test',
             ],
-            "prPriority": -1
+            prPriority: -1,
         },
         {
-            // Zensical documentation tool - requires review for all updates
-            "matchPackageNames": [
-                "zensical"
+            matchPackageNames: [
+                'zensical',
             ],
-            "groupName": "docs",
-            "automerge": false,
-            "addLabels": [
-                "deps: docs",
-                "deps: needs-review"
+            groupName: 'docs',
+            automerge: false,
+            addLabels: [
+                'deps: docs',
+                'deps: needs-review',
             ],
-            "schedule": [
-                "before 4am on the first day of the month"
-            ]
+            schedule: [
+                'before 4am on the first day of the month',
+            ],
         },
         {
-            // Group type stubs together
-            "matchPackageNames": [
-                "/^types-/",
-                "annotated-types",
-                "asyncpg-stubs"
+            matchPackageNames: [
+                '/^types-/',
+                'annotated-types',
+                'asyncpg-stubs',
             ],
-            "groupName": "types",
-            "automerge": true,
-            "automergeType": "branch",
-            "addLabels": [
-                "deps: types"
+            groupName: 'types',
+            automerge: true,
+            automergeType: 'branch',
+            addLabels: [
+                'deps: types',
             ],
-            "schedule": [
-                "before 4am on the first day of the month"
+            schedule: [
+                'before 4am on the first day of the month',
             ],
-            "prPriority": -2
+            prPriority: -2,
         },
         {
-            // basedpyright pinned version - allow minor/patch updates with branch automerge
-            "matchPackageNames": [
-                "basedpyright"
+            matchPackageNames: [
+                'basedpyright',
             ],
-            "matchUpdateTypes": [
-                "minor",
-                "patch"
+            matchUpdateTypes: [
+                'minor',
+                'patch',
             ],
-            "automerge": true,
-            "automergeType": "branch",
-            "addLabels": [
-                "deps: dev"
-            ]
+            automerge: true,
+            automergeType: 'branch',
+            addLabels: [
+                'deps: dev',
+            ],
         },
         {
-            // GitHub Actions updates with branch automerge
-            "matchManagers": [
-                "github-actions"
+            matchManagers: [
+                'github-actions',
             ],
-            "groupName": "actions",
-            "automerge": true,
-            "automergeType": "branch",
-            "addLabels": [
-                "deps: github-actions"
+            groupName: 'actions',
+            automerge: true,
+            automergeType: 'branch',
+            addLabels: [
+                'deps: github-actions',
             ],
-            "commitMessageTopic": "{{depName}}"
+            commitMessageTopic: '{{depName}}',
         },
         {
-            // Docker Compose updates with branch automerge
-            "matchManagers": [
-                "docker-compose"
+            matchManagers: [
+                'docker-compose',
             ],
-            "groupName": "docker-compose",
-            "automerge": true,
-            "automergeType": "branch",
-            "addLabels": [
-                "deps: docker"
-            ]
+            groupName: 'docker-compose',
+            automerge: true,
+            automergeType: 'branch',
+            addLabels: [
+                'deps: docker',
+            ],
         },
         {
-            // Dockerfile updates with branch automerge
-            "matchManagers": [
-                "dockerfile"
+            matchManagers: [
+                'dockerfile',
             ],
-            "groupName": "dockerfile",
-            "automerge": true,
-            "automergeType": "branch",
-            "addLabels": [
-                "deps: docker"
-            ]
+            groupName: 'dockerfile',
+            automerge: true,
+            automergeType: 'branch',
+            addLabels: [
+                'deps: docker',
+            ],
         },
         {
-            // UV package manager - require review for all updates (must be after general Dockerfile rule)
-            "matchManagers": [
-                "dockerfile"
+            matchManagers: [
+                'dockerfile',
             ],
-            "matchPackageNames": [
-                "uv"
+            matchPackageNames: [
+                'uv',
             ],
-            "automerge": false,
-            "addLabels": [
-                "deps: docker",
-                "deps: needs-review"
+            automerge: false,
+            addLabels: [
+                'deps: docker',
+                'deps: needs-review',
             ],
-            "prPriority": 5
+            prPriority: 5,
         },
         {
-            // Group all Python version updates together (runtime, workflows, .python-version)
-            // This ensures .python-version, pyproject.toml, and workflow files update in sync
-            "matchManagers": [
-                "dockerfile",
-                "github-actions",
-                "regex"
+            matchManagers: [
+                'dockerfile',
+                'github-actions',
+                'custom.regex',
             ],
-            "matchPackageNames": [
-                "python"
+            matchPackageNames: [
+                'python',
             ],
-            "groupName": "python runtime",
-            "addLabels": [
-                "deps: python"
+            groupName: 'python runtime',
+            addLabels: [
+                'deps: python',
             ],
-            "prPriority": 10
+            prPriority: 10,
         },
         {
-            // Python patch updates (e.g., 3.14.0 -> 3.14.1) can auto-merge
-            "matchManagers": [
-                "dockerfile",
-                "github-actions",
-                "regex"
+            matchManagers: [
+                'dockerfile',
+                'github-actions',
+                'custom.regex',
             ],
-            "matchPackageNames": [
-                "python"
+            matchPackageNames: [
+                'python',
             ],
-            "matchUpdateTypes": [
-                "patch"
+            matchUpdateTypes: [
+                'patch',
             ],
-            "automerge": true,
-            "automergeType": "branch",
-            "minimumReleaseAge": "3 days"
+            automerge: true,
+            automergeType: 'branch',
+            minimumReleaseAge: '3 days',
         },
         {
-            // Python minor/major updates need review
-            "matchManagers": [
-                "dockerfile",
-                "github-actions",
-                "regex"
+            matchManagers: [
+                'dockerfile',
+                'github-actions',
+                'custom.regex',
             ],
-            "matchPackageNames": [
-                "python"
+            matchPackageNames: [
+                'python',
             ],
-            "matchUpdateTypes": [
-                "minor",
-                "major"
+            matchUpdateTypes: [
+                'minor',
+                'major',
             ],
-            "automerge": false,
-            "addLabels": [
-                "deps: needs-review"
-            ]
+            automerge: false,
+            addLabels: [
+                'deps: needs-review',
+            ],
         },
         {
-            // Python packages - use update-lockfile strategy for ranges
-            "matchManagers": [
-                "pep621"
+            matchManagers: [
+                'pep621',
             ],
-            "rangeStrategy": "update-lockfile"
+            rangeStrategy: 'update-lockfile',
         },
         {
-            // Nix flake inputs - group updates together
-            "matchManagers": [
-                "nix"
+            matchManagers: [
+                'nix',
             ],
-            "groupName": "nix",
-            "automerge": true,
-            "automergeType": "branch",
-            "addLabels": [
-                "deps: nix"
+            groupName: 'nix',
+            automerge: true,
+            automergeType: 'branch',
+            addLabels: [
+                'deps: nix',
             ],
-            "prPriority": -1
-        }
+            prPriority: -1,
+        },
     ],
-    "lockFileMaintenance": {
-        "enabled": true,
-        "automerge": true,
-        "schedule": [
-            "before 4am on Monday"
-        ]
+    lockFileMaintenance: {
+        enabled: true,
+        automerge: true,
+        schedule: [
+            'before 4am on Monday',
+        ],
     },
-    "nix": {
-        "enabled": true
+    nix: {
+        enabled: true,
     },
-    "constraints": {
-        "python": ">=3.14,<3.15"
+    constraints: {
+        python: '>=3.14,<3.15',
     },
-    "customManagers": [
+    customManagers: [
         {
-            // Manage Python version in .python-version file
-            "customType": "regex",
-            "fileMatch": ["^\\.python-version$"],
-            "matchStrings": ["(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
-            "datasourceTemplate": "python-version",
-            "depNameTemplate": "python",
-            "versioningTemplate": "pep440"
-        }
+            customType: 'regex',
+            managerFilePatterns: [
+                '/^\\.python-version$/',
+            ],
+            matchStrings: [
+                '(?<currentValue>\\d+\\.\\d+\\.\\d+)',
+            ],
+            datasourceTemplate: 'python-version',
+            depNameTemplate: 'python',
+            versioningTemplate: 'pep440',
+        },
     ],
-    "suppressNotifications": [
-        "prIgnoreNotification"
+    suppressNotifications: [
+        'prIgnoreNotification',
     ],
-    "recreateWhen": "auto",
-    "separateMinorPatch": false,
-    "separateMajorMinor": true,
-    "updateNotScheduled": true,
-    "prBodyColumns": [
-        "Package",
-        "Update",
-        "Type",
-        "Change",
-        "Age",
-        "Confidence",
-        "References"
-    ]
+    recreateWhen: 'auto',
+    separateMinorPatch: false,
+    separateMajorMinor: true,
+    updateNotScheduled: true,
+    prBodyColumns: [
+        'Package',
+        'Update',
+        'Type',
+        'Change',
+        'Age',
+        'Confidence',
+        'References',
+    ],
 }
