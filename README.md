@@ -1,5 +1,11 @@
 <!-- markdownlint-disable MD041 -->
 
+<style>
+td, th {
+   border: none!important;
+}
+</style>
+
 <div align="center">
     <p align="center">
         <a href="https://github.com/allthingslinux/tux/releases">
