@@ -1,23 +1,17 @@
 <!-- markdownlint-disable MD041 -->
 
-> [!NOTE]
-**Tux v0.1.0 is our first major release! If you encounter any issues or need support, please join our community server [on Discord](https://discord.gg/gpmSjcjQxg) for help and announcements.**
-
 <div align="center">
     <p align="center">
-        <!-- Latest Release & Tech Stack -->
         <a href="https://github.com/allthingslinux/tux/releases">
             <img alt="GitHub Release" src="https://img.shields.io/github/v/release/allthingslinux/tux?logo=github&logoColor=white"></a>
         <a href="https://python.org">
             <img alt="Python" src="https://img.shields.io/badge/python-3.13.2+-blue?logo=python&logoColor=white"></a>
         <a href="https://docs.astral.sh/uv">
-            <img alt="Uv" src="https://img.shields.io/badge/uv-0.4.0+-purple?logo=uv&logoColor=white"></a>
-        <!-- CI/CD & Quality -->
+            <img alt="uv" src="https://img.shields.io/badge/uv-0.9.0+-purple?logo=uv&logoColor=white"></a>
         <a href="https://results.pre-commit.ci/latest/github/allthingslinux/tux/main">
             <img alt="pre-commit.ci status" src="https://results.pre-commit.ci/badge/github/allthingslinux/tux/main.svg"></a>
         <a href="https://codecov.io/gh/allthingslinux/tux">
             <img alt="Codecov" src="https://codecov.io/gh/allthingslinux/tux/graph/badge.svg?token=R0AUAS996W"></a>
-        <!-- Community & Legal -->
         <a href="https://github.com/allthingslinux/tux/blob/main/LICENSE">
             <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux?logo=gnu&logoColor=white"></a>
     </p>
@@ -25,171 +19,148 @@
 
 <img align="center" src="assets/readme-banner.png" alt="Banner">
 
-<div align="center" style="display: flex; justify-content: center; align-items: center;">
-    <table align="center" style="vertical-align: middle;">
-        <tr style="vertical-align: middle;">
-            <td style="vertical-align: middle;"><a href="https://tux.atl.dev">📚 Docs</a></td>
-            <td style="vertical-align: middle;"><a href="https://github.com/allthingslinux/tux/issues/525">🗺️ Roadmap</a></td>
-            <td style="vertical-align: middle;"><a href="https://github.com/allthingslinux/tux/issues/157">📦 Deps</a></td>
-            <td style="vertical-align: middle;"><a href="https://discord.gg/gpmSjcjQxg">💬 Support</a></td>
-        </tr>
-    </table>
+<div align="center">
+    <h1>Tux</h1>
+    <p><strong>The all-in-one open source Discord bot for Linux communities</strong></p>
+    <p>
+        <a href="https://tux.atl.dev">📚 Documentation</a> •
+        <a href="https://discord.gg/gpmSjcjQxg">💬 Discord</a> •
+        <a href="https://github.com/allthingslinux/tux/issues/525">🗺️ Roadmap</a>
+    </p>
 </div>
 
-# Tux - The all-in-one open source Discord bot
+---
+
+## Quick Start
+
+Choose your path to get started with Tux:
+
+<table border="0" cellpadding="10" cellspacing="0">
+  <tr>
+    <td width="50%" valign="top">
+      <a href="https://tux.atl.dev/getting-started/for-users/">
+        <img src="assets/readme/quickstart-users.svg" alt="Users - Using Tux in your server" width="100%">
+      </a>
+    </td>
+    <td width="50%" valign="top">
+      <a href="https://tux.atl.dev/getting-started/for-admins/">
+        <img src="assets/readme/quickstart-admins.svg" alt="Admins - Configuring Tux for your server" width="100%">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="https://tux.atl.dev/getting-started/for-self-hosters/">
+        <img src="assets/readme/quickstart-selfhosters.svg" alt="Self-Hosters - Running your own Tux instance" width="100%">
+      </a>
+    </td>
+    <td width="50%" valign="top">
+      <a href="https://tux.atl.dev/getting-started/for-developers/">
+        <img src="assets/readme/quickstart-developers.svg" alt="Developers - Contributing to Tux" width="100%">
+      </a>
+    </td>
+  </tr>
+</table>
 
 ## About
 
-Tux is an all-in-one open source Discord bot, originally designed for the [All Things Linux](https://allthingslinux.org) community.
+Tux is a feature-rich Discord bot originally built for the [All Things Linux](https://allthingslinux.org) community. It provides moderation tools, leveling systems, snippets, utilities, and fun commands - all in one package.
 
-It is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands.
+**Key Features:**
 
-## Table of Contents
+- **Moderation** - Comprehensive moderation tools with case management
+- **Leveling** - XP and ranking system to reward active members
+- **Snippets** - Quick text responses and custom commands
+- **Utilities** - Server management and utility commands
+- **Fun** - Entertainment commands and interactive features
+- **Plugin System** - Extensible architecture for custom functionality
 
-- [About](#about)
-- [Table of Contents](#table-of-contents)
-- [Tech Stack](#tech-stack)
-- [Bot Features](#bot-features)
-- [Plugin System](#plugin-system)
-- [Database Features](#database-features)
-- [Installation and Development](#installation-and-development)
-  - [Prerequisites](#prerequisites)
-  - [Setup & Workflow](#setup--workflow)
-- [Documentation & Support](#documentation--support)
-- [License](#license)
-- [Metrics](#metrics)
-- [Contributors](#contributors)
+## Why Tux?
+
+- **Modern tech stack** - Type-safe, async-first, powered by Python 3.13+ and discord.py
+- **Production-ready** - Battle-tested in large communities with comprehensive error handling
+- **Developer-friendly** - Clean architecture, extensive docs, and active development
+- **Free and open source** - Free to use, modify, and contribute under GPL-3.0
 
 ## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
 | **Runtime** | Python 3.13+ with `discord.py` |
-| **Dependencies** | `uv` for fast, reliable package management |
-| **Database** | Type-safe ORM using `SQLModel` with `SQLAlchemy` |
-| **Containers** | Docker & Docker Compose for development environments |
-| **Type Safety** | Strict typing with `basedpyright` and comprehensive type hints |
-| **Code Quality** | Linting and formatting via `ruff` |
-| **Pre-commit** | Automated code quality checks before commits |
-| **CLI** | Custom command-line interface built with `typer` and `uv` scripts |
-| **Logging** | Structured logging with `loguru` |
-| **Error Tracking** | Exception handling and monitoring with `sentry-sdk` |
-| **HTTP Client** | Modern async requests with `httpx` |
-| **Configuration** | Dynamic environment management with `pydantic-settings` & `python-dotenv` |
+| **Package Manager** | `uv` for fast dependency management |
+| **Database** | PostgreSQL with `SQLModel` (SQLAlchemy + Pydantic) |
+| **Type Safety** | `basedpyright` with strict type hints |
+| **Code Quality** | `ruff` for linting and formatting |
+| **Testing** | `pytest` with async support |
+| **CLI** | `typer` with custom command scripts |
+| **Logging** | `loguru` for structured logging |
+| **Monitoring** | `sentry-sdk` for error tracking |
+| **HTTP Client** | `httpx` for async requests |
+| **Configuration** | `pydantic-settings` with multi-format support |
+| **Containers** | Docker & Docker Compose |
 
-<sub>[back to top ↑](#table-of-contents)</sub>
+## Documentation
 
-## Bot Features
+Visit **[tux.atl.dev](https://tux.atl.dev)** for complete documentation including:
 
-- **Hybrid Commands**: Support for both slash commands and traditional prefix commands
-- **Dynamic Permissions**: Database-driven permission system with configurable ranks (0-10)
-- **Hot Reload**: Automatic cog reloading during development with file watching
-- **Plugin System**: Modular, hot-reloadable extensions for custom functionality
-- **Error Handling**: Centralized error handling with Sentry integration
-- **Rich Embeds**: Branded, interactive embeds and components
-- **Configuration**: Multi-format config support with interactive setup wizard
+- **[User Guide](https://tux.atl.dev/user/)** - Commands, features, and usage
+- **[Admin Guide](https://tux.atl.dev/admin/)** - Configuration and server setup
+- **[Self-Hosting](https://tux.atl.dev/selfhost/)** - Installation and deployment
+- **[Developer Guide](https://tux.atl.dev/developer/)** - Architecture and contributing
+- **[API Reference](https://tux.atl.dev/reference/)** - CLI tools and codebase reference
+- **[FAQ](https://tux.atl.dev/faq/)** - Common questions and answers
 
-<sub>[back to top ↑](#table-of-contents)</sub>
+## Support & Community
 
-## Plugin System
-
-Modular plugin architecture for extending functionality without modifying core code:
-
-- **Hot-Reloadable**: Load/unload plugins during development without restarts
-- **Isolated**: Plugin failures don't affect core bot functionality
-- **Database Access**: Full access to bot's database through type-safe controllers
-- **Event Integration**: Hook into Discord events and bot lifecycle
-
-**Plugin Development**: Located in `src/tux/plugins/` with automatic discovery and full bot API access.
-
-<sub>[back to top ↑](#table-of-contents)</sub>
-
-## Database Features
-
-**SQLModel**-powered type-safe database operations with async PostgreSQL support:
-
-- **Type Safety**: Compile-time checking with automatic Pydantic serialization
-- **Async Operations**: High-performance queries with connection pooling
-- **Controller Pattern**: Clean separation of business logic and data access
-- **Migration System**: Alembic-powered schema management with version control
-- **Advanced Controllers**: CRUD, bulk operations, pagination, and upserts
-- **Multi-Database**: PostgreSQL primary, SQLite testing, psycopg backup
-
-<sub>[back to top ↑](#table-of-contents)</sub>
-
-## Installation and Development
-
-### Prerequisites
-
-- Python 3.13+
-- [uv](https://docs.astral.sh/uv/)
-- A PostgreSQL database (e.g. via [Supabase](https://supabase.io/) or local installation)
-- Optional: [Docker](https://docs.docker.com/get-docker/) & [Docker Compose](https://docs.docker.com/compose/install/)
-
-### Setup & Workflow
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/allthingslinux/tux.git
-   cd tux
-   ```
-
-2. **Install dependencies:**
-
-   ```bash
-   uv sync
-   ```
-
-   For developers, you can install the pre-commit hooks with:
-
-   ```bash
-   uv run pre-commit install
-   ```
-
-   Configure git to ignore formatting commits in blame:
-
-   ```bash
-   git config blame.ignoreRevsFile .git-blame-ignore-revs
-   ```
-
-3. **Configure your environment:**
-
-   ```bash
-   # Generate example config files
-   uv run config generate
-
-   # Copy and edit to your needs
-   cp .env.example .env
-   cp config/config.toml.example config/config.toml
-   ```
-
-4. **Start the bot:**
-
-   ```bash
-   # Start the bot (or use docker per the docs)
-   uv run tux start
-   ```
-
-<sub>[back to top ↑](#table-of-contents)</sub>
-
-## Documentation & Support
-
-- **[Full Documentation](https://tux.atl.dev)** - Complete guides for users, admins, developers, and self-hosters
-- **[Getting Started](https://tux.atl.dev/getting-started/)** - Setup instructions for all user types
-- **[Developer Guide](https://tux.atl.dev/developer/)** - Architecture, contributing, and plugin development
-- **[Self-Hosting](https://tux.atl.dev/selfhost/)** - Docker deployment and configuration
-- **[API Reference](https://tux.atl.dev/reference/)** - Complete codebase and CLI documentation
-- **[Discord Community](https://discord.gg/gpmSjcjQxg)** - Live support and discussions
+- **[Discord Server](https://discord.gg/gpmSjcjQxg)** - Get help, report issues, and discuss features
 - **[GitHub Issues](https://github.com/allthingslinux/tux/issues)** - Bug reports and feature requests
 
-<sub>[back to top ↑](#table-of-contents)</sub>
+## Development Quick Start
 
-## License
+Want to contribute? Assuming you have the basics like Docker and a Discord bot for testing, you can get started in minutes:
 
-Tux is free and open source software licensed under the [GNU General Public License v3.0](LICENSE), founded by [@kzndotsh](https://github.com/kzndotsh), created for and maintained by the [All Things Linux](https://allthingslinux.org) community.
+```bash
+# For org members: Clone directly
+git clone https://github.com/allthingslinux/tux.git && cd tux
 
-## Metrics
+# For external contributors: Fork on GitHub first, then:
+git clone https://github.com/YOUR_USERNAME/tux.git && cd tux
+git remote add upstream https://github.com/allthingslinux/tux.git
+
+# Install dependencies
+uv sync
+
+# Install pre-commit hooks
+uv run pre-commit install
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Generate and edit configuration files
+uv run config generate
+cp .env.example .env && cp config/config.toml.example config/config.toml
+
+# Setup database
+uv run docker up -d tux-postgres
+uv run db push
+
+# Develop, run, lint, and test
+git checkout -b feature/your-feature-name
+# ... make changes ...
+uv run tux start --debug
+uv run dev all
+git commit -m "feat(command): add new command"
+# ... repeat until you are ready ...
+git push origin feature/your-feature-name
+```
+
+**Developer Resources:**
+
+| Getting Started | Development Workflow | Quality & Standards |
+|-------------------|------------------------|----------------------|
+| [Developer Setup](https://tux.atl.dev/developer/tutorials/development-setup/) | [Git Best Practices](https://tux.atl.dev/developer/best-practices/git/) | [Testing Guide](https://tux.atl.dev/developer/best-practices/testing/) |
+| [First Contribution](https://tux.atl.dev/developer/tutorials/first-contribution/) | [Branch Naming](https://tux.atl.dev/developer/best-practices/branch-naming/) | [Code Review](https://tux.atl.dev/developer/best-practices/code-review/) |
+| [Project Structure](https://tux.atl.dev/developer/tutorials/project-structure/) | [Creating Commands](https://tux.atl.dev/developer/tutorials/creating-first-command/) | [Error Handling](https://tux.atl.dev/developer/best-practices/error-handling/) |
+
+## Project Stats
 
 ![Metrics](https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg)
 
@@ -197,4 +168,10 @@ Tux is free and open source software licensed under the [GNU General Public Lice
 
 ![Contributors](https://contrib.rocks/image?repo=allthingslinux/tux)
 
-<sub>[back to top ↑](#table-of-contents)</sub>
+## License
+
+Tux is free and open source software licensed under the [GNU General Public License v3.0](LICENSE).
+
+Founded by [@kzndotsh](https://github.com/kzndotsh) • Maintained by the [All Things Linux](https://allthingslinux.org) community
+
+---
