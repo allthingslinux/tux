@@ -98,12 +98,12 @@ class Wiki(BaseCog):
         try:
             # Send a GET request to the wiki API
             response = await http_client.get(base_url, params=params)
-            logger.info(f"GET request to {base_url} with params {params}")
+            logger.info(f"GET request to {base_url} with params {params!r}")
             response.raise_for_status()
 
             # Parse JSON response
             data = response.json()
-            logger.info(data)
+            logger.info(f"Wiki API response: {data!r}")
 
             if data.get("query") and data["query"].get("search"):
                 search_results = data["query"]["search"]
