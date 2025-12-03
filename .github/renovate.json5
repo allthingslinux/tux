@@ -236,7 +236,19 @@
             ]
         },
         {
-            // UV package manager - require review for all updates
+            // Dockerfile updates with branch automerge
+            "matchManagers": [
+                "dockerfile"
+            ],
+            "groupName": "dockerfile",
+            "automerge": true,
+            "automergeType": "branch",
+            "addLabels": [
+                "deps: docker"
+            ]
+        },
+        {
+            // UV package manager - require review for all updates (must be after general Dockerfile rule)
             "matchManagers": [
                 "dockerfile"
             ],
@@ -249,18 +261,6 @@
                 "deps: needs-review"
             ],
             "prPriority": 5
-        },
-        {
-            // Dockerfile updates with branch automerge
-            "matchManagers": [
-                "dockerfile"
-            ],
-            "groupName": "dockerfile",
-            "automerge": true,
-            "automergeType": "branch",
-            "addLabels": [
-                "deps: docker"
-            ]
         },
         {
             // Python version updates in Dockerfiles - patch/minor within 3.13.x can auto-merge
