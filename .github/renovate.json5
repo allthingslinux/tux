@@ -3,7 +3,9 @@
     "extends": [
         "config:best-practices",
         ":semanticCommits",
-        ":separateMultipleMajorReleases"
+        ":separateMultipleMajorReleases",
+        "customManagers:githubActionsVersions",
+        "security:openssf-scorecard"
     ],
     "schedule": [
         "before 4am on Monday"
@@ -234,6 +236,21 @@
             ]
         },
         {
+            // UV package manager - require review for all updates
+            "matchManagers": [
+                "dockerfile"
+            ],
+            "matchPackageNames": [
+                "uv"
+            ],
+            "automerge": false,
+            "addLabels": [
+                "deps: docker",
+                "deps: needs-review"
+            ],
+            "prPriority": 5
+        },
+        {
             // Dockerfile updates with branch automerge
             "matchManagers": [
                 "dockerfile"
@@ -313,17 +330,17 @@
             "rangeStrategy": "update-lockfile"
         },
         {
-            // Lock file maintenance for uv.lock
+            // Nix flake inputs - group updates together
             "matchManagers": [
-                "pep621"
+                "nix"
             ],
-            "matchDepTypes": [
-                "lockFileMaintenance"
-            ],
+            "groupName": "nix",
             "automerge": true,
-            "schedule": [
-                "before 4am on Monday"
-            ]
+            "automergeType": "branch",
+            "addLabels": [
+                "deps: nix"
+            ],
+            "prPriority": -1
         }
     ],
     "lockFileMaintenance": {
@@ -332,6 +349,9 @@
         "schedule": [
             "before 4am on Monday"
         ]
+    },
+    "nix": {
+        "enabled": true
     },
     "constraints": {
         "python": ">=3.13.2,<3.14"
@@ -348,6 +368,8 @@
         "Update",
         "Type",
         "Change",
+        "Age",
+        "Confidence",
         "References"
     ]
 }
