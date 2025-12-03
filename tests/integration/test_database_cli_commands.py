@@ -31,7 +31,8 @@ def is_database_running() -> bool:
     try:
         import os
         import psycopg
-        # Get database connection parameters from environment or use defaults from compose.yaml
+        # Get database connection parameters from environment or use defaults
+        # (matches defaults from compose.yaml for consistency)
         user = os.getenv("POSTGRES_USER", "tuxuser")
         password = os.getenv("POSTGRES_PASSWORD", "ChangeThisToAStrongPassword123!")
         dbname = os.getenv("POSTGRES_DB", "tuxdb")

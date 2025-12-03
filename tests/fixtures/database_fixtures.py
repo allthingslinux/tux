@@ -24,6 +24,12 @@ async def pglite_async_manager():
     manager = SQLAlchemyAsyncPGliteManager()
     try:
         manager.start()
+        # Wait for PGlite to be fully ready before yielding
+        # This prevents race conditions where tests try to connect before PGlite is ready
+        # which would trigger unnecessary retries
+        if not manager.wait_for_ready(max_retries=10, delay=0.1):
+            raise RuntimeError("PGlite failed to become ready after startup")
+        logger.info("✅ PGlite async manager ready")
         yield manager
     finally:
         logger.info("🧹 Cleaning up PGlite async manager")
