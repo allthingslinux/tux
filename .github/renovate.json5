@@ -153,10 +153,13 @@
             ],
         },
         {
+            // Type stubs and type-related packages
             matchPackageNames: [
-                '/^types-/',
-                'annotated-types',
-                'asyncpg-stubs',
+                '/^types?-/', // types-, type-
+                '/^typing-/', // typing-*
+                '/^@types/', // @types/*
+                '/-types$/', // *-types
+                '/-stubs?$/', // *-stub, *-stubs
             ],
             groupName: 'types',
             automerge: true,
