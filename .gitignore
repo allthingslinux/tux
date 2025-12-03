@@ -236,3 +236,6 @@ examples/
 config/*
 !config/*.example
 docs/node_modules/.mf/cf.json
+
+# Docker Compose override (for local development/customization)
+compose.override.yaml
