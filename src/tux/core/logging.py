@@ -232,6 +232,28 @@ def _add_console_handler(log_level: str) -> None:
         """Dynamically retrieve sys.stderr for robustness."""
         sys.stderr.write(message)
 
+    def safe_message_filter(record: dict[str, Any]) -> bool:
+        """
+        Filter that escapes curly braces in log messages to prevent format errors.
+
+        This prevents dictionaries and strings with braces from being interpreted
+        as format placeholders by Loguru, fixing issues like KeyError with dict keys.
+
+        Parameters
+        ----------
+        record : dict[str, Any]
+            The log record to process.
+
+        Returns
+        -------
+        bool
+            Always True to allow the log message through.
+        """
+        # Escape curly braces in the message to prevent format string interpretation
+        if isinstance(record["message"], str):
+            record["message"] = record["message"].replace("{", "{{").replace("}", "}}")
+        return True
+
     logger.add(
         stderr_sink,
         format=_format_record,
@@ -241,6 +263,7 @@ def _add_console_handler(log_level: str) -> None:
         diagnose=True,  # Shows variable values in tracebacks
         enqueue=False,  # Synchronous for console
         catch=True,  # Catch errors in logging itself
+        filter=safe_message_filter,  # Automatically escape braces in all messages
     )
 
 
