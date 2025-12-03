@@ -194,7 +194,7 @@ class ModerationCoordinator:
 
             logger.debug(
                 f"Creating case: type={case_type.value}, user={user.id}, moderator={ctx.author.id}, "
-                f"guild={ctx.guild.id}, case_kwargs={case_kwargs}",
+                f"guild={ctx.guild.id}, case_kwargs={case_kwargs!r}",
             )
             case = await self._case_service.create_case(
                 guild_id=ctx.guild.id,
