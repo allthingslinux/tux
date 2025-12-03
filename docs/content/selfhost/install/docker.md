@@ -211,7 +211,8 @@ The Docker setup mounts several directories:
 - `./config` → `/app/config` (read-only) - Configuration files
 - `./src/tux/plugins` → `/app/tux/plugins` (read-only) - Custom plugins
 - `./assets` → `/app/assets` (read-only) - Bot assets
-- `./src/tux/database/migrations` → `/app/tux/database/migrations` (read-only) - Database migrations
+
+**Note:** Migration files are **not mounted by default** - they come from the Docker image. For development or customization, see [Docker Migration Setup](../../developer/concepts/database/migrations.md#-docker-migration-setup).
 
 Persistent volumes:
 
@@ -312,15 +313,21 @@ docker compose up -d tux
 
 ### Database Migrations
 
-Migrations run automatically on container startup. To force migrations:
+Migrations run automatically on container startup. Migrations come from the Docker image by default - no source code required.
+
+**For development or customization:**
+
+If you're developing or have custom migrations, enable the migration mount:
 
 ```bash
-# Set environment variable
-echo "FORCE_MIGRATE=true" >> .env
+# Copy override example
+cp compose.override.yaml.example compose.override.yaml
 
-# Restart container
+# Restart services
 docker compose restart tux
 ```
+
+See [Docker Migration Setup](../../developer/concepts/database/migrations.md#-docker-migration-setup) for details.
 
 ## Development Mode
 

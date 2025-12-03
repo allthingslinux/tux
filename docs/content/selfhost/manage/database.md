@@ -129,13 +129,21 @@ Located in: `src/tux/database/migrations/versions/`
 
 ### Docker Migrations
 
-Migrations can run automatically on container startup:
+Migrations run automatically on container startup. By default, migrations come from the Docker image (no source code needed).
+
+**For development or customization:**
+
+Enable migration mount for local development:
 
 ```bash
-# In .env
-FORCE_MIGRATE=true                  # Auto-run migrations on start
-USE_LOCAL_MIGRATIONS=true           # Use mounted migration files
+# Copy override example
+cp compose.override.yaml.example compose.override.yaml
+
+# Migrations now come from local mount
+docker compose restart tux
 ```
+
+See [Docker Migration Setup](../../developer/concepts/database/migrations.md#-docker-migration-setup) for complete details.
 
 ### Troubleshooting
 
