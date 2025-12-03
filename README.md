@@ -1,11 +1,5 @@
 <!-- markdownlint-disable MD041 -->
 
-<style>
-td, th {
-   border: none!important;
-}
-</style>
-
 <div align="center">
     <p align="center">
         <a href="https://github.com/allthingslinux/tux/releases">
@@ -41,32 +35,22 @@ td, th {
 
 Choose your path to get started with Tux:
 
-<table border="0" cellpadding="5" cellspacing="0" style="margin: 0;">
-  <tr valign="middle">
-    <td width="50%">
-      <a href="https://tux.atl.dev/getting-started/for-users/">
-        <img src="assets/readme/quickstart-users.svg" alt="Users - Using Tux in your server" width="100%" style="display: block; margin: 0;">
-      </a>
-    </td>
-    <td width="50%">
-      <a href="https://tux.atl.dev/getting-started/for-admins/">
-        <img src="assets/readme/quickstart-admins.svg" alt="Admins - Configuring Tux for your server" width="100%" style="display: block; margin: 0;">
-      </a>
-    </td>
-  </tr>
-  <tr valign="middle">
-    <td width="50%">
-      <a href="https://tux.atl.dev/getting-started/for-self-hosters/">
-        <img src="assets/readme/quickstart-selfhosters.svg" alt="Self-Hosters - Running your own Tux instance" width="100%" style="display: block; margin: 0;">
-      </a>
-    </td>
-    <td width="50%">
-      <a href="https://tux.atl.dev/getting-started/for-developers/">
-        <img src="assets/readme/quickstart-developers.svg" alt="Developers - Contributing to Tux" width="100%" style="display: block; margin: 0;">
-      </a>
-    </td>
-  </tr>
-</table>
+<div align="center">
+  <a href="https://tux.atl.dev/getting-started/for-users/" style="text-decoration: none; border: none; outline: none;">
+    <img src="assets/readme/quickstart-users.svg" alt="Users - Using Tux in your server" width="49%">
+  </a>
+  <a href="https://tux.atl.dev/getting-started/for-admins/" style="text-decoration: none; border: none; outline: none;">
+    <img src="assets/readme/quickstart-admins.svg" alt="Admins - Configuring Tux for your server" width="49%">
+  </a>
+</div>
+<div align="center">
+  <a href="https://tux.atl.dev/getting-started/for-self-hosters/" style="text-decoration: none; border: none; outline: none;">
+    <img src="assets/readme/quickstart-selfhosters.svg" alt="Self-Hosters - Running your own Tux instance" width="49%">
+  </a>
+  <a href="https://tux.atl.dev/getting-started/for-developers/" style="text-decoration: none; border: none; outline: none;">
+    <img src="assets/readme/quickstart-developers.svg" alt="Developers - Contributing to Tux" width="49%">
+  </a>
+</div>
 
 ## About
 

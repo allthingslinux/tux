@@ -40,6 +40,11 @@
           text-decoration: none;
           font-weight: 600;
           font-size: 13px;
+          outline: none;
+        }
+        .card-link:hover, .card-link:focus {
+          outline: none;
+          text-decoration: none;
         }
       </style>
       <div class="card">
