@@ -3,9 +3,6 @@
 > [!NOTE]
 **Tux v0.1.0 is our first major release! If you encounter any issues or need support, please join our community server [on Discord](https://discord.gg/gpmSjcjQxg) for help and announcements.**
 
-<h1 align="center">Tux</h1>
-<h3 align="center">A Discord bot for the All Things Linux Discord server</h3>
-
 <div align="center">
     <p align="center">
         <!-- Latest Release & Tech Stack -->
@@ -39,15 +36,13 @@
     </table>
 </div>
 
-# The all-in-one open source Discord bot
+# Tux - The all-in-one open source Discord bot
 
 ## About
 
 Tux is an all-in-one open source Discord bot, originally designed for the [All Things Linux](https://allthingslinux.org) community.
 
 It is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands.
-
-<!-- Table of Contents -->
 
 ## Table of Contents
 
