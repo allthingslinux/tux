@@ -35,22 +35,12 @@
 
 Choose your path to get started with Tux:
 
-<div align="center">
-  <a href="https://tux.atl.dev/getting-started/for-users/" style="text-decoration: none; border: none; outline: none;">
-    <img src="assets/readme/quickstart-users.svg" alt="Users - Using Tux in your server" width="49%">
-  </a>
-  <a href="https://tux.atl.dev/getting-started/for-admins/" style="text-decoration: none; border: none; outline: none;">
-    <img src="assets/readme/quickstart-admins.svg" alt="Admins - Configuring Tux for your server" width="49%">
-  </a>
-</div>
-<div align="center">
-  <a href="https://tux.atl.dev/getting-started/for-self-hosters/" style="text-decoration: none; border: none; outline: none;">
-    <img src="assets/readme/quickstart-selfhosters.svg" alt="Self-Hosters - Running your own Tux instance" width="49%">
-  </a>
-  <a href="https://tux.atl.dev/getting-started/for-developers/" style="text-decoration: none; border: none; outline: none;">
-    <img src="assets/readme/quickstart-developers.svg" alt="Developers - Contributing to Tux" width="49%">
-  </a>
-</div>
+| Role          | Get Started                                                                                   |
+|---------------|----------------------------------------------------------------------------------------------|
+| 👤 Users      | [Get Started](https://tux.atl.dev/getting-started/for-users/)                                 |
+| ⚙️ Admins     | [Get Started](https://tux.atl.dev/getting-started/for-admins/)                                |
+| 🐳 Self-Hosters | [Get Started](https://tux.atl.dev/getting-started/for-self-hosters/)                        |
+| 💻 Developers | [Get Started](https://tux.atl.dev/getting-started/for-developers/)                            |
 
 ## About
 
