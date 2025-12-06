@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
   # renovate: datasource=python-version depName=python
-  PYTHON_VERSION: 3.13.8
+  PYTHON_VERSION: 3.14.0
   REVIEWDOG_LEVEL: warning
   REVIEWDOG_REPORTER: github-pr-review
   REVIEWDOG_FILTER_MODE: file

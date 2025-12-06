@@ -1,4 +1,4 @@
-FROM python:3.13.8-slim AS base
+FROM python:3.14.0-slim@sha256:0aecac02dc3d4c5dbb024b753af084cafe41f5416e02193f1ce345d671ec966e AS base
 
 LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
         org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community" \
@@ -130,7 +130,7 @@ COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 CMD ["/entrypoint.sh"]
 
-FROM python:3.13.8-slim AS production
+FROM python:3.14.0-slim@sha256:0aecac02dc3d4c5dbb024b753af084cafe41f5416e02193f1ce345d671ec966e AS production
 
 LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
         org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community" \
