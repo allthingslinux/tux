@@ -41,11 +41,11 @@ jobs:
       any: ${{ steps.docs_changes.outputs.any_changed == 'true' || steps.code_changes.outputs.any_changed == 'true' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
         with:
           fetch-depth: 0
       - name: Check Docs
-        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46
         id: docs_changes
         with:
           files: |
@@ -54,7 +54,7 @@ jobs:
             scripts/docs.py
             .github/workflows/docs.yml
       - name: Check Code
-        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46
         id: code_changes
         with:
           files: |
@@ -73,7 +73,7 @@ jobs:
       any: ${{ needs.changes.outputs.any }}
     steps:
       - name: Checkout
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
         with:
           fetch-depth: 0
           sparse-checkout: |
@@ -101,7 +101,7 @@ jobs:
           uv run zensical build
           echo "Documentation build completed successfully"
       - name: Upload Documentation Artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: docs
           path: site
@@ -119,9 +119,9 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
       - name: Download Documentation Artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           name: docs
           path: site
@@ -133,7 +133,7 @@ jobs:
       - name: Deploy to Production
         if: github.ref == 'refs/heads/main'
         id: production_deploy
-        uses: mkcode/wrangler-version-deploy-action-with-metadata@35ee741c298be6c3bb124fbeef5feb85dabe3fcc # v1
+        uses: mkcode/wrangler-version-deploy-action-with-metadata@35ee741c298be6c3bb124fbeef5feb85dabe3fcc  # v1
         continue-on-error: true
         with:
           api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -212,7 +212,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       - name: Find Pull Request
         if: github.event_name == 'push'
-        uses: juliangruber/find-pull-request-action@48b6133aa6c826f267ebd33aa2d29470f9d9e7d0 # v1
+        uses: juliangruber/find-pull-request-action@48b6133aa6c826f267ebd33aa2d29470f9d9e7d0  # v1
         id: find_pr
         with:
           branch: ${{ github.ref_name }}
@@ -220,7 +220,7 @@ jobs:
       - name: Find Documentation Comment
         if: github.event_name == 'pull_request' || steps.find_pr.outputs.number !=
           ''
-        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4
+        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad  # v4
         id: find_comment
         with:
           issue-number: ${{ github.event.pull_request.number || steps.find_pr.outputs.number }}
@@ -243,7 +243,7 @@ jobs:
       - name: Create or Update Comment
         if: github.event_name == 'pull_request' || steps.find_pr.outputs.number !=
           ''
-        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9  # v5
         with:
           comment-id: ${{ steps.find_comment.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number || steps.find_pr.outputs.number }}
