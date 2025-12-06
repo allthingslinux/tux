@@ -278,6 +278,8 @@ quote-style = "double"
 # Preserve original sequence style (flow vs block) to prevent single-item
 # lists from being converted between [item] and - item formats
 sequence_style = "keep_style"
+# Don't require spaces after # in comments to match existing codebase style
+comments_require_starting_space = false
 
 [tool.basedpyright]
 defineConstant = { DEBUG = true }
