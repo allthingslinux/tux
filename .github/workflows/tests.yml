@@ -40,7 +40,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Check Python
-        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62  # v47
         id: python_changes
         with:
           files: |
@@ -53,7 +53,7 @@ jobs:
             **/migrations/**/*.py
             src/tux/database/migrations/**/*.py
       - name: Check Tests
-        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62  # v47
         id: test_changes
         with:
           files: |

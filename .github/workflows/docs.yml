@@ -45,7 +45,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Check Docs
-        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62  # v47
         id: docs_changes
         with:
           files: |
@@ -54,7 +54,7 @@ jobs:
             scripts/docs.py
             .github/workflows/docs.yml
       - name: Check Code
-        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62  # v47
         id: code_changes
         with:
           files: |
