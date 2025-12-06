@@ -35,7 +35,7 @@ jobs:
       any: ${{ steps.python_changes.outputs.any_changed == 'true' || steps.markdown_changes.outputs.any_changed == 'true' || steps.shell_changes.outputs.any_changed == 'true' || steps.workflow_changes.outputs.any_changed == 'true' || steps.docker_changes.outputs.any_changed == 'true' || steps.yaml_changes.outputs.any_changed == 'true' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
         with:
           fetch-depth: 0
       - name: Check Python
@@ -96,7 +96,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
         with:
           fetch-depth: 0
       - name: Setup Python
@@ -140,7 +140,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
       - name: Lint
         uses: reviewdog/action-markdownlint@3667398db9118d7e78f7a63d10e26ce454ba5f58  # v0.26.2
         with:
@@ -160,7 +160,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
       - name: Lint
         uses: reviewdog/action-shellcheck@4c07458293ac342d477251099501a718ae5ef86e  # v1.32
         with:
@@ -186,7 +186,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
       - name: Validate
         uses: reviewdog/action-actionlint@437bbe918b0d29544cbf9e8b1d63fe6f4e7a881d  # v1.69.0
         with:
@@ -205,7 +205,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
       - name: Lint
         uses: reviewdog/action-hadolint@fc7ee4a9f71e521bc43e370819247b70e5327540  # v1.50.2
         with:
@@ -226,7 +226,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
       - name: Lint
         uses: reviewdog/action-yamllint@f01d8a48fd8d89f89895499fca2cff09f9e9e8c0  # v1.21.0
         with:
@@ -245,7 +245,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
       - name: Scan
         uses: reviewdog/action-gitleaks@2b7b5685e3e3eecddab5d30cfa04f18123031421  # v1.8
         with:
