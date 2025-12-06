@@ -38,3 +38,5 @@ rules:
 
   # Allow braces in flow mappings
   braces: enable
+  comments:
+    min-spaces-from-content: 1
