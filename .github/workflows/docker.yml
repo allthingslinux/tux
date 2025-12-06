@@ -39,11 +39,11 @@ jobs:
       docker: ${{ steps.docker_changes.outputs.any_changed }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           fetch-depth: 0
       - name: Check Docker
-        uses: tj-actions/changed-files@v46
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46
         id: docker_changes
         with:
           files: |
@@ -62,7 +62,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       # Set up Docker Buildx for advanced build features
       # Uses docker/setup-buildx-action@v3 to create and boot a builder
@@ -86,7 +86,7 @@ jobs:
       # - Version pinning: Add version: v0.x.x to pin Buildx version
       # - Custom builder name: Add name: my-builder for persistent builders
       - name: Setup Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
 
       # Extract Docker image metadata for PR validation builds
       # Uses docker/metadata-action@v5 to generate tags and labels
@@ -108,7 +108,7 @@ jobs:
       # Note: Image name is local-only (tux) since PR builds don't push to registry
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
         with:
           # Local image name (no registry prefix needed for validation builds)
           images: tux
@@ -137,7 +137,7 @@ jobs:
       # - Build metadata (tags/labels) for image identification
       # - Build-time variables for versioning and traceability
       - name: Build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
         timeout-minutes: 10
         with:
           # Build context directory (current directory)
@@ -166,7 +166,7 @@ jobs:
       # Run Trivy scans in parallel for faster validation
       # Both scans are independent and can run simultaneously
       - name: Scan Containerfile
-        uses: reviewdog/action-trivy@v1
+        uses: reviewdog/action-trivy@a1e6d7dd5520369c076d7ce639a16442938535d8 # v1
         continue-on-error: true
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -179,7 +179,7 @@ jobs:
           filter_mode: added
           trivy_flags: --severity HIGH,CRITICAL --no-progress --quiet --skip-db-update
       - name: Scan Image
-        uses: reviewdog/action-trivy@v1
+        uses: reviewdog/action-trivy@a1e6d7dd5520369c076d7ce639a16442938535d8 # v1
         continue-on-error: true
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -201,7 +201,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       # Set up Docker Buildx for advanced build features
       # Uses docker/setup-buildx-action@v3 to create and boot a builder
@@ -225,9 +225,9 @@ jobs:
       # - Version pinning: Add version: v0.x.x to pin Buildx version
       # - Custom builder name: Add name: my-builder for persistent builders
       - name: Setup Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
       - name: Login to Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -264,7 +264,7 @@ jobs:
       # - Comprehensive OCI labels for traceability and compliance
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
         with:
           # Full registry path for production images (ghcr.io/owner/repo)
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
@@ -296,7 +296,7 @@ jobs:
       # - Build-time variables for versioning and traceability
       # - Multi-tag support (semver versions + latest tag)
       - name: Build & Push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
         timeout-minutes: 15
         with:
           # Build context directory (current directory)
@@ -323,7 +323,7 @@ jobs:
             BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
       - name: Scan Final Image
         if: always()
-        uses: reviewdog/action-trivy@v1
+        uses: reviewdog/action-trivy@a1e6d7dd5520369c076d7ce639a16442938535d8 # v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           trivy_command: image
