@@ -229,6 +229,9 @@ class TestAlembicConfiguration:
         cfg = Config(str(alembic_ini))
         prepend_sys_path = cfg.get_main_option("prepend_sys_path")
 
+        # Verify prepend_sys_path is set
+        assert prepend_sys_path is not None, "prepend_sys_path should be configured"
+
         # Verify the path exists
         prepend_path = project_root / prepend_sys_path
         assert prepend_path.exists()
