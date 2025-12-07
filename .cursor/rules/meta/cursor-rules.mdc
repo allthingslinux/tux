@@ -1,0 +1,160 @@
+---
+globs: *.mdc,AGENTS.md
+alwaysApply: false
+---
+# Cursor Rules Specification
+
+## Rule Type Classification
+
+| Type | Metadata | Application |
+|------|----------|-------------|
+| Always Apply | `alwaysApply: true` | Every chat session, project-wide standards |
+| Intelligent | `alwaysApply: false` + `description` | AI-selected based on relevance |
+| File-Scoped | `globs: pattern1, pattern2` | Matches file patterns (`*.py`, `src/api/**`) |
+| Manual | No globs, `alwaysApply: false` | Invoked via @-mention only |
+
+## MDC Format Requirements
+
+```markdown
+---
+description: Required for intelligent application, max 120 chars
+globs: optional/file/pattern, another/pattern  # Comma-separated glob patterns
+alwaysApply: false                # Boolean, default false
+---
+
+# Title (Required)
+
+## Content Structure
+- Use markdown headers for organization
+- Bullet points for scannable directives
+- Code blocks for examples
+- @-reference files for context
+
+## Patterns
+Declarative statements and requirements.
+
+## Anti-Patterns
+- ❌ BAD: Counter-example
+- ✅ GOOD: Correct pattern
+```
+
+## Constraints
+
+- **Size**: MAX 500 lines per rule file
+- **Scope**: One domain/concern per rule
+- **Specificity**: Project-specific only, no general coding advice
+- **Naming**: Descriptive kebab-case filenames (`database-models.mdc`)
+- **Location**: `.cursor/rules/` in project root or subdirectories
+
+## Content Requirements
+
+MUST include:
+
+- Clear title describing rule scope
+- Concrete, actionable directives
+- Project-specific patterns
+
+MUST NOT include:
+
+- Generic programming advice
+- Redundant LLM knowledge
+- Vague or abstract guidance
+- Conflicting directives with other rules
+
+SHOULD include:
+
+- Code examples demonstrating patterns
+- File references with `@filename.ext`
+- Anti-patterns with ❌ ✅ markers
+- Relationship links to related rules
+
+MAY include:
+
+- Templates for code generation
+- Workflow step sequences
+- Decision trees or conditionals
+
+## Directory Organization
+
+```text
+.cursor/rules/
+├── *.mdc                        # Project-wide rules
+└── subdirectory/
+    └── .cursor/rules/
+        └── *.mdc                # Directory-scoped rules
+```
+
+Nested rules inherit parent rules and auto-apply within their directory scope.
+
+## Rule Type Selection Matrix
+
+| Scenario | Type | Config |
+|----------|------|--------|
+| Universal coding standards | Always Apply | `alwaysApply: true` |
+| Database layer patterns | Intelligent | `description` + domain keywords |
+| Test file conventions | File-Scoped | `globs: tests/**/*.py` |
+| Code generation template | Manual | No metadata |
+| Framework-specific patterns | Intelligent | `description` referencing framework |
+
+## Metadata Specification
+
+### `description` Field
+
+- Required for intelligent application
+- 60-120 characters
+- Include domain keywords for matching
+- Clear indication of rule scope
+
+### `globs` Field
+
+- Array of glob pattern strings
+- Patterns relative to project root
+- Supports: `*`, `**`, `?`, `[abc]`, `{a,b}`
+- Examples: `["src/**/*.py", "tests/unit/**"]`
+
+### `alwaysApply` Field
+
+- Boolean: `true` | `false`
+- Default: `false`
+- Use sparingly to prevent context bloat
+- Reserved for universal project standards
+
+## Validation Criteria
+
+Rule files MUST:
+
+- Use `.mdc` extension
+- Include valid YAML frontmatter
+- Define clear title
+- Contain actionable content
+- Be under 500 lines
+
+Rule content MUST:
+
+- Be project-specific
+- Provide concrete examples
+- Avoid conflicts with existing rules
+- Reference actual project files
+
+Rule metadata MUST:
+
+- Use valid glob patterns if defined
+- Include description for intelligent rules
+- Set appropriate application type
+
+## Maintenance Requirements
+
+- Test rules via @-mention before enabling
+- Update rules when project patterns evolve
+- Remove rules that don't improve AI output
+- Split rules exceeding 500 lines
+- Merge redundant rules
+- Validate glob patterns match intended files
+- Check for conflicts with other rules
+
+## File References
+
+- Project rules: `.cursor/rules/*.mdc`
+- Nested rules: `path/to/.cursor/rules/*.mdc`
+- Legacy (deprecated): `.cursorrules`
+- Alternative: `AGENTS.md`

@@ -1,0 +1,156 @@
+---
+description: Discord permission patterns, command permissions, role-based access control, and permission checks for Tux
+globs: src/tux/modules/**/*.py, src/tux/core/**/*.py
+alwaysApply: false
+---
+
+# Discord Bot Permissions
+
+## Overview
+
+Tux uses a database-driven permission system where command permissions are configured per-guild in the database. All commands use `@requires_command_permission()` decorator for dynamic permission checking.
+
+## Permission Decorator
+
+### Basic Usage
+
+```python
+from tux.core.checks import requires_command_permission
+
+@commands.hybrid_command(name="command")
+@commands.guild_only()
+@requires_command_permission()  # ✅ GOOD: Use permission decorator
+async def command(self, ctx: commands.Context[Tux]) -> None:
+    """Command description."""
+    # Permission checked automatically
+    pass
+```
+
+✅ **GOOD:** Always use requires_command_permission() decorator
+
+❌ **BAD:** Manual permission checks or missing decorator
+
+```python
+# ❌ BAD: Manual permission check
+@commands.hybrid_command(name="command")
+async def command(self, ctx: commands.Context[Tux]) -> None:
+    if not await check_permission(ctx):
+        return  # Use decorator instead!
+```
+
+### Permission Configuration
+
+Permissions are configured per-guild in the database:
+
+- **Permission Ranks**: Numeric ranks (higher = more permissions)
+- **Role Assignments**: Roles mapped to permission ranks
+- **Command Permissions**: Commands require specific ranks
+
+✅ **GOOD:** Database-driven, per-guild configuration
+
+❌ **BAD:** Hard-coded permissions
+
+## Permission System Architecture
+
+### Permission Ranks
+
+Permission ranks are stored in the database:
+
+```python
+# Permission ranks are numeric
+# Higher rank = more permissions
+# Rank 0 = no permissions (default)
+# Rank 100 = maximum permissions
+```
+
+### Role-to-Rank Mapping
+
+Roles are assigned to permission ranks:
+
+```python
+# Example configuration:
+# @Admin role → Rank 100
+# @Moderator role → Rank 50
+# @Member role → Rank 10
+```
+
+### Command Requirements
+
+Commands require specific permission ranks:
+
+```python
+# Commands are configured in database:
+# /ban → Requires Rank 50
+# /warn → Requires Rank 30
+# /info → Requires Rank 0 (everyone)
+```
+
+## Permission Checking Flow
+
+1. **User invokes command** - Command is called
+2. **Get user's rank** - Look up user's highest role rank
+3. **Check command requirement** - Get required rank from database
+4. **Compare ranks** - User rank >= command requirement
+5. **Allow or deny** - Execute command or raise TuxPermissionDeniedError
+
+✅ **GOOD:** Automatic, database-driven checking
+
+## Permission Exceptions
+
+### TuxPermissionDeniedError
+
+Raised when permission check fails:
+
+```python
+from tux.shared.exceptions import TuxPermissionDeniedError
+
+# Automatically raised by decorator if permission denied
+# Handled by error handler cog
+```
+
+### Error Handling
+
+Error handler automatically sends permission denied message:
+
+```python
+# Error handler sends appropriate message:
+# "You don't have permission to use this command."
+```
+
+## Permission Best Practices
+
+1. **Always use decorator** - Use @requires_command_permission()
+2. **Database-driven** - Don't hard-code permissions
+3. **Per-guild configuration** - Each guild configures independently
+4. **Safe defaults** - Commands denied by default if not configured
+5. **Rank-based system** - Use numeric ranks for flexibility
+6. **Role assignments** - Map roles to ranks, not individual commands
+
+## Anti-Patterns
+
+1. ❌ **Manual permission checks** - Use decorator
+2. ❌ **Hard-coded permissions** - Use database configuration
+3. ❌ **Missing decorator** - Always use requires_command_permission()
+4. ❌ **Global permissions** - Configure per-guild
+5. ❌ **Command-specific roles** - Use rank-based system
+
+## Permission Configuration Commands
+
+Guild administrators configure permissions through bot commands:
+
+```python
+# Configuration commands (in config cog):
+# /config ranks create <name> <rank>
+# /config ranks assign <role> <rank>
+# /config commands set <command> <rank>
+```
+
+✅ **GOOD:** User-friendly configuration interface
+
+## See Also
+
+- @modules/commands.mdc - Command patterns with permissions
+- @modules/cogs.mdc - Cog structure
+- @database/models.mdc - Permission model patterns
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

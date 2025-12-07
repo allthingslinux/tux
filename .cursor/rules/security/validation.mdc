@@ -1,0 +1,191 @@
+---
+description: Input validation patterns, data sanitization, and validation best practices for Tux
+globs: src/tux/**/*.py
+alwaysApply: false
+---
+
+# Input Validation
+
+## Overview
+
+Tux validates all user input to prevent security vulnerabilities, data corruption, and errors. Validation should happen early and fail fast.
+
+## Command Input Validation
+
+### Parameter Validation
+
+```python
+# ✅ GOOD: Validate command parameters
+async def command(
+    self,
+    ctx: commands.Context[Tux],
+    member: discord.Member,
+    reason: str,
+) -> None:
+    # Validate reason length
+    if len(reason) > 500:
+        embed = EmbedCreator.error(
+            title="Invalid Input",
+            description="Reason must be 500 characters or less."
+        )
+        await ctx.send(embed=embed)
+        return
+
+    # Validate member
+    if member.bot:
+        embed = EmbedCreator.error(
+            title="Invalid Target",
+            description="Cannot act on bots."
+        )
+        await ctx.send(embed=embed)
+        return
+
+    # Proceed with validated input
+    await do_action(member, reason)
+```
+
+❌ **BAD:** No validation
+
+```python
+# ❌ BAD: No validation
+async def command(self, ctx, member, reason):
+    # Directly use input - dangerous!
+    await do_action(member, reason)
+```
+
+### Type Validation
+
+```python
+# ✅ GOOD: Use type hints and validate types
+async def command(
+    self,
+    ctx: commands.Context[Tux],
+    count: int,
+) -> None:
+    # Validate range
+    if count < 1 or count > 100:
+        await ctx.send("Count must be between 1 and 100")
+        return
+```
+
+## Interaction Validation
+
+### Author Validation
+
+```python
+from tux.ui.views.config.callbacks import validate_author
+
+# ✅ GOOD: Validate interaction author
+async def button_callback(
+    self,
+    interaction: discord.Interaction,
+    button: discord.ui.Button,
+) -> None:
+    if not await validate_author(
+        interaction,
+        expected_author,
+        "You can't use this interaction."
+    ):
+        return
+```
+
+### Data Validation
+
+```python
+from tux.ui.views.config.callbacks import validate_interaction_data
+
+# ✅ GOOD: Validate interaction data
+async def callback(self, interaction: discord.Interaction) -> None:
+    if not await validate_interaction_data(interaction):
+        return
+```
+
+## Database Input Validation
+
+### Model Validation
+
+SQLModel automatically validates using Pydantic:
+
+```python
+# ✅ GOOD: SQLModel validates automatically
+guild = Guild(
+    id=guild_id,
+    case_count=count,  # Validated by Pydantic constraints
+)
+# Raises ValidationError if constraints violated
+```
+
+### Query Parameter Validation
+
+```python
+# ✅ GOOD: Validate query parameters
+async def get_cases(
+    self,
+    guild_id: int,
+    limit: int = 10,
+) -> list[Case]:
+    # Validate limit
+    if limit < 1 or limit > 100:
+        raise ValueError("Limit must be between 1 and 100")
+
+    # SQLModel uses parameterized queries automatically
+    stmt = select(Case).where(Case.guild_id == guild_id).limit(limit)
+    return await session.execute(stmt)
+```
+
+## String Validation
+
+### Length Validation
+
+```python
+# ✅ GOOD: Validate string length
+def validate_reason(reason: str) -> bool:
+    if len(reason) < 1:
+        return False
+    if len(reason) > 500:
+        return False
+    return True
+```
+
+### Content Validation
+
+```python
+# ✅ GOOD: Validate string content
+import re
+
+def validate_prefix(prefix: str) -> bool:
+    # Only allow alphanumeric and common symbols
+    if not re.match(r"^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]+$", prefix):
+        return False
+    if len(prefix) > 3:
+        return False
+    return True
+```
+
+## Best Practices
+
+1. **Validate early** - Validate as soon as input is received
+2. **Fail fast** - Return error immediately on validation failure
+3. **Use type hints** - Leverage Python type system
+4. **Validate ranges** - Check numeric ranges
+5. **Validate length** - Check string lengths
+6. **Validate format** - Use regex for format validation
+7. **User-friendly errors** - Provide clear error messages
+
+## Anti-Patterns
+
+1. ❌ **No validation** - Always validate user input
+2. ❌ **Late validation** - Validate early, not late
+3. ❌ **Silent failures** - Return clear error messages
+4. ❌ **Trusting input** - Never trust user input
+5. ❌ **Weak validation** - Validate thoroughly
+6. ❌ **Generic errors** - Provide specific error messages
+
+## See Also
+
+- @security/patterns.mdc - Security patterns
+- @modules/commands.mdc - Command patterns
+- @modules/interactions.mdc - Interaction patterns
+- @database/models.mdc - Model validation
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

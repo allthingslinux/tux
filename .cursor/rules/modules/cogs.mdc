@@ -1,0 +1,224 @@
+---
+description: Discord bot cog structure, BaseCog usage, cog organization, and module patterns for Tux
+globs: src/tux/modules/**/*.py
+alwaysApply: false
+---
+
+# Discord Bot Cogs
+
+## Overview
+
+Tux uses discord.py cogs organized by feature domain. All cogs inherit from `BaseCog` which provides database access, configuration, and automatic usage generation.
+
+## Cog Structure
+
+### Basic Cog Pattern
+
+```python
+from discord.ext import commands
+from tux.core.base_cog import BaseCog
+from tux.core.bot import Tux
+
+class MyCog(BaseCog):
+    """Description of what this cog does."""
+
+    def __init__(self, bot: Tux) -> None:
+        """Initialize the cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance.
+        """
+        super().__init__(bot)
+        # Initialize any services or state here
+```
+
+✅ **GOOD:** Inherits from BaseCog, proper typing, NumPy docstrings
+
+❌ **BAD:** Direct commands.Cog inheritance, missing BaseCog
+
+```python
+# ❌ BAD: Missing BaseCog benefits
+class MyCog(commands.Cog):
+    def __init__(self, bot: Tux):
+        self.bot = bot  # Missing database access, config, etc.
+```
+
+## Cog Organization
+
+### Directory Structure
+
+Cogs are organized by feature domain:
+
+```
+src/tux/modules/
+├── admin/          # Administrative commands
+├── config/         # Configuration management
+├── features/       # Feature modules (levels, starboard, etc.)
+├── fun/            # Fun/entertainment commands
+├── guild/          # Guild-specific features
+├── info/           # Information commands
+├── levels/         # Leveling system
+├── moderation/     # Moderation commands
+├── snippets/       # Snippet management
+├── tools/          # Utility tools
+└── utility/        # Utility commands
+```
+
+✅ **GOOD:** Domain-based organization, clear separation
+
+❌ **BAD:** Flat structure, unclear organization
+
+### Module Files
+
+Each module directory contains:
+
+- `__init__.py` - Module exports and base classes
+- Individual cog files - One cog per file
+- `README.md` (optional) - Module documentation
+
+✅ **GOOD:** One cog per file, clear module structure
+
+## BaseCog Features
+
+### Database Access
+
+BaseCog provides `self.db` for database operations:
+
+```python
+# ✅ GOOD: Use self.db for database access
+class MyCog(BaseCog):
+    async def my_command(self, ctx: commands.Context[Tux]) -> None:
+        guild_controller = self.db.guild
+        guild = await guild_controller.get(id=ctx.guild.id)
+```
+
+❌ **BAD:** Direct database service access
+
+```python
+# ❌ BAD: Don't access database service directly
+async def my_command(self, ctx: commands.Context[Tux]) -> None:
+    db = DatabaseService()  # Don't create new instances!
+```
+
+### Configuration Access
+
+BaseCog provides `self.config` for guild configuration:
+
+```python
+# ✅ GOOD: Use self.config for guild config
+guild_config = await self.config.get_guild_config(ctx.guild.id)
+```
+
+### Automatic Usage Generation
+
+BaseCog automatically generates usage strings from function signatures:
+
+```python
+# ✅ GOOD: Usage generated automatically from signature
+@commands.hybrid_command(name="mycommand")
+async def my_command(
+    self,
+    ctx: commands.Context[Tux],
+    member: discord.Member,
+    reason: str | None = None,
+) -> None:
+    # Usage: mycommand <member: Member> [reason: str]
+    pass
+```
+
+## Cog Lifecycle
+
+### Initialization
+
+```python
+def __init__(self, bot: Tux) -> None:
+    super().__init__(bot)
+    # Initialize services, state, etc.
+```
+
+### Loading
+
+```python
+async def cog_load(self) -> None:
+    """Called when cog is loaded."""
+    # Setup tasks, initialize caches, etc.
+    pass
+```
+
+### Unloading
+
+```python
+async def cog_unload(self) -> None:
+    """Called when cog is unloaded."""
+    # Cleanup tasks, close connections, etc.
+    pass
+```
+
+## Cog Setup Function
+
+Every cog must have a setup function:
+
+```python
+async def setup(bot: Tux) -> None:
+    """Set up the cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
+    await bot.add_cog(MyCog(bot))
+```
+
+✅ **GOOD:** Proper setup function with type hints
+
+❌ **BAD:** Missing setup function or wrong signature
+
+## Specialized Base Classes
+
+### ModerationCogBase
+
+For moderation cogs:
+
+```python
+from tux.modules.moderation import ModerationCogBase
+
+class Warn(ModerationCogBase):
+    """Warning moderation cog."""
+
+    def __init__(self, bot: Tux) -> None:
+        super().__init__(bot)
+        # Moderation services automatically available
+        # self.moderation - ModerationCoordinator
+```
+
+✅ **GOOD:** Use specialized base classes when available
+
+## Best Practices
+
+1. **Always inherit from BaseCog** - Provides database, config, usage generation
+2. **Organize by domain** - Group related cogs in directories
+3. **One cog per file** - Keep cogs focused and maintainable
+4. **Use setup function** - Required for cog loading
+5. **Initialize in **init**** - Set up services and state
+6. **Handle lifecycle** - Implement cog_load/cog_unload if needed
+7. **Type hints** - Always type bot parameter and return types
+
+## Anti-Patterns
+
+1. ❌ **Direct commands.Cog** - Always use BaseCog
+2. ❌ **Multiple cogs per file** - One cog per file
+3. ❌ **Missing setup function** - Required for loading
+4. ❌ **Direct database access** - Use self.db
+5. ❌ **Flat organization** - Organize by domain
+6. ❌ **No type hints** - Always type bot and methods
+
+## See Also
+
+- @modules/commands.mdc - Command patterns
+- @modules/events.mdc - Event handler patterns
+- @modules/permissions.mdc - Permission patterns
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

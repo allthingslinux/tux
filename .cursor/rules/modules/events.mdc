@@ -1,0 +1,265 @@
+---
+description: Discord event handler patterns, Cog listeners, event organization, and event handling best practices for Tux
+globs: src/tux/**/*.py
+alwaysApply: false
+---
+
+# Discord Bot Event Handlers
+
+## Overview
+
+Tux uses discord.py event listeners organized in cogs. Event handlers should be properly typed, handle errors, and follow Tux patterns for logging and error tracking.
+
+## Event Listener Pattern
+
+### Basic Event Listener
+
+```python
+@commands.Cog.listener()
+async def on_message(self, message: discord.Message) -> None:
+    """Handle message events.
+
+    Parameters
+    ----------
+    message : discord.Message
+        The message that was sent.
+    """
+    # Ignore bot messages
+    if message.author.bot:
+        return
+
+    # Event handling logic
+    pass
+```
+
+✅ **GOOD:** Proper decorator, type hints, docstring, bot check
+
+❌ **BAD:** Missing decorator, no type hints
+
+```python
+# ❌ BAD: Missing @commands.Cog.listener()
+async def on_message(self, message):
+    pass
+```
+
+### Named Event Listeners
+
+For specific events:
+
+```python
+@commands.Cog.listener("on_member_join")
+async def on_member_join(self, member: discord.Member) -> None:
+    """Handle member join events."""
+    # Welcome logic
+    pass
+
+@commands.Cog.listener("on_command_error")
+async def on_command_error(
+    self,
+    ctx: commands.Context[Tux],
+    error: commands.CommandError,
+) -> None:
+    """Handle command errors."""
+    # Error handling
+    pass
+```
+
+✅ **GOOD:** Named listener, proper error types
+
+## Common Events
+
+### Message Events
+
+```python
+@commands.Cog.listener()
+async def on_message(self, message: discord.Message) -> None:
+    """Handle all messages."""
+    if message.author.bot:
+        return
+    # Process message
+    pass
+
+@commands.Cog.listener()
+async def on_message_edit(
+    self,
+    before: discord.Message,
+    after: discord.Message,
+) -> None:
+    """Handle message edits."""
+    # Handle edit
+    pass
+
+@commands.Cog.listener()
+async def on_message_delete(self, message: discord.Message) -> None:
+    """Handle message deletions."""
+    # Handle deletion
+    pass
+```
+
+### Member Events
+
+```python
+@commands.Cog.listener()
+async def on_member_join(self, member: discord.Member) -> None:
+    """Handle member joins."""
+    assert member.guild
+    # Welcome member, assign roles, etc.
+    pass
+
+@commands.Cog.listener()
+async def on_member_remove(self, member: discord.Member) -> None:
+    """Handle member leaves."""
+    # Cleanup, logging, etc.
+    pass
+
+@commands.Cog.listener()
+async def on_member_update(
+    self,
+    before: discord.Member,
+    after: discord.Member,
+) -> None:
+    """Handle member updates (roles, nickname, etc.)."""
+    # Handle role changes, nickname changes, etc.
+    pass
+```
+
+### Guild Events
+
+```python
+@commands.Cog.listener()
+async def on_guild_join(self, guild: discord.Guild) -> None:
+    """Handle bot joining a guild."""
+    # Initialize guild config, send welcome message
+    pass
+
+@commands.Cog.listener()
+async def on_guild_remove(self, guild: discord.Guild) -> None:
+    """Handle bot leaving a guild."""
+    # Cleanup guild data
+    pass
+```
+
+### Command Events
+
+```python
+@commands.Cog.listener("on_command")
+async def on_command(self, ctx: commands.Context[Tux]) -> None:
+    """Handle command invocation."""
+    # Logging, metrics, etc.
+    pass
+
+@commands.Cog.listener("on_command_completion")
+async def on_command_completion(
+    self,
+    ctx: commands.Context[Tux],
+) -> None:
+    """Handle command completion."""
+    # Logging, metrics, etc.
+    pass
+
+@commands.Cog.listener("on_command_error")
+async def on_command_error(
+    self,
+    ctx: commands.Context[Tux],
+    error: commands.CommandError,
+) -> None:
+    """Handle command errors."""
+    # Error handling, logging
+    pass
+```
+
+## Event Organization
+
+### Event Handler Cogs
+
+Create dedicated cogs for event handling:
+
+```python
+class EventHandler(BaseCog):
+    """Centralized event handling."""
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member) -> None:
+        # Handle join
+        pass
+
+    @commands.Cog.listener()
+    async def on_member_remove(self, member: discord.Member) -> None:
+        # Handle leave
+        pass
+```
+
+✅ **GOOD:** Dedicated event handler cogs
+
+### Feature-Specific Events
+
+Events can be in feature cogs:
+
+```python
+class Levels(BaseCog):
+    """Leveling system cog."""
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        """Handle messages for XP calculation."""
+        if message.author.bot:
+            return
+        # Calculate XP
+        pass
+```
+
+✅ **GOOD:** Events in feature cogs when relevant
+
+## Error Handling in Events
+
+### Try-Except Blocks
+
+```python
+@commands.Cog.listener()
+async def on_member_join(self, member: discord.Member) -> None:
+    """Handle member joins with error handling."""
+    try:
+        # Event logic
+        await welcome_member(member)
+    except Exception as e:
+        logger.exception(f"Failed to handle member join: {e}")
+        # Don't let event errors crash the bot
+```
+
+✅ **GOOD:** Always handle errors in events
+
+❌ **BAD:** Unhandled exceptions
+
+```python
+# ❌ BAD: Unhandled exceptions can crash the bot
+@commands.Cog.listener()
+async def on_member_join(self, member: discord.Member) -> None:
+    await welcome_member(member)  # No error handling!
+```
+
+## Event Best Practices
+
+1. **Always use @commands.Cog.listener()** - Required decorator
+2. **Type all parameters** - Use proper Discord types
+3. **Handle errors** - Don't let event errors crash the bot
+4. **Check bot messages** - Ignore bot messages where appropriate
+5. **Assert guild when needed** - Use assert for type narrowing
+6. **Log events** - Log important events for debugging
+7. **Organize by feature** - Group related events together
+
+## Anti-Patterns
+
+1. ❌ **Missing listener decorator** - Always use @commands.Cog.listener()
+2. ❌ **No error handling** - Always handle exceptions
+3. ❌ **Processing bot messages** - Check message.author.bot
+4. ❌ **No type hints** - Always type parameters
+5. ❌ **Blocking operations** - Use async/await properly
+6. ❌ **Unorganized events** - Group related events
+
+## See Also
+
+- @modules/cogs.mdc - Cog structure
+- @modules/commands.mdc - Command patterns
+- @error-handling/patterns.mdc - Error handling patterns
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

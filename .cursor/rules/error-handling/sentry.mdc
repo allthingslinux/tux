@@ -1,0 +1,132 @@
+---
+description: Sentry integration, error tracking, performance monitoring, and Sentry best practices for Tux
+globs: src/tux/services/sentry/**/*.py, src/tux/**/*.py
+alwaysApply: false
+---
+
+# Sentry Integration
+
+## Overview
+
+Tux uses Sentry for error tracking and performance monitoring. Errors are automatically captured with context, and sensitive data is sanitized before sending.
+
+## Error Capture
+
+### Automatic Capture
+
+```python
+from tux.services.sentry import capture_exception_safe
+
+# ✅ GOOD: Capture exceptions safely
+try:
+    await operation()
+except Exception as e:
+    capture_exception_safe(e)
+    # Error sent to Sentry with context
+```
+
+✅ **GOOD:** Automatic context capture
+
+### Manual Capture
+
+```python
+# ✅ GOOD: Manual capture with extra context
+capture_exception_safe(
+    error,
+    extra_context={"guild_id": guild_id, "user_id": user_id},
+    capture_locals=True,
+)
+```
+
+## Context Setting
+
+### Command Context
+
+```python
+from tux.services.sentry import set_command_context
+
+# ✅ GOOD: Set command context
+set_command_context(ctx)  # Includes command, user, guild info
+```
+
+### User Context
+
+```python
+from tux.services.sentry import set_user_context
+
+# ✅ GOOD: Set user context
+set_user_context(user)  # Includes user ID, username, roles
+```
+
+### Combined Context
+
+```python
+# ✅ GOOD: Set both contexts
+set_command_context(ctx)
+set_user_context(ctx.author)
+```
+
+## Error Handler Integration
+
+The error handler automatically sets Sentry context:
+
+```python
+# ✅ GOOD: Error handler sets context automatically
+# ErrorHandler cog sets context before capturing errors
+```
+
+## Data Sanitization
+
+### Automatic Sanitization
+
+Sentry automatically sanitizes sensitive data:
+
+```python
+from tux.services.sentry.handlers import _sanitize_sensitive_data
+
+# ✅ GOOD: Sensitive data is sanitized
+# Database URLs, API keys, tokens are masked
+```
+
+✅ **GOOD:** Sensitive data never sent to Sentry
+
+## Performance Monitoring
+
+### Command Tracking
+
+```python
+from tux.services.sentry import track_command_start, track_command_end
+
+# ✅ GOOD: Track command performance
+track_command_start(command_name)
+try:
+    await execute_command()
+    track_command_end(command_name, success=True)
+except Exception as e:
+    track_command_end(command_name, success=False, error=e)
+```
+
+## Best Practices
+
+1. **Use capture_exception_safe** - Safe error capture
+2. **Set context** - Always set command and user context
+3. **Sanitize data** - Sensitive data is automatically sanitized
+4. **Track performance** - Use performance tracking for commands
+5. **Don't capture manually** - Let error handler capture automatically
+6. **Extra context** - Add extra context when needed
+
+## Anti-Patterns
+
+1. ❌ **Direct sentry_sdk.capture_exception** - Use capture_exception_safe
+2. ❌ **Missing context** - Always set context
+3. ❌ **Logging secrets** - Sanitization handles this
+4. ❌ **Manual capture everywhere** - Let error handler work
+5. ❌ **No performance tracking** - Track important operations
+
+## See Also
+
+- @error-handling/patterns.mdc - Error handling patterns
+- @error-handling/logging.mdc - Logging patterns
+- @security/secrets.mdc - Secret sanitization
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

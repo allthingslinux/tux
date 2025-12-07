@@ -1,0 +1,197 @@
+---
+description: DatabaseService patterns, connection management, session handling, and async database operations for Tux
+globs: src/tux/database/service.py, **/*database*service*.py
+alwaysApply: false
+---
+
+# Database Service Layer
+
+## Overview
+
+Tux uses `DatabaseService` for async PostgreSQL connection management, session handling, and database operations. The service provides connection pooling, retry logic, and health checks.
+
+## Service Initialization
+
+### Creating Database Service
+
+```python
+from tux.database.service import DatabaseService
+
+# ✅ GOOD: Create service instance
+db = DatabaseService(echo=False)  # echo=True for SQL logging
+
+# Connect to database
+await db.connect(CONFIG.DATABASE_URL)
+```
+
+❌ **BAD:** Creating multiple service instances or not using service
+
+```python
+# ❌ BAD: Multiple instances
+db1 = DatabaseService()
+db2 = DatabaseService()  # Don't create multiple!
+```
+
+## Session Management
+
+### Using Sessions
+
+```python
+# ✅ GOOD: Use session context manager
+async with db.session() as session:
+    # Use session for operations
+    result = await session.execute(select(MyModel))
+    models = result.scalars().all()
+```
+
+❌ **BAD:** Manual session creation or not using context manager
+
+```python
+# ❌ BAD: Manual session management
+session = db._session_factory()
+try:
+    # operations
+finally:
+    await session.close()  # Don't do this!
+```
+
+### Session in Controllers
+
+Controllers automatically use DatabaseService:
+
+```python
+# ✅ GOOD: Controllers use service internally
+controller = MyModelController(db)
+model = await controller.get(id=123)  # Service manages session
+
+# ❌ BAD: Passing session to controller
+async with db.session() as session:
+    model = await controller.get(session, id=123)  # Don't do this!
+```
+
+## Connection Management
+
+### Connection Pooling
+
+DatabaseService automatically manages connection pooling:
+
+- **pool_pre_ping**: Tests connections before use
+- **pool_recycle**: Recycles connections after 1 hour
+- **connect_timeout**: 10-second connection timeout
+- **statement_timeout**: 5-minute query timeout
+
+✅ **GOOD:** Service handles pooling automatically
+
+❌ **BAD:** Manual connection management
+
+### Health Checks
+
+```python
+# ✅ GOOD: Use health check method
+is_healthy = await db.health_check()
+
+if not is_healthy:
+    logger.error("Database connection unhealthy")
+```
+
+## Async Operations
+
+### Query Execution
+
+```python
+# ✅ GOOD: Use async session methods
+async with db.session() as session:
+    result = await session.execute(
+        select(MyModel).where(MyModel.status == "active")
+    )
+    models = result.scalars().all()
+```
+
+❌ **BAD:** Using sync methods
+
+```python
+# ❌ BAD: Sync operations (not available in async)
+async with db.session() as session:
+    models = session.query(MyModel).all()  # Doesn't exist!
+```
+
+### Transaction Management
+
+```python
+# ✅ GOOD: Use async transaction
+async with db.session() as session:
+    async with session.begin():
+        model1 = MyModel(name="Model 1")
+        model2 = MyModel(name="Model 2")
+        session.add(model1)
+        session.add(model2)
+        # Committed automatically, or rolled back on error
+```
+
+## Error Handling
+
+### Connection Errors
+
+```python
+# ✅ GOOD: Handle connection errors
+try:
+    await db.connect(CONFIG.DATABASE_URL)
+except Exception as e:
+    logger.error(f"Failed to connect to database: {e}")
+    # Handle error appropriately
+```
+
+### Query Errors
+
+```python
+# ✅ GOOD: Let controllers handle query errors
+try:
+    model = await controller.get(id=123)
+except Exception as e:
+    logger.error(f"Query failed: {e}")
+    # Handle error
+```
+
+## Service Lifecycle
+
+### Startup
+
+```python
+# ✅ GOOD: Connect on startup
+async def startup():
+    db = DatabaseService()
+    await db.connect(CONFIG.DATABASE_URL)
+    return db
+```
+
+### Shutdown
+
+```python
+# ✅ GOOD: Close connections on shutdown
+async def shutdown(db: DatabaseService):
+    await db.close()
+```
+
+## Best Practices
+
+1. **Single service instance** - Create one DatabaseService per application
+2. **Use context managers** - Always use `async with db.session()`
+3. **Let controllers handle sessions** - Don't pass sessions to controllers
+4. **Handle errors properly** - Catch and log database errors
+5. **Use health checks** - Monitor database connectivity
+6. **Close on shutdown** - Properly close connections
+
+## Anti-Patterns
+
+1. ❌ **Multiple service instances** - Use singleton pattern
+2. ❌ **Manual session management** - Use context managers
+3. ❌ **Passing sessions to controllers** - Controllers manage sessions
+4. ❌ **Not handling errors** - Always catch database errors
+5. ❌ **Not closing connections** - Close on shutdown
+
+## See Also
+
+- @database/controllers.mdc - Controller patterns using service
+- @database/models.mdc - Model patterns
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

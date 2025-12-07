@@ -1,0 +1,319 @@
+---
+description: Discord command patterns, hybrid commands, slash commands, command decorators, and response patterns for Tux
+globs: src/tux/modules/**/*.py
+alwaysApply: false
+---
+
+# Discord Bot Commands
+
+## Overview
+
+Tux uses discord.py hybrid commands (slash + traditional) with proper decorators, error handling, and permission checks. Commands should be well-typed, documented, and follow Tux patterns.
+
+## Command Types
+
+### Hybrid Commands
+
+Hybrid commands work as both slash and traditional commands:
+
+```python
+@commands.hybrid_command(
+    name="mycommand",
+    aliases=["mc", "cmd"],
+    description="Command description for slash command"
+)
+@commands.guild_only()
+@requires_command_permission()
+async def my_command(
+    self,
+    ctx: commands.Context[Tux],
+    member: discord.Member,
+    reason: str | None = None,
+) -> None:
+    """Command description (appears in help).
+
+    Parameters
+    ----------
+    ctx : commands.Context[Tux]
+        The command context.
+    member : discord.Member
+        The member to act on.
+    reason : str, optional
+        Optional reason for the action.
+    """
+    assert ctx.guild  # Required for guild_only commands
+    # Command implementation
+```
+
+✅ **GOOD:** Hybrid command, proper decorators, type hints, docstring
+
+❌ **BAD:** Missing decorators, no type hints
+
+```python
+# ❌ BAD: Missing decorators and type hints
+@commands.command()
+async def my_command(self, ctx, member):
+    # Missing guild_only, permissions, type hints
+    pass
+```
+
+### Traditional Commands
+
+For commands that don't need slash support:
+
+```python
+@commands.command(
+    name="mycommand",
+    aliases=["mc"],
+)
+@commands.guild_only()
+@requires_command_permission()
+async def my_command(
+    self,
+    ctx: commands.Context[Tux],
+    member: discord.Member,
+) -> None:
+    """Command description."""
+    # Implementation
+```
+
+### Command Groups
+
+For nested commands:
+
+```python
+@commands.hybrid_group(
+    name="config",
+    aliases=["settings"],
+)
+@commands.guild_only()
+@requires_command_permission()
+async def config(self, ctx: commands.Context[Tux]) -> None:
+    """Manage guild configuration."""
+    if ctx.invoked_subcommand is None:
+        # Show help or default action
+        await self.show_config_overview(ctx)
+
+@config.command(name="set")
+@commands.guild_only()
+@requires_command_permission()
+async def config_set(
+    self,
+    ctx: commands.Context[Tux],
+    key: str,
+    value: str,
+) -> None:
+    """Set a configuration value."""
+    # Implementation
+```
+
+✅ **GOOD:** Proper group structure, subcommand handling
+
+## Command Decorators
+
+### Required Decorators
+
+```python
+# ✅ GOOD: Always include these decorators
+@commands.hybrid_command(name="command")
+@commands.guild_only()  # If command requires guild
+@requires_command_permission()  # Permission check
+async def command(self, ctx: commands.Context[Tux]) -> None:
+    pass
+```
+
+### Guild-Only Commands
+
+```python
+# ✅ GOOD: Use guild_only for commands that need a guild
+@commands.guild_only()
+async def command(self, ctx: commands.Context[Tux]) -> None:
+    assert ctx.guild  # Type narrowing after guild_only
+    # Safe to use ctx.guild
+```
+
+### Permission Checks
+
+```python
+# ✅ GOOD: Use permission decorator
+@requires_command_permission()
+async def command(self, ctx: commands.Context[Tux]) -> None:
+    # Permission checked automatically
+    pass
+```
+
+❌ **BAD:** Manual permission checks
+
+```python
+# ❌ BAD: Don't manually check permissions
+async def command(self, ctx: commands.Context[Tux]) -> None:
+    if not await check_permission(ctx):
+        return  # Use decorator instead!
+```
+
+## Command Parameters
+
+### Type Hints
+
+Always use proper type hints:
+
+```python
+# ✅ GOOD: Proper type hints
+async def command(
+    self,
+    ctx: commands.Context[Tux],
+    member: discord.Member,
+    reason: str | None = None,
+    count: int = 1,
+) -> None:
+    pass
+```
+
+❌ **BAD:** Missing or incorrect type hints
+
+```python
+# ❌ BAD: Missing type hints
+async def command(self, ctx, member, reason=None):
+    pass
+```
+
+### Optional Parameters
+
+```python
+# ✅ GOOD: Use | None for optional parameters
+async def command(
+    self,
+    ctx: commands.Context[Tux],
+    member: discord.Member,
+    reason: str | None = None,  # Optional
+) -> None:
+    if reason:
+        # Handle reason
+        pass
+```
+
+### Flag Parameters
+
+For complex parameters, use Flag classes:
+
+```python
+from tux.core.flags import WarnFlags
+
+@commands.hybrid_command(name="warn")
+async def warn(
+    self,
+    ctx: commands.Context[Tux],
+    member: discord.Member,
+    *,
+    flags: WarnFlags,  # Flags for complex options
+) -> None:
+    reason = flags.reason
+    silent = flags.silent
+```
+
+## Command Responses
+
+### Sending Messages
+
+```python
+# ✅ GOOD: Use appropriate response method
+await ctx.send("Simple message")
+await ctx.send(embed=embed)  # With embed
+await ctx.send(view=view)  # With view/components
+```
+
+### Deferring Responses
+
+For long-running operations:
+
+```python
+# ✅ GOOD: Defer for long operations
+if ctx.interaction:
+    await ctx.interaction.response.defer()
+
+# Do long operation
+result = await long_operation()
+
+# Edit or follow up
+if ctx.interaction:
+    await ctx.interaction.followup.send(result)
+else:
+    await ctx.send(result)
+```
+
+### Error Responses
+
+```python
+# ✅ GOOD: Use error embeds
+from tux.ui.embeds import EmbedCreator
+
+embed = EmbedCreator.error(
+    title="Error",
+    description="Something went wrong"
+)
+await ctx.send(embed=embed)
+```
+
+## Command Error Handling
+
+### Try-Except Blocks
+
+```python
+# ✅ GOOD: Handle errors properly
+async def command(self, ctx: commands.Context[Tux]) -> None:
+    try:
+        # Command logic
+        pass
+    except discord.Forbidden:
+        embed = EmbedCreator.error(
+            title="Permission Denied",
+            description="I don't have permission to do that."
+        )
+        await ctx.send(embed=embed)
+    except Exception as e:
+        logger.exception("Command failed")
+        await ctx.send("An error occurred.")
+```
+
+### Error Handler Cogs
+
+For global error handling:
+
+```python
+@commands.Cog.listener()
+async def on_command_error(
+    self,
+    ctx: commands.Context[Tux],
+    error: commands.CommandError,
+) -> None:
+    # Handle command errors
+    pass
+```
+
+## Best Practices
+
+1. **Use hybrid commands** - Support both slash and traditional
+2. **Always type hints** - Type all parameters and return types
+3. **Use decorators** - guild_only, requires_command_permission
+4. **Document commands** - NumPy docstrings
+5. **Handle errors** - Try-except with appropriate responses
+6. **Use embeds** - For rich responses
+7. **Assert ctx.guild** - After guild_only decorator
+
+## Anti-Patterns
+
+1. ❌ **Missing type hints** - Always type parameters
+2. ❌ **Missing decorators** - Use required decorators
+3. ❌ **No error handling** - Always handle errors
+4. ❌ **Plain text responses** - Use embeds for rich responses
+5. ❌ **Manual permission checks** - Use decorators
+6. ❌ **No docstrings** - Document all commands
+
+## See Also
+
+- @modules/cogs.mdc - Cog structure
+- @modules/permissions.mdc - Permission patterns
+- @modules/interactions.mdc - Interaction patterns
+- @ui/cv2.mdc - Components V2 patterns
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands
