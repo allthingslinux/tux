@@ -1,0 +1,191 @@
+---
+description: Pytest configuration, test structure, test organization, and pytest patterns for Tux
+globs: tests/**/*.py, **/test_*.py, **/*_test.py
+alwaysApply: false
+---
+
+# Pytest Testing Framework
+
+## Overview
+
+Tux uses pytest with async support, comprehensive plugins, and py-pglite for in-memory PostgreSQL testing. Tests are organized by type (unit, integration, e2e) and use markers for categorization.
+
+## Test Structure
+
+### Basic Test Function
+
+```python
+import pytest
+from tux.database.service import DatabaseService
+
+@pytest.mark.unit
+async def test_my_function(db_service: DatabaseService) -> None:
+    """Test description.
+
+    Parameters
+    ----------
+    db_service : DatabaseService
+        Database service fixture.
+    """
+    # Arrange
+    expected = "expected_value"
+
+    # Act
+    result = await my_function()
+
+    # Assert
+    assert result == expected
+```
+
+✅ **GOOD:** Proper marker, type hints, docstring, Arrange-Act-Assert pattern
+
+❌ **BAD:** Missing marker, no type hints, no docstring
+
+```python
+# ❌ BAD: Missing marker and type hints
+def test_my_function(db_service):
+    result = my_function()
+    assert result == "value"
+```
+
+### Test Classes
+
+```python
+class TestMyFeature:
+    """Test suite for MyFeature."""
+
+    @pytest.mark.unit
+    async def test_feature_one(self, db_service: DatabaseService) -> None:
+        """Test feature one."""
+        # Test implementation
+        pass
+
+    @pytest.mark.unit
+    async def test_feature_two(self, db_service: DatabaseService) -> None:
+        """Test feature two."""
+        # Test implementation
+        pass
+```
+
+✅ **GOOD:** Organized in classes, descriptive names
+
+## Test Organization
+
+### Directory Structure
+
+```
+tests/
+├── conftest.py           # Pytest configuration and fixtures
+├── fixtures/             # Shared fixtures
+│   ├── database_fixtures.py
+│   ├── test_data_fixtures.py
+│   └── sentry_fixtures.py
+├── unit/                 # Unit tests (fast, isolated)
+├── integration/          # Integration tests (database, services)
+└── e2e/                  # End-to-end tests (full workflows)
+```
+
+✅ **GOOD:** Clear separation by test type
+
+### Test File Naming
+
+```python
+# ✅ GOOD: Descriptive test file names
+test_database_models.py
+test_moderation_service.py
+test_permission_system.py
+
+# ❌ BAD: Generic names
+test1.py
+tests.py
+mytest.py
+```
+
+## Pytest Configuration
+
+### Markers
+
+Markers are defined in `pyproject.toml`:
+
+```toml
+[tool.pytest.ini_options.markers]
+unit = "Unit tests (uses py-pglite)"
+integration = "Integration tests (uses py-pglite)"
+slow = "Slow tests (>5 seconds)"
+database = "Tests requiring database access"
+async = "Async tests"
+```
+
+✅ **GOOD:** Always use appropriate markers
+
+### Async Support
+
+Pytest-asyncio is configured for async tests:
+
+```python
+# ✅ GOOD: Async test with marker
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_async_function(db_service: DatabaseService) -> None:
+    result = await async_function()
+    assert result is not None
+```
+
+❌ **BAD:** Missing asyncio marker for async tests
+
+## Test Execution
+
+### Running Tests
+
+```bash
+# ✅ GOOD: Use test script commands
+uv run test all          # Full test suite with coverage
+uv run test quick        # Fast run (no coverage)
+uv run test html         # Generate HTML report
+
+# Run specific markers
+uv run pytest -m unit
+uv run pytest -m integration
+uv run pytest -m "not slow"
+```
+
+### Coverage
+
+Coverage is automatically generated:
+
+```bash
+# Coverage reports:
+# - Terminal output (--cov-report=term-missing)
+# - XML (--cov-report=xml)
+# - JSON (--cov-report=json)
+# - LCOV (--cov-report=lcov)
+# - HTML (--cov-report=html)
+```
+
+## Best Practices
+
+1. **Use markers** - Always mark tests (unit, integration, etc.)
+2. **Type hints** - Type all test function parameters
+3. **Docstrings** - Document what each test does
+4. **Arrange-Act-Assert** - Follow AAA pattern
+5. **Descriptive names** - Test names should describe what they test
+6. **Isolated tests** - Tests should not depend on each other
+7. **Use fixtures** - Use fixtures for setup/teardown
+
+## Anti-Patterns
+
+1. ❌ **Missing markers** - Always use appropriate markers
+2. ❌ **No type hints** - Always type parameters
+3. ❌ **No docstrings** - Document all tests
+4. ❌ **Test dependencies** - Tests should be independent
+5. ❌ **Hard-coded values** - Use fixtures and constants
+6. ❌ **Slow unit tests** - Unit tests should be fast
+
+## See Also
+
+- @testing/fixtures.mdc - Fixture patterns
+- @testing/markers.mdc - Test marker conventions
+- @testing/coverage.mdc - Coverage requirements
+- @testing/async.mdc - Async testing patterns
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

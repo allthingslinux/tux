@@ -1,0 +1,194 @@
+---
+description: Pytest test markers, marker conventions, marker usage, and test categorization for Tux
+globs: tests/**/*.py
+alwaysApply: false
+---
+
+# Pytest Test Markers
+
+## Overview
+
+Tux uses pytest markers to categorize tests by type, speed, and requirements. Markers enable selective test execution and proper test organization.
+
+## Available Markers
+
+Markers are defined in `pyproject.toml`:
+
+```toml
+[tool.pytest.ini_options.markers]
+unit = "Unit tests (uses py-pglite)"
+integration = "Integration tests (uses py-pglite)"
+slow = "Slow tests (>5 seconds)"
+database = "Tests requiring database access"
+async = "Async tests"
+```
+
+## Marker Usage
+
+### Unit Tests
+
+```python
+@pytest.mark.unit
+async def test_model_creation(db_service: DatabaseService) -> None:
+    """Unit test for model creation."""
+    # Fast, isolated test
+    pass
+```
+
+✅ **GOOD:** Unit tests are fast and isolated
+
+**Characteristics:**
+
+- Fast execution (<1 second)
+- Isolated (no external dependencies)
+- Uses py-pglite for database
+- Tests single unit of code
+
+### Integration Tests
+
+```python
+@pytest.mark.integration
+async def test_database_service_integration(db_service: DatabaseService) -> None:
+    """Integration test for database service."""
+    # Tests multiple components together
+    pass
+```
+
+✅ **GOOD:** Integration tests verify component interactions
+
+**Characteristics:**
+
+- Tests multiple components
+- Uses py-pglite for database
+- May test service layer integration
+- Still relatively fast
+
+### Slow Tests
+
+```python
+@pytest.mark.slow
+@pytest.mark.integration
+async def test_full_workflow(db_service: DatabaseService) -> None:
+    """Slow integration test for full workflow."""
+    # Takes >5 seconds
+    pass
+```
+
+✅ **GOOD:** Mark slow tests for selective execution
+
+**Characteristics:**
+
+- Execution time >5 seconds
+- May test complex workflows
+- Can be skipped in quick test runs
+
+### Database Tests
+
+```python
+@pytest.mark.database
+@pytest.mark.unit
+async def test_database_query(db_service: DatabaseService) -> None:
+    """Database test."""
+    # Requires database access
+    pass
+```
+
+✅ **GOOD:** Mark tests that require database
+
+**Characteristics:**
+
+- Requires database access
+- Uses py-pglite fixtures
+- Tests database operations
+
+### Async Tests
+
+```python
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_async_function(db_service: DatabaseService) -> None:
+    """Async test."""
+    # Async test function
+    result = await async_function()
+    assert result is not None
+```
+
+✅ **GOOD:** Mark async tests with asyncio marker
+
+**Characteristics:**
+
+- Uses async/await
+- Requires asyncio marker
+- Tests async code
+
+## Multiple Markers
+
+Tests can have multiple markers:
+
+```python
+@pytest.mark.unit
+@pytest.mark.database
+@pytest.mark.asyncio
+async def test_async_database_operation(db_service: DatabaseService) -> None:
+    """Async unit test with database."""
+    pass
+```
+
+✅ **GOOD:** Use multiple markers when appropriate
+
+## Marker Combinations
+
+### Common Combinations
+
+```python
+# Unit test with database
+@pytest.mark.unit
+@pytest.mark.database
+
+# Integration test with database
+@pytest.mark.integration
+@pytest.mark.database
+
+# Slow integration test
+@pytest.mark.slow
+@pytest.mark.integration
+
+# Async unit test
+@pytest.mark.asyncio
+@pytest.mark.unit
+```
+
+## Running Tests by Marker
+
+```bash
+# ✅ GOOD: Run tests by marker
+uv run pytest -m unit              # Only unit tests
+uv run pytest -m integration        # Only integration tests
+uv run pytest -m "not slow"        # Exclude slow tests
+uv run pytest -m "unit and database"  # Unit tests with database
+```
+
+## Best Practices
+
+1. **Always use markers** - Mark all tests appropriately
+2. **Use multiple markers** - Combine markers when needed
+3. **Be specific** - Use most specific marker combination
+4. **Mark slow tests** - Always mark tests >5 seconds
+5. **Mark async tests** - Always use asyncio marker
+6. **Mark database tests** - Mark tests requiring database
+
+## Anti-Patterns
+
+1. ❌ **Missing markers** - Always mark tests
+2. ❌ **Wrong markers** - Use appropriate markers
+3. ❌ **Not marking slow tests** - Always mark slow tests
+4. ❌ **Missing asyncio** - Always mark async tests
+5. ❌ **Over-marking** - Don't use unnecessary markers
+
+## See Also
+
+- @testing/pytest.mdc - Pytest configuration
+- @testing/fixtures.mdc - Fixture patterns
+- @testing/async.mdc - Async testing patterns
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

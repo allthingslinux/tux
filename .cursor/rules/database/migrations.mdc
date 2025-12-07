@@ -1,0 +1,249 @@
+---
+description: Alembic migration patterns, creating migrations, upgrade/downgrade functions, and migration safety for Tux
+globs: src/tux/database/migrations/**/*.py, alembic.ini
+alwaysApply: false
+---
+
+# Alembic Database Migrations
+
+## Overview
+
+Tux uses Alembic for database schema migrations with async PostgreSQL support. Migrations are automatically generated from SQLModel changes and must include both upgrade and downgrade functions.
+
+## Migration Creation
+
+### Creating a New Migration
+
+```bash
+# ✅ GOOD: Use the db script command
+uv run db migrate-dev "description of changes"
+
+# This creates a new migration file in:
+# src/tux/database/migrations/versions/
+```
+
+❌ **BAD:** Manually creating migration files or using alembic directly
+
+```bash
+# ❌ BAD: Don't use alembic directly
+alembic revision --autogenerate -m "description"
+```
+
+### Migration File Structure
+
+```python
+"""Revision ID: abc123
+Revises: def456
+Create Date: 2025-01-15 10:30:00
+"""
+from __future__ import annotations
+
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+import sqlmodel
+
+# revision identifiers
+revision: str = "abc123"
+down_revision: Union[str, None] = "def456"
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    # ✅ GOOD: Always implement upgrade
+    op.create_table(
+        "my_table",
+        sa.Column("id", sa.BigInteger(), nullable=False),
+        sa.Column("name", sa.String(255), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
+
+
+def downgrade() -> None:
+    # ✅ GOOD: Always implement downgrade for rollback
+    op.drop_table("my_table")
+```
+
+✅ **GOOD:** Both upgrade and downgrade implemented, proper imports
+
+❌ **BAD:** Missing downgrade, incomplete migration
+
+## Migration Patterns
+
+### Creating Tables
+
+```python
+def upgrade() -> None:
+    op.create_table(
+        "my_table",
+        sa.Column("id", sa.BigInteger(), nullable=False),
+        sa.Column("name", sa.String(255), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index("ix_my_table_name", "my_table", ["name"])
+
+def downgrade() -> None:
+    op.drop_index("ix_my_table_name", table_name="my_table")
+    op.drop_table("my_table")
+```
+
+✅ **GOOD:** Includes indexes, timestamps, proper constraints
+
+### Adding Columns
+
+```python
+def upgrade() -> None:
+    op.add_column("my_table", sa.Column("description", sa.String(500), nullable=True))
+
+def downgrade() -> None:
+    op.drop_column("my_table", "description")
+```
+
+✅ **GOOD:** Symmetric upgrade/downgrade
+
+❌ **BAD:** Missing downgrade
+
+```python
+# ❌ BAD: No way to rollback
+def upgrade() -> None:
+    op.add_column("my_table", sa.Column("description", sa.String(500)))
+
+def downgrade() -> None:
+    pass  # Missing rollback!
+```
+
+### Modifying Columns
+
+```python
+def upgrade() -> None:
+    op.alter_column(
+        "my_table",
+        "name",
+        existing_type=sa.String(255),
+        type_=sa.String(500),
+        existing_nullable=False,
+        nullable=False,
+    )
+
+def downgrade() -> None:
+    op.alter_column(
+        "my_table",
+        "name",
+        existing_type=sa.String(500),
+        type_=sa.String(255),
+        existing_nullable=False,
+        nullable=False,
+    )
+```
+
+✅ **GOOD:** Specifies existing_type and type_ for safety
+
+### Adding Foreign Keys
+
+```python
+def upgrade() -> None:
+    op.add_column("cases", sa.Column("guild_id", sa.BigInteger(), nullable=False))
+    op.create_foreign_key(
+        "fk_cases_guild_id_guild",
+        "cases",
+        "guild",
+        ["guild_id"],
+        ["id"],
+        ondelete="CASCADE",
+    )
+
+def downgrade() -> None:
+    op.drop_constraint("fk_cases_guild_id_guild", "cases", type_="foreignkey")
+    op.drop_column("cases", "guild_id")
+```
+
+✅ **GOOD:** Named constraint, proper cascade options
+
+### Creating Enums
+
+```python
+def upgrade() -> None:
+    # Create enum type
+    case_type_enum = sa.Enum("WARN", "TIMEOUT", "KICK", "BAN", name="case_type")
+    case_type_enum.create(op.get_bind(), checkfirst=True)
+
+    # Use enum in column
+    op.add_column("cases", sa.Column("type", case_type_enum, nullable=False))
+
+def downgrade() -> None:
+    op.drop_column("cases", "type")
+    op.execute("DROP TYPE IF EXISTS case_type")
+```
+
+✅ **GOOD:** Creates enum type, uses checkfirst=True
+
+## Migration Safety
+
+### Data Migrations
+
+For data migrations, use batch operations:
+
+```python
+def upgrade() -> None:
+    # ✅ GOOD: Use batch operations for large data changes
+    with op.batch_alter_table("my_table", schema=None) as batch_op:
+        batch_op.alter_column("status", type_=sa.String(50))
+
+def downgrade() -> None:
+    with op.batch_alter_table("my_table", schema=None) as batch_op:
+        batch_op.alter_column("status", type_=sa.String(20))
+```
+
+### Testing Migrations
+
+Always test both upgrade and downgrade:
+
+```bash
+# ✅ GOOD: Test migration up and down
+uv run db migrate-dev "test migration"
+uv run db reset  # Test full migration chain
+```
+
+❌ **BAD:** Not testing downgrade
+
+## Migration Environment
+
+The migration environment (`env.py`) handles:
+
+- **URL Conversion:** Async to sync URL conversion
+- **Retry Logic:** 5 attempts with exponential backoff
+- **Connection Testing:** Validates connectivity before migrations
+- **Empty Migration Prevention:** Prevents empty migrations
+- **Transaction Safety:** Each migration in its own transaction
+
+✅ **GOOD:** Environment configured with safety features
+
+## Best Practices
+
+1. **Always implement downgrade** - Required for rollback capability
+2. **Test migrations** - Test both upgrade and downgrade paths
+3. **Use named constraints** - Makes migrations easier to understand
+4. **Include indexes** - Don't forget to create/drop indexes
+5. **Handle enums properly** - Create/drop enum types correctly
+6. **Use batch operations** - For large table modifications
+7. **Document complex migrations** - Add comments for non-obvious changes
+
+## Anti-Patterns
+
+1. ❌ **Missing downgrade** - Always implement rollback
+2. ❌ **Unnamed constraints** - Always name constraints
+3. ❌ **Missing indexes** - Don't forget index operations
+4. ❌ **Direct alembic usage** - Use `uv run db migrate-dev`
+5. ❌ **Not testing downgrade** - Always test rollback
+6. ❌ **Empty migrations** - Prevented by env.py, but check manually
+
+## See Also
+
+- @database/models.mdc - Model patterns that drive migrations
+- @database/controllers.mdc - Controller patterns
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

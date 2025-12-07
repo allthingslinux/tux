@@ -1,0 +1,298 @@
+---
+description: Discord interaction patterns, interaction responses, modals, components, and interaction handling for Tux
+globs: src/tux/**/*.py
+alwaysApply: false
+---
+
+# Discord Bot Interactions
+
+## Overview
+
+Tux handles Discord interactions (slash commands, buttons, selects, modals) with proper response patterns, error handling, and Components V2 support. Interactions should be properly typed and follow Discord's interaction lifecycle.
+
+## Interaction Types
+
+### Slash Commands
+
+Slash commands are handled through hybrid commands:
+
+```python
+@commands.hybrid_command(name="command")
+async def command(
+    self,
+    ctx: commands.Context[Tux],
+    member: discord.Member,
+) -> None:
+    """Command description."""
+    # Works for both slash and traditional commands
+    # ctx.interaction is available for slash commands
+    pass
+```
+
+✅ **GOOD:** Hybrid commands support both interaction and context
+
+### Button Interactions
+
+```python
+from discord.ui import View, Button
+
+class MyView(View):
+    @discord.ui.button(label="Click Me", style=discord.ButtonStyle.primary)
+    async def button_callback(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button,
+    ) -> None:
+        """Handle button click."""
+        await interaction.response.send_message("Button clicked!")
+```
+
+✅ **GOOD:** Proper interaction response, type hints
+
+❌ **BAD:** Missing response or wrong response type
+
+```python
+# ❌ BAD: Missing response
+@discord.ui.button(label="Click")
+async def button_callback(self, interaction, button):
+    # Missing await interaction.response...
+    pass
+```
+
+### Select Menu Interactions
+
+```python
+from discord.ui import Select
+
+class MySelect(Select):
+    def __init__(self) -> None:
+        super().__init__(
+            placeholder="Choose an option...",
+            options=[
+                discord.SelectOption(label="Option 1", value="1"),
+                discord.SelectOption(label="Option 2", value="2"),
+            ],
+        )
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        """Handle select menu selection."""
+        await interaction.response.send_message(
+            f"You selected: {self.values[0]}"
+        )
+```
+
+### Modal Interactions
+
+```python
+from discord.ui import Modal, TextInput
+
+class MyModal(Modal, title="My Modal"):
+    name = TextInput(
+        label="Name",
+        placeholder="Enter your name",
+        required=True,
+        max_length=100,
+    )
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        """Handle modal submission."""
+        await interaction.response.send_message(
+            f"Submitted: {self.name.value}"
+        )
+```
+
+✅ **GOOD:** Proper modal structure, response handling
+
+## Interaction Responses
+
+### Immediate Response
+
+```python
+# ✅ GOOD: Respond immediately (within 3 seconds)
+await interaction.response.send_message("Response")
+```
+
+### Deferred Response
+
+For long-running operations:
+
+```python
+# ✅ GOOD: Defer for long operations
+await interaction.response.defer()
+
+# Do long operation
+result = await long_operation()
+
+# Follow up with result
+await interaction.followup.send(result)
+```
+
+❌ **BAD:** Not responding or responding too late
+
+```python
+# ❌ BAD: Response after 3 seconds
+await long_operation()  # Takes 5 seconds
+await interaction.response.send_message("Done")  # Too late!
+```
+
+### Ephemeral Responses
+
+For private responses:
+
+```python
+# ✅ GOOD: Ephemeral response (only visible to user)
+await interaction.response.send_message(
+    "Private message",
+    ephemeral=True
+)
+```
+
+### Response Types
+
+```python
+# Send message
+await interaction.response.send_message("Text")
+
+# Send embed
+await interaction.response.send_message(embed=embed)
+
+# Send view/components
+await interaction.response.send_message(view=view)
+
+# Send modal
+await interaction.response.send_modal(modal)
+```
+
+## Interaction Validation
+
+### Author Validation
+
+```python
+from tux.ui.views.config.callbacks import validate_author
+
+# ✅ GOOD: Validate interaction author
+if not await validate_author(
+    interaction,
+    expected_author,
+    "You can't use this interaction."
+):
+    return
+```
+
+### Data Validation
+
+```python
+from tux.ui.views.config.callbacks import validate_interaction_data
+
+# ✅ GOOD: Validate interaction data
+if not await validate_interaction_data(interaction):
+    return
+```
+
+## Interaction Error Handling
+
+### Try-Except Blocks
+
+```python
+async def button_callback(
+    self,
+    interaction: discord.Interaction,
+    button: discord.ui.Button,
+) -> None:
+    """Handle button click with error handling."""
+    try:
+        # Interaction logic
+        await do_something()
+        await interaction.response.send_message("Success!")
+    except discord.HTTPException as e:
+        logger.error(f"HTTP error: {e}")
+        if not interaction.response.is_done():
+            await interaction.response.send_message(
+                "An error occurred.",
+                ephemeral=True
+            )
+    except Exception as e:
+        logger.exception("Interaction error")
+        # Handle error appropriately
+```
+
+### Error Handler Utility
+
+```python
+from tux.ui.views.config.callbacks import handle_callback_error
+
+# ✅ GOOD: Use error handler utility
+try:
+    # Interaction logic
+    pass
+except Exception as e:
+    await handle_callback_error(
+        interaction,
+        e,
+        operation="button_click"
+    )
+```
+
+## Components V2
+
+Tux uses Components V2 (Discord.py 2.6+):
+
+```python
+from tux.ui.views import LayoutView
+from discord.ui import TextDisplay, ActionRow, Button
+
+class MyView(LayoutView):
+    text = TextDisplay("Hello", id=1234)
+    action_row = ActionRow()
+
+    @action_row.button(label="Click")
+    async def btn(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button,
+    ) -> None:
+        await interaction.response.send_message("Hi!")
+```
+
+✅ **GOOD:** Use LayoutView for Components V2
+
+See @ui/cv2.mdc for detailed Components V2 patterns.
+
+## Interaction Context
+
+### Getting Context
+
+```python
+from tux.core.context import get_interaction_context
+
+# ✅ GOOD: Get standardized context
+context = get_interaction_context(interaction)
+# Returns dict with user_id, command_name, guild_id, etc.
+```
+
+## Best Practices
+
+1. **Respond within 3 seconds** - Defer if operation takes longer
+2. **Always handle errors** - Don't let interaction errors crash
+3. **Validate authors** - Check interaction author when needed
+4. **Use ephemeral for private** - Use ephemeral=True for private responses
+5. **Type interactions** - Always type interaction parameters
+6. **Use Components V2** - Use LayoutView for new components
+7. **Handle timeouts** - Check if response is done before responding
+
+## Anti-Patterns
+
+1. ❌ **Missing response** - Always respond to interactions
+2. ❌ **Response after timeout** - Defer for long operations
+3. ❌ **No error handling** - Always handle exceptions
+4. ❌ **Missing type hints** - Always type interaction parameters
+5. ❌ **Not validating authors** - Validate when needed
+6. ❌ **Using old components** - Use Components V2
+
+## See Also
+
+- @modules/commands.mdc - Command patterns
+- @ui/cv2.mdc - Components V2 detailed patterns
+- @error-handling/patterns.mdc - Error handling patterns
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

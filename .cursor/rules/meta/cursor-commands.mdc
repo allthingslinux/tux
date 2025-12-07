@@ -1,0 +1,203 @@
+---
+globs: *.mdc,AGENTS.md
+alwaysApply: false
+---
+# Cursor Commands Specification
+
+## Command Type Classification
+
+| Type | Location | Availability | Management |
+|------|----------|-------------|------------|
+| Project | `.cursor/commands/` | Current project only | Version controlled |
+| Global | `~/.cursor/commands/` | All projects | User-level |
+| Team | Dashboard managed | All team members | Admin-controlled |
+
+## File Format Requirements
+
+Commands MUST:
+
+- Use plain Markdown (`.md`) format
+- Have descriptive kebab-case filenames
+- Contain clear, actionable content
+- Be stored in `.cursor/commands/` directory
+
+Commands MUST NOT:
+
+- Use MDC format or YAML frontmatter
+- Exceed reasonable length (recommend 200 lines)
+- Duplicate functionality of existing commands
+- Include sensitive information or secrets
+
+## Invocation
+
+**Syntax**: `/command-name [optional parameters]`
+
+**Behavior**:
+
+- Triggered with `/` prefix in chat input
+- Filename (without `.md`) becomes command name
+- Auto-discovered and displayed on `/` input
+- Parameters passed as additional context
+
+**Example**:
+
+```text
+/review-code and check for security issues
+```
+
+Command: `review-code`
+Parameters: `and check for security issues`
+
+## Command Structure
+
+```markdown
+# Title
+
+## Overview
+Brief description of command purpose.
+
+## Steps
+1. Action one
+2. Action two
+3. Action three
+
+## Checklist
+- [ ] Item one
+- [ ] Item two
+```
+
+## Content Requirements
+
+Commands SHOULD:
+
+- Start with clear title and overview
+- Use step-by-step instructions for workflows
+- Include checklists for verification
+- Be specific to project workflows
+- Focus on repeatability
+
+Commands MAY:
+
+- Reference project-specific tools
+- Include code block templates
+- Define acceptance criteria
+- Link to related documentation
+
+## Naming Conventions
+
+Filenames MUST:
+
+- Use kebab-case: `command-name.md`
+- Be descriptive and action-oriented
+- Avoid generic names
+- Match expected usage pattern
+
+**Good**:
+
+- `review-code.md`
+- `create-pr.md`
+- `run-tests-and-fix.md`
+- `security-audit.md`
+
+**Bad**:
+
+- `command.md`
+- `helper.md`
+- `tool.md`
+- `misc.md`
+
+## Directory Organization
+
+```text
+.cursor/commands/
+├── code-review.md
+├── create-pr.md
+├── run-tests.md
+└── security-audit.md
+```
+
+No nested directories supported. All commands in flat structure.
+
+## Parameter Handling
+
+Parameters are appended to command content in model context:
+
+- Optional: Commands work with or without parameters
+- Freeform: Any text after command name
+- Context: Parameters add specificity to command execution
+
+## Team Commands
+
+**Requirements**:
+
+- Created via [Cursor Dashboard](https://cursor.com/dashboard?tab=team-content&section=commands)
+- Available only on Team/Enterprise plans
+- Automatically synchronized to all team members
+- Admin-only creation and modification
+
+**Fields**:
+
+- **Name** (required): Command identifier
+- **Description** (optional): Help text for users
+- **Content** (required): Markdown command content
+
+**Benefits**:
+
+- Centralized management
+- Instant synchronization
+- Standardized workflows
+- Access control
+
+## Validation Criteria
+
+Commands MUST:
+
+- Be valid Markdown
+- Have unique names within scope
+- Contain actionable content
+- Be project/workflow specific
+
+Commands SHOULD:
+
+- Be tested before committing
+- Have clear purpose
+- Be updated regularly
+- Be documented if complex
+
+## Best Practices
+
+**Scope**:
+
+- One workflow per command
+- Clear, focused purpose
+- Avoid command overlap
+
+**Content**:
+
+- Action-oriented language
+- Specific instructions
+- Project context included
+- Repeatable process
+
+**Maintenance**:
+
+- Remove unused commands
+- Update with workflow changes
+- Validate functionality periodically
+- Version control project commands
+
+## Command vs Rule
+
+| Aspect | Commands | Rules |
+|--------|----------|-------|
+| Format | Plain Markdown | MDC with metadata |
+| Trigger | Manual `/command` | Automatic/intelligent |
+| Purpose | Workflows/actions | Guidelines/standards |
+| Scope | User-initiated | Context-applied |
+| Location | `.cursor/commands/` | `.cursor/rules/` |
+
+## File References
+
+- Project commands: `.cursor/commands/*.md`
+- Global commands: `~/.cursor/commands/*.md`
+- Team commands: Dashboard managed
