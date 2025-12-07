@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-"""Cursor rules and commands validation CLI for Tux.
+"""Rules and commands validation CLI for Tux.
 
-This script provides commands for validating Cursor rules and commands
+This script provides commands for validating rules and commands
 to ensure they follow the Tux project standards.
 """
 
@@ -19,25 +19,25 @@ from scripts.base import BaseCLI
 from scripts.registry import Command
 
 
-class CursorCLI(BaseCLI):
-    """Cursor rules and commands validation CLI."""
+class RulesCLI(BaseCLI):
+    """Rules and commands validation CLI."""
 
     def __init__(self) -> None:
-        """Initialize the CursorCLI."""
+        """Initialize the RulesCLI."""
         super().__init__(
-            name="cursor",
-            description="Cursor rules and commands validation",
+            name="rules",
+            description="Rules and commands validation",
         )
         self._setup_command_registry()
         self._setup_commands()
 
     def _setup_command_registry(self) -> None:
-        """Set up the command registry with all cursor commands."""
+        """Set up the command registry with all rules commands."""
         all_commands = [
             Command(
                 "validate",
                 self.validate,
-                "Validate all Cursor rules and commands",
+                "Validate all rules and commands",
             ),
         ]
 
@@ -45,13 +45,13 @@ class CursorCLI(BaseCLI):
             self._command_registry.register_command(cmd)
 
     def _setup_commands(self) -> None:
-        """Set up all cursor CLI commands using the command registry."""
+        """Set up all rules CLI commands using the command registry."""
 
         # Add a no-op callback to force Typer into subcommand mode
         # This prevents Typer from treating a single command with only Options as the main command
         @self.app.callback(invoke_without_command=False)
         def _main_callback() -> None:  # pyright: ignore[reportUnusedFunction]
-            """Cursor rules and commands validation CLI."""
+            """Rules and commands validation CLI."""
 
         # Now register commands as subcommands
         for command in self._command_registry.get_commands().values():
@@ -96,9 +96,12 @@ class CursorCLI(BaseCLI):
         frontmatter = frontmatter_match[1]
 
         # Check globs format (must be comma-separated, not array format)
-        if "globs:" in frontmatter:
-            globs_line_match = re.search(r"^globs:\s*(.+)$", frontmatter, re.MULTILINE)
-            if globs_line_match:
+        if "globs:" in frontmatter:  # noqa: SIM102
+            if globs_line_match := re.search(
+                r"^globs:\s*(.+)$",
+                frontmatter,
+                re.MULTILINE,
+            ):
                 globs_value = globs_line_match[1].strip()
                 # Check for array format (incorrect)
                 if globs_value.startswith("[") and globs_value.endswith("]"):
@@ -342,7 +345,7 @@ class CursorCLI(BaseCLI):
             ),
         ] = Path(".cursor/commands"),
     ) -> None:
-        """Validate all Cursor rules and commands.
+        """Validate all rules and commands.
 
         This command validates that all rules and commands follow the Tux project
         standards for structure, content, and metadata.
@@ -459,12 +462,12 @@ class CursorCLI(BaseCLI):
 
 
 # Create the CLI app instance
-app = CursorCLI().app
+app = RulesCLI().app
 
 
 def main() -> None:
     """Entry point for the cursor CLI script."""
-    cli = CursorCLI()
+    cli = RulesCLI()
     cli.run()
 
 
