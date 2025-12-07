@@ -228,7 +228,7 @@ def _add_console_handler(log_level: str) -> None:
         """Dynamically retrieve sys.stderr for robustness."""
         sys.stderr.write(message)
 
-    def safe_message_filter(record: dict[str, Any]) -> bool:
+    def safe_message_filter(record: Any) -> bool:
         """
         Filter that escapes curly braces in log messages to prevent format errors.
 
@@ -237,8 +237,8 @@ def _add_console_handler(log_level: str) -> None:
 
         Parameters
         ----------
-        record : dict[str, Any]
-            The log record to process.
+        record : Any
+            The loguru Record object (dict-like) to process.
 
         Returns
         -------
