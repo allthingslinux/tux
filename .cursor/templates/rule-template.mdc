@@ -1,0 +1,63 @@
+---
+description: Brief description with domain keywords (60-120 chars)
+globs: file/pattern/to/match/**/*.*, another/pattern/to/match/**/*.*
+alwaysApply: false  # true for always-apply rules
+---
+
+# Rule Title
+
+## Overview
+
+Brief description of the rule's purpose and scope. Explain what this rule covers and when it applies.
+
+## Patterns
+
+### ✅ GOOD: Correct Pattern
+
+```python
+# Example of correct implementation
+# Include working code examples
+class MyClass:
+    """Proper docstring."""
+    def method(self) -> None:
+        # Implementation
+        pass
+```
+
+### ❌ BAD: Anti-Pattern
+
+```python
+# Example of what NOT to do
+# Show common mistakes
+class MyClass:
+    def method(self):  # Missing type hints, docstring
+        pass
+```
+
+## Best Practices
+
+1. **Practice 1** - Explanation of best practice
+2. **Practice 2** - Another best practice
+3. **Practice 3** - Additional guidance
+
+## Anti-Patterns
+
+1. ❌ **Anti-pattern 1** - Why this is bad
+2. ❌ **Anti-pattern 2** - Common mistake to avoid
+3. ❌ **Anti-pattern 3** - What not to do
+
+## Examples
+
+More detailed examples demonstrating the pattern in various contexts.
+
+```python
+# Additional example
+# Show different use cases
+```
+
+## See Also
+
+- @related-rule.mdc - Related rule
+- @another-rule.mdc - Another related rule
+- @AGENTS.md - General coding standards
+- @.cursor/rules/rules.mdc - Complete catalog of all rules and commands
