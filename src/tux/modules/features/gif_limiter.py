@@ -143,7 +143,7 @@ class GifLimiter(BaseCog):
         if await self._should_process_message(message):
             await self._handle_gif_message(message)
 
-    @tasks.loop(seconds=20)
+    @tasks.loop(seconds=20, name="old_gif_remover")
     async def old_gif_remover(self) -> None:
         """
         Regularly clean old GIF timestamps.
@@ -167,6 +167,11 @@ class GifLimiter(BaseCog):
                     self.recent_gifs_by_user[user_id] = filtered_timestamps
                 else:
                     del self.recent_gifs_by_user[user_id]
+
+    @old_gif_remover.before_loop
+    async def before_old_gif_remover(self) -> None:
+        """Wait until the bot is ready."""
+        await self.bot.wait_until_ready()
 
     async def cog_unload(self) -> None:
         """Cancel the background task when the cog is unloaded."""
