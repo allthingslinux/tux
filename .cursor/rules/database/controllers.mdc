@@ -20,11 +20,9 @@ BaseController uses **composition** to provide specialized database operations:
 
 #### Specialized Controllers (Lazy Loaded)
 
-- **PaginationController**: Paginated results with metadata
 - **BulkOperationsController**: Batch operations for efficiency
 - **TransactionController**: Transaction management
 - **UpsertController**: Get-or-create and upsert patterns
-- **PerformanceController**: Query optimization and analysis
 
 ### Lazy Initialization Strategy
 
@@ -114,30 +112,6 @@ class UserController(BaseController[User]):
             return user
 
         return await self.with_transaction(operation)
-```
-
-### Pagination Patterns
-
-**Use pagination for large result sets:**
-
-```python
-# Simple pagination
-result = await controller.paginate(page=1, per_page=20)
-
-# With filters and ordering
-result = await controller.paginate(
-    page=1,
-    per_page=20,
-    filters={"active": True},
-    order_by=User.created_at.desc()
-)
-
-# Access pagination metadata
-users = result.items
-total = result.total
-pages = result.pages
-has_next = result.has_next
-has_prev = result.has_prev
 ```
 
 ### Bulk Operations
@@ -304,19 +278,11 @@ class GuildController(BaseController[Guild]):
 
 **When to use:**
 
-- Pagination for large datasets
 - Bulk operations for efficiency
 - Upsert for synchronization
 - Transactions for consistency
 
 ### Leverage Specialized Controllers for Optimized Queries
-
-**Pagination:**
-
-```python
-# For UI display with metadata
-result = await controller.paginate(page=1, per_page=20)
-```
 
 **Bulk operations:**
 
@@ -450,14 +416,14 @@ users = await controller.find_all_with_options(
 )
 ```
 
-### ❌ Ignoring Pagination for Large Datasets
+### ❌ Loading All Records for Large Datasets
 
 ```python
-# BAD: Loading all records
+# BAD: Loading all records without limit
 users = await controller.find_all()  # Could be thousands
 
-# GOOD: Use pagination
-result = await controller.paginate(page=1, per_page=20)
+# GOOD: Use limit and offset for pagination
+users = await controller.find_all(filters={"active": True}, limit=20, offset=0)
 ```
 
 ## Related Rules

@@ -9,8 +9,6 @@ from tux.database.service import DatabaseService
 
 from .bulk import BulkOperationsController
 from .crud import CrudController
-from .pagination import PaginationController, PaginationResult
-from .performance import PerformanceController
 from .query import QueryController
 from .transaction import TransactionController
 from .upsert import UpsertController
@@ -26,8 +24,8 @@ class BaseController[ModelT]:
     This controller delegates operations to specialized controllers while
     maintaining backward compatibility with the original BaseController API.
     Core CRUD and Query controllers are eagerly initialized, while specialized
-    controllers (pagination, bulk, transaction, performance, upsert) use lazy
-    initialization to reduce overhead for simple use cases.
+    controllers (bulk, transaction, upsert) use lazy initialization to reduce
+    overhead for simple use cases.
     """
 
     def __init__(self, model: type[ModelT], db: DatabaseService | None = None) -> None:
@@ -59,10 +57,8 @@ class BaseController[ModelT]:
         self._query = QueryController(model, db)
 
         # Specialized controllers - lazy initialization (reduces overhead)
-        self._pagination: PaginationController[ModelT] | None = None
         self._bulk: BulkOperationsController[ModelT] | None = None
         self._transaction: TransactionController[ModelT] | None = None
-        self._performance: PerformanceController[ModelT] | None = None
         self._upsert: UpsertController[ModelT] | None = None
 
     # Properties for test compatibility
@@ -91,19 +87,6 @@ class BaseController[ModelT]:
         return self.model
 
     # Lazy initialization helpers
-    def _get_pagination(self) -> PaginationController[ModelT]:
-        """
-        Get or create pagination controller.
-
-        Returns
-        -------
-        PaginationController[ModelT]
-            The pagination controller instance.
-        """
-        if self._pagination is None:
-            self._pagination = PaginationController(self.model, self.db)
-        return self._pagination
-
     def _get_bulk(self) -> BulkOperationsController[ModelT]:
         """
         Get or create bulk operations controller.
@@ -129,19 +112,6 @@ class BaseController[ModelT]:
         if self._transaction is None:
             self._transaction = TransactionController(self.model, self.db)
         return self._transaction
-
-    def _get_performance(self) -> PerformanceController[ModelT]:
-        """
-        Get or create performance controller.
-
-        Returns
-        -------
-        PerformanceController[ModelT]
-            The performance controller instance.
-        """
-        if self._performance is None:
-            self._performance = PerformanceController(self.model, self.db)
-        return self._performance
 
     def _get_upsert(self) -> UpsertController[ModelT]:
         """
@@ -312,109 +282,6 @@ class BaseController[ModelT]:
         """
         return await self._query.execute_query(query)
 
-    async def find_with_json_query(
-        self,
-        json_column: str,
-        json_path: str,
-        value: Any,
-        filters: Any | None = None,
-    ) -> list[ModelT]:
-        """
-        Find records using JSON column queries.
-
-        Returns
-        -------
-        list[ModelT]
-            List of records matching the JSON query.
-        """
-        return await self._query.find_with_json_query(
-            json_column,
-            json_path,
-            value,
-            filters,
-        )
-
-    async def find_with_array_contains(
-        self,
-        array_column: str,
-        value: Any,
-        filters: Any | None = None,
-    ) -> list[ModelT]:
-        """
-        Find records where array column contains value.
-
-        Returns
-        -------
-        list[ModelT]
-            List of records with matching array values.
-        """
-        return await self._query.find_with_array_contains(array_column, value, filters)
-
-    async def find_with_full_text_search(
-        self,
-        search_columns: list[str],
-        search_term: str,
-        filters: Any | None = None,
-    ) -> list[ModelT]:
-        """
-        Find records using full-text search.
-
-        Returns
-        -------
-        list[ModelT]
-            List of records matching the search term.
-        """
-        return await self._query.find_with_full_text_search(
-            search_columns,
-            search_term,
-            filters,
-        )
-
-    # ------------------------------------------------------------------
-    # Pagination Methods - Lazy-loaded
-    # ------------------------------------------------------------------
-
-    async def paginate(
-        self,
-        page: int = 1,
-        per_page: int = 20,
-        filters: Any | None = None,
-        order_by: Any | None = None,
-    ) -> PaginationResult[ModelT]:
-        """
-        Paginate records with metadata.
-
-        Returns
-        -------
-        PaginationResult[ModelT]
-            Pagination result with items, total, and page info.
-        """
-        return await self._get_pagination().paginate(page, per_page, filters, order_by)
-
-    async def find_paginated(
-        self,
-        page: int = 1,
-        per_page: int = 20,
-        filters: Any | None = None,
-        order_by: Any | None = None,
-        load_relationships: list[str] | None = None,
-    ) -> PaginationResult[ModelT]:
-        """
-        Find paginated records with relationship loading.
-
-        Returns
-        -------
-        PaginationResult[ModelT]
-            Pagination result with items and relationships loaded.
-        """
-        return await self._get_pagination().find_paginated(
-            page,
-            per_page,
-            filters,
-            order_by,
-            load_relationships,
-        )
-
     # ------------------------------------------------------------------
     # Bulk Operations - Lazy-loaded
     # ------------------------------------------------------------------
@@ -474,26 +341,6 @@ class BaseController[ModelT]:
         """
         return await self._get_bulk().delete_where(filters)
 
-    async def bulk_upsert_with_conflict_resolution(
-        self,
-        items: list[dict[str, Any]],
-        conflict_columns: list[str],
-        update_columns: list[str] | None = None,
-    ) -> list[ModelT]:
-        """
-        Bulk upsert with conflict resolution.
-
-        Returns
-        -------
-        list[ModelT]
-            List of upserted records.
-        """
-        return await self._get_bulk().bulk_upsert_with_conflict_resolution(
-            items,
-            conflict_columns,
-            update_columns,
-        )
-
     # ------------------------------------------------------------------
     # Transaction Methods - Lazy-loaded
     # ------------------------------------------------------------------
@@ -530,41 +377,6 @@ class BaseController[ModelT]:
             The result of the callback.
         """
         return await self._get_transaction().execute_transaction(callback)
-
-    # ------------------------------------------------------------------
-    # Performance Methods - Lazy-loaded
-    # ------------------------------------------------------------------
-
-    async def get_table_statistics(self) -> dict[str, Any]:
-        """
-        Get comprehensive table statistics.
-
-        Returns
-        -------
-        dict[str, Any]
-            Dictionary containing table statistics.
-        """
-        return await self._get_performance().get_table_statistics()
-
-    async def explain_query_performance(
-        self,
-        query: Any,
-        analyze: bool = False,
-        buffers: bool = False,
-    ) -> dict[str, Any]:
-        """
-        Explain query performance with optional analysis.
-
-        Returns
-        -------
-        dict[str, Any]
-            Dictionary containing query execution plan and statistics.
-        """
-        return await self._get_performance().explain_query_performance(
-            query,
-            analyze,
-            buffers,
-        )
 
     # ------------------------------------------------------------------
     # Upsert Methods - Lazy-loaded

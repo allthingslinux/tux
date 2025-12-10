@@ -29,11 +29,9 @@ The BaseController uses composition to provide specialized database operations t
 
 #### Specialized Controllers (Lazy Loaded)
 
-- **PaginationController**: Paginated results with metadata
 - **BulkOperationsController**: Batch operations for efficiency
 - **TransactionController**: Transaction management
 - **UpsertController**: Get-or-create and upsert patterns
-- **PerformanceController**: Query optimization and analysis
 
 ### Lazy Initialization Strategy
 
@@ -81,7 +79,7 @@ Create domain-specific controllers that extend BaseController with business logi
 
 ### Specialized Controller Usage
 
-Leverage pagination for large datasets, bulk operations for efficiency, upsert for synchronization, and transactions for consistency.
+Leverage bulk operations for efficiency, upsert for synchronization, and transactions for consistency.
 
 ## Best Practices
 
@@ -106,7 +104,6 @@ Build domain-specific controllers that encapsulate business rules and provide hi
 
 ### Leverage Specialized Controllers for Optimized Queries
 
-- Pagination for large result sets and UI display
 - Bulk operations for batch processing efficiency
 - Upsert for data synchronization scenarios
 - Transactions for multi-step operations requiring consistency
