@@ -3,7 +3,7 @@
 from typing import Any, TypeVar
 
 from loguru import logger
-from sqlmodel import SQLModel, delete, select, update
+from sqlmodel import SQLModel, delete, update
 
 from tux.database.service import DatabaseService
 
@@ -140,55 +140,3 @@ class BulkOperationsController[ModelT]:
                 "rowcount",
                 1,
             )  # fallback to 1 if rowcount not available
-
-    async def bulk_upsert_with_conflict_resolution(
-        self,
-        items: list[dict[str, Any]],
-        conflict_columns: list[str],
-        update_columns: list[str] | None = None,
-    ) -> list[ModelT]:
-        """
-        Bulk upsert with conflict resolution.
-
-        Returns
-        -------
-        list[ModelT]
-            List of upserted records.
-        """
-        async with self.db.session() as session:
-            instances: list[ModelT] = []
-
-            for item in items:
-                # Try to find existing record using direct query
-                filters = {col: item[col] for col in conflict_columns if col in item}
-                filter_expr = build_filters_for_model(filters, self.model)
-
-                stmt = select(self.model)
-                if filter_expr is not None:
-                    stmt = stmt.where(filter_expr)
-
-                result = await session.execute(stmt)
-                if existing := result.scalars().first():
-                    # Update existing record
-                    if update_columns:
-                        for col in update_columns:
-                            if col in item:
-                                setattr(existing, col, item[col])
-                    else:
-                        for key, value in item.items():
-                            if key not in conflict_columns:
-                                setattr(existing, key, value)
-                    instances.append(existing)
-                else:
-                    # Create new record
-                    instance = self.model(**item)
-                    session.add(instance)
-                    instances.append(instance)
-
-            await session.commit()
-
-            # Refresh all instances
-            for instance in instances:
-                await session.refresh(instance)
-
-            return instances
