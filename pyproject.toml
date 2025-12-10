@@ -65,6 +65,7 @@ tests = "scripts.test:main"
 docker = "scripts.docker_cli:main"
 docs = "scripts.docs:main"
 config = "scripts.config:main"
+rules = "scripts.rules:main"
 
 [dependency-groups]
 dev = [

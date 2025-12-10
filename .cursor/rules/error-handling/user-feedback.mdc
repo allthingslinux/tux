@@ -1,0 +1,146 @@
+---
+description: User-facing error messages, error embeds, user-friendly error responses, and error communication for Tux
+globs: src/tux/**/*.py
+alwaysApply: false
+---
+
+# User-Facing Error Messages
+
+## Overview
+
+Tux provides user-friendly error messages through embeds and formatted responses. Error messages should be clear, helpful, and not expose internal details.
+
+## Error Embeds
+
+### Using ErrorFormatter
+
+```python
+from tux.services.handlers.error.formatter import ErrorFormatter
+
+# ✅ GOOD: Use ErrorFormatter for consistent error messages
+formatter = ErrorFormatter()
+embed = formatter.format_error_embed(error, ctx, config)
+await ctx.send(embed=embed)
+```
+
+✅ **GOOD:** Consistent error formatting
+
+### Manual Error Embeds
+
+```python
+from tux.ui.embeds import EmbedCreator
+
+# ✅ GOOD: Use EmbedCreator for error embeds
+embed = EmbedCreator.error(
+    title="Error Title",
+    description="User-friendly error message"
+)
+await ctx.send(embed=embed)
+```
+
+❌ **BAD:** Exposing internal errors
+
+```python
+# ❌ BAD: Exposing internal error details
+try:
+    await operation()
+except Exception as e:
+    await ctx.send(f"Error: {e}")  # Exposes internal details!
+```
+
+## Error Message Patterns
+
+### Permission Errors
+
+```python
+# ✅ GOOD: Clear permission error message
+embed = EmbedCreator.error(
+    title="Permission Denied",
+    description="You don't have permission to use this command."
+)
+await ctx.send(embed=embed)
+```
+
+### Validation Errors
+
+```python
+# ✅ GOOD: Clear validation error message
+embed = EmbedCreator.error(
+    title="Invalid Input",
+    description="Reason must be 500 characters or less."
+)
+await ctx.send(embed=embed)
+```
+
+### Generic Errors
+
+```python
+# ✅ GOOD: Generic error for unexpected errors
+embed = EmbedCreator.error(
+    title="Error",
+    description="An unexpected error occurred. Please try again later."
+)
+await ctx.send(embed=embed)
+```
+
+## Error Handler Messages
+
+The error handler automatically formats error messages:
+
+```python
+# ✅ GOOD: Error handler formats messages automatically
+# ErrorHandler cog formats errors based on error type
+```
+
+## Interaction Error Responses
+
+### Ephemeral Responses
+
+```python
+# ✅ GOOD: Use ephemeral for error responses
+await interaction.response.send_message(
+    embed=error_embed,
+    ephemeral=True  # Only visible to user
+)
+```
+
+### Follow-up Responses
+
+```python
+# ✅ GOOD: Use follow-up if response already sent
+if interaction.response.is_done():
+    await interaction.followup.send(
+        embed=error_embed,
+        ephemeral=True
+    )
+else:
+    await interaction.response.send_message(
+        embed=error_embed,
+        ephemeral=True
+    )
+```
+
+## Best Practices
+
+1. **User-friendly messages** - Clear, helpful error messages
+2. **Use embeds** - Use error embeds for consistency
+3. **Don't expose internals** - Generic messages for unexpected errors
+4. **Be specific** - Specific messages for validation/permission errors
+5. **Ephemeral responses** - Use ephemeral for error responses
+6. **Consistent formatting** - Use ErrorFormatter or EmbedCreator
+
+## Anti-Patterns
+
+1. ❌ **Exposing internals** - Don't show internal error details
+2. ❌ **Generic messages** - Be specific when possible
+3. ❌ **Plain text** - Use embeds for errors
+4. ❌ **Not ephemeral** - Use ephemeral for error responses
+5. ❌ **Inconsistent formatting** - Use standard formatters
+
+## See Also
+
+- @error-handling/patterns.mdc - Error handling patterns
+- @ui/embeds.mdc - Embed patterns (if exists)
+- @modules/interactions.mdc - Interaction patterns
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

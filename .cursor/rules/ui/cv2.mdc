@@ -1,5 +1,5 @@
 ---
-description: Discord.py Components V2 rules
+description: Discord.py Components V2 rules, LayoutView patterns, component types, limits, and interaction handling for Tux
 globs: src/tux/ui/**/*.py
 alwaysApply: false
 ---
@@ -48,6 +48,29 @@ class MyLayout(ui.LayoutView):
 ## LayoutView Methods
 
 - `walk_children()` - Yields all children including nested
+
+## Best Practices
+
+1. **Use LayoutView for new components** - Prefer Components V2
+2. **Define items as class variables** - No manual `add_item` needed
+3. **Use ActionRow for buttons/selects** - Required except Section accessory
+4. **Respect component limits** - Max 40 components total
+5. **Respect character limits** - Max 4000 chars across TextDisplay items
+6. **Type interactions** - Always type interaction parameters
+
+## Anti-Patterns
+
+1. ❌ **Mixing V1 and V2** - Don't mix old View with LayoutView
+2. ❌ **Manual add_item** - Use class variables instead
+3. ❌ **Exceeding limits** - Respect component and character limits
+4. ❌ **Missing ActionRow** - Buttons/selects must be in ActionRow
+5. ❌ **No type hints** - Always type interaction parameters
+
+## See Also
+
+- @modules/interactions.mdc - Interaction response patterns
+- @modules/commands.mdc - Command patterns
+- @AGENTS.md - General coding standards
 - `find_item(id)` - Find component by numerical ID
 - `content_length()` - Total characters across all TextDisplay
 - `total_children_count` - Count including nested children

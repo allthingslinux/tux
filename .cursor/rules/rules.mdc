@@ -1,6 +1,128 @@
 ---
+description: Complete catalog of all Cursor rules and commands for the Tux project
 alwaysApply: true
 ---
-# Rules
+# Cursor Rules & Commands Index
 
-See [AGENTS.md](../../AGENTS.md) for the coding agent rules.
+Complete catalog of all rules and commands in the Tux project.
+
+## Rules
+
+### Core Rules
+
+- `core/tech-stack.mdc` - Tech stack, dependencies, project structure
+
+### Database Rules
+
+- `database/models.mdc` - SQLModel database model patterns
+- `database/migrations.mdc` - Alembic migration patterns
+- `database/controllers.mdc` - Database controller patterns
+- `database/services.mdc` - DatabaseService patterns
+- `database/queries.mdc` - Database query patterns and optimization
+
+### Modules Rules
+
+- `modules/cogs.mdc` - Discord bot cog structure
+- `modules/commands.mdc` - Discord command patterns
+- `modules/events.mdc` - Discord event handler patterns
+- `modules/permissions.mdc` - Permission patterns
+- `modules/interactions.mdc` - Interaction response patterns
+
+### Testing Rules
+
+- `testing/pytest.mdc` - Pytest configuration and patterns
+- `testing/fixtures.mdc` - Fixture usage patterns
+- `testing/markers.mdc` - Test marker conventions
+- `testing/coverage.mdc` - Coverage requirements
+- `testing/async.mdc` - Async testing patterns
+
+### Security Rules
+
+- `security/patterns.mdc` - Security patterns
+- `security/secrets.mdc` - Secret management
+- `security/validation.mdc` - Input validation
+- `security/dependencies.mdc` - Dependency security
+
+### Error Handling Rules
+
+- `error-handling/patterns.mdc` - Error patterns
+- `error-handling/logging.mdc` - Logging patterns (loguru)
+- `error-handling/sentry.mdc` - Sentry integration
+- `error-handling/user-feedback.mdc` - User-facing error messages
+
+### Documentation Rules
+
+- `docs/docs.mdc` - Master guide for documentation rules
+- `docs/patterns.mdc` - Practical examples and templates
+- `docs/principals.mdc` - Documentation frameworks (Diátaxis)
+- `docs/structure.mdc` - Documentation organization
+- `docs/style.mdc` - Writing standards
+- `docs/syntax.mdc` - Zensical syntax reference
+- `docs/zensical.mdc` - Zensical setup and deployment
+
+### UI Rules
+
+- `ui/cv2.mdc` - Discord.py Components V2 rules
+
+### Meta Rules
+
+- `meta/cursor-rules.mdc` - Cursor rules specification
+- `meta/cursor-commands.mdc` - Cursor commands specification
+
+## Commands
+
+### Code Quality Commands
+
+- `code-quality/lint.md` - Lint and fix code
+- `code-quality/refactor.md` - Refactor code
+- `code-quality/review-existing-diffs.md` - Review git diffs
+
+### Testing Commands
+
+- `testing/write-unit-tests.md` - Write unit tests
+- `testing/run-all-tests-and-fix.md` - Run all tests and fix failures
+- `testing/test-coverage.md` - Generate and review coverage
+- `testing/integration-tests.md` - Run integration tests
+
+### Database Commands
+
+- `database/migration.md` - Create and apply migrations
+- `database/health.md` - Check database connection
+- `database/reset.md` - Reset database safely
+
+### Discord Commands
+
+- `discord/create-module.md` - Create new Discord module/cog
+- `discord/test-command.md` - Test Discord command locally
+- `discord/sync-commands.md` - Sync slash commands to Discord
+
+### Security Commands
+
+- `security/security-review.md` - Comprehensive security review
+
+### Debugging Commands
+
+- `debugging/debug.md` - Debug Discord bot issues
+
+### Error Handling Commands
+
+- `error-handling/add-error-handling.md` - Add error handling
+
+### Documentation Commands
+
+- `documentation/generate-docs.md` - Generate API documentation
+- `documentation/update-docs.md` - Update documentation for changes
+- `documentation/docs-serve.md` - Serve documentation locally
+
+### Development Commands
+
+- `development/setup-project.md` - Initial project setup
+- `development/docker-up.md` - Start Docker services
+- `development/docker-down.md` - Stop Docker services
+
+## See Also
+
+- [AGENTS.md](../../AGENTS.md) - High-level project overview and standards
+- [README.md](../README.md) - System overview
+- [Creating Cursor Rules Guide](../../docs/content/developer/guides/creating-cursor-rules.md) - Guide for creating rules
+- [Creating Cursor Commands Guide](../../docs/content/developer/guides/creating-cursor-commands.md) - Guide for creating commands

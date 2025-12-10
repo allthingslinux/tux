@@ -201,6 +201,17 @@ This documentation rules system is organized into focused, modular guides:
 - **Focus on problems users actually encounter**
 - **Maintain consistency across all documentation**
 
+## See Also
+
+- @docs/principals.mdc - Documentation frameworks and methodologies
+- @docs/style.mdc - Writing standards and formatting
+- @docs/syntax.mdc - Zensical syntax and features
+- @docs/structure.mdc - Organization and navigation
+- @docs/patterns.mdc - Practical examples and templates
+- @docs/zensical.mdc - Zensical setup and deployment
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands
+
 ---
 
 **Remember**: Documentation is a conversation with users. Make it helpful, clear, and focused on their success with Tux.

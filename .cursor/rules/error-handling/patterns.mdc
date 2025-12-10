@@ -1,0 +1,163 @@
+---
+description: Error handling patterns, exception handling, error types, and error handling best practices for Tux
+globs: src/tux/**/*.py
+alwaysApply: false
+---
+
+# Error Handling Patterns
+
+## Overview
+
+Tux uses a centralized error handling system with custom exceptions, proper error logging, and user-friendly error messages. All errors should be handled appropriately with proper context.
+
+## Exception Hierarchy
+
+### Custom Exceptions
+
+Tux defines custom exceptions in `tux.shared.exceptions`:
+
+```python
+from tux.shared.exceptions import TuxError, TuxPermissionDeniedError
+
+# ✅ GOOD: Use custom exceptions
+if not has_permission:
+    raise TuxPermissionDeniedError("User lacks required permission")
+```
+
+✅ **GOOD:** Custom exceptions provide context
+
+### Base Exception
+
+```python
+class TuxError(Exception):
+    """Base exception for all Tux-specific errors."""
+    pass
+```
+
+All Tux exceptions inherit from `TuxError`.
+
+## Error Handling Patterns
+
+### Try-Except Blocks
+
+```python
+# ✅ GOOD: Handle errors with try-except
+try:
+    result = await operation()
+except ValueError as e:
+    logger.error(f"Validation error: {e}")
+    await ctx.send("Invalid input provided.")
+except Exception as e:
+    logger.exception("Unexpected error")
+    await ctx.send("An error occurred.")
+```
+
+❌ **BAD:** Swallowing errors or not handling them
+
+```python
+# ❌ BAD: Swallowing errors
+try:
+    await operation()
+except Exception:
+    pass  # Silent failure!
+
+# ❌ BAD: Not handling errors
+result = await operation()  # No error handling!
+```
+
+### Error Context
+
+```python
+# ✅ GOOD: Provide context in errors
+try:
+    await database_operation()
+except DatabaseError as e:
+    logger.error(f"Database operation failed: {e}", exc_info=True)
+    raise TuxDatabaseError("Failed to access database") from e
+```
+
+✅ **GOOD:** Preserve original exception with `from e`
+
+## Command Error Handling
+
+### Local Error Handlers
+
+```python
+# ✅ GOOD: Local error handler for specific errors
+@commands.hybrid_command(name="command")
+async def command(self, ctx: commands.Context[Tux]) -> None:
+    """Command description."""
+    pass
+
+@command.error
+async def command_error(
+    self,
+    ctx: commands.Context[Tux],
+    error: commands.CommandError,
+) -> None:
+    """Handle command-specific errors."""
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("Missing required argument.")
+    else:
+        # Let global handler handle other errors
+        raise
+```
+
+### Global Error Handler
+
+The global error handler in `ErrorHandler` cog handles all unhandled errors:
+
+```python
+# ✅ GOOD: Global handler catches all unhandled errors
+# ErrorHandler cog automatically handles errors
+```
+
+## Error Propagation
+
+### Re-raising Exceptions
+
+```python
+# ✅ GOOD: Re-raise with context
+try:
+    await operation()
+except ValueError as e:
+    logger.error(f"Operation failed: {e}")
+    raise TuxError("Operation failed") from e
+```
+
+### Error Wrapping
+
+```python
+# ✅ GOOD: Wrap exceptions with context
+try:
+    await database_operation()
+except DatabaseError as e:
+    raise TuxDatabaseError("Database operation failed") from e
+```
+
+## Best Practices
+
+1. **Use custom exceptions** - Use Tux-specific exceptions
+2. **Handle errors appropriately** - Don't swallow errors
+3. **Provide context** - Include context in error messages
+4. **Log errors** - Always log errors with context
+5. **Preserve exceptions** - Use `from e` when re-raising
+6. **User-friendly messages** - Provide clear error messages to users
+7. **Let global handler work** - Don't handle everything locally
+
+## Anti-Patterns
+
+1. ❌ **Swallowing errors** - Always handle or log errors
+2. ❌ **Generic exceptions** - Use specific exception types
+3. ❌ **No context** - Include context in error messages
+4. ❌ **Silent failures** - Log all errors
+5. ❌ **Exposing internals** - Use generic messages for users
+6. ❌ **Not preserving exceptions** - Use `from e` when re-raising
+
+## See Also
+
+- @error-handling/logging.mdc - Logging patterns
+- @error-handling/sentry.mdc - Sentry integration
+- @error-handling/user-feedback.mdc - User error messages
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

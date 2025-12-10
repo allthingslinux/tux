@@ -1,0 +1,155 @@
+---
+description: Logging patterns, loguru usage, log levels, and structured logging for Tux
+globs: src/tux/**/*.py
+alwaysApply: false
+---
+
+# Logging Patterns
+
+## Overview
+
+Tux uses loguru for structured logging with automatic formatting, log levels, and context. All logging should use loguru's logger with appropriate log levels.
+
+## Loguru Usage
+
+### Basic Logging
+
+```python
+from loguru import logger
+
+# ✅ GOOD: Use loguru logger
+logger.info("Operation completed successfully")
+logger.error("Operation failed")
+logger.debug("Debug information")
+logger.warning("Warning message")
+```
+
+❌ **BAD:** Using print or standard logging
+
+```python
+# ❌ BAD: Don't use print
+print("Operation completed")  # Use logger instead!
+
+# ❌ BAD: Don't use standard logging
+import logging
+logging.info("Operation completed")  # Use loguru!
+```
+
+### Log Levels
+
+```python
+# ✅ GOOD: Use appropriate log levels
+logger.trace("Very detailed debugging")
+logger.debug("Debug information")
+logger.info("General information")
+logger.success("Successful operation")
+logger.warning("Warning message")
+logger.error("Error occurred")
+logger.critical("Critical error")
+```
+
+✅ **GOOD:** Appropriate log level for message importance
+
+## Structured Logging
+
+### Context in Logs
+
+```python
+# ✅ GOOD: Include context in logs
+logger.info(f"Processing guild {guild_id} with {member_count} members")
+logger.error(f"Failed to process command {command_name} for user {user_id}")
+```
+
+### Exception Logging
+
+```python
+# ✅ GOOD: Log exceptions with context
+try:
+    await operation()
+except Exception as e:
+    logger.exception("Operation failed")  # Includes traceback
+    # Or with custom message
+    logger.opt(exception=True).error(f"Operation failed: {e}")
+```
+
+❌ **BAD:** Logging without exception info
+
+```python
+# ❌ BAD: Missing exception info
+try:
+    await operation()
+except Exception as e:
+    logger.error(f"Operation failed: {e}")  # Missing traceback!
+```
+
+## Log Configuration
+
+### Log Levels
+
+Log levels are configured in `CONFIG.LOG_LEVEL`:
+
+```python
+# ✅ GOOD: Use configured log level
+# Logging is configured in core/logging.py
+# Respects CONFIG.LOG_LEVEL setting
+```
+
+### Testing Logging
+
+```python
+# ✅ GOOD: Configure test logging
+from tux.core.logging import configure_testing_logging
+
+configure_testing_logging()
+```
+
+## Log Formatting
+
+### Automatic Formatting
+
+Loguru automatically formats logs with:
+
+- Timestamp
+- Log level
+- Module name
+- Line number
+- Message
+
+✅ **GOOD:** Automatic formatting provides context
+
+### Custom Formatting
+
+```python
+# ✅ GOOD: Custom formatting when needed
+logger.add(
+    sink,
+    format="{time} | {level} | {name}:{function}:{line} | {message}",
+)
+```
+
+## Best Practices
+
+1. **Use loguru** - Always use loguru logger
+2. **Appropriate levels** - Use correct log level
+3. **Include context** - Add relevant context to logs
+4. **Log exceptions** - Use logger.exception() or logger.opt(exception=True)
+5. **Structured logs** - Include relevant data in logs
+6. **Don't log secrets** - Sanitize sensitive data
+7. **Respect log levels** - Don't log debug in production
+
+## Anti-Patterns
+
+1. ❌ **Using print** - Always use logger
+2. ❌ **Wrong log level** - Use appropriate level
+3. ❌ **Missing context** - Include relevant context
+4. ❌ **No exception info** - Use exception logging
+5. ❌ **Logging secrets** - Sanitize sensitive data
+6. ❌ **Too verbose** - Don't log everything at debug
+
+## See Also
+
+- @error-handling/patterns.mdc - Error handling patterns
+- @error-handling/sentry.mdc - Sentry integration
+- @security/secrets.mdc - Secret sanitization
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

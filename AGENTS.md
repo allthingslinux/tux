@@ -7,6 +7,30 @@
 **Core:** Python 3.13+ • discord.py • PostgreSQL • SQLModel • Docker
 **Tools:** uv • ruff • basedpyright • pytest • loguru • sentry-sdk • httpx • Zensical
 
+## Cursor Rules & Commands
+
+The project uses Cursor's rules and commands system for AI-assisted development:
+
+See [.cursor/rules/rules.mdc](.cursor/rules/rules.mdc) for the complete catalog of all rules and commands.
+
+- **Rules** (`.cursor/rules/*.mdc`) - Project-specific coding patterns automatically applied
+- **Commands** (`.cursor/commands/*.md`) - Reusable workflows invoked with `/` prefix
+
+**Validation:**
+
+```bash
+uv run rules validate      # Validate all rules and commands
+```
+
+**Documentation:**
+
+- [Creating Cursor Rules](docs/content/developer/guides/creating-cursor-rules.md)
+- [Creating Cursor Commands](docs/content/developer/guides/creating-cursor-commands.md)
+- [Cursor Rules & Commands Overview](.cursor/README.md)
+
+!!! tip "Detailed Rules Available"
+    This file provides a high-level overview. For detailed, domain-specific patterns and standards, see the rules in `.cursor/rules/` organized by domain (database, modules, testing, security, etc.).
+
 ## Quick Setup
 
 ```bash
@@ -33,7 +57,11 @@ tux/
 ├── tests/                      # Tests (unit/integration/e2e)
 ├── docs/                       # Zensical documentation
 ├── docker/                     # Docker related files
-└── config/                     # Config examples
+├── config/                     # Config examples
+└── .cursor/                    # Cursor rules & commands
+    ├── rules/                  # AI coding patterns (.mdc)
+    ├── commands/               # Workflow commands (.md)
+    └── templates/              # Rule/command templates
 ```
 
 ## Code Standards
@@ -50,6 +78,11 @@ tux/
 
 **Quality checks:**
 
+```bash
+uv run dev all            # Run all quality checks (lint, type, format)
+uv run dev pre-commit     # Run pre-commit checks
+```
+
 ## Testing
 
 ```bash
@@ -62,7 +95,7 @@ uv run test html            # Generate HTML report
 
 ## Database
 
-**Stack:** SQLModel (ORM) • Alembic (migrations) • PostgreSQL (asyncpg)
+**Stack:** SQLModel (ORM) • Alembic (migrations) • PostgreSQL (psycopg async)
 
 ```bash
 uv run db init              # Initialize with migrations
@@ -106,12 +139,19 @@ uv run config generate      # Generate configuration example files
 uv run config validate      # Validate the current configuration
 ```
 
+**Cursor:**
+
+```bash
+uv run rules validate      # Validate Cursor rules and commands
+```
+
 ## Development Workflow
 
 1. **Setup:** `uv sync` → configure `.env` & `config.toml`
 2. **Develop:** Make changes → `uv run dev all` → `uv run test quick`
 3. **Database:** Modify models → `uv run db new "description"` → `uv run db dev`
-4. **Commit:** `uv run dev pre-commit` → `uv run test all`
+4. **Rules:** Validate rules/commands → `uv run rules validate`
+5. **Commit:** `uv run dev pre-commit` → `uv run test all`
 
 ## Conventional Commits
 
@@ -144,6 +184,7 @@ refactor(database): optimize query performance
 - All tests pass (`uv run test all`)
 - Quality checks pass (`uv run dev all`)
 - Migrations tested (`uv run db dev`)
+- Cursor rules/commands validated (`uv run rules validate`)
 - Documentation updated
 - Type hints complete
 - Docstrings for public APIs
@@ -216,6 +257,9 @@ uv run basedpyright --verbose
 
 # Test failures
 uv run pytest -v -s
+
+# Cursor validation
+uv run rules validate
 ```
 
 ## Resources

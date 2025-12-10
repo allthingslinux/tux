@@ -1,0 +1,159 @@
+---
+description: Async testing patterns, async fixtures, async test execution, and asyncio testing for Tux
+globs: tests/**/*.py
+alwaysApply: false
+---
+
+# Async Testing
+
+## Overview
+
+Tux uses pytest-asyncio for async test support. All database operations and Discord bot operations are async, so most tests are async.
+
+## Async Test Pattern
+
+### Basic Async Test
+
+```python
+import pytest
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_async_function(db_service: DatabaseService) -> None:
+    """Test async function."""
+    result = await async_function()
+    assert result is not None
+```
+
+✅ **GOOD:** asyncio marker, async function, await calls
+
+❌ **BAD:** Missing asyncio marker or not using await
+
+```python
+# ❌ BAD: Missing asyncio marker
+async def test_async_function(db_service):
+    result = await async_function()  # Will fail!
+
+# ❌ BAD: Not using await
+@pytest.mark.asyncio
+async def test_async_function(db_service):
+    result = async_function()  # Missing await!
+```
+
+## Async Fixtures
+
+### Async Fixture Pattern
+
+```python
+@pytest.fixture(scope="function")
+async def db_service(pglite_engine):
+    """Async database service fixture."""
+    service = DatabaseService(echo=False)
+    service._engine = pglite_engine
+    yield service
+    # Cleanup
+```
+
+✅ **GOOD:** Async fixtures for async setup/teardown
+
+### Fixture Dependencies
+
+```python
+# ✅ GOOD: Async fixtures can depend on other async fixtures
+@pytest.fixture(scope="session")
+async def pglite_async_manager():
+    manager = SQLAlchemyAsyncPGliteManager()
+    manager.start()
+    yield manager
+    manager.stop()
+
+@pytest.fixture(scope="function")
+async def pglite_engine(pglite_async_manager):
+    # Depends on async fixture
+    engine = create_async_engine(...)
+    yield engine
+```
+
+## Async Database Operations
+
+### Database Queries
+
+```python
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_database_query(db_service: DatabaseService) -> None:
+    """Test async database query."""
+    async with db_service.session() as session:
+        result = await session.execute(select(MyModel))
+        models = result.scalars().all()
+        assert len(models) == 0
+```
+
+✅ **GOOD:** Use async session context manager
+
+### Controller Operations
+
+```python
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_controller_operation(guild_controller: GuildController) -> None:
+    """Test async controller operation."""
+    guild = await guild_controller.create(id=123456789)
+    assert guild.id == 123456789
+```
+
+✅ **GOOD:** Use async controller methods
+
+## Async Error Handling
+
+### Exception Testing
+
+```python
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_async_error_handling(db_service: DatabaseService) -> None:
+    """Test async error handling."""
+    with pytest.raises(ValueError):
+        await async_function_that_raises()
+```
+
+✅ **GOOD:** Use pytest.raises for async exceptions
+
+## Async Timeouts
+
+### Timeout Testing
+
+```python
+@pytest.mark.asyncio
+@pytest.mark.timeout(5)  # 5 second timeout
+async def test_with_timeout(db_service: DatabaseService) -> None:
+    """Test with timeout."""
+    await long_operation()
+```
+
+✅ **GOOD:** Use timeout marker for long operations
+
+## Best Practices
+
+1. **Always use asyncio marker** - Required for async tests
+2. **Use async fixtures** - For async setup/teardown
+3. **Await all async calls** - Don't forget await
+4. **Use async context managers** - For async resources
+5. **Handle async errors** - Use pytest.raises properly
+6. **Test async operations** - Test all async code paths
+
+## Anti-Patterns
+
+1. ❌ **Missing asyncio marker** - Always use @pytest.mark.asyncio
+2. ❌ **Not awaiting** - Always await async calls
+3. ❌ **Sync fixtures for async** - Use async fixtures
+4. ❌ **Blocking in async** - Don't use blocking operations
+5. ❌ **Not testing async errors** - Test error paths
+
+## See Also
+
+- @testing/pytest.mdc - Pytest configuration
+- @testing/fixtures.mdc - Fixture patterns
+- @testing/markers.mdc - Test markers
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

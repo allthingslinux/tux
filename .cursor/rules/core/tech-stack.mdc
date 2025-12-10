@@ -1,7 +1,7 @@
 ---
-alwaysApply: true
+description: Tech stack, dependencies, project structure, and development tools for Tux Discord bot
+alwaysApply: false
 ---
-
 # Tech Stack & Dependencies
 
 ## Core Runtime
@@ -119,6 +119,8 @@ tux/
 
 ## Development Workflow
 
+✅ **GOOD:** Use project scripts
+
 ```bash
 # Setup
 uv sync                        # Install all dependencies
@@ -129,14 +131,16 @@ cp config/config.toml.example config/config.toml
 uv run dev all                # Run all quality checks
 uv run tests quick            # Fast test run
 uv run tux start --debug      # Start bot in debug mode
+```
 
-# Database
-uv run db migrate-dev         # Create & apply migrations
-uv run db health              # Check database connection
+❌ **BAD:** Don't use Python directly or skip setup
 
-# Documentation
-uv run docs serve             # Local preview
-uv run docs build             # Build static site
+```bash
+# ❌ BAD: Using Python directly (lacks venv deps)
+python src/tux/main.py
+
+# ❌ BAD: Skipping dependency installation
+# Missing: uv sync
 ```
 
 ## Configuration System
@@ -192,3 +196,9 @@ uv run docs build             # Build static site
 8. **Docker:** Use multi-stage builds, non-root users
 9. **Monitoring:** Structured logging, error tracking
 10. **Security:** Regular dependency updates, secret management
+
+## See Also
+
+- @database/models.mdc - Database model patterns
+- @testing/pytest.mdc - Testing patterns
+- @AGENTS.md - General coding standards

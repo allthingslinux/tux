@@ -1,0 +1,208 @@
+---
+description: Database query patterns, optimization, filtering, joins, and performance best practices for Tux
+globs: src/tux/database/**/*.py
+alwaysApply: false
+---
+
+# Database Query Patterns
+
+## Overview
+
+Tux uses SQLAlchemy async queries with SQLModel for type-safe database operations. Queries should be optimized, use proper filtering, and avoid N+1 problems.
+
+## Basic Query Patterns
+
+### Select Queries
+
+```python
+from sqlalchemy import select
+from sqlmodel import SQLModel
+
+# ✅ GOOD: Use select() with async session
+async with db.session() as session:
+    stmt = select(MyModel).where(MyModel.status == "active")
+    result = await session.execute(stmt)
+    models = result.scalars().all()
+```
+
+❌ **BAD:** Using deprecated query API
+
+```python
+# ❌ BAD: Old query API (not available in async)
+models = await session.query(MyModel).all()  # Doesn't exist!
+```
+
+### Filtering
+
+```python
+# ✅ GOOD: Use where() for filtering
+stmt = select(MyModel).where(
+    MyModel.status == "active",
+    MyModel.created_at >= datetime.now() - timedelta(days=7)
+)
+
+# Multiple conditions
+stmt = select(MyModel).where(
+    (MyModel.status == "active") | (MyModel.status == "pending")
+)
+```
+
+### Ordering
+
+```python
+# ✅ GOOD: Use order_by()
+from sqlalchemy import desc
+
+stmt = select(MyModel).order_by(
+    desc(MyModel.created_at),  # Newest first
+    MyModel.name  # Then by name
+)
+```
+
+## Relationship Queries
+
+### Eager Loading
+
+```python
+# ✅ GOOD: Use selectinload or joinedload to avoid N+1
+from sqlalchemy.orm import selectinload
+
+stmt = select(Guild).options(
+    selectinload(Guild.cases)  # Load cases in one query
+)
+result = await session.execute(stmt)
+guilds = result.scalars().all()
+
+# Access relationships without additional queries
+for guild in guilds:
+    print(guild.cases)  # Already loaded!
+```
+
+❌ **BAD:** Lazy loading causing N+1 queries
+
+```python
+# ❌ BAD: Lazy loading (N+1 problem)
+guilds = await session.execute(select(Guild)).scalars().all()
+for guild in guilds:
+    cases = guild.cases  # Additional query per guild!
+```
+
+### Joins
+
+```python
+# ✅ GOOD: Use joins for filtering related data
+from sqlalchemy.orm import joinedload
+
+stmt = select(Case).join(Guild).where(
+    Guild.id == 123456789
+).options(joinedload(Case.guild))
+
+result = await session.execute(stmt)
+cases = result.scalars().all()
+```
+
+## Query Optimization
+
+### Indexes
+
+Always use indexes for frequently queried columns:
+
+```python
+# ✅ GOOD: Model defines indexes
+class MyModel(BaseModel, table=True):
+    name: str = Field(index=True)  # Indexed for fast lookups
+    status: str = Field(index=True)  # Indexed for filtering
+```
+
+❌ **BAD:** Missing indexes on frequently queried columns
+
+### Limit and Offset
+
+```python
+# ✅ GOOD: Use limit() and offset() for pagination
+stmt = select(MyModel).limit(20).offset(0)
+```
+
+For better performance, use cursor-based pagination:
+
+```python
+# ✅ GOOD: Cursor-based pagination (better performance)
+stmt = select(MyModel).where(
+    MyModel.id > last_id
+).order_by(MyModel.id).limit(20)
+```
+
+### Count Queries
+
+```python
+# ✅ GOOD: Use count() for counting
+from sqlalchemy import func
+
+stmt = select(func.count(MyModel.id)).where(MyModel.status == "active")
+result = await session.execute(stmt)
+count = result.scalar()
+```
+
+❌ **BAD:** Loading all records to count
+
+```python
+# ❌ BAD: Loading all records
+models = await session.execute(select(MyModel)).scalars().all()
+count = len(models)  # Loads all records into memory!
+```
+
+## Aggregations
+
+```python
+# ✅ GOOD: Use SQL aggregations
+from sqlalchemy import func
+
+stmt = select(
+    func.count(MyModel.id),
+    func.avg(MyModel.value),
+    func.max(MyModel.created_at)
+).where(MyModel.status == "active")
+
+result = await session.execute(stmt)
+count, avg_value, max_date = result.one()
+```
+
+## Subqueries
+
+```python
+# ✅ GOOD: Use subqueries for complex queries
+subquery = select(func.count(Case.id)).where(
+    Case.guild_id == Guild.id
+).scalar_subquery()
+
+stmt = select(
+    Guild,
+    subquery.label("case_count")
+)
+```
+
+## Best Practices
+
+1. **Use select()** - Always use select() for queries
+2. **Eager load relationships** - Use selectinload/joinedload to avoid N+1
+3. **Add indexes** - Index frequently queried columns
+4. **Use limit/offset** - Don't load all records
+5. **Use aggregations** - Let database do aggregations
+6. **Optimize joins** - Use appropriate join types
+7. **Avoid N+1 queries** - Always eager load relationships
+
+## Anti-Patterns
+
+1. ❌ **N+1 queries** - Always eager load relationships
+2. ❌ **Loading all records** - Use limit/offset
+3. ❌ **Missing indexes** - Index frequently queried columns
+4. ❌ **Manual counting** - Use SQL count()
+5. ❌ **Lazy loading** - Use eager loading
+6. ❌ **Complex Python filtering** - Filter in SQL
+
+## See Also
+
+- @database/controllers.mdc - Controller query patterns
+- @database/models.mdc - Model patterns with relationships
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

@@ -1,0 +1,101 @@
+---
+description: Dependency security, dependency updates, vulnerability scanning, and dependency management for Tux
+globs: pyproject.toml, uv.lock, **/requirements*.txt
+alwaysApply: false
+---
+
+# Dependency Security
+
+## Overview
+
+Tux uses `uv` for dependency management with locked versions in `uv.lock`. Dependencies should be kept up to date and scanned for vulnerabilities.
+
+## Dependency Management
+
+### Using uv
+
+```bash
+# ✅ GOOD: Use uv for dependency management
+uv sync                    # Install dependencies
+uv add package-name        # Add new dependency
+uv remove package-name     # Remove dependency
+uv lock                    # Update lock file
+```
+
+❌ **BAD:** Manual dependency management
+
+```bash
+# ❌ BAD: Don't manually edit pyproject.toml without uv
+# Always use uv commands
+```
+
+### Lock File
+
+```bash
+# ✅ GOOD: Commit uv.lock file
+git add uv.lock
+git commit -m "chore: update dependencies"
+```
+
+✅ **GOOD:** Lock file ensures reproducible builds
+
+## Dependency Updates
+
+### Regular Updates
+
+```bash
+# ✅ GOOD: Regularly update dependencies
+uv lock --upgrade          # Update all dependencies
+uv lock --upgrade-package package-name  # Update specific package
+```
+
+### Security Updates
+
+```bash
+# ✅ GOOD: Check for security updates
+uv lock --upgrade          # Updates to latest compatible versions
+# Review changelogs for security fixes
+```
+
+## Vulnerability Scanning
+
+### Manual Review
+
+```bash
+# ✅ GOOD: Review dependency changelogs
+# Check GitHub security advisories
+# Review package release notes
+```
+
+### Automated Scanning
+
+```bash
+# ✅ GOOD: Use automated tools
+# Check GitHub Dependabot alerts
+# Review security advisories
+```
+
+## Dependency Best Practices
+
+1. **Use uv** - Always use uv for dependency management
+2. **Commit lock file** - Always commit uv.lock
+3. **Regular updates** - Update dependencies regularly
+4. **Review updates** - Review changelogs before updating
+5. **Security patches** - Apply security patches immediately
+6. **Minimal dependencies** - Only add necessary dependencies
+7. **Version pinning** - Use locked versions in production
+
+## Anti-Patterns
+
+1. ❌ **Outdated dependencies** - Keep dependencies updated
+2. ❌ **Ignoring security patches** - Apply security updates
+3. ❌ **Too many dependencies** - Minimize dependencies
+4. ❌ **Unpinned versions** - Use lock file
+5. ❌ **Not reviewing updates** - Review before updating
+6. ❌ **Manual edits** - Use uv commands
+
+## See Also
+
+- @core/tech-stack.mdc - Dependency list
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

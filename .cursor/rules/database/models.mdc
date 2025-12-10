@@ -1,513 +1,260 @@
 ---
-alwaysApply: true
-description: Database model patterns, BaseModel usage, and SQLModel best practices
+description: SQLModel database model patterns, BaseModel usage, relationships, and field definitions for Tux
+globs: src/tux/database/models/**/*.py, **/*model*.py
+alwaysApply: false
 ---
 
-# Database Model Rules
+# SQLModel Database Models
 
-Tux uses SQLModel for type-safe database models that combine SQLAlchemy and Pydantic. All models inherit from a custom BaseModel class providing automatic timestamp management, serialization utilities, and PostgreSQL-specific features.
+## Overview
 
-## BaseModel Foundation
+Tux uses SQLModel (SQLAlchemy + Pydantic) for type-safe database models with automatic validation and serialization. All models inherit from `BaseModel` which provides automatic timestamp management.
 
-### Always Inherit from BaseModel
+## Base Model Pattern
 
-**All Tux models must inherit from BaseModel:**
+All database models must inherit from `BaseModel`:
 
 ```python
-from tux.database.models.base import BaseModel
+from tux.database.models import BaseModel
 
-class User(BaseModel, table=True):
+class MyModel(BaseModel, table=True):
+    """Model description with NumPy docstring format."""
+
+    id: int = Field(
+        primary_key=True,
+        sa_type=BigInteger,
+        description="Primary key description"
+    )
+```
+
+✅ **GOOD:** Inherits from BaseModel, includes docstring, proper field definitions
+
+❌ **BAD:** Direct SQLModel inheritance without BaseModel, missing docstrings
+
+```python
+# ❌ BAD: Missing BaseModel, no docstring
+class MyModel(SQLModel, table=True):
     id: int = Field(primary_key=True)
-    name: str
-    email: str = Field(unique=True, index=True)
 ```
 
-**Benefits:**
+## Field Definitions
 
-- Automatic created_at and updated_at timestamps
-- Built-in serialization utilities
-- Consistent behavior across all models
-- Future-proofing through centralized features
+### Primary Keys
 
-### BaseModel Features
-
-**Automatic Timestamps:**
+**Integer IDs (Discord entities):**
 
 ```python
-class User(BaseModel, table=True):
-    # created_at and updated_at are automatically added
-    # Managed by database with server_default and onupdate
-    id: int = Field(primary_key=True)
-    name: str
+id: int = Field(
+    primary_key=True,
+    sa_type=BigInteger,
+    description="Discord guild ID"
+)
 ```
 
-**Serialization:**
+**UUID IDs (internal entities):**
 
 ```python
-user = User(id=1, name="Alice")
-data = user.to_dict()  # Converts to dict with ISO datetime strings
-# {'id': 1, 'name': 'Alice', 'created_at': '2024-01-01T00:00:00', ...}
+from tux.database.models import UUIDMixin
+
+class MyModel(BaseModel, UUIDMixin, table=True):
+    # id is automatically provided by UUIDMixin
+    pass
 ```
 
-**Relationship Support:**
+✅ **GOOD:** Appropriate ID type for entity type, proper sa_type
+
+❌ **BAD:** Wrong ID type, missing sa_type for BigInteger
+
+### Timestamps
+
+Timestamps are automatically managed by `BaseModel`:
 
 ```python
-data = user.to_dict(include_relationships=True, relationships=["profile"])
-# Includes related profile data
-```
-
-## Mixin Patterns
-
-### UUIDMixin
-
-**For records needing UUID primary keys:**
-
-```python
-from tux.database.models.base import UUIDMixin, BaseModel
-
-class ApiKey(BaseModel, UUIDMixin, table=True):
-    key: str = Field(unique=True, index=True)
-    user_id: int = Field(foreign_key="user.id")
-    # id field is automatically UUID with auto-generation
-```
-
-**Use Cases:**
-
-- API keys and tokens
-- External-facing identifiers
-- Records needing non-sequential IDs
-
-### SoftDeleteMixin
-
-**For recoverable data:**
-
-```python
-from tux.database.models.base import SoftDeleteMixin, BaseModel
-
-class User(BaseModel, SoftDeleteMixin, table=True):
-    id: int = Field(primary_key=True)
+# ✅ GOOD: BaseModel provides created_at and updated_at automatically
+class MyModel(BaseModel, table=True):
     name: str
 
-    # Soft delete methods available
-    # user.soft_delete() - Marks as deleted
-    # user.restore() - Restores deleted record
+# Timestamps are database-managed:
+# - created_at: Set on insert
+# - updated_at: Updated on every update
 ```
 
-**Use Cases:**
-
-- Users and accounts
-- Important records that should be recoverable
-- Audit trail requirements
-
-**Combining Mixins:**
+❌ **BAD:** Manually defining timestamp fields
 
 ```python
-class ImportantRecord(BaseModel, UUIDMixin, SoftDeleteMixin, table=True):
-    # Has UUID id, soft delete, and timestamps
-    data: str
+# ❌ BAD: Don't manually define timestamps
+class MyModel(BaseModel, table=True):
+    created_at: datetime = Field(...)  # Already in BaseModel!
 ```
 
-## Model Definition Patterns
-
-### Enum Definitions
-
-**Type-safe constants for database fields:**
+### Field Types and Constraints
 
 ```python
-from enum import Enum
+# String fields
+name: str = Field(
+    max_length=255,
+    description="Human-readable name"
+)
 
-class UserRole(str, Enum):
-    ADMIN = "admin"
-    MODERATOR = "moderator"
-    USER = "user"
+# Optional fields
+description: str | None = Field(
+    default=None,
+    nullable=True,
+    description="Optional description"
+)
 
-class User(BaseModel, table=True):
-    id: int = Field(primary_key=True)
-    role: UserRole = Field(default=UserRole.USER)
+# Integer with constraints
+count: int = Field(
+    default=0,
+    ge=0,  # Greater than or equal to 0
+    description="Non-negative count"
+)
+
+# Enum fields
+status: CaseType = Field(
+    sa_type=PgEnum(CaseType, name="case_type"),
+    description="Case type enum"
+)
+
+# JSON fields
+metadata: dict[str, Any] = Field(
+    default_factory=dict,
+    sa_type=JSON,
+    description="JSON metadata"
+)
+
+# DateTime with timezone
+created_at: datetime | None = Field(
+    sa_type=DateTime(timezone=True),
+    description="Creation timestamp"
+)
 ```
 
-**Benefits:**
+✅ **GOOD:** Proper types, constraints, descriptions, nullable handling
 
-- Compile-time validation
-- Self-documenting names
-- Type safety in Python code
-- Stored as strings in PostgreSQL
+❌ **BAD:** Missing constraints, wrong types, no descriptions
 
-### Relationship Definitions
+## Relationships
 
-**Proper relationship configuration:**
+### One-to-Many
 
 ```python
-from sqlmodel import Relationship
+from sqlalchemy.orm import Mapped, relationship
 
-class User(BaseModel, table=True):
-    id: int = Field(primary_key=True)
-    name: str
+class Guild(BaseModel, table=True):
+    id: int = Field(primary_key=True, sa_type=BigInteger)
 
-    # One-to-many relationship
-    cases: list["Case"] = Relationship(back_populates="user")
+    # Relationship definition
+    cases: Mapped[list["Case"]] = relationship(
+        "Case",
+        back_populates="guild",
+        cascade="all, delete-orphan"
+    )
 
 class Case(BaseModel, table=True):
-    id: int = Field(primary_key=True)
-    user_id: int = Field(foreign_key="user.id")
-
-    # Many-to-one relationship
-    user: User = Relationship(back_populates="cases")
-```
-
-**Relationship Best Practices:**
-
-- Always use `Relationship` for navigation
-- Configure `back_populates` for bidirectional relationships
-- Choose appropriate `lazy` strategy (selectin, joined, noload)
-- Set proper `cascade` behavior for deletions
-
-### Field Definitions
-
-**Proper field configuration:**
-
-```python
-class User(BaseModel, table=True):
-    # Primary key
-    id: int = Field(primary_key=True)
-
-    # Required field
-    name: str
-
-    # Optional field
-    email: str | None = None
-
-    # Field with constraints
-    age: int = Field(ge=0, le=150)
-
-    # Indexed field
-    username: str = Field(unique=True, index=True)
-
-    # Foreign key
-    guild_id: int = Field(foreign_key="guild.id")
-
-    # JSON field
-    metadata: dict[str, Any] = Field(default_factory=dict, sa_type=JSON)
-
-    # Array field
-    tags: list[str] = Field(default_factory=list, sa_type=ARRAY(String))
-```
-
-### PostgreSQL-Specific Types
-
-**Leverage PostgreSQL features:**
-
-```python
-from sqlalchemy import JSON, ARRAY, String
-
-class User(BaseModel, table=True):
-    # JSONB for flexible metadata
-    preferences: dict[str, Any] = Field(
-        default_factory=dict,
-        sa_type=JSON
+    guild_id: int = Field(
+        foreign_key="guild.id",
+        sa_type=BigInteger,
+        description="Foreign key to guild"
     )
 
-    # Array for ordered lists
-    permissions: list[str] = Field(
-        default_factory=list,
-        sa_type=ARRAY(String)
+    guild: Mapped["Guild"] = relationship(
+        "Guild",
+        back_populates="cases"
     )
+```
 
-    # Enum stored as string
-    status: UserStatus = Field(default=UserStatus.ACTIVE)
+✅ **GOOD:** Proper Mapped typing, back_populates, cascade options
+
+❌ **BAD:** Missing Mapped, no back_populates, wrong cascade
+
+### Many-to-Many
+
+Use association tables for many-to-many relationships:
+
+```python
+class PermissionAssignment(BaseModel, table=True):
+    rank_id: UUID = Field(foreign_key="permission_rank.id")
+    command_id: UUID = Field(foreign_key="permission_command.id")
+
+    # Composite primary key
+    __table_args__ = (
+        UniqueConstraint("rank_id", "command_id"),
+    )
+```
+
+## Model Organization
+
+### File Structure
+
+```text
+src/tux/database/models/
+├── __init__.py          # Exports all models
+├── base.py              # BaseModel, mixins
+├── enums.py             # Database enums
+└── models.py            # All model definitions
+```
+
+### Import Pattern
+
+```python
+# ✅ GOOD: Import from models package
+from tux.database.models import Guild, Case, BaseModel
+
+# ❌ BAD: Direct imports from files
+from tux.database.models.models import Guild
+```
+
+## Validation and Serialization
+
+### Pydantic Validation
+
+SQLModel models automatically validate on creation:
+
+```python
+# ✅ GOOD: Validation happens automatically
+guild = Guild(id=123456789, case_count=0)
+
+# ❌ BAD: Invalid data raises ValidationError
+guild = Guild(id=-1)  # Fails if ge=0 constraint exists
+```
+
+### Serialization
+
+Use `to_dict()` method from BaseModel:
+
+```python
+# ✅ GOOD: Use built-in serialization
+guild_dict = guild.to_dict()
+guild_dict_with_rels = guild.to_dict(include_relationships=True)
+
+# ❌ BAD: Manual dict conversion
+guild_dict = {"id": guild.id, "name": guild.name}  # Misses timestamps
 ```
 
 ## Best Practices
 
-### Always Inherit from BaseModel
-
-**Ensures uniform behavior:**
-
-```python
-# GOOD: Inherits from BaseModel
-class User(BaseModel, table=True):
-    id: int = Field(primary_key=True)
-    name: str
-
-# BAD: Direct SQLModel inheritance
-class User(SQLModel, table=True):
-    id: int = Field(primary_key=True)
-    name: str
-    # Missing automatic timestamps and serialization
-```
-
-### Use Appropriate Mixins
-
-**Choose mixins based on requirements:**
-
-```python
-# For UUID primary keys
-class ApiKey(BaseModel, UUIDMixin, table=True):
-    key: str
-
-# For soft delete functionality
-class User(BaseModel, SoftDeleteMixin, table=True):
-    name: str
-
-# Combine as needed
-class ImportantRecord(BaseModel, UUIDMixin, SoftDeleteMixin, table=True):
-    data: str
-```
-
-### Define Relationships Carefully
-
-**Proper relationship configuration:**
-
-```python
-# GOOD: Proper bidirectional relationship
-class User(BaseModel, table=True):
-    cases: list["Case"] = Relationship(back_populates="user")
-
-class Case(BaseModel, table=True):
-    user: User = Relationship(back_populates="cases")
-
-# BAD: Missing back_populates
-class User(BaseModel, table=True):
-    cases: list["Case"] = Relationship()  # No back_populates
-```
-
-**Cascade Behavior:**
-
-```python
-# Appropriate cascade for parent-child relationships
-class Guild(BaseModel, table=True):
-    configs: list["GuildConfig"] = Relationship(
-        back_populates="guild",
-        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
-    )
-```
-
-**Lazy Loading Strategy:**
-
-```python
-# selectin: Separate query (default, good for most cases)
-cases: list["Case"] = Relationship(
-    back_populates="user",
-    sa_relationship_kwargs={"lazy": "selectin"}
-)
-
-# joined: Single query with JOIN (performance-critical)
-user: User = Relationship(
-    back_populates="cases",
-    sa_relationship_kwargs={"lazy": "joined"}
-)
-
-# noload: Skip loading (explicit control)
-metadata: dict = Relationship(
-    sa_relationship_kwargs={"lazy": "noload"}
-)
-```
-
-### Use Type Hints Consistently
-
-**Proper type annotations:**
-
-```python
-# GOOD: Clear type hints
-class User(BaseModel, table=True):
-    id: int = Field(primary_key=True)
-    name: str
-    email: str | None = None
-    roles: list[str] = Field(default_factory=list)
-    metadata: dict[str, Any] = Field(default_factory=dict)
-
-# BAD: Missing type hints
-class User(BaseModel, table=True):
-    id = Field(primary_key=True)  # No type hint
-    name = Field()  # No type hint
-```
-
-**Use `| None` convention:**
-
-```python
-# GOOD: Modern type union syntax
-email: str | None = None
-
-# BAD: Optional type (deprecated)
-from typing import Optional
-email: Optional[str] = None
-```
-
-### Leverage PostgreSQL Features
-
-**JSONB for flexible metadata:**
-
-```python
-class User(BaseModel, table=True):
-    # JSONB allows querying and indexing
-    preferences: dict[str, Any] = Field(
-        default_factory=dict,
-        sa_type=JSON
-    )
-
-    # Query JSONB fields
-    # await controller.find_with_json_query("preferences", "$.theme", "dark")
-```
-
-**Arrays for ordered lists:**
-
-```python
-class User(BaseModel, table=True):
-    # Array type for ordered lists
-    tags: list[str] = Field(
-        default_factory=list,
-        sa_type=ARRAY(String)
-    )
-
-    # Query array fields
-    # await controller.find_with_array_contains("tags", "admin")
-```
-
-**Enums for constrained choices:**
-
-```python
-class User(BaseModel, table=True):
-    # Enum stored as string in database
-    role: UserRole = Field(default=UserRole.USER)
-```
-
-### Handle Serialization Properly
-
-**Use to_dict() for API responses:**
-
-```python
-# Basic serialization
-user = User(id=1, name="Alice")
-data = user.to_dict()
-# {'id': 1, 'name': 'Alice', 'created_at': '...', 'updated_at': '...'}
-
-# With relationships
-data = user.to_dict(include_relationships=True, relationships=["profile"])
-# Includes profile relationship data
-
-# Without relationships (default)
-data = user.to_dict()  # Relationships excluded
-```
-
-**Serialization Guidelines:**
-
-- Use `to_dict()` for logging, debugging, and API responses
-- Control relationship inclusion to prevent over-fetching
-- Ensure proper type conversion for JSON compatibility
-- Handle circular references with relationship control
-
-### Index Strategically
-
-**Add indexes for frequently queried fields:**
-
-```python
-class User(BaseModel, table=True):
-    # Indexed unique field
-    email: str = Field(unique=True, index=True)
-
-    # Indexed foreign key
-    guild_id: int = Field(foreign_key="guild.id", index=True)
-
-    # Composite index (via migration)
-    # CREATE INDEX idx_user_guild_active ON user(guild_id, active)
-```
-
-**Index Guidelines:**
-
-- Index foreign keys
-- Index frequently queried fields
-- Use GIN indexes for JSON and array fields
-- Consider query patterns when adding indexes
-- Don't over-index (slows writes)
-
-### Document Model Purpose
-
-**Clear docstrings:**
-
-```python
-class User(BaseModel, table=True):
-    """
-    User model representing a Discord user.
-
-    Stores user information including name, email, and preferences.
-    Supports soft delete for account recovery.
-
-    Attributes
-    ----------
-    id : int
-        Primary key identifier.
-    name : str
-        User's display name.
-    email : str | None
-        User's email address (optional).
-    active : bool
-        Whether the user account is active.
-
-    Relationships
-    --------------
-    cases : list[Case]
-        Moderation cases associated with this user.
-    """
-    id: int = Field(primary_key=True)
-    name: str
-    email: str | None = None
-    active: bool = Field(default=True)
-
-    cases: list["Case"] = Relationship(back_populates="user")
-```
+1. **Always inherit from BaseModel** for automatic timestamps
+2. **Use appropriate ID types**: BigInteger for Discord IDs, UUID for internal
+3. **Add constraints**: Use `ge`, `le`, `max_length` where appropriate
+4. **Document fields**: Include description in Field() definitions
+5. **Use Mapped[] for relationships**: Type-safe relationship definitions
+6. **Validate with Pydantic**: Let SQLModel handle validation
+7. **Use to_dict() for serialization**: Don't manually convert to dict
 
 ## Anti-Patterns
 
-### ❌ Not Inheriting from BaseModel
+1. ❌ **Direct SQLModel inheritance** - Always use BaseModel
+2. ❌ **Manual timestamp fields** - BaseModel provides them
+3. ❌ **Missing field descriptions** - Always document fields
+4. ❌ **Wrong ID types** - Use BigInteger for Discord IDs
+5. ❌ **Missing constraints** - Add validation constraints
+6. ❌ **Manual serialization** - Use to_dict() method
 
-```python
-# BAD: Missing BaseModel
-class User(SQLModel, table=True):
-    id: int = Field(primary_key=True)
-    # Missing timestamps and serialization
-```
+## See Also
 
-### ❌ Missing Type Hints
-
-```python
-# BAD: No type hints
-class User(BaseModel, table=True):
-    id = Field(primary_key=True)
-    name = Field()
-```
-
-### ❌ Incorrect Relationship Configuration
-
-```python
-# BAD: Missing back_populates
-class User(BaseModel, table=True):
-    cases: list["Case"] = Relationship()  # No back_populates
-```
-
-### ❌ Over-Fetching in Serialization
-
-```python
-# BAD: Loading all relationships
-data = user.to_dict(include_relationships=True)  # Loads everything
-
-# GOOD: Selective loading
-data = user.to_dict(include_relationships=True, relationships=["profile"])
-```
-
-### ❌ Missing Indexes on Foreign Keys
-
-```python
-# BAD: No index on foreign key
-class Case(BaseModel, table=True):
-    user_id: int = Field(foreign_key="user.id")  # No index
-
-# GOOD: Indexed foreign key
-class Case(BaseModel, table=True):
-    user_id: int = Field(foreign_key="user.id", index=True)
-```
-
-## Related Rules
-
-- [`overview.mdc`](overview.mdc) - Architecture overview
-- [`controllers.mdc`](controllers.mdc) - Using models through controllers
-- [`service.mdc`](service.mdc) - Service layer using models
+- @database/migrations.mdc - Migration patterns
+- @database/controllers.mdc - Controller patterns
+- @database/services.mdc - Service layer patterns
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

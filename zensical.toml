@@ -90,6 +90,8 @@ nav = [
             "developer/guides/index.md",
             "developer/guides/components-v2.md",
             "developer/guides/extending-cli.md",
+            "developer/guides/creating-cursor-rules.md",
+            "developer/guides/creating-cursor-commands.md",
         ] },
         { "Concepts" = [
             "developer/concepts/index.md",

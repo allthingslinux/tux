@@ -1,0 +1,206 @@
+---
+description: Pytest fixture patterns, fixture scopes, fixture organization, and fixture usage for Tux
+globs: tests/**/*.py
+alwaysApply: false
+---
+
+# Pytest Fixtures
+
+## Overview
+
+Tux uses pytest fixtures organized in `tests/fixtures/` for database setup, test data, and mocks. Fixtures are automatically discovered via `pytest_plugins` in `conftest.py`.
+
+## Fixture Organization
+
+### Fixture Modules
+
+Fixtures are organized by category:
+
+```
+tests/fixtures/
+├── database_fixtures.py    # Database and PGlite fixtures
+├── test_data_fixtures.py   # Sample data and constants
+└── sentry_fixtures.py      # Sentry and Discord mocks
+```
+
+✅ **GOOD:** Organized by category, clear naming
+
+### Fixture Registration
+
+Fixtures are registered in `conftest.py`:
+
+```python
+# ✅ GOOD: Register fixtures via pytest_plugins
+pytest_plugins = [
+    "tests.fixtures.database_fixtures",
+    "tests.fixtures.test_data_fixtures",
+    "tests.fixtures.sentry_fixtures",
+]
+```
+
+## Fixture Scopes
+
+### Session Scope
+
+For expensive setup shared across all tests:
+
+```python
+@pytest.fixture(scope="session")
+async def pglite_async_manager():
+    """Session-scoped PGlite manager - shared across tests."""
+    manager = SQLAlchemyAsyncPGliteManager()
+    manager.start()
+    yield manager
+    manager.stop()
+```
+
+✅ **GOOD:** Session scope for expensive resources
+
+### Function Scope
+
+For fresh state per test:
+
+```python
+@pytest.fixture(scope="function")
+async def db_service(pglite_engine):
+    """Function-scoped database service - fresh per test."""
+    service = DatabaseService(echo=False)
+    service._engine = pglite_engine
+    yield service
+    # Cleanup
+```
+
+✅ **GOOD:** Function scope for test isolation
+
+## Database Fixtures
+
+### PGlite Manager
+
+```python
+@pytest.fixture(scope="session")
+async def pglite_async_manager():
+    """Session-scoped PGlite async manager."""
+    manager = SQLAlchemyAsyncPGliteManager()
+    try:
+        manager.start()
+        if not manager.wait_for_ready(max_retries=10, delay=0.1):
+            raise RuntimeError("PGlite failed to become ready")
+        yield manager
+    finally:
+        manager.stop()
+```
+
+✅ **GOOD:** Proper startup/teardown, error handling
+
+### Database Service
+
+```python
+@pytest.fixture(scope="function")
+async def db_service(pglite_engine):
+    """DatabaseService with fresh database per test."""
+    service = DatabaseService(echo=False)
+    service._engine = pglite_engine
+    service._session_factory = async_sessionmaker(...)
+    yield service
+    # Cleanup handled automatically
+```
+
+### Controllers
+
+```python
+@pytest.fixture(scope="function")
+async def guild_controller(db_service: DatabaseService) -> GuildController:
+    """Guild controller fixture."""
+    return GuildController(Guild, db_service)
+```
+
+✅ **GOOD:** Type hints, proper dependency injection
+
+## Test Data Fixtures
+
+### Constants
+
+```python
+# Test constants
+TEST_GUILD_ID = 123456789012345678
+TEST_USER_ID = 987654321098765432
+TEST_CHANNEL_ID = 876543210987654321
+```
+
+✅ **GOOD:** Centralized test constants
+
+### Sample Data
+
+```python
+@pytest.fixture(scope="function")
+async def sample_guild(guild_controller: GuildController) -> Guild:
+    """Sample guild for testing."""
+    return await guild_controller.insert_guild_by_id(TEST_GUILD_ID)
+```
+
+✅ **GOOD:** Reusable test data fixtures
+
+## Mock Fixtures
+
+### Sentry Mocks
+
+```python
+@pytest.fixture
+def mock_sentry_sdk():
+    """Mock Sentry SDK."""
+    with patch("sentry_sdk.init") as mock_init:
+        yield mock_init
+```
+
+✅ **GOOD:** Proper mocking with context managers
+
+## Fixture Dependencies
+
+### Fixture Chains
+
+```python
+# ✅ GOOD: Fixtures can depend on other fixtures
+@pytest.fixture(scope="session")
+async def pglite_async_manager():
+    # Session-scoped
+    yield manager
+
+@pytest.fixture(scope="function")
+async def pglite_engine(pglite_async_manager):
+    # Depends on session fixture
+    yield engine
+
+@pytest.fixture(scope="function")
+async def db_service(pglite_engine):
+    # Depends on function fixture
+    yield service
+```
+
+✅ **GOOD:** Proper fixture dependency chain
+
+## Best Practices
+
+1. **Organize by category** - Group related fixtures
+2. **Use appropriate scope** - Session for expensive, function for isolation
+3. **Type fixtures** - Always type fixture return values
+4. **Document fixtures** - Docstrings explain fixture purpose
+5. **Cleanup properly** - Use try/finally or yield for cleanup
+6. **Reuse fixtures** - Don't duplicate fixture logic
+7. **Use constants** - Centralize test constants
+
+## Anti-Patterns
+
+1. ❌ **Wrong scope** - Don't use session for test-specific data
+2. ❌ **No cleanup** - Always clean up resources
+3. ❌ **Missing type hints** - Always type fixtures
+4. ❌ **Duplicated fixtures** - Reuse existing fixtures
+5. ❌ **Hard-coded values** - Use constants and fixtures
+6. ❌ **Fixture dependencies** - Don't create circular dependencies
+
+## See Also
+
+- @testing/pytest.mdc - Pytest configuration
+- @testing/markers.mdc - Test markers
+- @testing/async.mdc - Async fixture patterns
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

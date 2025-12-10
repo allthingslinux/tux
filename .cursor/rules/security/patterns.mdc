@@ -1,0 +1,178 @@
+---
+description: Security patterns, secure coding practices, and security best practices for Tux
+globs: src/tux/**/*.py
+alwaysApply: false
+---
+
+# Security Patterns
+
+## Overview
+
+Tux follows security best practices for Discord bot operations, database access, and user input handling. All code should follow secure coding patterns.
+
+## Input Validation
+
+### Validate All Inputs
+
+```python
+# ✅ GOOD: Validate user input
+async def command(
+    self,
+    ctx: commands.Context[Tux],
+    member: discord.Member,
+    reason: str,
+) -> None:
+    # Validate reason length
+    if len(reason) > 500:
+        await ctx.send("Reason too long (max 500 characters)")
+        return
+
+    # Validate member
+    if member.bot:
+        await ctx.send("Cannot act on bots")
+        return
+```
+
+❌ **BAD:** Trusting user input without validation
+
+```python
+# ❌ BAD: No validation
+async def command(self, ctx, member, reason):
+    # Directly use user input - dangerous!
+    await do_action(member, reason)
+```
+
+### Sanitize Sensitive Data
+
+```python
+from tux.services.sentry.handlers import _sanitize_sensitive_data
+
+# ✅ GOOD: Sanitize before logging
+log_message = _sanitize_sensitive_data(f"Connecting to {database_url}")
+logger.info(log_message)
+```
+
+❌ **BAD:** Logging sensitive data
+
+```python
+# ❌ BAD: Logging sensitive data
+logger.info(f"Database URL: {database_url}")  # Contains password!
+```
+
+## Permission Checks
+
+### Always Check Permissions
+
+```python
+# ✅ GOOD: Use permission decorator
+@requires_command_permission()
+async def command(self, ctx: commands.Context[Tux]) -> None:
+    # Permission checked automatically
+    pass
+```
+
+❌ **BAD:** Manual or missing permission checks
+
+```python
+# ❌ BAD: Missing permission check
+async def command(self, ctx: commands.Context[Tux]) -> None:
+    # Anyone can use this!
+    pass
+```
+
+### Validate Interaction Authors
+
+```python
+from tux.ui.views.config.callbacks import validate_author
+
+# ✅ GOOD: Validate interaction author
+async def button_callback(
+    self,
+    interaction: discord.Interaction,
+    button: discord.ui.Button,
+) -> None:
+    if not await validate_author(
+        interaction,
+        expected_author,
+        "You can't use this interaction."
+    ):
+        return
+```
+
+## Database Security
+
+### Parameterized Queries
+
+SQLModel automatically uses parameterized queries:
+
+```python
+# ✅ GOOD: SQLModel uses parameterized queries
+stmt = select(MyModel).where(MyModel.id == user_id)
+result = await session.execute(stmt)
+```
+
+❌ **BAD:** String concatenation for queries
+
+```python
+# ❌ BAD: SQL injection risk (SQLModel prevents this, but don't do it)
+query = f"SELECT * FROM table WHERE id = {user_id}"  # Dangerous!
+```
+
+### Connection Security
+
+```python
+# ✅ GOOD: Use secure connection settings
+database_url = "postgresql+psycopg://user:password@host:port/db"
+# Password from environment, not hard-coded
+```
+
+## Error Handling
+
+### Don't Leak Information
+
+```python
+# ✅ GOOD: Generic error messages for users
+try:
+    await sensitive_operation()
+except Exception as e:
+    logger.exception("Operation failed")  # Detailed log
+    await ctx.send("An error occurred.")  # Generic message
+```
+
+❌ **BAD:** Exposing internal details
+
+```python
+# ❌ BAD: Exposing internal errors
+try:
+    await operation()
+except Exception as e:
+    await ctx.send(f"Error: {e}")  # Exposes internal details!
+```
+
+## Best Practices
+
+1. **Validate all inputs** - Never trust user input
+2. **Sanitize sensitive data** - Before logging or displaying
+3. **Check permissions** - Always verify user permissions
+4. **Use parameterized queries** - SQLModel handles this automatically
+5. **Secure connections** - Use environment variables for credentials
+6. **Generic error messages** - Don't leak internal details
+7. **Log security events** - Log permission denials, etc.
+
+## Anti-Patterns
+
+1. ❌ **Trusting user input** - Always validate
+2. ❌ **Logging sensitive data** - Sanitize before logging
+3. ❌ **Missing permission checks** - Always check permissions
+4. ❌ **Exposing errors** - Use generic error messages
+5. ❌ **Hard-coded secrets** - Use environment variables
+6. ❌ **SQL injection** - Use parameterized queries (SQLModel)
+
+## See Also
+
+- @security/secrets.mdc - Secret management
+- @security/validation.mdc - Input validation patterns
+- @modules/permissions.mdc - Permission patterns
+- @error-handling/patterns.mdc - Error handling patterns
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands

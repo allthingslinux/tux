@@ -1,4 +1,8 @@
 ---
+ci:
+  autofix_commit_msg: 'style: auto fixes from pre-commit hooks'
+  autoupdate_commit_msg: 'chore: update pre-commit hook versions'
+  skip: [validate-rules]
 default_language_version:
   python: python3.13
 repos:
@@ -79,7 +83,13 @@ repos:
         additional_dependencies:
           - '@commitlint/cli'
           - '@commitlint/config-conventional'
+  - repo: local
+    hooks:
+      - id: validate-rules
+        name: Validate Rules & Commands
+        entry: uv run rules validate
+        language: system
+        args: [--rules-dir, .cursor/rules, --commands-dir, .cursor/commands]
+        files: \.cursor/(rules|commands)/.*(\.mdc|\.md)$
+        pass_filenames: false
 exclude: ^(\.archive/|.*typings/|node_modules/|\.venv/|\.kiro/|src/tux/database/migrations/versions/).*$
-ci:
-  autofix_commit_msg: 'style: auto fixes from pre-commit hooks'
-  autoupdate_commit_msg: 'chore: update pre-commit hook versions'

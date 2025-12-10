@@ -1,0 +1,134 @@
+---
+description: Test coverage requirements, coverage reporting, coverage goals, and coverage best practices for Tux
+globs: tests/**/*.py, pyproject.toml
+alwaysApply: false
+---
+
+# Test Coverage
+
+## Overview
+
+Tux uses pytest-cov for coverage reporting with multiple output formats. Coverage is automatically generated for all test runs and should be maintained at high levels.
+
+## Coverage Configuration
+
+Coverage is configured in `pyproject.toml`:
+
+```toml
+[tool.pytest.ini_options.addopts]
+--cov=src/tux
+--cov-report=term-missing
+--cov-report=xml
+--cov-report=json
+--cov-report=lcov
+--cov-branch
+```
+
+✅ **GOOD:** Multiple coverage formats for different tools
+
+## Coverage Reports
+
+### Terminal Report
+
+```bash
+# ✅ GOOD: Terminal report shows missing lines
+uv run test all
+# Shows coverage percentage and missing lines
+```
+
+### HTML Report
+
+```bash
+# ✅ GOOD: HTML report for detailed analysis
+uv run test html
+# Generates htmlcov/index.html
+```
+
+### XML/JSON Reports
+
+```bash
+# ✅ GOOD: Machine-readable formats
+# Coverage XML for CI/CD
+# Coverage JSON for tools
+```
+
+## Coverage Goals
+
+### Target Coverage
+
+- **Overall:** Aim for 80%+ coverage
+- **Critical paths:** 100% coverage (database, services, core)
+- **New code:** 100% coverage requirement
+- **Legacy code:** Improve gradually
+
+✅ **GOOD:** High coverage on critical code
+
+### Coverage by Type
+
+- **Unit tests:** High coverage (80%+)
+- **Integration tests:** Moderate coverage (60%+)
+- **E2E tests:** Lower coverage (40%+)
+
+## Coverage Best Practices
+
+1. **Test new code** - Always add tests for new features
+2. **Cover edge cases** - Test error paths and edge cases
+3. **Cover critical paths** - Ensure 100% coverage on critical code
+4. **Review coverage** - Regularly review coverage reports
+5. **Improve gradually** - Improve coverage on legacy code over time
+6. **Use branch coverage** - Enable --cov-branch for branch coverage
+
+## Coverage Exclusions
+
+Some code may be excluded from coverage:
+
+```python
+# pragma: no cover
+def debug_function():
+    # Excluded from coverage
+    pass
+```
+
+✅ **GOOD:** Exclude only when necessary (debug code, unreachable code)
+
+## Coverage Analysis
+
+### Identifying Gaps
+
+```bash
+# ✅ GOOD: Use HTML report to identify gaps
+uv run test html
+# Open htmlcov/index.html in browser
+# Review uncovered lines
+```
+
+### Improving Coverage
+
+1. **Identify uncovered code** - Review coverage reports
+2. **Add missing tests** - Write tests for uncovered code
+3. **Test edge cases** - Cover error paths
+4. **Test integration points** - Cover service interactions
+
+## Best Practices
+
+1. **Maintain high coverage** - Aim for 80%+ overall
+2. **Cover critical paths** - 100% on critical code
+3. **Review regularly** - Check coverage reports
+4. **Test new code** - Always add tests for new features
+5. **Use multiple formats** - Terminal, HTML, XML, JSON
+6. **Enable branch coverage** - Test all code paths
+
+## Anti-Patterns
+
+1. ❌ **Low coverage** - Maintain high coverage
+2. ❌ **Not testing new code** - Always add tests
+3. ❌ **Ignoring coverage reports** - Review regularly
+4. ❌ **Excluding too much** - Only exclude when necessary
+5. ❌ **Not testing edge cases** - Cover error paths
+
+## See Also
+
+- @testing/pytest.mdc - Pytest configuration
+- @testing/fixtures.mdc - Fixture patterns
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands
