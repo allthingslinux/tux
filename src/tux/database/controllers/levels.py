@@ -317,6 +317,24 @@ class LevelsController(BaseController[Levels]):
         levels = await self.get_or_create_levels(member_id, guild_id)
         return levels.xp, levels.level
 
+    async def get_user_level_data(
+        self,
+        member_id: int,
+        guild_id: int,
+    ) -> Levels | None:
+        """
+        Get complete level data for a user in a single query.
+
+        This method is optimized for batch fetching user level data including
+        XP, level, blacklist status, and last message time in one database call.
+
+        Returns
+        -------
+        Levels | None
+            The levels record if found, None otherwise.
+        """
+        return await self.get_levels_by_member(member_id, guild_id)
+
     async def get_member_rank(self, member_id: int, guild_id: int) -> int:
         """
         Get a member's rank in their guild (1-based).
