@@ -7,6 +7,7 @@ for monitoring bot performance, usage statistics, and system metrics.
 
 from typing import Any
 
+import discord
 from discord.ext import tasks
 from influxdb_client.client.influxdb_client import InfluxDBClient
 from influxdb_client.client.write.point import Point
@@ -35,6 +36,7 @@ class InfluxLogger(BaseCog):
         self.influx_org: str = ""
 
         if self.init_influx():
+            self._log_guild_stats.start()
             self.logger.start()
         else:
             logger.warning(
@@ -64,7 +66,46 @@ class InfluxLogger(BaseCog):
             return True
         return False
 
-    @tasks.loop(seconds=60)
+    @tasks.loop(seconds=60, name="influx_guild_stats")
+    async def _log_guild_stats(self) -> None:
+        """Log guild statistics to InfluxDB."""
+        if not self.bot.is_ready() or not self.influx_write_api:
+            logger.debug(
+                "Bot not ready or InfluxDB writer not initialized, skipping InfluxDB logging.",
+            )
+            return
+
+        for guild in self.bot.guilds:
+            online_members = sum(
+                m.status != discord.Status.offline for m in guild.members
+            )
+
+            tags = {"guild": guild.name}
+            fields = {
+                "members": guild.member_count,
+                "online": online_members,
+            }
+
+            point = {"measurement": "guild_stats", "tags": tags, "fields": fields}
+
+            self.influx_write_api.write(
+                bucket="tux_stats",
+                org=self.influx_org,
+                record=point,
+            )
+
+    @_log_guild_stats.before_loop
+    async def before_log_guild_stats(self) -> None:
+        """Wait until the bot is ready."""
+        await self.bot.wait_until_ready()
+
+    async def cog_unload(self) -> None:
+        """Cancel background tasks when the cog is unloaded."""
+        if self.influx_write_api:
+            self._log_guild_stats.cancel()
+            self.logger.cancel()
+
+    @tasks.loop(seconds=60, name="influx_db_logger")
     async def logger(self) -> None:
         """Log statistics to InfluxDB at regular intervals.
 
@@ -79,69 +120,70 @@ class InfluxLogger(BaseCog):
         influx_bucket = "tux stats"
 
         # Collect the guild list from the database
-        try:
-            guild_list = await self.db.guild.find_many(where={})
+        guild_list = await self.db.guild.find_many(where={})
 
-            # Iterate through each guild and collect metrics
-            for guild in guild_list:
-                if not guild.id:
-                    continue
+        # Iterate through each guild and collect metrics
+        for guild in guild_list:
+            if not guild.id:
+                continue
 
-                guild_id = int(guild.id)
+            guild_id = int(guild.id)
 
-                # Collect data by querying controllers
-                # Count starboard messages for this guild
-                # Fallback to retrieving and counting (no dedicated count method yet)
-                starboard_messages = []
-                try:
-                    # Not all controllers implement find_many; do a safe query via guild id when available
-                    # StarboardMessageController currently lacks find_many; skip if not present
-                    get_msg = getattr(
-                        self.db.starboard_message,
-                        "get_starboard_message_by_id",
-                        None,
-                    )
-                    if callable(get_msg):
-                        # Cannot list all without an index; set to empty for now
-                        starboard_messages = []
-                except Exception:
+            # Collect data by querying controllers
+            # Count starboard messages for this guild
+            # Fallback to retrieving and counting (no dedicated count method yet)
+            starboard_messages = []
+            try:
+                # Not all controllers implement find_many; do a safe query via guild id when available
+                # StarboardMessageController currently lacks find_many; skip if not present
+                get_msg = getattr(
+                    self.db.starboard_message,
+                    "get_starboard_message_by_id",
+                    None,
+                )
+                if callable(get_msg):
+                    # Cannot list all without an index; set to empty for now
                     starboard_messages = []
+            except Exception:
+                starboard_messages = []
 
-                snippet_stats = await self.db.snippet.find_many(
-                    where={"guild_id": guild_id},
-                )
+            snippet_stats = await self.db.snippet.find_many(
+                where={"guild_id": guild_id},
+            )
 
-                afk_stats = await self.db.afk.find_many(where={"guild_id": guild_id})
+            afk_stats = await self.db.afk.find_many(where={"guild_id": guild_id})
 
-                # CaseController has no find_many; use get_all_cases
-                case_stats = await self.db.case.get_all_cases(guild_id)
+            # CaseController has no find_many; use get_all_cases
+            case_stats = await self.db.case.get_all_cases(guild_id)
 
-                # Create data points with type ignores for InfluxDB methods
-                # The InfluxDB client's type hints are incomplete
-                points: list[Point] = [
-                    Point("guild stats")
-                    .tag("guild", guild_id)
-                    .field("starboard count", len(starboard_messages)),  # type: ignore
-                    Point("guild stats")
-                    .tag("guild", guild_id)
-                    .field("snippet count", len(snippet_stats)),
-                    Point("guild stats")
-                    .tag("guild", guild_id)
-                    .field("afk count", len(afk_stats)),
-                    Point("guild stats")
-                    .tag("guild", guild_id)
-                    .field("case count", len(case_stats)),
-                ]
+            # Create data points with type ignores for InfluxDB methods
+            # The InfluxDB client's type hints are incomplete
+            points: list[Point] = [
+                Point("guild stats")
+                .tag("guild", guild_id)
+                .field("starboard count", len(starboard_messages)),  # type: ignore
+                Point("guild stats")
+                .tag("guild", guild_id)
+                .field("snippet count", len(snippet_stats)),
+                Point("guild stats")
+                .tag("guild", guild_id)
+                .field("afk count", len(afk_stats)),
+                Point("guild stats")
+                .tag("guild", guild_id)
+                .field("case count", len(case_stats)),
+            ]
 
-                # Write to InfluxDB
-                self.influx_write_api.write(
-                    bucket=influx_bucket,
-                    org=self.influx_org,
-                    record=points,
-                )
+            # Write to InfluxDB
+            self.influx_write_api.write(
+                bucket=influx_bucket,
+                org=self.influx_org,
+                record=points,
+            )
 
-        except Exception as e:
-            logger.error(f"Error collecting metrics for InfluxDB: {e}")
+    @logger.before_loop
+    async def before_logger(self) -> None:
+        """Wait until the bot is ready."""
+        await self.bot.wait_until_ready()
 
 
 async def setup(bot: Tux) -> None:
@@ -152,4 +194,16 @@ async def setup(bot: Tux) -> None:
     bot : Tux
         The bot instance to add the cog to.
     """
-    await bot.add_cog(InfluxLogger(bot))
+    # Only load the cog if InfluxDB configuration is available
+    if all(
+        [
+            CONFIG.EXTERNAL_SERVICES.INFLUXDB_TOKEN,
+            CONFIG.EXTERNAL_SERVICES.INFLUXDB_URL,
+            CONFIG.EXTERNAL_SERVICES.INFLUXDB_ORG,
+        ],
+    ):
+        await bot.add_cog(InfluxLogger(bot))
+    else:
+        logger.warning(
+            "InfluxDB configuration incomplete, skipping InfluxLogger cog",
+        )
