@@ -28,7 +28,7 @@ class TempBan(ModerationCogBase):
         """
         super().__init__(bot)
         self._processing_tempbans = False
-        self.tempban_check.start()
+        self.check_tempbans.start()
 
     @commands.hybrid_command(name="tempban", aliases=["tb"])
     @commands.guild_only()
@@ -136,16 +136,15 @@ class TempBan(ModerationCogBase):
             )
             return 1, 0
 
-    @tasks.loop(minutes=1)
-    async def tempban_check(self) -> None:
-        """Check for expired tempbans and automatically unban users."""
+    @tasks.loop(minutes=1, name="tempban_checker")
+    async def check_tempbans(self) -> None:
+        """Check for expired tempbans and unbans the user."""
         if self._processing_tempbans:
+            logger.debug("Tempban check is already in progress. Skipping.")
             return
 
+        self._processing_tempbans = True
         try:
-            self._processing_tempbans = True
-            logger.debug("Starting tempban expiration check")
-
             # Collect expired tempbans from all guilds
             all_expired_cases: list[Case] = []
             for guild in self.bot.guilds:
@@ -161,6 +160,10 @@ class TempBan(ModerationCogBase):
             if not all_expired_cases:
                 return
 
+            logger.info(
+                f"Processing {len(all_expired_cases)} expired tempban cases.",
+            )
+
             # Process all expired cases
             processed = 0
             failed = 0
@@ -171,21 +174,31 @@ class TempBan(ModerationCogBase):
                 failed += fail
 
             if processed or failed:
-                logger.info(f"Tempban check: {processed} processed, {failed} failed")
+                logger.info(
+                    f"Finished processing tempbans. Processed: {processed}, Failed: {failed}.",
+                )
 
-        except Exception as e:
-            logger.error(f"Tempban check error: {e}", exc_info=True)
         finally:
             self._processing_tempbans = False
 
-    @tempban_check.before_loop
-    async def before_tempban_check(self) -> None:
-        """Wait for the bot to be ready before starting the loop."""
+    @check_tempbans.before_loop
+    async def before_check_tempbans(self) -> None:
+        """Wait until the bot is ready."""
         await self.bot.wait_until_ready()
+
+    @check_tempbans.error
+    async def on_tempban_error(self, error: BaseException) -> None:
+        """Handle errors in the tempban checking loop."""
+        logger.error(f"Error in tempban checker loop: {error}")
+
+        if isinstance(error, Exception):
+            self.bot.sentry_manager.capture_exception(error)
+        else:
+            raise error
 
     async def cog_unload(self) -> None:
         """Cancel the tempban check loop when the cog is unloaded."""
-        self.tempban_check.cancel()
+        self.check_tempbans.cancel()
 
 
 async def setup(bot: Tux) -> None:
