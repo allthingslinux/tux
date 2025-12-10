@@ -29,17 +29,7 @@ class Wolfram(BaseCog):
             The bot instance.
         """
         super().__init__(bot)
-
-        # Verify AppID configuration; unload cog if missing
-        if self.unload_if_missing_config(
-            not CONFIG.EXTERNAL_SERVICES.WOLFRAM_APP_ID,
-            "Wolfram Alpha API ID",
-        ):
-            return
-
-        logger.info(
-            "Wolfram Alpha API ID is set, Science/Math commands that depend on it will work.",
-        )
+        logger.info("Wolfram Alpha cog initialized successfully.")
 
     @commands.hybrid_command(
         name="wolfram",
@@ -115,4 +105,9 @@ async def setup(bot: Tux) -> None:
     bot : Tux
         The bot instance.
     """
+    # Check if Wolfram API ID is configured before loading the cog
+    if not CONFIG.EXTERNAL_SERVICES.WOLFRAM_APP_ID:
+        logger.warning("Wolfram Alpha API ID is not set. Skipping Wolfram cog.")
+        return
+
     await bot.add_cog(Wolfram(bot))
