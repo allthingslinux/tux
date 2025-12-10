@@ -42,6 +42,10 @@ class Afk(BaseCog):
         super().__init__(bot)
         self.handle_afk_expiration.start()
 
+    async def cog_unload(self) -> None:
+        """Cancel the background task when the cog is unloaded."""
+        self.handle_afk_expiration.cancel()
+
     @commands.hybrid_command(name="afk")
     @commands.guild_only()
     async def afk(
@@ -246,8 +250,8 @@ class Afk(BaseCog):
             allowed_mentions=AFK_ALLOWED_MENTIONS,
         )
 
-    @tasks.loop(seconds=120)
-    async def handle_afk_expiration(self):
+    @tasks.loop(seconds=120, name="afk_expiration_handler")
+    async def handle_afk_expiration(self) -> None:
         """Check AFK database at a regular interval, remove AFK from users with an entry that has expired."""
         for guild in self.bot.guilds:
             expired_entries = await self._get_expired_afk_entries(guild.id)
@@ -271,6 +275,20 @@ class Afk(BaseCog):
                         f"Expiring AFK status for {member.name} ({member.id}) in {guild.name}",
                     )
                     await del_afk(self.db, member, entry.nickname)
+
+    @handle_afk_expiration.before_loop
+    async def before_handle_afk_expiration(self) -> None:
+        """Wait until the bot is ready."""
+        await self.bot.wait_until_ready()
+
+    @handle_afk_expiration.error
+    async def on_handle_afk_expiration_error(self, error: BaseException) -> None:
+        """Handle errors in the AFK expiration handler loop."""
+        logger.error(f"Error in AFK expiration handler loop: {error}")
+        if isinstance(error, Exception):
+            self.bot.sentry_manager.capture_exception(error)
+        else:
+            raise error
 
     async def _get_expired_afk_entries(self, guild_id: int) -> list[AFKMODEL]:
         """
