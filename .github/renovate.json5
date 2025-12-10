@@ -294,6 +294,7 @@
     },
     constraints: {
         python: '>=3.13.2,<3.14',
+        postgres: '<=17',
     },
     customManagers: [
         {

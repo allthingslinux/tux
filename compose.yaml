@@ -3,7 +3,7 @@ services:
   tux-postgres:
     container_name: tux-postgres
     hostname: tux-postgres
-    image: postgres:18-alpine@sha256:eca6fb2d91fda290eb8cfb8ba53dd0dcbf3508a08011e30adb039ea7c8e1e9f2
+    image: postgres:17-alpine
     restart: 'no'
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
