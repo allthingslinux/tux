@@ -21,11 +21,10 @@ class BaseController[ModelT]:
     """
     Composed database controller with lazy-loaded specialized operations.
 
-    This controller delegates operations to specialized controllers while
-    maintaining backward compatibility with the original BaseController API.
-    Core CRUD and Query controllers are eagerly initialized, while specialized
-    controllers (bulk, transaction, upsert) use lazy initialization to reduce
-    overhead for simple use cases.
+    This controller delegates operations to specialized controllers for clean
+    separation of concerns. Core CRUD and Query controllers are eagerly
+    initialized, while specialized controllers (bulk, transaction, upsert) use
+    lazy initialization to reduce overhead for simple use cases.
     """
 
     def __init__(self, model: type[ModelT], db: DatabaseService | None = None) -> None:
