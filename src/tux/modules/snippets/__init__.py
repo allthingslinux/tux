@@ -165,12 +165,15 @@ class SnippetsBaseCog(BaseCog):
         """
         assert ctx.guild
 
+        # Check moderator override first
         if await self.check_if_user_has_mod_override(ctx):
             return True, "Mod override granted."
 
+        # Check snippet ban status
         if await self.is_snippetbanned(ctx.guild.id, ctx.author.id):
             return False, "You are banned from using snippets."
 
+        # Check role restrictions
         if (
             CONFIG.SNIPPETS.LIMIT_TO_ROLE_IDS
             and isinstance(ctx.author, discord.Member)
@@ -187,10 +190,11 @@ class SnippetsBaseCog(BaseCog):
                 f"You do not have a role that allows you to manage snippets. Accepted roles: {roles_str}",
             )
 
+        # Check lock status
         if snippet_locked:
             return False, "This snippet is locked. You cannot edit or delete it."
 
-        # Allow if snippet_user_id is 0 (not provided, e.g., for create) or matches the author.
+        # Check ownership (allow if snippet_user_id is 0 for create operations)
         if snippet_user_id not in (0, ctx.author.id):
             return False, "You can only edit or delete your own snippets."
 
@@ -247,3 +251,92 @@ class SnippetsBaseCog(BaseCog):
             description=description,
         )
         await ctx.send(embed=embed)
+
+    def _require_snippet_id(self, snippet: Snippet) -> int:
+        """Require snippet to have a valid ID.
+
+        Parameters
+        ----------
+        snippet : Snippet
+            The snippet to check.
+
+        Returns
+        -------
+        int
+            The snippet ID.
+
+        Raises
+        ------
+        ValueError
+            If the snippet ID is None.
+        """
+        if snippet.id is None:
+            error_msg = "Snippet ID is invalid"
+            raise ValueError(error_msg)
+        return snippet.id
+
+    async def _resolve_alias(
+        self,
+        snippet: Snippet,
+        guild_id: int,
+    ) -> tuple[Snippet | None, bool]:
+        """Resolve a snippet alias to its target snippet.
+
+        Parameters
+        ----------
+        snippet : Snippet
+            The snippet that may be an alias.
+        guild_id : int
+            The ID of the guild.
+
+        Returns
+        -------
+        tuple[Snippet | None, bool]
+            A tuple containing the resolved snippet (or None if broken) and
+            a boolean indicating if the original snippet was an alias.
+        """
+        if not snippet.alias:
+            return snippet, False
+
+        # Fetch the target snippet
+        target = await self.db.snippet.get_snippet_by_name_and_guild_id(
+            snippet.alias,
+            guild_id,
+        )
+
+        # Return target if found, None if broken alias
+        return (target, True) if target is not None else (None, True)
+
+    def _format_snippet_message(
+        self,
+        snippet: Snippet,
+        is_alias: bool = False,
+        alias_name: str | None = None,
+    ) -> str:
+        """Format a snippet message for display.
+
+        Parameters
+        ----------
+        snippet : Snippet
+            The snippet to format.
+        is_alias : bool, optional
+            Whether this is an alias snippet. Defaults to False.
+        alias_name : str | None, optional
+            The name of the alias if this is an alias. Defaults to None.
+
+        Returns
+        -------
+        str
+            The formatted message text.
+        """
+        if is_alias and alias_name:
+            text = f"`{alias_name}.txt -> {snippet.snippet_name}.txt` "
+        else:
+            text = f"`/snippets/{snippet.snippet_name}.txt` "
+
+        if snippet.locked:
+            text += "🔒 "
+
+        text += f"|| {snippet.snippet_content}"
+
+        return text

@@ -147,9 +147,7 @@ class InfluxLogger(BaseCog):
             except Exception:
                 starboard_messages = []
 
-            snippet_stats = await self.db.snippet.find_many(
-                where={"guild_id": guild_id},
-            )
+            snippet_stats = await self.db.snippet.get_snippets_by_guild(guild_id)
 
             afk_stats = await self.db.afk.find_many(where={"guild_id": guild_id})
 

@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from sqlalchemy import desc
+
 from tux.database.controllers.base import BaseController
 from tux.database.models import Snippet
 from tux.database.service import DatabaseService
@@ -27,10 +29,14 @@ class SnippetController(BaseController[Snippet]):
         """
         super().__init__(Snippet, db)
 
-    # Simple, clean methods that use BaseController's CRUD operations
     async def get_snippet_by_id(self, snippet_id: int) -> Snippet | None:
         """
         Get a snippet by its ID.
+
+        Parameters
+        ----------
+        snippet_id : int
+            The ID of the snippet to retrieve.
 
         Returns
         -------
@@ -39,13 +45,20 @@ class SnippetController(BaseController[Snippet]):
         """
         return await self.get_by_id(snippet_id)
 
-    async def get_snippet_by_name_and_guild(
+    async def get_snippet_by_name_and_guild_id(
         self,
-        snippet_name: str,
+        name: str,
         guild_id: int,
     ) -> Snippet | None:
         """
-        Get a snippet by name and guild.
+        Get a snippet by name and guild ID.
+
+        Parameters
+        ----------
+        name : str
+            The name of the snippet.
+        guild_id : int
+            The ID of the guild.
 
         Returns
         -------
@@ -53,20 +66,33 @@ class SnippetController(BaseController[Snippet]):
             The snippet if found, None otherwise.
         """
         return await self.find_one(
-            filters=(Snippet.snippet_name == snippet_name)
-            & (Snippet.guild_id == guild_id),
+            filters=(Snippet.snippet_name == name) & (Snippet.guild_id == guild_id),
         )
 
-    async def get_snippets_by_guild(self, guild_id: int) -> list[Snippet]:
+    async def get_snippets_by_guild(
+        self,
+        guild_id: int,
+        order_by: Any | None = None,
+    ) -> list[Snippet]:
         """
-        Get all snippets in a guild.
+        Get all snippets in a guild, optionally ordered.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild.
+        order_by : Any | None, optional
+            Optional ordering expression (e.g., desc(Snippet.uses)).
 
         Returns
         -------
         list[Snippet]
             List of all snippets for the guild.
         """
-        return await self.find_all(filters=Snippet.guild_id == guild_id)
+        return await self.find_all(
+            filters=Snippet.guild_id == guild_id,
+            order_by=order_by,
+        )
 
     async def create_snippet(
         self,
@@ -79,6 +105,21 @@ class SnippetController(BaseController[Snippet]):
     ) -> Snippet:
         """
         Create a new snippet.
+
+        Parameters
+        ----------
+        snippet_name : str
+            The name of the snippet.
+        snippet_content : str
+            The content of the snippet.
+        guild_id : int
+            The ID of the guild.
+        snippet_user_id : int
+            The ID of the user creating the snippet.
+        alias : str | None, optional
+            Optional alias name for the snippet.
+        **kwargs : Any
+            Additional fields to set on the snippet.
 
         Returns
         -------
@@ -96,9 +137,20 @@ class SnippetController(BaseController[Snippet]):
             **kwargs,
         )
 
-    async def update_snippet(self, snippet_id: int, **kwargs: Any) -> Snippet | None:
+    async def update_snippet_by_id(
+        self,
+        snippet_id: int,
+        **kwargs: Any,
+    ) -> Snippet | None:
         """
         Update a snippet by ID.
+
+        Parameters
+        ----------
+        snippet_id : int
+            The ID of the snippet to update.
+        **kwargs : Any
+            Fields to update on the snippet.
 
         Returns
         -------
@@ -107,24 +159,14 @@ class SnippetController(BaseController[Snippet]):
         """
         return await self.update_by_id(snippet_id, **kwargs)
 
-    async def update_snippet_by_id(
-        self,
-        snippet_id: int,
-        **kwargs: Any,
-    ) -> Snippet | None:
-        """
-        Update a snippet by ID - alias for update_snippet.
-
-        Returns
-        -------
-        Snippet | None
-            The updated snippet, or None if not found.
-        """
-        return await self.update_snippet(snippet_id, **kwargs)
-
-    async def delete_snippet(self, snippet_id: int) -> bool:
+    async def delete_snippet_by_id(self, snippet_id: int) -> bool:
         """
         Delete a snippet by ID.
+
+        Parameters
+        ----------
+        snippet_id : int
+            The ID of the snippet to delete.
 
         Returns
         -------
@@ -133,17 +175,6 @@ class SnippetController(BaseController[Snippet]):
         """
         return await self.delete_by_id(snippet_id)
 
-    async def delete_snippet_by_id(self, snippet_id: int) -> bool:
-        """
-        Delete a snippet by ID - alias for delete_snippet.
-
-        Returns
-        -------
-        bool
-            True if deleted successfully, False otherwise.
-        """
-        return await self.delete_snippet(snippet_id)
-
     async def get_snippets_by_creator(
         self,
         creator_id: int,
@@ -151,6 +182,13 @@ class SnippetController(BaseController[Snippet]):
     ) -> list[Snippet]:
         """
         Get all snippets created by a specific user in a guild.
+
+        Parameters
+        ----------
+        creator_id : int
+            The ID of the user who created the snippets.
+        guild_id : int
+            The ID of the guild.
 
         Returns
         -------
@@ -166,13 +204,22 @@ class SnippetController(BaseController[Snippet]):
         """
         Search snippets by name or content in a guild.
 
+        Uses Python-side filtering for case-insensitive search.
+        For production use with large datasets, consider implementing
+        database-level ILIKE queries via custom SQL.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to search in.
+        search_term : str
+            The search term to match against snippet names and content.
+
         Returns
         -------
         list[Snippet]
             List of snippets matching the search term.
         """
-        # This is a simple search - in production you might want to use with_session
-        # for more complex SQL queries with ILIKE or full-text search
         all_snippets = await self.get_snippets_by_guild(guild_id)
         search_lower = search_term.lower()
         return [
@@ -191,41 +238,17 @@ class SnippetController(BaseController[Snippet]):
         """
         Get the total number of snippets in a guild.
 
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild.
+
         Returns
         -------
         int
             The total count of snippets in the guild.
         """
         return await self.count(filters=Snippet.guild_id == guild_id)
-
-    # Additional methods that module files expect
-    async def find_many(self, **filters: Any) -> list[Snippet]:
-        """
-        Find many snippets with optional filters - alias for find_all.
-
-        Returns
-        -------
-        list[Snippet]
-            List of snippets matching the filters.
-        """
-        return await self.find_all()
-
-    async def get_snippet_by_name_and_guild_id(
-        self,
-        name: str,
-        guild_id: int,
-    ) -> Snippet | None:
-        """
-        Get a snippet by name and guild ID.
-
-        Returns
-        -------
-        Snippet | None
-            The snippet if found, None otherwise.
-        """
-        return await self.find_one(
-            filters=(Snippet.snippet_name == name) & (Snippet.guild_id == guild_id),
-        )
 
     async def create_snippet_alias(
         self,
@@ -267,6 +290,13 @@ class SnippetController(BaseController[Snippet]):
         """
         Get the number of snippets created by a user in a guild.
 
+        Parameters
+        ----------
+        creator_id : int
+            The ID of the user.
+        guild_id : int
+            The ID of the guild.
+
         Returns
         -------
         int
@@ -277,9 +307,14 @@ class SnippetController(BaseController[Snippet]):
             & (Snippet.guild_id == guild_id),
         )
 
-    async def toggle_snippet_lock(self, snippet_id: int) -> Snippet | None:
+    async def toggle_snippet_lock_by_id(self, snippet_id: int) -> Snippet | None:
         """
-        Toggle the locked status of a snippet.
+        Toggle the locked status of a snippet by ID.
+
+        Parameters
+        ----------
+        snippet_id : int
+            The ID of the snippet to toggle.
 
         Returns
         -------
@@ -291,20 +326,14 @@ class SnippetController(BaseController[Snippet]):
             return None
         return await self.update_by_id(snippet_id, locked=not snippet.locked)
 
-    async def toggle_snippet_lock_by_id(self, snippet_id: int) -> Snippet | None:
-        """
-        Toggle the locked status of a snippet by ID - alias for toggle_snippet_lock.
-
-        Returns
-        -------
-        Snippet | None
-            The updated snippet, or None if not found.
-        """
-        return await self.toggle_snippet_lock(snippet_id)
-
     async def increment_snippet_uses(self, snippet_id: int) -> Snippet | None:
         """
         Increment the usage count of a snippet.
+
+        Parameters
+        ----------
+        snippet_id : int
+            The ID of the snippet to increment uses for.
 
         Returns
         -------
@@ -324,20 +353,36 @@ class SnippetController(BaseController[Snippet]):
         """
         Get the most popular snippets in a guild by usage count.
 
+        Uses database-level ordering for better performance.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild.
+        limit : int, optional
+            Maximum number of snippets to return. Defaults to 10.
+
         Returns
         -------
         list[Snippet]
             List of snippets sorted by usage count (most popular first).
         """
-        # Get all snippets and sort in Python for now to avoid SQLAlchemy ordering type issues
-        all_snippets = await self.find_all(filters=Snippet.guild_id == guild_id)
-        # Sort by uses descending and limit
-        sorted_snippets = sorted(all_snippets, key=lambda x: x.uses, reverse=True)
-        return sorted_snippets[:limit]
+        return await self.find_all(
+            filters=Snippet.guild_id == guild_id,
+            order_by=desc(Snippet.__table__.c.uses),  # type: ignore[attr-defined]
+            limit=limit,
+        )
 
     async def get_snippets_by_alias(self, alias: str, guild_id: int) -> list[Snippet]:
         """
         Get snippets by alias in a guild.
+
+        Parameters
+        ----------
+        alias : str
+            The alias name to search for.
+        guild_id : int
+            The ID of the guild.
 
         Returns
         -------
@@ -352,6 +397,11 @@ class SnippetController(BaseController[Snippet]):
         """
         Get all aliases in a guild.
 
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild.
+
         Returns
         -------
         list[Snippet]
@@ -361,13 +411,24 @@ class SnippetController(BaseController[Snippet]):
             filters=(Snippet.alias is not None) & (Snippet.guild_id == guild_id),
         )
 
-    async def get_all_snippets_by_guild_id(self, guild_id: int) -> list[Snippet]:
+    async def get_all_snippets_by_guild_id(
+        self,
+        guild_id: int,
+        order_by: Any | None = None,
+    ) -> list[Snippet]:
         """
-        Get all snippets in a guild - alias for get_snippets_by_guild.
+        Get all snippets in a guild, optionally ordered.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild.
+        order_by : Any | None, optional
+            Optional ordering expression (e.g., desc(Snippet.uses)).
 
         Returns
         -------
         list[Snippet]
             List of all snippets for the guild.
         """
-        return await self.get_snippets_by_guild(guild_id)
+        return await self.get_snippets_by_guild(guild_id, order_by=order_by)
