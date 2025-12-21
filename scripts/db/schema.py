@@ -22,11 +22,6 @@ from tux.shared.config import CONFIG
 app = create_app()
 
 
-def _fail():
-    """Raise Exit(1) to satisfy Ruff's TRY301 rule."""
-    raise Exit(1)
-
-
 @app.command(name="schema")
 def schema() -> None:
     """Validate that database schema matches model definitions."""
@@ -62,7 +57,7 @@ def schema() -> None:
                     "  • Check that your models match the latest migration files",
                 )
 
-                _fail()
+                raise Exit(1)  # noqa: TRY301
 
             print_success("Schema validation completed")
 
