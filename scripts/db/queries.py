@@ -23,6 +23,18 @@ from tux.shared.config import CONFIG
 
 app = create_app()
 
+LONG_RUNNING_QUERIES_SQL = """
+SELECT
+    pid,
+    now() - pg_stat_activity.query_start AS duration,
+    query,
+    state
+FROM pg_stat_activity
+WHERE (now() - pg_stat_activity.query_start) > interval '5 minutes'
+AND state != 'idle'
+ORDER BY duration DESC
+"""
+
 
 @app.command(name="queries")
 def queries() -> None:
@@ -40,19 +52,7 @@ def queries() -> None:
                 async def _get_long_queries(
                     session: Any,
                 ) -> list[tuple[Any, Any, str, str]]:
-                    result = await session.execute(
-                        text("""
-                        SELECT
-                            pid,
-                            now() - pg_stat_activity.query_start AS duration,
-                            query,
-                            state
-                        FROM pg_stat_activity
-                        WHERE (now() - pg_stat_activity.query_start) > interval '5 minutes'
-                        AND state != 'idle'
-                        ORDER BY duration DESC
-                    """),
-                    )
+                    result = await session.execute(text(LONG_RUNNING_QUERIES_SQL))
                     return result.fetchall()
 
                 long_queries = await service.execute_query(

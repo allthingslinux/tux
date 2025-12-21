@@ -38,12 +38,7 @@ def health() -> None:
 
             if health_data["status"] == "healthy":
                 rich_print("[green]Database is healthy![/green]")
-                rich_print(
-                    f"[green]Connection: {health_data.get('connection', 'OK')}[/green]",
-                )
-                rich_print(
-                    f"[green]Response time: {health_data.get('response_time', 'N/A')}[/green]",
-                )
+                rich_print(f"[green]Mode: {health_data.get('mode', 'unknown')}[/green]")
             else:
                 rich_print("[red]Database is unhealthy![/red]")
                 rich_print(
