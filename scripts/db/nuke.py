@@ -5,54 +5,100 @@ Complete database reset (destructive).
 """
 
 import asyncio
+import os
 import sys
 import traceback
-from typing import Annotated, Any
+from typing import Annotated
 
-from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import text
 from typer import Exit, Option
 
 from scripts.core import ROOT, create_app
-from scripts.ui import print_error, print_info, print_section, print_success, rich_print
+from scripts.ui import (
+    print_error,
+    print_info,
+    print_section,
+    print_success,
+    print_warning,
+    rich_print,
+)
 from tux.database.service import DatabaseService
 from tux.shared.config import CONFIG
 
 app = create_app()
 
 
-async def _drop_all_tables(session: Any) -> None:
-    """Drop all tables and recreate the public schema."""
+async def _drop_and_recreate_schema(session: AsyncSession) -> None:
+    """Drop the public schema (including all tables) and recreate it."""
     # Dropping the schema with CASCADE will already drop all tables including alembic_version
     await session.execute(text("DROP SCHEMA public CASCADE"))
     await session.execute(text("CREATE SCHEMA public"))
     # Note: We removed GRANT ALL ON SCHEMA public TO public for security reasons.
     # The connection user should already have necessary permissions as owner.
-    await session.commit()
 
 
 def _delete_migration_files():
     """Delete all migration files in the versions directory."""
+    # Anchor to repo root via ROOT constant from core
     migration_dir = ROOT / "src" / "tux" / "database" / "migrations" / "versions"
     if migration_dir.exists():
         rich_print("[yellow]Deleting all migration files...[/yellow]")
         deleted_count = 0
         for migration_file in migration_dir.glob("*.py"):
             if migration_file.name != "__init__.py":
-                migration_file.unlink()
-                deleted_count += 1
+                try:
+                    migration_file.unlink()
+                    deleted_count += 1
+                except OSError as e:
+                    print_error(f"Failed to delete {migration_file.name}: {e}")
         print_success(f"Deleted {deleted_count} migration files")
     else:
-        print_error(f"Migration directory not found: {migration_dir}")
+        print_error(f"Migration directory not found at: {migration_dir}")
         raise Exit(1)
 
 
 async def _nuclear_reset(fresh: bool):
     """Perform a complete database reset by dropping all tables and schemas."""
+    # Safety check: prevent running against production
+    # We check for a generic ENVIRONMENT variable or explicit PRODUCTION flag in CONFIG
+    is_prod = (
+        os.getenv("ENVIRONMENT", "").lower() == "production"
+        or os.getenv("APP_ENV", "").lower() == "production"
+        or getattr(CONFIG, "PRODUCTION", False)
+    )
+
+    db_url = CONFIG.database_url
+    is_prod_db = any(
+        kw in db_url.lower() for kw in ["prod", "live", "allthingslinux.org"]
+    )
+
+    if is_prod or is_prod_db:
+        if os.getenv("FORCE_NUKE") != "true":
+            print_error(
+                "CRITICAL: Cannot run nuke command against production database!",
+            )
+            rich_print(
+                "[yellow]If you are absolutely sure, set FORCE_NUKE=true environment variable.[/yellow]",
+            )
+            raise Exit(1)
+        print_warning(
+            "FORCE_NUKE detected. Proceeding with nuclear reset on PRODUCTION database...",
+        )
+
     service = DatabaseService(echo=False)
     try:
         await service.connect(CONFIG.database_url)
+
+        # Show which database is being nuked for user awareness
+        db_name = CONFIG.database_url.split("/")[-1].split("?")[0]
+        rich_print(f"[yellow]Target database: {db_name}[/yellow]")
+
         rich_print("[yellow]Dropping all tables and schema...[/yellow]")
-        await service.execute_query(_drop_all_tables, "drop_all_tables")
+        await service.execute_query(
+            _drop_and_recreate_schema,
+            "drop_and_recreate_schema",
+        )
 
         print_success("Nuclear reset completed - database is completely empty")
 
@@ -96,7 +142,12 @@ def nuke(
         Option("--yes", "-y", help="Automatically answer 'yes' to all prompts"),
     ] = False,
 ) -> None:
-    """Complete database reset."""
+    """
+    Complete database reset.
+
+    This command is destructive and should only be used in development
+    or in case of critical migration failure.
+    """
     print_section("Complete Database Reset", "red")
     rich_print("[bold red]WARNING: This will DELETE ALL DATA[/bold red]")
     rich_print(

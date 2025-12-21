@@ -38,8 +38,9 @@ async def _inspect_db_state() -> tuple[int, int]:
                 text("SELECT COUNT(*) FROM alembic_version"),
             )
 
-        table_count = table_result.scalar() or 0
-        migration_count = migration_result.scalar() or 0
+            # Move .scalar() calls inside the session context for clarity
+            table_count = table_result.scalar() or 0
+            migration_count = migration_result.scalar() or 0
     except Exception:
         # Preserve current behavior: treat errors as "0"
         return 0, 0
@@ -60,7 +61,17 @@ def init() -> None:
 
     migration_dir = pathlib.Path("src/tux/database/migrations/versions")
     migration_files = list(migration_dir.glob("*.py")) if migration_dir.exists() else []
-    migration_file_count = len([f for f in migration_files if f.name != "__init__.py"])
+
+    # More explicit migration file filtering
+    migration_file_count = len(
+        [
+            f
+            for f in migration_files
+            if f.name != "__init__.py"
+            and not f.name.startswith("_")
+            and f.suffix == ".py"
+        ],
+    )
 
     if table_count > 0 or migration_count > 0 or migration_file_count > 0:
         rich_print(
@@ -71,7 +82,7 @@ def init() -> None:
         rich_print(
             "[yellow]'db init' only works on completely empty databases with no migration files.[/yellow]",
         )
-        return
+        raise Exit(1)
 
     try:
         rich_print("[blue]Generating initial migration...[/blue]")
