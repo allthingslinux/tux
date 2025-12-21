@@ -4,14 +4,13 @@ Command: docs build.
 Builds documentation site for production.
 """
 
-import os
-import subprocess
 from typing import Annotated
 
 from typer import Exit, Option
 
 from scripts.core import create_app
 from scripts.docs.utils import has_zensical_config
+from scripts.proc import run_command
 from scripts.ui import print_error, print_info, print_section, print_success
 
 app = create_app()
@@ -42,13 +41,11 @@ def build(
 
     try:
         print_info("Building documentation...")
-        subprocess.run(cmd, check=True, env=os.environ.copy())
+        run_command(cmd, capture_output=False)
         print_success("Documentation built successfully")
-    except subprocess.CalledProcessError:
-        print_error("Failed to build documentation")
-        raise
-    except KeyboardInterrupt:
-        print_info("\nBuild interrupted")
+    except Exception as e:
+        print_error(f"Failed to build documentation: {e}")
+        raise Exit(1) from e
 
 
 if __name__ == "__main__":

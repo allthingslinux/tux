@@ -4,14 +4,13 @@ Command: docs serve.
 Serves documentation locally with live reload.
 """
 
-import os
-import subprocess
 from typing import Annotated
 
 from typer import Exit, Option
 
 from scripts.core import create_app
 from scripts.docs.utils import has_zensical_config
+from scripts.proc import run_command
 from scripts.ui import print_error, print_info, print_section
 
 app = create_app()
@@ -46,14 +45,14 @@ def serve(
     if open_browser:
         cmd.append("--open")
     if strict:
-        print_info("Warning: --strict mode is currently unsupported by zensical")
-        cmd.append("--strict")
+        print_error("--strict mode is currently unsupported by zensical")
+        raise Exit(1)
 
     try:
         print_info(f"Starting documentation server at {dev_addr}")
-        subprocess.run(cmd, check=True, env=os.environ.copy())
-    except subprocess.CalledProcessError as e:
-        print_error("Failed to start documentation server")
+        run_command(cmd, capture_output=False)
+    except Exception as e:
+        print_error(f"Failed to start documentation server: {e}")
         raise Exit(1) from e
     except KeyboardInterrupt:
         print_info("\nDocumentation server stopped")
