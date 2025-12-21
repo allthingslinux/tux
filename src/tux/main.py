@@ -72,6 +72,8 @@ def run(debug: bool = False) -> int:
         elif isinstance(e, KeyboardInterrupt):
             logger.info("Shutdown requested by user")
             return 0
+        elif isinstance(e, RuntimeError):
+            logger.critical(f"Runtime error: {e}")
         else:
             logger.opt(exception=True).critical(f"Application failed to start: {e}")
 
