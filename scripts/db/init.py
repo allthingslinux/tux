@@ -5,6 +5,7 @@ Initializes the database with a proper initial migration.
 """
 
 import asyncio
+import contextlib
 import pathlib
 
 from sqlalchemy import text
@@ -18,6 +19,37 @@ from tux.shared.config import CONFIG
 app = create_app()
 
 
+async def _inspect_db_state() -> tuple[int, int]:
+    """Return (table_count, migration_count)."""
+    service = DatabaseService(echo=False)
+    try:
+        await service.connect(CONFIG.database_url)
+        async with service.session() as session:
+            table_result = await session.execute(
+                text(
+                    """
+                    SELECT COUNT(*) FROM information_schema.tables
+                    WHERE table_schema = 'public'
+                      AND table_type = 'BASE TABLE'
+                      AND table_name != 'alembic_version'
+                    """,
+                ),
+            )
+            migration_result = await session.execute(
+                text("SELECT COUNT(*) FROM alembic_version"),
+            )
+
+        table_count = table_result.scalar() or 0
+        migration_count = migration_result.scalar() or 0
+    except Exception:
+        # Preserve current behavior: treat errors as "0"
+        return 0, 0
+    finally:
+        with contextlib.suppress(Exception):
+            await service.disconnect()
+    return table_count, migration_count
+
+
 @app.command(name="init")
 def init() -> None:
     """Initialize database with proper migration from empty state."""
@@ -25,40 +57,7 @@ def init() -> None:
     rich_print("[bold green]Initializing database with migrations...[/bold green]")
     rich_print("[yellow]This will create an initial migration file.[/yellow]\n")
 
-    async def _check_tables():
-        try:
-            service = DatabaseService(echo=False)
-            await service.connect(CONFIG.database_url)
-            async with service.session() as session:
-                result = await session.execute(
-                    text(
-                        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' AND table_name != 'alembic_version'",
-                    ),
-                )
-                table_count = result.scalar() or 0
-            await service.disconnect()
-        except Exception:
-            return 0
-        else:
-            return table_count
-
-    async def _check_migrations():
-        try:
-            service = DatabaseService(echo=False)
-            await service.connect(CONFIG.database_url)
-            async with service.session() as session:
-                result = await session.execute(
-                    text("SELECT COUNT(*) FROM alembic_version"),
-                )
-                migration_count = result.scalar() or 0
-            await service.disconnect()
-        except Exception:
-            return 0
-        else:
-            return migration_count
-
-    table_count = asyncio.run(_check_tables())
-    migration_count = asyncio.run(_check_migrations())
+    table_count, migration_count = asyncio.run(_inspect_db_state())
 
     migration_dir = pathlib.Path("src/tux/database/migrations/versions")
     migration_files = list(migration_dir.glob("*.py")) if migration_dir.exists() else []
@@ -66,7 +65,9 @@ def init() -> None:
 
     if table_count > 0 or migration_count > 0 or migration_file_count > 0:
         rich_print(
-            f"[red]Database already has {table_count} tables, {migration_count} migrations in DB, and {migration_file_count} migration files![/red]",
+            f"[red]Database already has {table_count} tables, "
+            f"{migration_count} migrations in DB, and "
+            f"{migration_file_count} migration files![/red]",
         )
         rich_print(
             "[yellow]'db init' only works on completely empty databases with no migration files.[/yellow]",
@@ -93,8 +94,8 @@ def init() -> None:
         print_success("Database initialized with migrations")
         rich_print("[green]Ready for development[/green]")
 
-    except Exception:
-        print_error("Failed to initialize database")
+    except Exception as e:
+        print_error(f"Failed to initialize database: {e}")
 
 
 if __name__ == "__main__":
