@@ -10,7 +10,14 @@ from typing import Any
 from sqlalchemy import text
 
 from scripts.core import create_app
-from scripts.ui import print_error, print_info, print_section, print_success, rich_print
+from scripts.ui import (
+    create_progress_bar,
+    print_error,
+    print_info,
+    print_section,
+    print_success,
+    rich_print,
+)
 from tux.database.service import DatabaseService
 from tux.shared.config import CONFIG
 
@@ -24,8 +31,8 @@ def tables() -> None:
     rich_print("[bold blue]Listing database tables...[/bold blue]")
 
     async def _list_tables():
+        service = DatabaseService(echo=False)
         try:
-            service = DatabaseService(echo=False)
             await service.connect(CONFIG.database_url)
 
             async def _get_tables(session: Any) -> list[tuple[str, int]]:
@@ -33,7 +40,9 @@ def tables() -> None:
                     text("""
                     SELECT
                         table_name,
-                        (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = t.table_name) as column_count
+                        (SELECT COUNT(*) FROM information_schema.columns c
+                         WHERE c.table_name = t.table_name
+                         AND c.table_schema = t.table_schema) as column_count
                     FROM information_schema.tables t
                     WHERE table_schema = 'public'
                     AND table_type = 'BASE TABLE'
@@ -43,7 +52,9 @@ def tables() -> None:
                 )
                 return result.fetchall()
 
-            tables_data = await service.execute_query(_get_tables, "get_tables")
+            with create_progress_bar("Fetching tables...") as progress:
+                progress.add_task("Fetching tables...", total=None)
+                tables_data = await service.execute_query(_get_tables, "get_tables")
 
             if not tables_data:
                 print_info("No tables found in database")
@@ -53,11 +64,12 @@ def tables() -> None:
             for table_name, column_count in tables_data:
                 rich_print(f"[cyan]{table_name}[/cyan]: {column_count} columns")
 
-            await service.disconnect()
             print_success("Database tables listed")
 
         except Exception as e:
             print_error(f"Failed to list database tables: {e}")
+        finally:
+            await service.disconnect()
 
     asyncio.run(_list_tables())
 
