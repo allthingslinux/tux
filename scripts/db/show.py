@@ -6,7 +6,7 @@ Shows details of a specific migration.
 
 from typing import Annotated
 
-from typer import Argument
+from typer import Argument, Exit
 
 from scripts.core import create_app
 from scripts.proc import run_command
@@ -31,8 +31,9 @@ def show(
     try:
         run_command(["uv", "run", "alembic", "show", revision])
         print_success(f"Migration details displayed for: {revision}")
-    except Exception:
+    except Exception as e:
         print_error(f"Failed to show migration: {revision}")
+        raise Exit(1) from e
 
 
 if __name__ == "__main__":

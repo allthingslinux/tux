@@ -8,6 +8,7 @@ import asyncio
 from typing import Any
 
 from sqlalchemy import text
+from typer import Exit
 
 from scripts.core import create_app
 from scripts.ui import (
@@ -76,6 +77,7 @@ def queries() -> None:
 
         except Exception as e:
             print_error(f"Failed to check database queries: {e}")
+            raise Exit(1) from e
         finally:
             await service.disconnect()
 

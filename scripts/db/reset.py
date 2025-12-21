@@ -4,6 +4,8 @@ Command: db reset.
 Resets the database to a clean state via migrations.
 """
 
+from subprocess import CalledProcessError
+
 from scripts.core import create_app
 from scripts.proc import run_command
 from scripts.ui import print_error, print_section, print_success, rich_print
@@ -20,10 +22,17 @@ def reset() -> None:
 
     try:
         run_command(["uv", "run", "alembic", "downgrade", "base"])
+    except CalledProcessError:
+        print_error("Failed to downgrade database")
+        raise
+
+    try:
         run_command(["uv", "run", "alembic", "upgrade", "head"])
         print_success("Database reset and migrations reapplied!")
-    except Exception:
-        print_error("Failed to reset database")
+    except CalledProcessError:
+        print_error("Failed to reapply migrations")
+        print_error("WARNING: Database is at base state with no migrations!")
+        raise
 
 
 if __name__ == "__main__":

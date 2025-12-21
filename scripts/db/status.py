@@ -4,6 +4,8 @@ Command: db status.
 Shows current migration status.
 """
 
+from typer import Exit
+
 from scripts.core import create_app
 from scripts.proc import run_command
 from scripts.ui import print_error, print_section, print_success, rich_print
@@ -25,8 +27,9 @@ def status() -> None:
         run_command(["uv", "run", "alembic", "heads"])
 
         print_success("Status check complete")
-    except Exception:
+    except Exception as e:
         print_error("Failed to get migration status")
+        raise Exit(1) from e
 
 
 if __name__ == "__main__":
