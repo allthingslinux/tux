@@ -27,6 +27,7 @@ __all__ = [
     "TuxDependencyResolutionError",
     "TuxError",
     "TuxFileWatchError",
+    "TuxGracefulShutdown",
     "TuxHotReloadConfigurationError",
     "TuxHotReloadError",
     "TuxInvalidCodeFormatError",
@@ -37,6 +38,7 @@ __all__ = [
     "TuxPermissionLevelError",
     "TuxRuntimeError",
     "TuxServiceError",
+    "TuxSetupError",
     "TuxUnsupportedLanguageError",
     "handle_case_result",
     "handle_gather_result",
@@ -55,6 +57,14 @@ class TuxConfigurationError(TuxError):
 
 class TuxRuntimeError(TuxError):
     """Raised when there's a runtime issue."""
+
+
+class TuxSetupError(TuxError):
+    """Raised when bot setup fails."""
+
+
+class TuxGracefulShutdown(TuxError):  # noqa: N818
+    """Raised when bot shuts down gracefully."""
 
 
 # === Database Exceptions ===
