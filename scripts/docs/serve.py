@@ -45,7 +45,7 @@ def serve(
     if open_browser:
         cmd.append("--open")
     if strict:
-        print_error("--strict mode is currently unsupported by zensical")
+        print_error("--strict mode is not yet supported by zensical")
         raise Exit(1)
 
     try:
