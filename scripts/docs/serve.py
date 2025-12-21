@@ -52,8 +52,9 @@ def serve(
     try:
         print_info(f"Starting documentation server at {dev_addr}")
         subprocess.run(cmd, check=True, env=os.environ.copy())
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
         print_error("Failed to start documentation server")
+        raise Exit(1) from e
     except KeyboardInterrupt:
         print_info("\nDocumentation server stopped")
 
