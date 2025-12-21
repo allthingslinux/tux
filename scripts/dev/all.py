@@ -41,7 +41,7 @@ def run_check(check: Check) -> bool:
     try:
         check.func()
     except SystemExit as e:
-        return e.code == 0
+        return e.code == 0 if isinstance(e.code, int) else False
     except Exception as e:
         print_error(f"Unexpected error in {check.name}: {e}")
         return False
