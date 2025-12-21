@@ -58,6 +58,7 @@ def print_pretty(
     obj: Any,
     expand_all: bool = False,
     max_length: int | None = None,
+    indent_guides: bool = True,
 ) -> None:
     """
     Pretty print a container (list, dict, set, etc.) using Rich.
@@ -70,8 +71,16 @@ def print_pretty(
         Whether to fully expand all data structures (default is False).
     max_length : int | None, optional
         Maximum number of elements to show before truncating (default is None).
+    indent_guides : bool, optional
+        Whether to show indent guides (default is True).
     """
-    pprint(obj, expand_all=expand_all, max_length=max_length, console=console)
+    pprint(
+        obj,
+        expand_all=expand_all,
+        max_length=max_length,
+        console=console,
+        indent_guides=indent_guides,
+    )
 
 
 def print_json(data: str | Any) -> None:
@@ -155,7 +164,6 @@ def print_table(
 
 
 def create_progress_bar(
-    description: str = "Processing...",
     total: int | None = None,
 ) -> Progress:
     """
@@ -163,8 +171,6 @@ def create_progress_bar(
 
     Parameters
     ----------
-    description : str, optional
-        Text to show next to the progress bar.
     total : int | None, optional
         Total number of steps. If provided, shows percentage and bar.
 
