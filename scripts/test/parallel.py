@@ -5,12 +5,13 @@ Runs tests in parallel using pytest-xdist.
 """
 
 import os
+import sys
 from typing import Annotated
 
 from typer import Option
 
 from scripts.core import create_app
-from scripts.ui import print_info, print_section
+from scripts.ui import print_error, print_info, print_section
 
 app = create_app()
 
@@ -46,7 +47,11 @@ def parallel_tests(
         cmd.extend(["--dist", load_scope])
 
     print_info(f"Running: {' '.join(cmd)}")
-    os.execvp(cmd[0], cmd)
+    try:
+        os.execvp(cmd[0], cmd)
+    except OSError as e:
+        print_error(f"Failed to execute command: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
