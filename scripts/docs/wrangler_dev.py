@@ -32,11 +32,8 @@ def wrangler_dev(
         raise Exit(1)
 
     print_info("Building documentation...")
-    try:
-        build(strict=True)
-    except Exception as e:
-        print_error(f"Build failed, aborting Wrangler dev: {e}")
-        raise Exit(1) from e
+    # build(strict=True) already handles errors and raises Exit(1)
+    build(strict=True)
 
     cmd = ["wrangler", "dev", f"--port={port}"]
     if remote:
@@ -47,14 +44,12 @@ def wrangler_dev(
 
     try:
         run_command(cmd, capture_output=False)
-    except Exception as e:
-        # KeyboardInterrupt is handled by the shell/parent
-        # but we catch other exceptions here
-        if not isinstance(e, KeyboardInterrupt):
-            print_error(f"Wrangler dev server failed: {e}")
-            raise Exit(1) from e
-    finally:
+    except KeyboardInterrupt:
         print_info("\nWrangler dev server stopped")
+        raise Exit(0) from None
+    except Exception as e:
+        print_error(f"Wrangler dev server failed: {e}")
+        raise Exit(1) from e
 
 
 if __name__ == "__main__":

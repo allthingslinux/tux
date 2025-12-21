@@ -12,6 +12,7 @@ from scripts.core import create_app
 from scripts.ui import (
     create_progress_bar,
     print_error,
+    print_pretty,
     print_section,
     print_success,
     print_warning,
@@ -63,10 +64,9 @@ def lint() -> None:
 
     if issues:
         print_warning(f"Found {len(issues)} issues in documentation:")
-        for issue in issues:
-            print_error(f"  • {issue}")
-    else:
-        print_success("No issues found in documentation!")
+        print_pretty(issues)
+        raise Exit(1)
+    print_success("No issues found in documentation!")
 
 
 if __name__ == "__main__":
