@@ -12,8 +12,9 @@ from typer import Exit
 
 from scripts.core import create_app
 from scripts.ui import (
-    create_progress_bar,
+    create_status,
     print_error,
+    print_pretty,
     print_section,
     print_success,
     rich_print,
@@ -45,8 +46,7 @@ def queries() -> None:
     async def _check_queries():
         service = DatabaseService(echo=False)
         try:
-            with create_progress_bar("Analyzing queries...") as progress:
-                progress.add_task("Checking for long-running queries...", total=None)
+            with create_status("Analyzing queries...") as status:
                 await service.connect(CONFIG.database_url)
 
                 async def _get_long_queries(
@@ -59,17 +59,13 @@ def queries() -> None:
                     _get_long_queries,
                     "get_long_queries",
                 )
+                status.update("[bold green]Analysis complete![/bold green]")
 
             if long_queries:
                 rich_print(
                     f"[yellow]Found {len(long_queries)} long-running queries:[/yellow]",
                 )
-                for pid, duration, query_text, state in long_queries:
-                    rich_print(f"[red]PID {pid}[/red]: {state} for {duration}")
-                    query_preview = (
-                        (query_text[:100] + "...") if query_text else "<no query text>"
-                    )
-                    rich_print(f"     Query: {query_preview}")
+                print_pretty(long_queries)
             else:
                 rich_print("[green]No long-running queries found[/green]")
 

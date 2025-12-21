@@ -10,7 +10,7 @@ from typer import Exit
 
 from scripts.core import create_app
 from scripts.ui import (
-    create_progress_bar,
+    create_status,
     print_error,
     print_section,
     print_success,
@@ -35,12 +35,12 @@ def schema() -> None:
 
     async def _schema_check():
         try:
-            with create_progress_bar("Validating schema...") as progress:
-                progress.add_task("Validating schema against models...", total=None)
+            with create_status("Validating schema against models...") as status:
                 service = DatabaseService(echo=False)
                 await service.connect(CONFIG.database_url)
                 schema_result = await service.validate_schema()
                 await service.disconnect()
+                status.update("[bold green]Validation complete![/bold green]")
 
             if schema_result["status"] == "valid":
                 rich_print("[green]Database schema validation passed![/green]")

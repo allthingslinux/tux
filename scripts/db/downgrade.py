@@ -4,10 +4,11 @@ Command: db downgrade.
 Rolls back to a previous migration revision.
 """
 
+import sys
 from subprocess import CalledProcessError
 from typing import Annotated
 
-from typer import Argument, Option, confirm
+from typer import Argument, Option
 
 from scripts.core import create_app
 from scripts.proc import run_command
@@ -16,6 +17,7 @@ from scripts.ui import (
     print_info,
     print_section,
     print_success,
+    prompt,
     rich_print,
 )
 
@@ -42,19 +44,18 @@ def downgrade(
         "[yellow]This may cause data loss. Backup your database first.[/yellow]\n",
     )
 
-    if (
-        not force
-        and revision != "-1"
-        and not confirm(f"Downgrade to {revision}?", default=False)
-    ):
-        print_info("Downgrade cancelled")
-        return
+    if not force:
+        response = prompt(f"Type 'yes' to downgrade to {revision}: ")
+        if response.lower() != "yes":
+            print_info("Downgrade cancelled")
+            return
 
     try:
         run_command(["uv", "run", "alembic", "downgrade", revision])
         print_success(f"Successfully downgraded to revision: {revision}")
     except CalledProcessError as e:
         print_error(f"Failed to downgrade to revision {revision}: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

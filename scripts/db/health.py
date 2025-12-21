@@ -10,8 +10,9 @@ from typer import Exit
 
 from scripts.core import create_app
 from scripts.ui import (
-    create_progress_bar,
+    create_status,
     print_error,
+    print_pretty,
     print_section,
     print_success,
     rich_print,
@@ -36,14 +37,15 @@ def health() -> None:
     async def _health_check():
         service = DatabaseService(echo=False)
         try:
-            with create_progress_bar("Connecting to database...") as progress:
-                progress.add_task("Checking database health...", total=None)
+            with create_status("Checking database health...") as status:
                 await service.connect(CONFIG.database_url)
                 health_data = await service.health_check()
+                status.update("[bold green]Connection successful![/bold green]")
 
             if health_data["status"] == "healthy":
                 rich_print("[green]Database is healthy![/green]")
                 rich_print(f"[green]Mode: {health_data.get('mode', 'unknown')}[/green]")
+                print_pretty(health_data)
                 print_success("Health check completed")
             else:
                 rich_print("[red]Database is unhealthy![/red]")
