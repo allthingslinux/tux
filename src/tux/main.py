@@ -68,6 +68,7 @@ def run(debug: bool = False) -> int:  # noqa: PLR0911
             return 1
         if isinstance(e.code, int):
             return e.code
+        logger.warning(f"SystemExit with non-int code: {e.code!r}, returning 1")
         return 1
     except RuntimeError as e:
         logger.critical(f"Runtime error: {e}")
