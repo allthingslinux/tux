@@ -4,13 +4,13 @@ Command: docs wrangler-deploy.
 Deploys documentation to Cloudflare Workers.
 """
 
-from pathlib import Path
 from typing import Annotated
 
-from typer import Option
+from typer import Exit, Option
 
 from scripts.core import create_app
 from scripts.docs.build import build
+from scripts.docs.utils import has_wrangler_config
 from scripts.proc import run_command
 from scripts.ui import print_error, print_info, print_section, print_success
 
@@ -31,13 +31,17 @@ def wrangler_deploy(
     """Deploy documentation to Cloudflare Workers."""
     print_section("Deploying to Cloudflare Workers", "blue")
 
-    if not Path("wrangler.toml").exists():
-        print_error("wrangler.toml not found. Please run from the project root.")
-        return
+    if not has_wrangler_config():
+        raise Exit(1)
 
     print_info("Building documentation...")
 
-    build(strict=False)
+    try:
+        # Build with strict=True to ensure we fail on any issue
+        build(strict=True)
+    except Exception as e:
+        print_error(f"Build failed, aborting deployment: {e}")
+        raise Exit(1) from e
 
     cmd = ["wrangler", "deploy", "--env", env]
     if dry_run:
@@ -49,7 +53,8 @@ def wrangler_deploy(
         run_command(cmd, capture_output=False)
         print_success(f"Documentation deployed successfully to {env}")
     except Exception as e:
-        print_error(f"Error: {e}")
+        print_error(f"Deployment failed: {e}")
+        raise Exit(1) from e
 
 
 if __name__ == "__main__":
