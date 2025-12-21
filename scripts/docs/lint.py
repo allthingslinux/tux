@@ -35,7 +35,6 @@ def lint() -> None:
     issues: list[str] = []
 
     with create_progress_bar(
-        "Scanning Documentation...",
         total=len(all_md_files),
     ) as progress:
         task = progress.add_task("Scanning Documentation...", total=len(all_md_files))
@@ -55,7 +54,7 @@ def lint() -> None:
                     issues.append(f"Empty file: {md_file}")
                 elif not content.startswith("#"):
                     issues.append(f"Missing title: {md_file}")
-                elif "TODO" in content or "FIXME" in content:
+                elif "TODO" in content.upper() or "FIXME" in content.upper():
                     issues.append(f"Contains TODO/FIXME: {md_file}")
             except Exception as e:
                 issues.append(f"Could not read {md_file}: {e}")
