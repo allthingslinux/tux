@@ -4,12 +4,12 @@ Command: docs wrangler-versions.
 Lists and manages versions.
 """
 
-from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 from typer import Option
 
 from scripts.core import create_app
+from scripts.docs.utils import has_wrangler_config
 from scripts.proc import run_command
 from scripts.ui import print_error, print_section, print_success
 
@@ -19,30 +19,37 @@ app = create_app()
 @app.command(name="wrangler-versions")
 def wrangler_versions(
     action: Annotated[
-        str,
-        Option("--action", "-a", help="Action to perform: list, view, or upload"),
+        Literal["list", "view", "upload"],
+        Option("--action", "-a", help="Action to perform"),
     ] = "list",
     version_id: Annotated[
         str,
-        Option("--version-id", help="Version ID to view"),
+        Option("--version-id", help="Version ID to view (required for 'view')"),
     ] = "",
     alias: Annotated[
         str,
-        Option("--alias", help="Preview alias name"),
+        Option("--alias", help="Preview alias name (required for 'upload')"),
     ] = "",
 ) -> None:
     """List and manage versions of the documentation."""
     print_section("Managing Versions", "blue")
 
-    if not Path("wrangler.toml").exists():
-        print_error("wrangler.toml not found. Please run from the project root.")
+    if not has_wrangler_config():
+        return
+
+    if action == "view" and not version_id:
+        print_error("The --version-id option is required when --action view is used.")
+        return
+
+    if action == "upload" and not alias:
+        print_error("The --alias option is required when --action upload is used.")
         return
 
     cmd = ["wrangler", "versions", action]
 
-    if action == "view" and version_id:
+    if action == "view":
         cmd.append(version_id)
-    elif action == "upload" and alias:
+    elif action == "upload":
         cmd.extend(["--preview-alias", alias])
 
     try:
