@@ -4,6 +4,10 @@ Command: db check.
 Validates migration files.
 """
 
+from subprocess import CalledProcessError
+
+from typer import Exit
+
 from scripts.core import create_app
 from scripts.proc import run_command
 from scripts.ui import print_error, print_section, print_success, rich_print
@@ -20,8 +24,9 @@ def check() -> None:
     try:
         run_command(["uv", "run", "alembic", "check"])
         print_success("All migrations validated successfully!")
-    except Exception:
-        print_error("Migration validation failed - check your migration files")
+    except CalledProcessError as e:
+        print_error(f"Migration validation failed: {e}")
+        raise Exit(1) from e
 
 
 if __name__ == "__main__":
