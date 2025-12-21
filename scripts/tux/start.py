@@ -11,7 +11,7 @@ from typing import Annotated
 from typer import Option
 
 from scripts.core import create_app
-from scripts.ui import print_error, print_info, print_section, print_success, rich_print
+from scripts.ui import print_info, print_section, print_success, rich_print
 from tux.main import run
 
 app = create_app()
@@ -25,34 +25,16 @@ class PostRunBehavior(Enum):
 
 
 def _run_bot(debug: bool) -> tuple[int, PostRunBehavior]:
-    """Run the bot and handle exceptions."""
-    exit_code = 1
-    behavior = PostRunBehavior.SKIP
+    """Run the bot and return the exit code and post-run behavior."""
+    if debug:
+        print_info("Debug mode enabled")
 
-    try:
-        if debug:
-            print_info("Debug mode enabled")
+    # The run() function in main.py already catches and logs exceptions
+    # and returns a proper exit code.
+    exit_code = run(debug=debug)
 
-        exit_code = run(debug=debug)
-        behavior = PostRunBehavior.NORMAL
-    except RuntimeError as e:
-        msg = str(e)
-        if "setup failed" in msg.lower():
-            print_error("Bot setup failed")
-        elif "Event loop stopped before Future completed" in msg:
-            print_info("Bot shutdown completed")
-            exit_code = 0
-        else:
-            print_error(f"Runtime error: {e}")
-    except KeyboardInterrupt:
-        print_info("Bot shutdown requested by user (Ctrl+C)")
-        exit_code = 130
-    except SystemExit as e:
-        exit_code = int(e.code) if e.code is not None else 1
-    except Exception as e:
-        print_error(f"Failed to start bot: {e}")
-
-    return exit_code, behavior
+    # We assume run() has already handled the logging for errors and shutdowns
+    return exit_code, PostRunBehavior.NORMAL
 
 
 @app.command(name="start")
@@ -71,7 +53,8 @@ def start(
         elif exit_code == 130:
             print_info("Bot shutdown requested by user (Ctrl+C)")
         else:
-            print_error(f"Bot exited with code {exit_code}")
+            # We don't print a generic error here because run() already logged it
+            pass
 
     sys.exit(exit_code)
 
