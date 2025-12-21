@@ -69,9 +69,11 @@ async def _nuclear_reset(fresh: bool):
     )
 
     db_url = CONFIG.database_url
-    is_prod_db = any(
-        kw in db_url.lower() for kw in ["prod", "live", "allthingslinux.org"]
+    # Allow override via env var
+    prod_keywords = os.getenv("PROD_DB_KEYWORDS", "prod,live,allthingslinux.org").split(
+        ",",
     )
+    is_prod_db = any(kw.strip() in db_url.lower() for kw in prod_keywords if kw.strip())
 
     if is_prod or is_prod_db:
         if os.getenv("FORCE_NUKE") != "true":

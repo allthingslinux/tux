@@ -8,7 +8,7 @@ import sys
 from subprocess import CalledProcessError
 from typing import Annotated
 
-from typer import Argument, Option
+from typer import Argument, Option, confirm
 
 from scripts.core import create_app
 from scripts.proc import run_command
@@ -17,7 +17,6 @@ from scripts.ui import (
     print_info,
     print_section,
     print_success,
-    prompt,
     rich_print,
 )
 
@@ -44,11 +43,9 @@ def downgrade(
         "[yellow]This may cause data loss. Backup your database first.[/yellow]\n",
     )
 
-    if not force:
-        response = prompt(f"Type 'yes' to downgrade to {revision}: ")
-        if response.lower() != "yes":
-            print_info("Downgrade cancelled")
-            return
+    if not force and not confirm(f"Downgrade to {revision}?", default=False):
+        print_info("Downgrade cancelled")
+        return
 
     try:
         run_command(["uv", "run", "alembic", "downgrade", revision])

@@ -15,7 +15,6 @@ from scripts.ui import (
     create_progress_bar,
     print_error,
     print_info,
-    print_pretty,
     print_section,
     print_success,
     rich_print,
@@ -54,7 +53,7 @@ def tables() -> None:
                 )
                 return result.fetchall()
 
-            with create_progress_bar("Fetching tables...") as progress:
+            with create_progress_bar(total=None) as progress:
                 progress.add_task("Fetching tables...", total=None)
                 tables_data = await service.execute_query(_get_tables, "get_tables")
 
@@ -62,8 +61,9 @@ def tables() -> None:
                 print_info("No tables found in database")
                 return
 
-            rich_print(f"[green]Found {len(tables_data)} tables:[/green]")
-            print_pretty(tables_data)
+            rich_print(f"[green]Found {len(tables_data)} tables:[/green]\n")
+            for table_name, column_count in tables_data:
+                rich_print(f"  [cyan]{table_name:40}[/cyan] {column_count:3} columns")
 
             print_success("Database tables listed")
 
