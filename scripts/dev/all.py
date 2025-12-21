@@ -18,6 +18,7 @@ from scripts.dev.pre_commit import pre_commit
 from scripts.dev.type_check import type_check
 from scripts.ui import (
     create_progress_bar,
+    print_error,
     print_section,
     print_success,
     print_table,
@@ -41,7 +42,8 @@ def run_check(check: Check) -> bool:
         check.func()
     except SystemExit as e:
         return e.code == 0
-    except Exception:
+    except Exception as e:
+        print_error(f"Unexpected error in {check.name}: {e}")
         return False
     else:
         return True
@@ -68,7 +70,6 @@ def run_all_checks(
     results: list[tuple[str, bool]] = []
 
     with create_progress_bar(
-        "Running Development Checks",
         total=len(checks),
     ) as progress:
         task = progress.add_task("Running Development Checks", total=len(checks))
