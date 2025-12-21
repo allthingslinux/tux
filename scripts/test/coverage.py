@@ -94,6 +94,9 @@ def coverage_report(
 
     cmd = _build_coverage_cmd(specific, format_type, quick, fail_under)
 
+    if quick and format_type:
+        print_info("Note: --quick takes precedence; --format will be ignored")
+
     print_info(f"Running: {shlex.join(cmd)}")
 
     try:
