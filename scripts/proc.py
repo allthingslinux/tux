@@ -5,6 +5,7 @@ Provides helpers for running shell commands and managing subprocesses.
 """
 
 import os
+import shlex
 import subprocess
 
 from scripts.ui import console, print_error
@@ -42,6 +43,9 @@ def run_command(
     """
     run_env = env if env is not None else os.environ.copy()
 
+    # Log command for auditing (security suggestion)
+    # console.print(f"[dim]Executing: {shlex.join(command)}[/dim]")
+
     try:
         result = subprocess.run(
             command,
@@ -55,7 +59,7 @@ def run_command(
             console.print(result.stdout.strip())
 
     except subprocess.CalledProcessError as e:
-        print_error(f"Command failed: {' '.join(command)}")
+        print_error(f"Command failed: {shlex.join(command)}")
         if e.stderr:
             console.print(f"[red]{e.stderr.strip()}[/red]")
         raise
