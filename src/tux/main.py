@@ -14,12 +14,17 @@ from tux.core.app import TuxApp
 from tux.shared.exceptions import TuxDatabaseError, TuxError
 
 
-def run() -> int:
+def run(debug: bool = False) -> int:
     """
     Instantiate and run the Tux application.
 
     This function is the entry point for the Tux application.
     It creates an instance of the TuxApp class.
+
+    Parameters
+    ----------
+    debug : bool, optional
+        Whether to enable debug mode (default is False).
 
     Returns
     -------
@@ -28,10 +33,14 @@ def run() -> int:
 
     Notes
     -----
-    Logging is configured by the CLI script (scripts/base.py) before this is called.
+    Logging is configured by the CLI script before this is called.
     """
     try:
-        logger.info("Starting Tux...")
+        if debug:
+            logger.info("Starting Tux in debug mode...")
+        else:
+            logger.info("Starting Tux...")
+
         app = TuxApp()
         return app.run()
 
