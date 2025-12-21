@@ -67,7 +67,7 @@ def start(
 
     if behavior is PostRunBehavior.NORMAL:
         if exit_code == 0:
-            print_success("Bot started successfully")
+            print_success("Bot completed successfully")
         elif exit_code == 130:
             print_info("Bot shutdown requested by user (Ctrl+C)")
         else:
