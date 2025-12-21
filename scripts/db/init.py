@@ -73,9 +73,7 @@ def init() -> None:
         [
             f
             for f in migration_files
-            if f.name != "__init__.py"
-            and not f.name.startswith("_")
-            and f.suffix == ".py"
+            if f.name != "__init__.py" and not f.name.startswith("_")
         ],
     )
 

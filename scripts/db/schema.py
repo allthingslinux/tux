@@ -34,12 +34,11 @@ def schema() -> None:
     rich_print("[bold blue]Validating database schema against models...[/bold blue]")
 
     async def _schema_check():
+        service = DatabaseService(echo=False)
         try:
             with create_status("Validating schema against models...") as status:
-                service = DatabaseService(echo=False)
                 await service.connect(CONFIG.database_url)
                 schema_result = await service.validate_schema()
-                await service.disconnect()
                 status.update("[bold green]Validation complete![/bold green]")
 
             if schema_result["status"] == "valid":
@@ -72,6 +71,8 @@ def schema() -> None:
                 print_error(f"Failed to validate database schema: {e}")
                 raise Exit(1) from e
             raise
+        finally:
+            await service.disconnect()
 
     asyncio.run(_schema_check())
 
