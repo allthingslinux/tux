@@ -30,10 +30,10 @@ def queries() -> None:
     rich_print("[bold blue]Checking for long-running queries...[/bold blue]")
 
     async def _check_queries():
+        service = DatabaseService(echo=False)
         try:
             with create_progress_bar("Analyzing queries...") as progress:
                 progress.add_task("Checking for long-running queries...", total=None)
-                service = DatabaseService(echo=False)
                 await service.connect(CONFIG.database_url)
 
                 async def _get_long_queries(
@@ -58,7 +58,6 @@ def queries() -> None:
                     _get_long_queries,
                     "get_long_queries",
                 )
-                await service.disconnect()
 
             if long_queries:
                 rich_print(
@@ -66,7 +65,10 @@ def queries() -> None:
                 )
                 for pid, duration, query_text, state in long_queries:
                     rich_print(f"[red]PID {pid}[/red]: {state} for {duration}")
-                    rich_print(f"     Query: {query_text[:100]}...")
+                    query_preview = (
+                        (query_text[:100] + "...") if query_text else "<no query text>"
+                    )
+                    rich_print(f"     Query: {query_preview}")
             else:
                 rich_print("[green]No long-running queries found[/green]")
 
@@ -74,6 +76,8 @@ def queries() -> None:
 
         except Exception as e:
             print_error(f"Failed to check database queries: {e}")
+        finally:
+            await service.disconnect()
 
     asyncio.run(_check_queries())
 
