@@ -5,6 +5,7 @@ Runs pre-commit hooks.
 """
 
 import sys
+from subprocess import CalledProcessError
 
 from scripts.core import create_app
 from scripts.proc import run_command
@@ -21,8 +22,11 @@ def pre_commit() -> None:
     try:
         run_command(["uv", "run", "pre-commit", "run", "--all-files"])
         print_success("Pre-commit checks completed successfully")
-    except Exception:
-        print_error("Pre-commit checks did not pass - see issues above")
+    except CalledProcessError as e:
+        print_error(f"Pre-commit checks did not pass: {e}")
+        sys.exit(1)
+    except Exception as e:
+        print_error(f"An unexpected error occurred during pre-commit checks: {e}")
         sys.exit(1)
 
 
