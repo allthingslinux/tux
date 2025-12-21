@@ -11,7 +11,7 @@ from rich.table import Table
 from typer import Exit
 
 from scripts.core import create_app
-from scripts.ui import console, create_progress_bar
+from scripts.ui import console, create_status
 from tux.shared.config.settings import Config
 
 app = create_app()
@@ -23,9 +23,9 @@ def validate() -> None:
     console.print(Panel.fit("Configuration Validator", style="bold blue"))
 
     try:
-        with create_progress_bar("Validating configuration...") as progress:
-            progress.add_task("Loading settings...", total=None)
+        with create_status("Validating configuration...") as status:
             config = Config()  # pyright: ignore[reportCallIssue]
+            status.update("[bold green]Validation complete![/bold green]")
 
         table = Table(
             title="Configuration Summary",
