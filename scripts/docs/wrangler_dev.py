@@ -4,15 +4,15 @@ Command: docs wrangler-dev.
 Starts local Wrangler development server.
 """
 
-from pathlib import Path
 from typing import Annotated
 
-from typer import Option
+from typer import Exit, Option
 
 from scripts.core import create_app
 from scripts.docs.build import build
+from scripts.docs.utils import has_wrangler_config
 from scripts.proc import run_command
-from scripts.ui import print_error, print_info, print_section, print_success
+from scripts.ui import print_error, print_info, print_section
 
 app = create_app()
 
@@ -28,25 +28,33 @@ def wrangler_dev(
     """Start local Wrangler development server."""
     print_section("Starting Wrangler Dev Server", "blue")
 
-    if not Path("wrangler.toml").exists():
-        print_error("wrangler.toml not found. Please run from the project root.")
-        return
+    if not has_wrangler_config():
+        raise Exit(1)
 
     print_info("Building documentation...")
-
-    build(strict=True)
+    try:
+        build(strict=True)
+    except Exception as e:
+        print_error(f"Build failed, aborting Wrangler dev: {e}")
+        raise Exit(1) from e
 
     cmd = ["wrangler", "dev", f"--port={port}"]
     if remote:
         cmd.append("--remote")
 
     print_info(f"Starting Wrangler dev server on port {port}...")
+    print_info("Press Ctrl+C to stop the server")
 
     try:
         run_command(cmd, capture_output=False)
-        print_success(f"Wrangler dev server started at http://localhost:{port}")
     except Exception as e:
-        print_error(f"Error: {e}")
+        # KeyboardInterrupt is handled by the shell/parent
+        # but we catch other exceptions here
+        if not isinstance(e, KeyboardInterrupt):
+            print_error(f"Wrangler dev server failed: {e}")
+            raise Exit(1) from e
+    finally:
+        print_info("\nWrangler dev server stopped")
 
 
 if __name__ == "__main__":
