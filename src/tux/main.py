@@ -49,7 +49,7 @@ def run(debug: bool = False) -> int:  # noqa: PLR0911
 
     except TuxDatabaseError:
         logger.error("Database connection failed")
-        logger.info("To start the database, run: docker compose up")
+        logger.info("To start the database, run: docker compose up -d")
         return 1
     except TuxSetupError as e:
         logger.error(f"Bot setup failed: {e}")
