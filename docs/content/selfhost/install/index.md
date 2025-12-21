@@ -17,7 +17,7 @@ These are the system requirements needed to install and run Tux.
 
 - **OS**: Any
 - **RAM**: 512MB
-- **Storage**: 2GB free space
+- **Storage**: 4GB free space
 
 ### Recommended Requirements
 
