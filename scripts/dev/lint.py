@@ -5,6 +5,7 @@ Runs linting checks with Ruff.
 """
 
 import sys
+from subprocess import CalledProcessError
 from typing import Annotated
 
 from typer import Option
@@ -32,8 +33,11 @@ def lint(
     try:
         run_command(cmd)
         print_success("Linting completed successfully")
-    except Exception:
-        print_error("Linting did not pass - see issues above")
+    except CalledProcessError as e:
+        print_error(f"Linting did not pass: {e}")
+        sys.exit(1)
+    except Exception as e:
+        print_error(f"An unexpected error occurred during linting: {e}")
         sys.exit(1)
 
 

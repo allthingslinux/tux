@@ -18,7 +18,6 @@ from scripts.dev.pre_commit import pre_commit
 from scripts.dev.type_check import type_check
 from scripts.ui import (
     create_progress_bar,
-    print_error,
     print_section,
     print_success,
     print_table,
@@ -68,45 +67,42 @@ def run_all_checks(
 
     results: list[tuple[str, bool]] = []
 
-    with create_progress_bar("Running Development Checks", len(checks)) as progress:
+    with create_progress_bar(
+        "Running Development Checks",
+        total=len(checks),
+    ) as progress:
         task = progress.add_task("Running Development Checks", total=len(checks))
 
         for check in checks:
             progress.update(task, description=f"Running {check.name}...")
-            progress.refresh()
-
             success = run_check(check)
             results.append((check.name, success))
-
             progress.advance(task)
-            progress.refresh()
 
-    rich_print("")
+    # Summary
     print_section("Development Checks Summary", "blue")
 
-    passed = sum(bool(success) for _, success in results)
-    total = len(results)
-
-    table_data: list[tuple[str, str, str]] = [
+    table_data: list[tuple[str, str]] = [
         (
             check_name,
-            "PASSED" if success else "FAILED",
-            "Completed" if success else "Failed",
+            "[green]✓ PASSED[/green]" if success else "[red]✗ FAILED[/red]",
         )
         for check_name, success in results
     ]
 
     print_table(
         "",
-        [("Check", "cyan"), ("Status", "green"), ("Details", "white")],
+        [("Check", "cyan"), ("Status", "white")],
         table_data,
     )
 
-    rich_print("")
-    if passed == total:
-        print_success(f"All {total} checks passed!")
+    passed_count = sum(1 for _, success in results if success)
+    total_count = len(checks)
+
+    if passed_count == total_count:
+        print_success(f"\nAll {total_count} checks passed!")
     else:
-        print_error(f"{passed}/{total} checks passed")
+        rich_print(f"\n[bold red]{passed_count}/{total_count} checks passed[/bold red]")
         raise Exit(1)
 
 
