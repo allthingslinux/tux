@@ -56,12 +56,18 @@ def run_command(
         )
 
         if capture_output and result.stdout:
-            console.print(result.stdout.strip())
+            # Use markup=False to avoid interpreting command output as Rich formatting
+            console.print(result.stdout.strip(), markup=False)
 
     except subprocess.CalledProcessError as e:
+        # Many tools (ruff, pyright) print errors to stdout
+        if capture_output:
+            if e.stdout:
+                console.print(e.stdout.strip(), markup=False)
+            if e.stderr:
+                console.print(f"[red]{e.stderr.strip()}[/red]", markup=False)
+
         print_error(f"Command failed: {shlex.join(command)}")
-        if e.stderr:
-            console.print(f"[red]{e.stderr.strip()}[/red]")
         raise
     else:
         return result
