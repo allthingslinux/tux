@@ -4,6 +4,7 @@ Command: db show.
 Shows details of a specific migration.
 """
 
+from subprocess import CalledProcessError
 from typing import Annotated
 
 from typer import Argument, Exit
@@ -31,8 +32,11 @@ def show(
     try:
         run_command(["uv", "run", "alembic", "show", revision])
         print_success(f"Migration details displayed for: {revision}")
+    except CalledProcessError as e:
+        print_error(f"Failed to show migration '{revision}': {e}")
+        raise Exit(1) from e
     except Exception as e:
-        print_error(f"Failed to show migration: {revision}")
+        print_error(f"An unexpected error occurred: {e}")
         raise Exit(1) from e
 
 
