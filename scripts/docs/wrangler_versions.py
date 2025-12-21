@@ -4,6 +4,7 @@ Command: docs wrangler-versions.
 Lists and manages versions.
 """
 
+from subprocess import CalledProcessError
 from typing import Annotated, Literal
 
 from typer import Exit, Option
@@ -55,8 +56,12 @@ def wrangler_versions(
     try:
         run_command(cmd, capture_output=False)
         print_success(f"Version {action} completed")
+    except CalledProcessError as e:
+        print_error(f"Version {action} failed: {e}")
+        raise Exit(1) from e
     except Exception as e:
-        print_error(f"Error: {e}")
+        print_error(f"An unexpected error occurred: {e}")
+        raise Exit(1) from e
 
 
 if __name__ == "__main__":

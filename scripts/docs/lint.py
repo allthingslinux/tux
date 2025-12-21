@@ -41,6 +41,13 @@ def lint() -> None:
             progress.update(task, description=f"Scanning {md_file.name}...")
             try:
                 content = md_file.read_text()
+
+                # Skip YAML frontmatter if present
+                if content.startswith("---"):
+                    parts = content.split("---", 2)
+                    if len(parts) >= 3:
+                        content = parts[2].strip()
+
                 if content.strip() == "":
                     issues.append(f"Empty file: {md_file}")
                 elif not content.startswith("#"):
