@@ -5,6 +5,7 @@ Lints docstrings for proper formatting.
 """
 
 import sys
+from subprocess import CalledProcessError
 
 from scripts.core import create_app
 from scripts.proc import run_command
@@ -21,8 +22,8 @@ def lint_docstring() -> None:
     try:
         run_command(["uv", "run", "pydoclint", "--config=pyproject.toml", "."])
         print_success("Docstring linting completed successfully")
-    except Exception:
-        print_error("Docstring linting did not pass - see issues above")
+    except CalledProcessError as e:
+        print_error(f"Docstring linting failed: {e}")
         sys.exit(1)
 
 

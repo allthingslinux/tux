@@ -5,6 +5,7 @@ Performs static type checking using basedpyright.
 """
 
 import sys
+from subprocess import CalledProcessError
 
 from scripts.core import create_app
 from scripts.proc import run_command
@@ -21,8 +22,8 @@ def type_check() -> None:
     try:
         run_command(["uv", "run", "basedpyright"])
         print_success("Type checking completed successfully")
-    except Exception:
-        print_error("Type checking did not pass - see issues above")
+    except CalledProcessError as e:
+        print_error(f"Type checking failed: {e}")
         sys.exit(1)
 
 

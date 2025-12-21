@@ -5,6 +5,7 @@ Formats code using Ruff's formatter.
 """
 
 import sys
+from subprocess import CalledProcessError
 
 from scripts.core import create_app
 from scripts.proc import run_command
@@ -21,8 +22,8 @@ def format_code() -> None:
     try:
         run_command(["uv", "run", "ruff", "format", "."])
         print_success("Code formatting completed successfully")
-    except Exception:
-        print_error("Code formatting did not pass - see issues above")
+    except CalledProcessError as e:
+        print_error(f"Code formatting failed: {e}")
         sys.exit(1)
 
 
