@@ -64,7 +64,11 @@ def run(debug: bool = False) -> int:  # noqa: PLR0911
         logger.info("Application interrupted by user")
         return 130
     except SystemExit as e:
-        return int(e.code) if e.code is not None else 1
+        if e.code is None:
+            return 1
+        if isinstance(e.code, int):
+            return e.code
+        return 1
     except RuntimeError as e:
         logger.critical(f"Runtime error: {e}")
         return 1
