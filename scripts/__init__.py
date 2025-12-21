@@ -1,30 +1,32 @@
 """
-CLI Infrastructure Package.
+Unified CLI Entry Point.
 
-This package provides a clean, object-oriented foundation for building CLI applications
-with proper separation of concerns and extensibility.
+Aggregates all command groups (config, db, dev, docs, test, tux)
+into a single root application.
 """
 
-from scripts.base import BaseCLI
-from scripts.config import ConfigCLI
-from scripts.db import DatabaseCLI
-from scripts.dev import DevCLI
-from scripts.docs import DocsCLI
-from scripts.registry import Command, CommandGroup, CommandRegistry
-from scripts.rich_utils import RichCLI
-from scripts.test import TestCLI
-from scripts.tux import TuxCLI
+from scripts import config, db, dev, docs, test, tux
+from scripts.core import create_app
 
-__all__ = [
-    "BaseCLI",
-    "Command",
-    "CommandGroup",
-    "CommandRegistry",
-    "ConfigCLI",
-    "DatabaseCLI",
-    "DevCLI",
-    "DocsCLI",
-    "RichCLI",
-    "TestCLI",
-    "TuxCLI",
-]
+# Create the root app
+app = create_app(
+    name="uv run",
+    help_text="Tux CLI",
+)
+
+# Add command groups
+app.add_typer(config.app, name="config")
+app.add_typer(db.app, name="db")
+app.add_typer(dev.app, name="dev")
+app.add_typer(docs.app, name="docs")
+app.add_typer(test.app, name="test")
+app.add_typer(tux.app, name="tux")
+
+
+def main() -> None:
+    """Root entry point for all Tux CLI commands."""
+    app()
+
+
+if __name__ == "__main__":
+    main()
