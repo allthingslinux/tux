@@ -7,7 +7,7 @@ Cleans temporary files, cache directories, and build artifacts.
 import shutil
 from pathlib import Path
 
-from scripts.core import create_app
+from scripts.core import ROOT, create_app
 from scripts.ui import (
     create_progress_bar,
     print_info,
@@ -71,7 +71,7 @@ def clean() -> None:
     """Clean temporary files, cache directories, and build artifacts."""
     print_section("Cleaning Project", "blue")
 
-    project_root = Path(__file__).parent.parent.parent
+    project_root = ROOT
     cleaned_count = 0
     total_size = 0
 
@@ -111,10 +111,11 @@ def clean() -> None:
                 progress.advance(task)
                 continue
 
+            # Better component-based check for protected dirs
             matches = [
                 m
                 for m in matches
-                if all(protected not in str(m) for protected in protected_dirs)
+                if not any(part in protected_dirs for part in m.parts)
             ]
 
             if not matches:
