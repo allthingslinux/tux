@@ -4,9 +4,11 @@ Command: dev docstring-coverage.
 Checks docstring coverage across the codebase.
 """
 
+from subprocess import CalledProcessError
+
 from scripts.core import create_app
 from scripts.proc import run_command
-from scripts.ui import print_section, print_success
+from scripts.ui import print_error, print_section, print_success
 
 app = create_app()
 
@@ -19,10 +21,17 @@ def docstring_coverage() -> None:
     try:
         run_command(["uv", "run", "docstr-coverage", "--verbose", "2", "."])
         print_success("Docstring coverage report generated")
-    except Exception:
-        # docstr-coverage might return non-zero if coverage is below threshold
-        # but we still want to show the report
-        pass
+    except CalledProcessError as e:
+        # docstr-coverage returns non-zero if coverage is below threshold
+        # Exit codes 1-99 typically indicate coverage issues (show report)
+        # Exit codes 100+ indicate actual errors
+        if e.returncode < 100:
+            print_success(
+                "Docstring coverage report generated (coverage below threshold)",
+            )
+        else:
+            print_error(f"Error running docstring coverage: {e}")
+            raise
 
 
 if __name__ == "__main__":
