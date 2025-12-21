@@ -52,6 +52,7 @@ def run(debug: bool = False) -> int:
         TuxSetupError,
         TuxGracefulShutdown,
         TuxError,
+        RuntimeError,
         SystemExit,
         KeyboardInterrupt,
         Exception,
