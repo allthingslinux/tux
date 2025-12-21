@@ -9,6 +9,7 @@ import contextlib
 import pathlib
 
 from sqlalchemy import text
+from typer import Exit
 
 from scripts.core import create_app
 from scripts.proc import run_command
@@ -94,6 +95,7 @@ def init() -> None:
 
     except Exception as e:
         print_error(f"Failed to initialize database: {e}")
+        raise Exit(1) from e
 
 
 if __name__ == "__main__":

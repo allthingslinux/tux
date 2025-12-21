@@ -4,6 +4,7 @@ Command: db new.
 Generates a new migration from model changes.
 """
 
+from subprocess import CalledProcessError
 from typing import Annotated
 
 from typer import Argument, Exit, Option
@@ -39,9 +40,9 @@ def new(
         run_command(cmd)
         print_success(f"Migration generated: {message}")
         rich_print("[yellow]Review the migration file before applying[/yellow]")
-    except Exception:
-        print_error("Failed to generate migration")
-        raise Exit(1) from None
+    except CalledProcessError as e:
+        print_error(f"Failed to generate migration: {e}")
+        raise Exit(1) from e
 
 
 if __name__ == "__main__":

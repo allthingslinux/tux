@@ -4,9 +4,10 @@ Command: db downgrade.
 Rolls back to a previous migration revision.
 """
 
+from subprocess import CalledProcessError
 from typing import Annotated
 
-from typer import Argument, Option
+from typer import Argument, Exit, Option
 
 from scripts.core import create_app
 from scripts.proc import run_command
@@ -44,8 +45,9 @@ def downgrade(
     try:
         run_command(["uv", "run", "alembic", "downgrade", revision])
         print_success(f"Successfully downgraded to revision: {revision}")
-    except Exception:
-        print_error(f"Failed to downgrade to revision: {revision}")
+    except CalledProcessError as e:
+        print_error(f"Failed to downgrade to revision {revision}: {e}")
+        raise Exit(1) from e
 
 
 if __name__ == "__main__":

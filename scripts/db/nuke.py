@@ -5,7 +5,6 @@ Complete database reset (destructive).
 """
 
 import asyncio
-import pathlib
 import sys
 import traceback
 from typing import Annotated, Any
@@ -13,7 +12,7 @@ from typing import Annotated, Any
 from sqlalchemy import text
 from typer import Exit, Option
 
-from scripts.core import create_app
+from scripts.core import ROOT, create_app
 from scripts.ui import print_error, print_info, print_section, print_success, rich_print
 from tux.database.service import DatabaseService
 from tux.shared.config import CONFIG
@@ -33,7 +32,7 @@ async def _drop_all_tables(session: Any) -> None:
 
 def _delete_migration_files():
     """Delete all migration files in the versions directory."""
-    migration_dir = pathlib.Path("src/tux/database/migrations/versions")
+    migration_dir = ROOT / "src" / "tux" / "database" / "migrations" / "versions"
     if migration_dir.exists():
         rich_print("[yellow]Deleting all migration files...[/yellow]")
         deleted_count = 0
@@ -42,6 +41,9 @@ def _delete_migration_files():
                 migration_file.unlink()
                 deleted_count += 1
         print_success(f"Deleted {deleted_count} migration files")
+    else:
+        print_error(f"Migration directory not found: {migration_dir}")
+        raise Exit(1)
 
 
 async def _nuclear_reset(fresh: bool):
