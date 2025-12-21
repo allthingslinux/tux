@@ -49,8 +49,10 @@ def lint() -> None:
                     parts = content.split("---", 2)
                     if len(parts) >= 3:
                         content = parts[2].strip()
+                else:
+                    content = content.strip()
 
-                if content.strip() == "":
+                if content == "":
                     issues.append(f"Empty file: {md_file}")
                 elif not content.startswith("#"):
                     issues.append(f"Missing title: {md_file}")
