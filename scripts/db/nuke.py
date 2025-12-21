@@ -26,7 +26,8 @@ async def _drop_all_tables(session: Any) -> None:
     # Dropping the schema with CASCADE will already drop all tables including alembic_version
     await session.execute(text("DROP SCHEMA public CASCADE"))
     await session.execute(text("CREATE SCHEMA public"))
-    await session.execute(text("GRANT ALL ON SCHEMA public TO public"))
+    # Note: We removed GRANT ALL ON SCHEMA public TO public for security reasons.
+    # The connection user should already have necessary permissions as owner.
     await session.commit()
 
 

@@ -14,7 +14,6 @@ from scripts.core import create_app
 from scripts.proc import run_command
 from scripts.ui import print_error, print_section, print_success, rich_print
 from tux.database.service import DatabaseService
-from tux.shared.config import CONFIG
 
 app = create_app()
 
@@ -23,7 +22,6 @@ async def _inspect_db_state() -> tuple[int, int]:
     """Return (table_count, migration_count)."""
     service = DatabaseService(echo=False)
     try:
-        await service.connect(CONFIG.database_url)
         async with service.session() as session:
             table_result = await session.execute(
                 text(
