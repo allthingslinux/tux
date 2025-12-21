@@ -4,15 +4,17 @@ Command: test coverage.
 Generates coverage reports.
 """
 
+import sys
 import webbrowser
 from pathlib import Path
+from subprocess import CalledProcessError
 from typing import Annotated
 
 from typer import Option
 
 from scripts.core import create_app
 from scripts.proc import run_command
-from scripts.ui import print_info, print_section
+from scripts.ui import print_error, print_info, print_section
 
 app = create_app()
 
@@ -32,7 +34,7 @@ def coverage_report(
         Option("--quick", help="Skip coverage report generation"),
     ] = False,
     fail_under: Annotated[
-        str | None,
+        int | None,
         Option("--fail-under", help="Minimum coverage percentage required"),
     ] = None,
     open_browser: Annotated[
@@ -46,26 +48,16 @@ def coverage_report(
     """Generate coverage reports."""
     print_section("Coverage Report", "blue")
 
-    cmd = ["uv", "run", "pytest"]
-
-    if specific:
-        cmd.append(f"--cov={specific}")
+    cmd = ["uv", "run", "pytest", f"--cov={specific or 'src/tux'}"]
 
     if quick:
         cmd.append("--cov-report=")
-    elif format_type:
-        match format_type:
-            case "html":
-                cmd.append("--cov-report=html")
-            case "xml":
-                cmd.append("--cov-report=xml:coverage.xml")
-            case "json":
-                cmd.append("--cov-report=json")
-            case _:
-                pass
+    elif format_type in {"html", "xml", "json"}:
+        report_arg = "xml:coverage.xml" if format_type == "xml" else format_type
+        cmd.append(f"--cov-report={report_arg}")
 
     if fail_under:
-        cmd.extend(["--cov-fail-under", fail_under])
+        cmd.extend(["--cov-fail-under", str(fail_under)])
 
     print_info(f"Running: {' '.join(cmd)}")
 
@@ -76,9 +68,16 @@ def coverage_report(
             html_report_path = Path("htmlcov/index.html")
             if html_report_path.exists():
                 print_info("Opening HTML coverage report in browser...")
-                webbrowser.open(f"file://{html_report_path.resolve()}")
-    except Exception:
-        pass
+                try:
+                    webbrowser.open(f"file://{html_report_path.resolve()}")
+                except Exception as e:
+                    print_error(f"Failed to open browser: {e}")
+    except CalledProcessError:
+        print_error("Coverage report generation failed")
+        sys.exit(1)
+    except Exception as e:
+        print_error(f"An unexpected error occurred: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
