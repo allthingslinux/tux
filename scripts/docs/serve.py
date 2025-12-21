@@ -52,11 +52,11 @@ def serve(
         print_info(f"Starting documentation server at {dev_addr}")
         # Using run_command for consistency and logging
         run_command(cmd, capture_output=False)
+    except KeyboardInterrupt:
+        print_info("\nDocumentation server stopped")
     except Exception as e:
         print_error(f"Failed to start documentation server: {e}")
         raise Exit(1) from e
-    except KeyboardInterrupt:
-        print_info("\nDocumentation server stopped")
 
 
 if __name__ == "__main__":
