@@ -20,6 +20,49 @@ from scripts.ui import print_error, print_info, print_section
 app = create_app()
 
 
+def _build_coverage_cmd(
+    specific: str | None,
+    format_type: str | None,
+    quick: bool,
+    fail_under: int | None,
+) -> list[str]:
+    """Build the pytest coverage command."""
+    cmd = ["uv", "run", "pytest", f"--cov={specific or 'src/tux'}"]
+
+    if quick:
+        cmd.append("--cov-report=")
+    elif format_type:
+        report_arg = "xml:coverage.xml" if format_type == "xml" else format_type
+        cmd.append(f"--cov-report={report_arg}")
+
+    if fail_under:
+        cmd.extend(["--cov-fail-under", str(fail_under)])
+
+    return cmd
+
+
+def _handle_browser_opening(format_type: str | None) -> None:
+    """Handle opening the coverage report in the browser."""
+    if format_type == "html":
+        html_report_path = Path("htmlcov/index.html")
+        if html_report_path.exists():
+            print_info("Opening HTML coverage report in browser...")
+            try:
+                webbrowser.open(f"file://{html_report_path.resolve()}")
+            except Exception as e:
+                print_error(f"Failed to open browser: {e}")
+        else:
+            print_error("HTML coverage report not found at htmlcov/index.html")
+    elif format_type:
+        print_info(
+            f"Browser opening only supported for HTML format (current: {format_type})",
+        )
+    else:
+        print_info(
+            "Browser opening only supported for HTML format. Use --format html.",
+        )
+
+
 @app.command(name="coverage")
 def coverage_report(
     specific: Annotated[
@@ -49,16 +92,7 @@ def coverage_report(
     """Generate coverage reports."""
     print_section("Coverage Report", "blue")
 
-    cmd = ["uv", "run", "pytest", f"--cov={specific or 'src/tux'}"]
-
-    if quick:
-        cmd.append("--cov-report=")
-    elif format_type:
-        report_arg = "xml:coverage.xml" if format_type == "xml" else format_type
-        cmd.append(f"--cov-report={report_arg}")
-
-    if fail_under:
-        cmd.extend(["--cov-fail-under", str(fail_under)])
+    cmd = _build_coverage_cmd(specific, format_type, quick, fail_under)
 
     print_info(f"Running: {shlex.join(cmd)}")
 
@@ -66,25 +100,10 @@ def coverage_report(
         run_command(cmd, capture_output=False)
 
         if open_browser:
-            if format_type == "html":
-                html_report_path = Path("htmlcov/index.html")
-                if html_report_path.exists():
-                    print_info("Opening HTML coverage report in browser...")
-                    try:
-                        webbrowser.open(f"file://{html_report_path.resolve()}")
-                    except Exception as e:
-                        print_error(f"Failed to open browser: {e}")
-                else:
-                    print_error("HTML coverage report not found at htmlcov/index.html")
-            elif format_type:
-                print_info(
-                    f"Browser opening only supported for HTML format (current: {format_type})",
-                )
-            else:
-                print_info(
-                    "Browser opening only supported for HTML format. Use --format html.",
-                )
+            _handle_browser_opening(format_type)
 
+    except KeyboardInterrupt:
+        print_info("\nCoverage generation interrupted by user")
     except CalledProcessError as e:
         print_error(f"Coverage report generation failed: {e}")
         sys.exit(1)
