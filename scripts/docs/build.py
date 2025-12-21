@@ -6,23 +6,15 @@ Builds documentation site for production.
 
 import os
 import subprocess
-from pathlib import Path
 from typing import Annotated
 
 from typer import Option
 
 from scripts.core import create_app
+from scripts.docs.utils import has_zensical_config
 from scripts.ui import print_error, print_info, print_section, print_success
 
 app = create_app()
-
-
-def _find_zensical_config() -> str | None:
-    current_dir = Path.cwd()
-    if (current_dir / "zensical.toml").exists():
-        return "zensical.toml"
-    print_error("Can't find zensical.toml file. Please run from the project root.")
-    return None
 
 
 @app.command(name="build")
@@ -33,13 +25,13 @@ def build(
     ] = False,
     strict: Annotated[
         bool,
-        Option("--strict", "-s", help="Strict mode (currently unsupported)"),
+        Option("--strict", "-s", help="Strict mode"),
     ] = False,
 ) -> None:
     """Build documentation site for production."""
     print_section("Building Documentation", "blue")
 
-    if not _find_zensical_config():
+    if not has_zensical_config():
         return
 
     cmd = ["uv", "run", "zensical", "build"]
@@ -54,6 +46,7 @@ def build(
         print_success("Documentation built successfully")
     except subprocess.CalledProcessError:
         print_error("Failed to build documentation")
+        raise
     except KeyboardInterrupt:
         print_info("\nBuild interrupted")
 
