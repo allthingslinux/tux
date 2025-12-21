@@ -318,6 +318,10 @@ root = "src"
 [[tool.basedpyright.executionEnvironments]]
 root = "scripts"
 reportMissingTypeStubs = "none"
+reportUnknownVariableType = "none"
+reportUnknownMemberType = "none"
+reportUnknownArgumentType = "none"
+reportUnknownParameterType = "none"
 
 [tool.coverage.run]
 source = ["src/tux"]
