@@ -99,7 +99,6 @@ def clean() -> None:
     protected_dirs = {".venv", "venv"}
 
     with create_progress_bar(
-        "Cleaning Project...",
         total=len(patterns_to_clean),
     ) as progress:
         task = progress.add_task("Cleaning Project...", total=len(patterns_to_clean))
