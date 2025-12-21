@@ -42,7 +42,9 @@ def validate() -> None:
             "***" if config.BOT_TOKEN else "NOT SET",
             "✓" if config.BOT_TOKEN else "✗",
         )
-        table.add_row("Database URL", f"{config.database_url[:50]}...", "✓")
+        db_url = config.database_url
+        db_url_display = f"{db_url[:50]}..." if len(db_url) > 50 else db_url
+        table.add_row("Database URL", db_url_display, "✓")
         table.add_row("Bot Name", config.BOT_INFO.BOT_NAME, "✓")
         table.add_row("Prefix", config.BOT_INFO.PREFIX, "✓")
 
