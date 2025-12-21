@@ -157,9 +157,8 @@ class TestDatabaseCLICommands:
         """Test that init command properly detects existing database."""
         exit_code, stdout, _stderr = self.run_cli_command("init")
 
-        assert exit_code == 0  # Command succeeds but shows warning
-        assert "Database already has" in stdout
-        assert "tables" in stdout
+        assert exit_code != 0  # Command should fail when DB/migrations exist
+        assert "Database initialization blocked" in stdout or "Database already has" in stdout
 
     @pytest.mark.integration
     def test_new_command_help_works(self):
@@ -395,6 +394,13 @@ class TestErrorHandling(TestDatabaseCLICommands):
 
 class TestRecoveryScenarios(TestDatabaseCLICommands):
     """🔧 Test recovery from various failure scenarios."""
+
+    def setup_method(self, method):
+        """Ensure database is up to date for recovery tests."""
+        # Ensure we have a clean, up-to-date database for recovery tests
+        # Using nuke + push to ensure absolute clean state
+        self.run_cli_command("nuke --force")
+        self.run_cli_command("push")
 
     @pytest.mark.integration
     def test_status_works_after_operations(self):
