@@ -6,12 +6,15 @@ It handles application initialization, error handling, and provides the run()
 function that starts the bot with proper lifecycle management.
 """
 
-import sys
-
 from loguru import logger
 
 from tux.core.app import TuxApp
-from tux.shared.exceptions import TuxDatabaseError, TuxError
+from tux.shared.exceptions import (
+    TuxDatabaseError,
+    TuxError,
+    TuxGracefulShutdown,
+    TuxSetupError,
+)
 
 
 def run(debug: bool = False) -> int:
@@ -44,15 +47,25 @@ def run(debug: bool = False) -> int:
         app = TuxApp()
         return app.run()
 
-    except (TuxDatabaseError, TuxError, SystemExit, KeyboardInterrupt, Exception) as e:
-        # Handle all errors in one place
+    except (
+        TuxDatabaseError,
+        TuxSetupError,
+        TuxGracefulShutdown,
+        TuxError,
+        SystemExit,
+        KeyboardInterrupt,
+        Exception,
+    ) as e:
         if isinstance(e, TuxDatabaseError):
             logger.error("Database connection failed")
             logger.info("To start the database, run: docker compose up")
+        elif isinstance(e, TuxSetupError):
+            logger.error(f"Bot setup failed: {e}")
+        elif isinstance(e, TuxGracefulShutdown):
+            logger.info(f"Bot shut down gracefully: {e}")
+            return 0
         elif isinstance(e, TuxError):
-            logger.error(f"Bot startup failed: {e}")
-        elif isinstance(e, RuntimeError):
-            logger.critical(f"Application failed to start: {e}")
+            logger.error(f"Bot error: {e}")
         elif isinstance(e, SystemExit):
             return int(e.code) if e.code is not None else 1
         elif isinstance(e, KeyboardInterrupt):
@@ -62,11 +75,3 @@ def run(debug: bool = False) -> int:
             logger.opt(exception=True).critical(f"Application failed to start: {e}")
 
         return 1
-
-    else:
-        return 0
-
-
-if __name__ == "__main__":
-    exit_code = run()
-    sys.exit(exit_code)
