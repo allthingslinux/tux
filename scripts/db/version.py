@@ -36,8 +36,8 @@ def version() -> None:
         )
 
         print_success("Version information displayed")
-    except CalledProcessError as e:
-        print_error(f"Failed to get version information: {e}")
+    except CalledProcessError:
+        print_error("Failed to get version information")
         sys.exit(1)
     except Exception as e:
         print_error(f"An unexpected error occurred: {e}")
