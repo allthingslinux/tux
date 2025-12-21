@@ -4,12 +4,12 @@ Command: docs wrangler-rollback.
 Rolls back to a previous deployment.
 """
 
-from pathlib import Path
 from typing import Annotated
 
-from typer import Option
+from typer import Argument, Exit, Option
 
 from scripts.core import create_app
+from scripts.docs.utils import has_wrangler_config
 from scripts.proc import run_command
 from scripts.ui import print_error, print_section, print_success, print_warning
 
@@ -20,8 +20,8 @@ app = create_app()
 def wrangler_rollback(
     version_id: Annotated[
         str,
-        Option("--version-id", help="Version ID to rollback to"),
-    ] = "",
+        Argument(help="Version ID to rollback to"),
+    ],
     message: Annotated[
         str,
         Option("--message", "-m", help="Rollback message"),
@@ -30,15 +30,8 @@ def wrangler_rollback(
     """Rollback to a previous deployment."""
     print_section("Rolling Back Deployment", "blue")
 
-    if not Path("wrangler.toml").exists():
-        print_error("wrangler.toml not found. Please run from the project root.")
-        return
-
-    if not version_id:
-        print_error(
-            "Version ID is required. Use wrangler-deployments to find version IDs.",
-        )
-        return
+    if not has_wrangler_config():
+        raise Exit(1)
 
     cmd = ["wrangler", "rollback", version_id]
     if message:
@@ -51,6 +44,7 @@ def wrangler_rollback(
         print_success(f"Successfully rolled back to version {version_id}")
     except Exception as e:
         print_error(f"Error: {e}")
+        raise Exit(1) from e
 
 
 if __name__ == "__main__":
