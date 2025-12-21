@@ -20,6 +20,7 @@ from loguru import logger
 from tux.help import TuxHelp
 from tux.services.sentry import SentryManager, capture_exception_safe
 from tux.shared.config import CONFIG
+from tux.shared.exceptions import TuxSetupError
 
 if TYPE_CHECKING:
     from tux.core.bot import Tux
@@ -121,8 +122,10 @@ class TuxApp:
 
         Raises
         ------
-        RuntimeError
+        TuxSetupError
             If a critical application error occurs during startup.
+        TuxGracefulShutdown
+            If the application is stopped gracefully.
         """
         try:
             # Create a fresh event loop for this application run
@@ -441,8 +444,14 @@ class TuxApp:
 
             # Wait for setup to complete
             if self.bot.setup_task:
-                await self.bot.setup_task
-                logger.info("Bot setup completed successfully")
+                try:
+                    await self.bot.setup_task
+                    logger.info("Bot setup completed successfully")
+                except Exception as e:
+                    # If setup fails, raise TuxSetupError to be caught by run()
+                    msg = f"Bot setup failed: {e}"
+                    logger.critical(msg)
+                    raise TuxSetupError(msg) from e
 
     async def _connect_to_gateway(self) -> None:
         """
