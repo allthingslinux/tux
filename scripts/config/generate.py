@@ -69,6 +69,7 @@ def generate(
         cmd = [*base_cmd, "--generator", generator]
 
         try:
+            # Using run_command for consistent error handling and auditing
             run_command(cmd, capture_output=True)
         except Exception as e:
             console.print(f"Error running {generator}: {e}", style="red")
