@@ -6,6 +6,8 @@ Checks database connection and health status.
 
 import asyncio
 
+from typer import Exit
+
 from scripts.core import create_app
 from scripts.ui import (
     create_progress_bar,
@@ -27,13 +29,12 @@ def health() -> None:
     rich_print("[bold blue]Checking database health...[/bold blue]")
 
     async def _health_check():
+        service = DatabaseService(echo=False)
         try:
             with create_progress_bar("Connecting to database...") as progress:
                 progress.add_task("Checking database health...", total=None)
-                service = DatabaseService(echo=False)
                 await service.connect(CONFIG.database_url)
                 health_data = await service.health_check()
-                await service.disconnect()
 
             if health_data["status"] == "healthy":
                 rich_print("[green]Database is healthy![/green]")
@@ -53,6 +54,9 @@ def health() -> None:
 
         except Exception as e:
             print_error(f"Failed to check database health: {e}")
+            raise Exit(1) from e
+        finally:
+            await service.disconnect()
 
     asyncio.run(_health_check())
 
