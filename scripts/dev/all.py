@@ -5,6 +5,7 @@ Runs all development checks including linting, type checking, and documentation.
 """
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Annotated
 
 from typer import Exit, Option
@@ -13,7 +14,6 @@ from scripts.core import create_app
 from scripts.dev.format import format_code
 from scripts.dev.lint import lint
 from scripts.dev.lint_docstring import lint_docstring
-from scripts.dev.lint_fix import lint_fix
 from scripts.dev.pre_commit import pre_commit
 from scripts.dev.type_check import type_check
 from scripts.ui import (
@@ -28,6 +28,26 @@ from scripts.ui import (
 app = create_app()
 
 
+@dataclass
+class Check:
+    """Represents a single development check."""
+
+    name: str
+    func: Callable[[], None]
+
+
+def run_check(check: Check) -> bool:
+    """Run a single check, normalizing SystemExit/Exception to a bool result."""
+    try:
+        check.func()
+    except SystemExit as e:
+        return e.code == 0
+    except Exception:
+        return False
+    else:
+        return True
+
+
 @app.command(name="all")
 def run_all_checks(
     fix: Annotated[
@@ -38,12 +58,12 @@ def run_all_checks(
     """Run all development checks including linting, type checking, and documentation."""
     print_section("Running All Development Checks", "blue")
 
-    checks: list[tuple[str, Callable[[], None]]] = [
-        ("Linting", lint_fix if fix else lint),
-        ("Code Formatting", format_code),
-        ("Type Checking", type_check),
-        ("Docstring Linting", lint_docstring),
-        ("Pre-commit Checks", pre_commit),
+    checks: list[Check] = [
+        Check("Linting", lambda: lint(fix=fix)),
+        Check("Code Formatting", format_code),
+        Check("Type Checking", type_check),
+        Check("Docstring Linting", lint_docstring),
+        Check("Pre-commit Checks", pre_commit),
     ]
 
     results: list[tuple[str, bool]] = []
@@ -51,23 +71,12 @@ def run_all_checks(
     with create_progress_bar("Running Development Checks", len(checks)) as progress:
         task = progress.add_task("Running Development Checks", total=len(checks))
 
-        for check_name, check_func in checks:
-            progress.update(task, description=f"Running {check_name}...")
+        for check in checks:
+            progress.update(task, description=f"Running {check.name}...")
             progress.refresh()
 
-            try:
-                # Note: These functions call sys.exit(1) on failure.
-                # In a combined run, we might want them to raise an exception instead.
-                # For now, we'll try to catch exceptions if any, but they might still exit.
-                check_func()
-                results.append((check_name, True))
-            except SystemExit as e:
-                if e.code == 0:
-                    results.append((check_name, True))
-                else:
-                    results.append((check_name, False))
-            except Exception:
-                results.append((check_name, False))
+            success = run_check(check)
+            results.append((check.name, success))
 
             progress.advance(task)
             progress.refresh()
