@@ -95,7 +95,7 @@ class PrefixManager:
         """
         # Priority 1: Check if prefix override is enabled by environment variable
         if CONFIG.is_prefix_override_enabled():
-            logger.debug(
+            logger.trace(
                 f"Prefix override enabled, using default prefix '{self._default_prefix}' for guild {guild_id}",
             )
             return self._default_prefix
