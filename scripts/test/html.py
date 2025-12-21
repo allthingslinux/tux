@@ -4,6 +4,7 @@ Command: test html.
 Runs tests and generates an HTML report.
 """
 
+import shlex
 import sys
 import webbrowser
 from pathlib import Path
@@ -38,7 +39,7 @@ def html_report(
         "--self-contained-html",
     ]
 
-    print_info(f"Running: {' '.join(cmd)}")
+    print_info(f"Running: {shlex.join(cmd)}")
 
     try:
         run_command(cmd, capture_output=False)
@@ -54,6 +55,8 @@ def html_report(
             else:
                 print_warning(f"HTML report not found at {report_path}")
 
+    except KeyboardInterrupt:
+        print_info("\nTests interrupted by user")
     except CalledProcessError as e:
         print_error(f"Tests failed: {e}")
         sys.exit(1)
