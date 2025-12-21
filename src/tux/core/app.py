@@ -124,8 +124,6 @@ class TuxApp:
         ------
         TuxSetupError
             If a critical application error occurs during startup.
-        TuxGracefulShutdown
-            If the application is stopped gracefully.
         """
         try:
             # Create a fresh event loop for this application run
