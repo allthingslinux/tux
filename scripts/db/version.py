@@ -4,6 +4,9 @@ Command: db version.
 Shows version information for database components.
 """
 
+import sys
+from subprocess import CalledProcessError
+
 from scripts.core import create_app
 from scripts.proc import run_command
 from scripts.ui import print_error, print_section, print_success, rich_print
@@ -33,8 +36,12 @@ def version() -> None:
         )
 
         print_success("Version information displayed")
-    except Exception:
-        print_error("Failed to get version information")
+    except CalledProcessError as e:
+        print_error(f"Failed to get version information: {e}")
+        sys.exit(1)
+    except Exception as e:
+        print_error(f"An unexpected error occurred: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

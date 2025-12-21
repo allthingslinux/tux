@@ -62,8 +62,15 @@ def tables() -> None:
                 return
 
             rich_print(f"[green]Found {len(tables_data)} tables:[/green]\n")
+            max_name_len = (
+                max(len(name) for name, _ in tables_data) if tables_data else 0
+            )
+            width = max(max_name_len, 10)  # minimum 10 chars
+
             for table_name, column_count in tables_data:
-                rich_print(f"  [cyan]{table_name:40}[/cyan] {column_count:3} columns")
+                rich_print(
+                    f"  [cyan]{table_name:{width}}[/cyan] {column_count:3} columns",
+                )
 
             print_success("Database tables listed")
 
