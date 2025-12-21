@@ -51,7 +51,12 @@ def validate() -> None:
         console.print(table)
 
         console.print("\n[bold]Configuration Files:[/bold]")
-        for file_path in ["config.toml", "config.yaml", "config.json", ".env"]:
+        for file_path in [
+            "config/config.toml",
+            "config/config.yaml",
+            "config/config.json",
+            ".env",
+        ]:
             path = Path(file_path)
             if path.exists():
                 console.print(f"  ✓ {file_path} found", style="green")
