@@ -39,7 +39,7 @@ def run() -> int:
         # Handle all errors in one place
         if isinstance(e, TuxDatabaseError):
             logger.error("Database connection failed")
-            logger.info("To start the database, run: make docker-up")
+            logger.info("To start the database, run: docker compose up")
         elif isinstance(e, TuxError):
             logger.error(f"Bot startup failed: {e}")
         elif isinstance(e, RuntimeError):

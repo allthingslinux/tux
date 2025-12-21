@@ -48,7 +48,7 @@ def run() -> int:
         # Handle all errors in one place
         if isinstance(e, TuxDatabaseError):
             logger.error("❌ Database connection failed")
-            logger.info("💡 To start the database, run: make docker-up")
+            logger.info("💡 To start the database, run: docker compose up")
         elif isinstance(e, TuxError):
             logger.error(f"❌ Bot startup failed: {e}")
         elif isinstance(e, RuntimeError):
@@ -76,7 +76,7 @@ The entry point implements comprehensive error handling with specific responses 
 ```python
 if isinstance(e, TuxDatabaseError):
     logger.error("❌ Database connection failed")
-    logger.info("💡 To start the database, run: make docker-up")
+    logger.info("💡 To start the database, run: docker compose up")
 ```
 
 **Application Errors:**
@@ -223,7 +223,7 @@ python -m tux.main
 ```bash
 # Database connection failure
 ❌ "Database connection failed"
-💡 To start the database, run: uv run docker-up
+💡 To start the database, run: docker compose up
 
 # Configuration error
 ❌ "Bot startup failed: Invalid token"
@@ -288,7 +288,7 @@ def test_entry_point():
 
 ```bash
 # Check database container
-uv run docker ps | grep postgres
+docker compose ps | grep postgres
 
 # Test database connectivity
 uv run tux db health

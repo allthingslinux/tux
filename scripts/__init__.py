@@ -9,7 +9,6 @@ from scripts.base import BaseCLI
 from scripts.config import ConfigCLI
 from scripts.db import DatabaseCLI
 from scripts.dev import DevCLI
-from scripts.docker_cli import DockerCLI
 from scripts.docs import DocsCLI
 from scripts.registry import Command, CommandGroup, CommandRegistry
 from scripts.rich_utils import RichCLI
@@ -24,7 +23,6 @@ __all__ = [
     "ConfigCLI",
     "DatabaseCLI",
     "DevCLI",
-    "DockerCLI",
     "DocsCLI",
     "RichCLI",
     "TestCLI",

@@ -372,7 +372,7 @@ permissions:
 # Test CI locally
 uv run test quick           # Fast local testing
 uv run dev all             # Full quality checks
-uv run docker build .      # Test Docker builds
+docker compose build .     # Test Docker builds
 ```
 
 ### Testing with Act

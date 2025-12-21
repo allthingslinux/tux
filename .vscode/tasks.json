@@ -207,7 +207,7 @@
     {
       "label": "Docker: Up",
       "type": "shell",
-      "command": "uv run docker up",
+      "command": "uv run ",
       "group": "build",
       "presentation": {
         "reveal": "always",
@@ -218,7 +218,7 @@
     {
       "label": "Docker: Down",
       "type": "shell",
-      "command": "uv run docker down",
+      "command": "docker compose down",
       "group": "build",
       "presentation": {
         "reveal": "always",
@@ -229,7 +229,7 @@
     {
       "label": "Docker: Logs",
       "type": "shell",
-      "command": "uv run docker logs",
+      "command": "docker compose logs",
       "group": "build",
       "presentation": {
         "reveal": "always",

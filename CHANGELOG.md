@@ -286,7 +286,6 @@ CLI Tools (Click-based)
 * **Bot Commands**: `tux start`, `tux version`
 * **Development Commands**: `dev lint`, `dev format`, `dev type-check`, `dev lint-docstring`, `dev docstring-coverage`, `dev pre-commit`, `dev all`
 * **Database Commands**: `db init`, `db dev`, `db push`, `db status`, `db new`, `db health`, `db schema`, `db queries`
-* **Docker Commands**: `docker up`, `docker down`, `docker build`, `docker logs`, `docker ps`, `docker shell`, `docker health`, `docker config`
 * **Testing Commands**: `tests all`, `tests quick`, `tests plain`, `tests parallel`, `tests html`, `tests coverage`, `tests benchmark`
 * **Documentation Commands**: `docs serve`, `docs build`
 * **Config Commands**: `config generate`

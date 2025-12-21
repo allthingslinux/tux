@@ -83,14 +83,6 @@ uv run tux start            # Start bot
 uv run tux start --debug    # Debug mode
 ```
 
-**Docker:**
-
-```bash
-uv run docker up            # Start services
-uv run docker down          # Stop services
-uv run docker logs          # View logs
-```
-
 **Docs:**
 
 ```bash

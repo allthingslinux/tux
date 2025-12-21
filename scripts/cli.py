@@ -18,7 +18,6 @@ sys.path.insert(0, str(src_path))
 from scripts.config import ConfigCLI
 from scripts.db import DatabaseCLI
 from scripts.dev import DevCLI
-from scripts.docker_cli import DockerCLI
 from scripts.docs import DocsCLI
 from scripts.test import TestCLI
 from scripts.tux import TuxCLI
@@ -44,7 +43,6 @@ def create_unified_cli() -> Typer:
     config_cli = ConfigCLI()
     db_cli = DatabaseCLI()
     dev_cli = DevCLI()
-    docker_cli = DockerCLI()
     docs_cli = DocsCLI()
     test_cli = TestCLI()
     tux_cli = TuxCLI()
@@ -64,11 +62,6 @@ def create_unified_cli() -> Typer:
         dev_cli.app,
         name="dev",
         help="Development tools",
-    )
-    cli.add_typer(
-        docker_cli.app,
-        name="docker",
-        help="Docker operations",
     )
     cli.add_typer(
         docs_cli.app,

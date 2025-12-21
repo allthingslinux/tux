@@ -408,7 +408,7 @@ async def debug_async_performance():
 
 ```bash
 # View container logs
-uv run docker logs
+docker compose logs
 
 # Execute commands in running container
 docker exec -it tux /bin/bash

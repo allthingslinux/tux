@@ -119,7 +119,7 @@ uv run config generate
 cp .env.example .env && cp config/config.toml.example config/config.toml
 
 # Setup database
-uv run docker up -d tux-postgres
+docker compose up -d tux-postgres
 uv run db push
 
 # Develop, run, lint, and test

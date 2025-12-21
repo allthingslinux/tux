@@ -44,7 +44,6 @@ dependencies = [
     "psycopg[binary,pool]>=3.2.9",
     "pydantic>=2.11.7",
     "h2>=4.1.0",
-    "docker>=7.0.0",
     "pydantic-settings>=2.10.1",
     "typer>=0.17.3",
     "semver>=3.0.4",
@@ -62,7 +61,6 @@ db = "scripts.db:main"
 dev = "scripts.dev:main"
 test = "scripts.test:main"
 tests = "scripts.test:main"
-docker = "scripts.docker_cli:main"
 docs = "scripts.docs:main"
 config = "scripts.config:main"
 

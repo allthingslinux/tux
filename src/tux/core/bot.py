@@ -158,7 +158,7 @@ class Tux(commands.Bot):
         except TuxDatabaseConnectionError as e:
             # Database connection or migration failure is critical - provide helpful error message
             # Error details already logged by database service, just provide hint
-            logger.info("To start the database, run: uv run docker up")
+            logger.info("To start the database, run: docker compose up")
             logger.info("To run migrations manually, run: uv run db push")
             capture_database_error(e, operation="connection")
             # Re-raise the original exception to preserve error type
@@ -166,7 +166,7 @@ class Tux(commands.Bot):
         except ConnectionError as e:
             # Wrap generic connection errors in TuxDatabaseConnectionError
             # Error details already logged by database service, just provide hint
-            logger.info("To start the database, run: uv run docker up")
+            logger.info("To start the database, run: docker compose up")
             capture_database_error(e, operation="connection")
             msg = "Database setup failed"
             raise TuxDatabaseConnectionError(msg) from e

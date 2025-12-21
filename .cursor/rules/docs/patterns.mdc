@@ -134,28 +134,29 @@ Retrieve user information and statistics.
 #### Documenting Architecture
 
 **For system components:**
+
 ```markdown
 ### Cog System Architecture
 
 Tux uses Discord.py's cog system for modular command organization.
 
-```
-
+```text
 src/tux/modules/
 ├── moderation/     # Ban, kick, timeout commands
 ├── utility/        # Info, ping, reminder commands
 ├── fun/           # Games and entertainment
 └── levels/        # XP and leveling system
-
 ```
 
 **Key Benefits:**
+
 - **Hot Reloading**: Changes reload without restart
 - **Permission Isolation**: Each cog manages its own permissions
 - **Dependency Injection**: Services injected via constructor
 
 !!! info "Development"
     See `developer/concepts/cog-system.md` for implementation details.
+
 ```
 
 #### Troubleshooting Sections
@@ -184,7 +185,7 @@ src/tux/modules/
 3. **Restart Services**
 
    ```bash
-   uv run docker restart
+   docker compose restart tux
    uv run tux start
    ```
 
@@ -192,8 +193,6 @@ src/tux/modules/
     - Database connection timeouts
     - Missing Discord intents
     - Rate limiting from Discord API
-
-```
 
 ### When to Use Different Features
 
@@ -221,6 +220,7 @@ src/tux/modules/
 - **🔍 User needs TECHNICAL details** → Reference (specs, API, commands)
 
 **Examples:**
+
 - "How do I set up Tux?" → Tutorial (`getting-started/`)
 - "How do I ban someone?" → How-to guide (`user/commands/moderation.md`)
 - "Why does Tux use cogs?" → Explanation (`developer/concepts/cog-system.md`)
@@ -229,28 +229,33 @@ src/tux/modules/
 ### When to Use Admonitions
 
 **USE `!!! note`** for:
+
 - General information users should know
 - Tips that improve user experience
 - Background context
 - Related information
 
 **USE `!!! tip`** for:
+
 - Best practices and recommendations
 - Time-saving shortcuts
 - Pro tips for advanced users
 
 **USE `!!! warning`** for:
+
 - Security implications
 - Data loss risks
 - Breaking changes
 - Important limitations
 
 **USE `!!! danger`** for:
+
 - Critical security issues
 - Data corruption risks
 - System stability threats
 
 **USE `!!! info`** for:
+
 - Technical details
 - System requirements
 - Version information
@@ -258,6 +263,7 @@ src/tux/modules/
 ### When to Use Tabs vs. Sections
 
 **USE TABS** for:
+
 - Alternative implementations (Python vs JavaScript setup)
 - Different configuration formats (TOML vs YAML vs ENV)
 - Platform-specific instructions (Docker vs bare metal)
@@ -265,6 +271,7 @@ src/tux/modules/
 - API request/response examples
 
 **USE SECTIONS** for:
+
 - Sequential steps in a process
 - Different aspects of same feature
 - Hierarchical information
@@ -274,12 +281,14 @@ src/tux/modules/
 ### When to Use Code Blocks
 
 **ALWAYS USE** code blocks for:
+
 - Command-line examples
 - Configuration files
 - API responses
 - Multi-line code
 
 **NEVER USE** code blocks for:
+
 - Single function names (use `backticks`)
 - File paths (use `backticks`)
 - Short variable names (use `backticks`)
@@ -287,12 +296,14 @@ src/tux/modules/
 ### When to Create New Pages vs. Sections
 
 **CREATE NEW PAGE** when:
+
 - Topic deserves its own navigation entry
 - Content is > 2000 words
 - Topic is referenced from multiple places
 - User needs to bookmark/link directly
 
 **USE SECTION** when:
+
 - Content fits within parent topic's context
 - < 1000 words
 - Part of a larger workflow
@@ -301,6 +312,7 @@ src/tux/modules/
 ### When to Use Expandable Content
 
 **USE `??? note`** for:
+
 - Advanced configuration options
 - Troubleshooting details
 - Implementation specifics
@@ -308,6 +320,7 @@ src/tux/modules/
 - Detailed technical explanations
 
 **DON'T USE** for:
+
 - Essential setup steps
 - Required configuration
 - Primary user workflows
@@ -315,11 +328,13 @@ src/tux/modules/
 ### When to Use New Documentation Features
 
 **USE SOCIAL CARDS** for:
+
 - All pages automatically generate beautiful previews (built into Zensical)
 - Custom backgrounds and branding
 - Open Graph and Twitter Card support
 
 **Note**: The following features are not currently available in Zensical:
+
 - **Spellcheck**: Use external tools for spell checking
 - **Coverage Reports**: Not available
 - **Snippet Extraction**: Not available
@@ -329,12 +344,14 @@ src/tux/modules/
 ### Error Message Guidelines
 
 **WHEN DOCUMENTING ERRORS:**
+
 1. Start with user-visible symptom
 2. Explain what causes the error
 3. Provide step-by-step solution
 4. Include prevention tips
 
 **TEMPLATE:**
+
 ```markdown
 ### Error: "Database connection failed"
 
@@ -365,7 +382,7 @@ src/tux/modules/
 3. **Restart database service**
 
    ```bash
-   uv run docker up
+   docker compose restart tux-postgres
    ```
 
 ```

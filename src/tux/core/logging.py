@@ -49,7 +49,6 @@ INTERCEPTED_LIBRARIES = [
     "asyncpg",
     "psycopg",
     "sentry_sdk",
-    "docker",
     "githubkit",
     "influxdb_client",
     "watchdog",
@@ -69,8 +68,6 @@ THIRD_PARTY_LOG_LEVELS = {
     "urllib3": logging.WARNING,
     "httpx": logging.WARNING,
     "aiohttp": logging.WARNING,
-    # Infrastructure - Rarely needed
-    "docker": logging.WARNING,
     # Database - Fine-grained control per subsystem
     "sqlalchemy.engine": logging.WARNING,  # SQL queries and parameters (not result sets)
     "sqlalchemy.pool": logging.DEBUG,  # Connection pool events (not checkin/checkout spam)
