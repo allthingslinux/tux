@@ -23,7 +23,7 @@ app = create_app()
 
 async def _drop_all_tables(session: Any) -> None:
     """Drop all tables and recreate the public schema."""
-    await session.execute(text("DROP TABLE IF EXISTS alembic_version"))
+    # Dropping the schema with CASCADE will already drop all tables including alembic_version
     await session.execute(text("DROP SCHEMA public CASCADE"))
     await session.execute(text("CREATE SCHEMA public"))
     await session.execute(text("GRANT ALL ON SCHEMA public TO public"))
