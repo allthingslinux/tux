@@ -21,6 +21,7 @@ from scripts.ui import (
     print_section,
     print_success,
     print_warning,
+    prompt,
     rich_print,
 )
 from tux.database.service import DatabaseService
@@ -54,14 +55,13 @@ def _delete_migration_files():
                     print_error(f"Failed to delete {migration_file.name}: {e}")
         print_success(f"Deleted {deleted_count} migration files")
     else:
-        print_error(f"Migration directory not found at: {migration_dir}")
+        print_error(f"Migration directory not found: {migration_dir}")
         raise Exit(1)
 
 
 async def _nuclear_reset(fresh: bool):
     """Perform a complete database reset by dropping all tables and schemas."""
     # Safety check: prevent running against production
-    # We check for a generic ENVIRONMENT variable or explicit PRODUCTION flag in CONFIG
     is_prod = (
         os.getenv("ENVIRONMENT", "").lower() == "production"
         or os.getenv("APP_ENV", "").lower() == "production"
@@ -167,7 +167,7 @@ def nuke(
             )
             raise Exit(1)
 
-        response = input("Type 'NUKE' to confirm (case sensitive): ")
+        response = prompt("Type 'NUKE' to confirm (case sensitive): ")
         if response != "NUKE":
             print_info("Nuclear reset cancelled")
             return

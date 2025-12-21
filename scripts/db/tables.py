@@ -15,6 +15,7 @@ from scripts.ui import (
     create_progress_bar,
     print_error,
     print_info,
+    print_pretty,
     print_section,
     print_success,
     rich_print,
@@ -62,8 +63,7 @@ def tables() -> None:
                 return
 
             rich_print(f"[green]Found {len(tables_data)} tables:[/green]")
-            for table_name, column_count in tables_data:
-                rich_print(f"[cyan]{table_name}[/cyan]: {column_count} columns")
+            print_pretty(tables_data)
 
             print_success("Database tables listed")
 

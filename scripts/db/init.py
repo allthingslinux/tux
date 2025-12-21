@@ -13,7 +13,13 @@ from typer import Exit
 
 from scripts.core import create_app
 from scripts.proc import run_command
-from scripts.ui import print_error, print_section, print_success, rich_print
+from scripts.ui import (
+    print_error,
+    print_pretty,
+    print_section,
+    print_success,
+    rich_print,
+)
 from tux.database.service import DatabaseService
 
 app = create_app()
@@ -74,10 +80,13 @@ def init() -> None:
     )
 
     if table_count > 0 or migration_count > 0 or migration_file_count > 0:
-        rich_print(
-            f"[red]Database already has {table_count} tables, "
-            f"{migration_count} migrations in DB, and "
-            f"{migration_file_count} migration files![/red]",
+        rich_print("[red]Database initialization blocked:[/red]")
+        print_pretty(
+            {
+                "tables": table_count,
+                "migrations_in_db": migration_count,
+                "migration_files": migration_file_count,
+            },
         )
         rich_print(
             "[yellow]'db init' only works on completely empty databases with no migration files.[/yellow]",
