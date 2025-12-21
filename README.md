@@ -102,26 +102,37 @@ Want to contribute? Assuming you have the basics like Docker and a Discord bot f
 ```bash
 # For org members: Clone directly
 git clone https://github.com/allthingslinux/tux.git && cd tux
+```
 
+```bash
 # For external contributors: Fork on GitHub first, then:
 git clone https://github.com/YOUR_USERNAME/tux.git && cd tux
 git remote add upstream https://github.com/allthingslinux/tux.git
+```
 
+```bash
 # Install dependencies
 uv sync
+```
 
+```bash
 # Install pre-commit hooks
 uv run pre-commit install
-git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
 
+```bash
 # Generate and edit configuration files
 uv run config generate
 cp .env.example .env && cp config/config.toml.example config/config.toml
+```
 
+```bash
 # Setup database
-docker compose up -d tux-postgres
+docker compose up -d tux-postgres # (or tux-adminer for a webui at :8080)
 uv run db push
+```
 
+```bash
 # Develop, run, lint, and test
 git checkout -b feature/your-feature-name
 # ... make changes ...
