@@ -6,7 +6,7 @@ Lists and manages versions.
 
 from typing import Annotated, Literal
 
-from typer import Option
+from typer import Exit, Option
 
 from scripts.core import create_app
 from scripts.docs.utils import has_wrangler_config
@@ -35,15 +35,15 @@ def wrangler_versions(
     print_section("Managing Versions", "blue")
 
     if not has_wrangler_config():
-        return
+        raise Exit(1)
 
     if action == "view" and not version_id:
         print_error("The --version-id option is required when --action view is used.")
-        return
+        raise Exit(1)
 
     if action == "upload" and not alias:
         print_error("The --alias option is required when --action upload is used.")
-        return
+        raise Exit(1)
 
     cmd = ["wrangler", "versions", action]
 

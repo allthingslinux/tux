@@ -8,7 +8,7 @@ import os
 import subprocess
 from typing import Annotated
 
-from typer import Option
+from typer import Exit, Option
 
 from scripts.core import create_app
 from scripts.docs.utils import has_zensical_config
@@ -32,7 +32,7 @@ def build(
     print_section("Building Documentation", "blue")
 
     if not has_zensical_config():
-        return
+        raise Exit(1)
 
     cmd = ["uv", "run", "zensical", "build"]
     if clean:
