@@ -12,4 +12,4 @@ icon: material/shield-outline
 
 The Admin Guide covers everything you need to know to use Tux on your Discord server.
 
-<!-- AUTO_INDEX_START -->
+<!-- TODO: Consider adding quick guide here for people who know what they are doing -->

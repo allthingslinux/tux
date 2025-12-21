@@ -11,4 +11,4 @@ Get started by reading the [Installation Guide](./install/index.md) to set up Tu
 After installation, refer to the [Configuration Guide](./config/index.md) to customize Tux to your needs.
 For ongoing maintenance and operations, the [Management Guide](./manage/index.md) provides essential information.
 
-<!-- AUTO_INDEX_START -->
+<!-- TODO: Consider adding quick guide here for people who know what they are doing -->
