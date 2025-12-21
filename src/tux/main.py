@@ -17,7 +17,7 @@ from tux.shared.exceptions import (
 )
 
 
-def run(debug: bool = False) -> int:
+def run(debug: bool = False) -> int:  # noqa: PLR0911
     """
     Instantiate and run the Tux application.
 
@@ -47,34 +47,27 @@ def run(debug: bool = False) -> int:
         app = TuxApp()
         return app.run()
 
-    except (
-        TuxDatabaseError,
-        TuxSetupError,
-        TuxGracefulShutdown,
-        TuxError,
-        RuntimeError,
-        SystemExit,
-        KeyboardInterrupt,
-        Exception,
-    ) as e:
-        if isinstance(e, TuxDatabaseError):
-            logger.error("Database connection failed")
-            logger.info("To start the database, run: docker compose up")
-        elif isinstance(e, TuxSetupError):
-            logger.error(f"Bot setup failed: {e}")
-        elif isinstance(e, TuxGracefulShutdown):
-            logger.info(f"Bot shut down gracefully: {e}")
-            return 0
-        elif isinstance(e, TuxError):
-            logger.error(f"Bot error: {e}")
-        elif isinstance(e, SystemExit):
-            return int(e.code) if e.code is not None else 1
-        elif isinstance(e, KeyboardInterrupt):
-            logger.info("Shutdown requested by user")
-            return 0
-        elif isinstance(e, RuntimeError):
-            logger.critical(f"Runtime error: {e}")
-        else:
-            logger.opt(exception=True).critical(f"Application failed to start: {e}")
-
+    except TuxDatabaseError:
+        logger.error("Database connection failed")
+        logger.info("To start the database, run: docker compose up")
+        return 1
+    except TuxSetupError as e:
+        logger.error(f"Bot setup failed: {e}")
+        return 1
+    except TuxGracefulShutdown as e:
+        logger.info(f"Bot shut down gracefully: {e}")
+        return 0
+    except TuxError as e:
+        logger.error(f"Bot error: {e}")
+        return 1
+    except KeyboardInterrupt:
+        logger.info("Application interrupted by user")
+        return 130
+    except SystemExit as e:
+        return int(e.code) if e.code is not None else 1
+    except RuntimeError as e:
+        logger.critical(f"Runtime error: {e}")
+        return 1
+    except Exception as e:
+        logger.opt(exception=True).critical(f"Application failed to start: {e}")
         return 1
