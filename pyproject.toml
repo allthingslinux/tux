@@ -55,7 +55,7 @@ dependencies = [
 repository = "https://github.com/allthingslinux/tux"
 
 [project.scripts]
-cli = "scripts.cli:main"
+cli = "scripts:main"
 tux = "scripts.tux:main"
 db = "scripts.db:main"
 dev = "scripts.dev:main"
