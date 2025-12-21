@@ -107,6 +107,7 @@ def coverage_report(
 
     except KeyboardInterrupt:
         print_info("\nCoverage generation interrupted by user")
+        sys.exit(130)
     except CalledProcessError as e:
         print_error(f"Coverage report generation failed: {e}")
         sys.exit(1)
