@@ -72,11 +72,11 @@ def coverage_report(
                     webbrowser.open(f"file://{html_report_path.resolve()}")
                 except Exception as e:
                     print_error(f"Failed to open browser: {e}")
-    except CalledProcessError:
-        print_error("Coverage report generation failed")
+    except CalledProcessError as e:
+        print_error(f"Coverage report generation failed: {e}")
         sys.exit(1)
     except Exception as e:
-        print_error(f"An unexpected error occurred: {e}")
+        print_error(f"An unexpected error occurred during coverage generation: {e}")
         sys.exit(1)
 
 

@@ -54,11 +54,11 @@ def html_report(
             else:
                 print_warning(f"HTML report not found at {report_path}")
 
-    except CalledProcessError:
-        print_error("Tests failed - see output above")
+    except CalledProcessError as e:
+        print_error(f"Tests failed: {e}")
         sys.exit(1)
     except Exception as e:
-        print_error(f"An unexpected error occurred: {e}")
+        print_error(f"An unexpected error occurred during HTML report generation: {e}")
         sys.exit(1)
 
 
