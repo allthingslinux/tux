@@ -43,8 +43,8 @@ def run_command(
     """
     run_env = env if env is not None else os.environ.copy()
 
-    # Log command for auditing (security suggestion)
-    # console.print(f"[dim]Executing: {shlex.join(command)}[/dim]")
+    # Log command for auditing
+    console.print(f"[dim]Executing: {shlex.join(command)}[/dim]")
 
     try:
         result = subprocess.run(
