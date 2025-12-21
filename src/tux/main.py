@@ -70,8 +70,8 @@ def run(debug: bool = False) -> int:  # noqa: PLR0911
             return e.code
         logger.warning(f"SystemExit with non-int code: {e.code!r}, returning 1")
         return 1
-    except RuntimeError as e:
-        logger.critical(f"Runtime error: {e}")
+    except RuntimeError:
+        # RuntimeError is already logged in TuxApp.run()
         return 1
     except Exception as e:
         logger.opt(exception=True).critical(f"Application failed to start: {e}")
