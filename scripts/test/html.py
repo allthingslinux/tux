@@ -57,6 +57,7 @@ def html_report(
 
     except KeyboardInterrupt:
         print_info("\nTests interrupted by user")
+        sys.exit(130)
     except CalledProcessError as e:
         print_error(f"Tests failed: {e}")
         sys.exit(1)
