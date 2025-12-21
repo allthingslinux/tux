@@ -50,6 +50,7 @@ def serve(
 
     try:
         print_info(f"Starting documentation server at {dev_addr}")
+        # Using run_command for consistency and logging
         run_command(cmd, capture_output=False)
     except Exception as e:
         print_error(f"Failed to start documentation server: {e}")

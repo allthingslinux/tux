@@ -6,6 +6,8 @@ Lints documentation files.
 
 from pathlib import Path
 
+from typer import Exit
+
 from scripts.core import create_app
 from scripts.ui import (
     create_progress_bar,
@@ -26,7 +28,7 @@ def lint() -> None:
     docs_dir = Path("docs/content")
     if not docs_dir.exists():
         print_error("docs/content directory not found")
-        return
+        raise Exit(1)
 
     all_md_files = list(docs_dir.rglob("*.md"))
     issues: list[str] = []
@@ -55,16 +57,16 @@ def lint() -> None:
                 elif "TODO" in content or "FIXME" in content:
                     issues.append(f"Contains TODO/FIXME: {md_file}")
             except Exception as e:
-                issues.append(f"Error reading {md_file}: {e}")
+                issues.append(f"Could not read {md_file}: {e}")
 
             progress.advance(task)
 
     if issues:
-        print_warning("\nDocumentation linting issues found:")
+        print_warning(f"Found {len(issues)} issues in documentation:")
         for issue in issues:
-            print_warning(f"  • {issue}")
+            print_error(f"  • {issue}")
     else:
-        print_success("No documentation linting issues found")
+        print_success("No issues found in documentation!")
 
 
 if __name__ == "__main__":
