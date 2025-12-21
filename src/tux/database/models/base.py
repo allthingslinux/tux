@@ -13,6 +13,7 @@ from enum import Enum
 from typing import Any, cast
 from uuid import UUID, uuid4
 
+import rich.repr
 from pydantic import field_serializer
 from sqlalchemy import DateTime, text
 from sqlmodel import Field, SQLModel  # type: ignore[import]
@@ -172,6 +173,20 @@ class BaseModel(SQLModel, TimestampMixin):
             data[attr] = value
 
         return data
+
+    def __rich_repr__(self) -> rich.repr.Result:
+        """Provide a Rich-formatted representation of the model.
+
+        Yields
+        ------
+        tuple
+            Positional or keyword arguments for the repr.
+        """
+        # We use __dict__ to get only the current instance's data
+        # while avoiding full relationship traversal by default
+        for attr, value in self.__dict__.items():
+            if not attr.startswith("_"):
+                yield attr, value
 
 
 class UUIDMixin(SQLModel):
