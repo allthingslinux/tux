@@ -37,10 +37,10 @@ Choose your path to get started with Tux:
 
 | Role          | Get Started                                                                                   |
 |---------------|----------------------------------------------------------------------------------------------|
-| 👤 Users      | [Get Started](https://tux.atl.dev/getting-started/for-users/)                                 |
-| ⚙️ Admins     | [Get Started](https://tux.atl.dev/getting-started/for-admins/)                                |
-| 🐳 Self-Hosters | [Get Started](https://tux.atl.dev/getting-started/for-self-hosters/)                        |
-| 💻 Developers | [Get Started](https://tux.atl.dev/getting-started/for-developers/)                            |
+| 👤 Users      | [Get Started](https://tux.atl.dev/user/)                                 |
+| ⚙️ Admins     | [Get Started](https://tux.atl.dev/admin/)                                |
+| 🐳 Self-Hosters | [Get Started](https://tux.atl.dev/selfhost/)                        |
+| 💻 Developers | [Get Started](https://tux.atl.dev/developer/)                            |
 
 ## About
 
@@ -94,54 +94,6 @@ Visit **[tux.atl.dev](https://tux.atl.dev)** for complete documentation includin
 
 - **[Discord Server](https://discord.gg/gpmSjcjQxg)** - Get help, report issues, and discuss features
 - **[GitHub Issues](https://github.com/allthingslinux/tux/issues)** - Bug reports and feature requests
-
-## Development Quick Start
-
-Want to contribute? Assuming you have the basics like Docker and a Discord bot for testing, you can get started in minutes:
-
-```bash
-# For org members: Clone directly
-git clone https://github.com/allthingslinux/tux.git && cd tux
-```
-
-```bash
-# For external contributors: Fork on GitHub first, then:
-git clone https://github.com/YOUR_USERNAME/tux.git && cd tux
-git remote add upstream https://github.com/allthingslinux/tux.git
-```
-
-```bash
-# Install dependencies
-uv sync
-```
-
-```bash
-# Install pre-commit hooks
-uv run pre-commit install
-```
-
-```bash
-# Generate and edit configuration files
-uv run config generate
-cp .env.example .env && cp config/config.toml.example config/config.toml
-```
-
-```bash
-# Setup database
-docker compose up -d tux-postgres # (or tux-adminer for a webui at :8080)
-uv run db push
-```
-
-```bash
-# Develop, run, lint, and test
-git checkout -b feature/your-feature-name
-# ... make changes ...
-uv run tux start --debug
-uv run dev all
-git commit -m "feat(command): add new command"
-# ... repeat until you are ready ...
-git push origin feature/your-feature-name
-```
 
 **Developer Resources:**
 
