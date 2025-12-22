@@ -43,7 +43,7 @@ jobs:
         continue-on-error: true
         with:
           ref: ${{ github.sha }}
-          check-name: Run All Tests
+          check-regexp: ^Run All Tests
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: ${{ env.WAIT_INTERVAL_SECONDS }}
           allowed-conclusions: success
