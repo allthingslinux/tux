@@ -125,19 +125,26 @@ bump_changelog_fixed() {
   fi
 
   # Use awk to process the changelog
-  # Keep-a-Changelog format requires link definitions at the end
-  # Structure: sections -> link definitions (links must be last)
+  # Keep-a-Changelog format requires:
+  # 1. Header (before first ##)
+  # 2. ## [Unreleased] (must be first and unique release section)
+  # 3. Other version sections
+  # 4. Link definitions (must be last)
   awk -v version="$version" -v release_date="$release_date" -v keep_unreleased="$keep_unreleased" '
     BEGIN {
       in_unreleased = 0
       in_links = 0
-      before_links = ""
+      header = ""
+      version_sections = ""
       links_section = ""
       found_unreleased = 0
+      unreleased_content = ""
+      in_header = 1
     }
     /^\[.*\]:/ {
       # Start of link definitions section - everything after this is links
       in_links = 1
+      in_header = 0
       links_section = links_section $0 "\n"
       next
     }
@@ -149,33 +156,57 @@ bump_changelog_fixed() {
     /^## \[Unreleased\]/ {
       found_unreleased = 1
       in_unreleased = 1
-      before_links = before_links "## [" version "] - " release_date "\n"
+      in_header = 0
+      # Replace Unreleased header with new version header
+      version_sections = version_sections "## [" version "] - " release_date "\n"
       next
     }
     in_unreleased == 1 {
       if (/^## \[/) {
         # Found next version section, end of unreleased
         in_unreleased = 0
-        before_links = before_links $0 "\n"
+        version_sections = version_sections $0 "\n"
+        next
+      } else if (/^\[.*\]:/) {
+        # Found link definitions, end of unreleased (links come after sections)
+        in_unreleased = 0
+        in_links = 1
+        links_section = links_section $0 "\n"
         next
       } else {
-        # Collect unreleased content
-        before_links = before_links $0 "\n"
+        # Collect unreleased content (will go under new version)
+        unreleased_content = unreleased_content $0 "\n"
         next
       }
     }
+    /^## \[/ {
+      # Other version sections
+      in_header = 0
+      version_sections = version_sections $0 "\n"
+      next
+    }
     {
-      # Regular content before links
-      before_links = before_links $0 "\n"
+      if (in_header == 1) {
+        # Header content (before first ## section)
+        header = header $0 "\n"
+      } else {
+        # Content within version sections
+        version_sections = version_sections $0 "\n"
+      }
     }
     END {
-      # Output all content before links
-      printf "%s", before_links
+      # Output header first
+      printf "%s", header
 
-      # Add new Unreleased section if requested (before links)
+      # Add new Unreleased section if requested (must be first release section, right after header)
       if (keep_unreleased == "true" && found_unreleased) {
-        printf "\n## [Unreleased]\n"
+        printf "## [Unreleased]\n\n"
       }
+
+      # Output version sections (includes the new version)
+      printf "%s", version_sections
+      # Output unreleased content under the new version
+      printf "%s", unreleased_content
 
       # Output link definitions last (they must be at the end)
       printf "%s", links_section
