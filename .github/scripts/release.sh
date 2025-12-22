@@ -36,14 +36,19 @@ determine_version_and_branch() {
   local version="${1}"
 
   # Strip 'v' prefix if present (semver format doesn't include it)
-  local version_no_v="${version#v}"
+  # Handle both "v0.1.0" and " v0.1.0" cases
+  local version_no_v="${version}"
+  version_no_v="${version_no_v#"${version_no_v%%[![:space:]]*}"}"  # trim leading whitespace first
+  version_no_v="${version_no_v#v}"  # then strip 'v' prefix
+  version_no_v="${version_no_v%"${version_no_v##*[![:space:]]}"}"  # trim trailing whitespace
   echo "version_no_v=$version_no_v" >> "$GITHUB_OUTPUT"
 
   # Check if this is a fixed version (contains numbers and dots/dashes) vs a keyword
   # Keywords: major, premajor, minor, preminor, patch, prepatch, prerelease
   # Fixed versions: 0.1.0, 0.1.0-rc.5, 1.2.3-beta.1, etc.
+  # A fixed version starts with a digit and contains at least one dot (semver format)
   local is_fixed_version=false
-  if [[ "$version_no_v" =~ ^[0-9] ]]; then
+  if [[ "$version_no_v" =~ ^[0-9]+\. ]]; then
     is_fixed_version=true
   fi
   echo "is_fixed_version=$is_fixed_version" >> "$GITHUB_OUTPUT"
