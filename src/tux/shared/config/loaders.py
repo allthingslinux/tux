@@ -3,8 +3,8 @@
 This module provides custom settings sources for pydantic-settings to load
 configuration from TOML, YAML, and JSON files with proper priority handling.
 
-All loaders share common logic for field resolution and dictionary flattening,
-with only the file parsing implementation differing per format.
+All loaders share common logic for field resolution, with only the file
+parsing implementation differing per format.
 """
 
 import json
@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic.fields import FieldInfo
 from pydantic_settings import PydanticBaseSettingsSource
 
 __all__ = ["JsonConfigSource", "TomlConfigSource", "YamlConfigSource"]
@@ -88,34 +87,11 @@ class FileConfigSource(PydanticBaseSettingsSource, ABC):
 
     def get_field_value(
         self,
-        field: FieldInfo,
+        field: Any,
         field_name: str,
     ) -> tuple[Any, str, bool]:
-        """Get field value from configuration data.
-
-        Handles nested fields using double underscore delimiter.
-
-        Parameters
-        ----------
-        field : FieldInfo
-            The field info
-        field_name : str
-            The field name (may contain __ for nested access)
-
-        Returns
-        -------
-        tuple[Any, str, bool]
-            Tuple of (value, field_name, value_is_complex)
-        """
-        # Handle nested fields with double underscore delimiter
-        value = self._data
-        for key in field_name.split("__"):
-            if isinstance(value, dict) and key.lower() in value:
-                value = value[key.lower()]  # type: ignore[assignment]
-            else:
-                return None, field_name, False
-
-        return value, field_name, False  # type: ignore[return-value]
+        """Get field value (not used as we implement __call__)."""
+        return None, field_name, False
 
     def __call__(self) -> dict[str, Any]:
         """Return all loaded config data.
@@ -123,50 +99,9 @@ class FileConfigSource(PydanticBaseSettingsSource, ABC):
         Returns
         -------
         dict[str, Any]
-            Flattened configuration data
+            Configuration data
         """
-        return self._flatten_nested_dict(self._data)
-
-    @staticmethod
-    def _flatten_nested_dict(d: dict[str, Any], parent_key: str = "") -> dict[str, Any]:
-        """Flatten nested dict with double underscore delimiter.
-
-        Converts nested dictionaries into flat dictionaries with keys joined
-        by double underscores and uppercased, which matches pydantic-settings convention
-        for case-insensitive field matching.
-
-        Parameters
-        ----------
-        d : dict[str, Any]
-            Dictionary to flatten
-        parent_key : str, optional
-            Parent key prefix, by default ""
-
-        Returns
-        -------
-        dict[str, Any]
-            Flattened dictionary with uppercase keys
-
-        Examples
-        --------
-        >>> _flatten_nested_dict({"a": {"b": 1}})
-        {'A__B': 1}
-        >>> _flatten_nested_dict({"value_from_toml": "test"})
-        {'VALUE_FROM_TOML': 'test'}
-        """
-        items: list[tuple[str, Any]] = []
-
-        for k, v in d.items():
-            # Convert keys to uppercase to match pydantic field names
-            new_key = f"{parent_key}__{k}".upper() if parent_key else k.upper()
-
-            if isinstance(v, dict):
-                # Recursively flatten nested dicts
-                items.extend(FileConfigSource._flatten_nested_dict(v, new_key).items())  # type: ignore[arg-type]
-            else:
-                items.append((new_key, v))
-
-        return dict(items)
+        return self._data
 
 
 class TomlConfigSource(FileConfigSource):

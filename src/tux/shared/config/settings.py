@@ -6,9 +6,9 @@ using the extracted models and proper pydantic-settings for environment variable
 Configuration loading priority (highest to lowest):
 1. Environment variables
 2. .env file
-3. config.toml file
-4. config.yaml file
-5. config.json file
+3. config/config.toml or config.toml file
+4. config/config.yaml or config.yaml file
+5. config/config.json or config.json file
 6. Default values
 """
 
@@ -94,9 +94,9 @@ class Config(BaseSettings):
     Configuration is loaded from multiple sources in priority order:
     1. Environment variables (highest priority)
     2. .env file
-    3. config.toml file
-    4. config.yaml file
-    5. config.json file
+    3. config/config.toml or config.toml file
+    4. config/config.yaml or config.yaml file
+    5. config/config.json or config.json file
     6. Default values (lowest priority)
     """
 
@@ -258,8 +258,14 @@ class Config(BaseSettings):
             init_settings,
             env_settings,
             dotenv_settings,
+            # TOML sources (config/config.toml takes priority over root config.toml)
+            TomlConfigSource(settings_cls, Path("config/config.toml")),
             TomlConfigSource(settings_cls, Path("config.toml")),
+            # YAML sources
+            YamlConfigSource(settings_cls, Path("config/config.yaml")),
             YamlConfigSource(settings_cls, Path("config.yaml")),
+            # JSON sources
+            JsonConfigSource(settings_cls, Path("config/config.json")),
             JsonConfigSource(settings_cls, Path("config.json")),
             file_secret_settings,
         )

@@ -472,6 +472,7 @@ class Tux(commands.Bot):
                 bot_name=CONFIG.BOT_INFO.BOT_NAME,
                 version=get_version(),
                 bot_id=str(self.user.id) if self.user else None,
+                owner_id=str(CONFIG.USER_IDS.BOT_OWNER_ID),
                 guild_count=len(self.guilds),
                 user_count=len(self.users),
                 prefix=CONFIG.get_prefix(),

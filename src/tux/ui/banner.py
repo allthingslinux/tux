@@ -35,6 +35,7 @@ class BannerConfig:
     bot_name: str
     version: str
     bot_id: str | None = None
+    owner_id: str | None = None
     guild_count: int = 0
     user_count: int = 0
     prefix: str = "~"
@@ -102,6 +103,7 @@ class BannerBuilder:
             ("Bot Name", f"{self.config.bot_name} (Tux)"),
             ("Version", self.config.version),
             ("Bot ID", str(self.config.bot_id or "Unknown")),
+            ("Owner ID", str(self.config.owner_id or "Unknown")),
             (
                 "Status",
                 f"Watching {self.config.guild_count} servers with {self.config.user_count} users",
@@ -139,6 +141,7 @@ def create_banner(
     bot_name: str,
     version: str,
     bot_id: str | None = None,
+    owner_id: str | None = None,
     guild_count: int = 0,
     user_count: int = 0,
     prefix: str = "~",
@@ -154,6 +157,7 @@ def create_banner(
         bot_name=bot_name,
         version=version,
         bot_id=bot_id,
+        owner_id=owner_id,
         guild_count=guild_count,
         user_count=user_count,
         prefix=prefix,
