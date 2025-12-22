@@ -8,16 +8,10 @@ import json
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel, Field
+from pydantic import Field
 from pydantic_settings import BaseSettings
 
 from tux.shared.config.loaders import JsonConfigSource, TomlConfigSource, YamlConfigSource
-
-
-class NestedSubSettings(BaseModel):
-    """Nested settings for testing."""
-
-    value: str = Field(default="default")
 
 
 class SimpleSettings(BaseSettings):
@@ -26,7 +20,7 @@ class SimpleSettings(BaseSettings):
     debug: bool = Field(default=False)
     name: str = Field(default="test")
     port: int = Field(default=8000)
-    nested: NestedSubSettings = Field(default_factory=NestedSubSettings)
+    nested__value: str = Field(default="default")
 
 
 @pytest.fixture
@@ -101,7 +95,7 @@ def test_toml_loader_reads_file(temp_config_files: dict[str, Path]) -> None:
     assert data["DEBUG"] is True
     assert data["NAME"] == "toml_test"
     assert data["PORT"] == 9000
-    assert data["NESTED"]["VALUE"] == "from_toml"
+    assert data["NESTED__VALUE"] == "from_toml"
 
 
 def test_toml_loader_missing_file() -> None:
@@ -227,8 +221,8 @@ def test_json_loader_invalid_file(tmp_path: Path) -> None:
     assert data == {}
 
 
-def test_nested_field_normalization(temp_config_files: dict[str, Path]) -> None:
-    """Test that nested fields are properly normalized with uppercase keys.
+def test_nested_field_flattening(temp_config_files: dict[str, Path]) -> None:
+    """Test that nested fields are properly flattened with double underscore.
 
     Parameters
     ----------
@@ -239,20 +233,17 @@ def test_nested_field_normalization(temp_config_files: dict[str, Path]) -> None:
     # Test TOML
     toml_loader = TomlConfigSource(SimpleSettings, temp_config_files["toml"])
     toml_data = toml_loader()
-    assert "NESTED" in toml_data
-    assert "VALUE" in toml_data["NESTED"]
+    assert "NESTED__VALUE" in toml_data
 
     # Test YAML
     yaml_loader = YamlConfigSource(SimpleSettings, temp_config_files["yaml"])
     yaml_data = yaml_loader()
-    assert "NESTED" in yaml_data
-    assert "VALUE" in yaml_data["NESTED"]
+    assert "NESTED__VALUE" in yaml_data
 
     # Test JSON
     json_loader = JsonConfigSource(SimpleSettings, temp_config_files["json"])
     json_data = json_loader()
-    assert "NESTED" in json_data
-    assert "VALUE" in json_data["NESTED"]
+    assert "NESTED__VALUE" in json_data
 
 
 # ============================================================================
