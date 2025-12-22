@@ -29,8 +29,8 @@ jobs:
           fetch-depth: 0
       - name: Determine Version
         id: version
-        run: ./.github/scripts/release.sh determine-version \ "${{ github.event_name }}"
-          \ "${{ github.event.inputs.version }}"
+        run: ./.github/scripts/release.sh determine-version "${{ github.event_name }}"
+          "${{ github.event.inputs.version }}"
   wait:
     name: Wait for Tests
     runs-on: ubuntu-latest
@@ -61,12 +61,12 @@ jobs:
         run: ./.github/scripts/release.sh configure-git
       - name: Determine Version and Branch
         id: setup
-        run: ./.github/scripts/release.sh determine-version-and-branch \ "${{ needs.validate.outputs.version }}"
+        run: ./.github/scripts/release.sh determine-version-and-branch "${{ needs.validate.outputs.version }}"
       - name: Bump Changelog Version (Fixed)
         if: steps.setup.outputs.is_fixed_version == 'true'
         id: bump_fixed
-        run: ./.github/scripts/release.sh bump-changelog-fixed \ "${{ steps.setup.outputs.version_no_v }}"
-          \ "CHANGELOG.md" \ "true"
+        run: ./.github/scripts/release.sh bump-changelog-fixed "${{ steps.setup.outputs.version_no_v }}"
+          "CHANGELOG.md" "true"
       - name: Bump Changelog Version (Keyword)
         if: steps.setup.outputs.is_fixed_version != 'true'
         id: bump
@@ -78,8 +78,8 @@ jobs:
           tag-prefix: v
           keep-unreleased-section: true
       - name: Commit Updated Changelog
-        run: ./.github/scripts/release.sh commit-changelog \ "${{ needs.validate.outputs.version }}"
-          \ "${{ steps.setup.outputs.branch }}"
+        run: ./.github/scripts/release.sh commit-changelog "${{ needs.validate.outputs.version }}"
+          "${{ steps.setup.outputs.branch }}"
       - name: Query Release Notes
         id: query
         uses: release-flow/keep-a-changelog-action@74931dec7ecdbfc8e38ac9ae7e8dd84c08db2f32  # v3

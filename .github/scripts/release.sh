@@ -65,6 +65,7 @@ determine_version_and_branch() {
   # Try to find the default branch, fallback to common branch names
   local default_branch
   default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2> /dev/null | sed 's@^refs/remotes/origin/@@' || echo "")
+  default_branch="$(trim_whitespace "$default_branch")"
 
   if [ -z "$default_branch" ]; then
     # Try common branch names
@@ -75,6 +76,7 @@ determine_version_and_branch() {
     else
       # Fallback: use the first branch we find
       default_branch=$(git branch -r | grep -v HEAD | head -n1 | sed 's/origin\///' | xargs)
+      default_branch="$(trim_whitespace "$default_branch")"
     fi
   fi
 
@@ -158,8 +160,11 @@ bump_changelog_fixed() {
 
 # Commit updated changelog
 commit_changelog() {
-  local version="${1}"
-  local branch="${2}"
+  # Trim whitespace from parameters
+  local version
+  version="$(trim_whitespace "${1}")"
+  local branch
+  branch="$(trim_whitespace "${2}")"
 
   if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
     git add CHANGELOG.md
