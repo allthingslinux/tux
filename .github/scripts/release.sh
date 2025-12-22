@@ -125,35 +125,86 @@ bump_changelog_fixed() {
   fi
 
   # Use awk to process the changelog
-  # This is more reliable than bash string manipulation
+  # Keep-a-Changelog format requires link definitions at the end
+  # Structure: sections -> link definitions (links must be last)
   awk -v version="$version" -v release_date="$release_date" -v keep_unreleased="$keep_unreleased" '
     BEGIN {
       in_unreleased = 0
-      unreleased_start = 0
+      in_links = 0
+      before_links = ""
+      links_section = ""
+      found_unreleased = 0
+    }
+    /^\[.*\]:/ {
+      # Start of link definitions section - everything after this is links
+      in_links = 1
+      links_section = links_section $0 "\n"
+      next
+    }
+    in_links == 1 {
+      # Collect all link definition lines (including empty lines between them)
+      links_section = links_section $0 "\n"
+      next
     }
     /^## \[Unreleased\]/ {
-      unreleased_start = NR
+      found_unreleased = 1
       in_unreleased = 1
-      print "## [" version "] - " release_date
+      before_links = before_links "## [" version "] - " release_date "\n"
       next
     }
-    in_unreleased == 1 && /^## \[/ {
-      # Found next version section, end of unreleased
-      in_unreleased = 0
-      print
-      next
-    }
-    {
-      # Print all other lines
-      print
-    }
-    END {
-      if (keep_unreleased == "true" && unreleased_start > 0) {
-        print ""
-        print "## [Unreleased]"
+    in_unreleased == 1 {
+      if (/^## \[/) {
+        # Found next version section, end of unreleased
+        in_unreleased = 0
+        before_links = before_links $0 "\n"
+        next
+      } else {
+        # Collect unreleased content
+        before_links = before_links $0 "\n"
+        next
       }
     }
+    {
+      # Regular content before links
+      before_links = before_links $0 "\n"
+    }
+    END {
+      # Output all content before links
+      printf "%s", before_links
+
+      # Add new Unreleased section if requested (before links)
+      if (keep_unreleased == "true" && found_unreleased) {
+        printf "\n## [Unreleased]\n"
+      }
+
+      # Output link definitions last (they must be at the end)
+      printf "%s", links_section
+    }
   ' "$changelog" > "${changelog}.tmp" && mv "${changelog}.tmp" "$changelog"
+
+  # Update link definitions - add new version link and update Unreleased link
+  local repo="${GITHUB_REPOSITORY:-allthingslinux/tux}"
+  local tag_prefix="v"
+
+  # Find the previous version from the first link that has a compare URL
+  local previous_version
+  previous_version=$(grep -E "^\[.*\]:.*compare.*\.\.\." "$changelog" | head -1 | sed -E 's/\[.*\]:.*compare\/([^.]*)\..*/\1/' | sed 's/^v//' || echo "0.0.0")
+
+  # Update Unreleased link to point from new version
+  if grep -q "^\[Unreleased\]: " "$changelog"; then
+    sed -i "s|^\[Unreleased\]:.*|\[Unreleased\]: https://github.com/${repo}/compare/${tag_prefix}${version}...HEAD|" "$changelog"
+  fi
+
+  # Add new version link if it doesn't exist (insert after Unreleased link)
+  if ! grep -q "^\[${version}\]: " "$changelog"; then
+    if grep -q "^\[Unreleased\]: " "$changelog"; then
+      # Insert after Unreleased link
+      sed -i "/^\[Unreleased\]: /a\[${version}\]: https://github.com/${repo}/compare/${tag_prefix}${previous_version}...${tag_prefix}${version}" "$changelog"
+    else
+      # Add at the beginning of links section
+      sed -i "/^\[.*\]:/i\[${version}\]: https://github.com/${repo}/compare/${tag_prefix}${previous_version}...${tag_prefix}${version}" "$changelog"
+    fi
+  fi
 
   echo "Bumped changelog to version $version"
 }
