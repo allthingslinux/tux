@@ -1,5 +1,10 @@
 # TODO.md
 
+- [ ] Fix db version command not working
+- [ ] Update docs on how to setup native discord roles in relation to our config approach.
+- [ ] Fix jail setup not being in the config wizard.
+- [ ] Make config reset button in wizard be smaller or move to a new command.
+
 ## Plugin System Stability
 
 - [ ] **Document Plugin APIs** - Create a clear guide showing which parts of Tux plugins can safely use

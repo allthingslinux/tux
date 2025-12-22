@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+* `owner_id` to bot configuration and banner
+* Type reporting options for unknown variables and parameters in `pyproject.toml`
+* Rich representation for `BaseModel`
+* Utility functions for configuration checks in documentation scripts
+* Database initialization state inspection
+* Unified CLI entry point with comprehensive command groups for `tux`, `test`, `docs`, `dev`, `db`, and `config`
 * Git blame ignore configuration for formatting commits
 * Comprehensive error handling system with test registry and configuration
 * Documentation workflow for automated builds and deployment
@@ -40,6 +46,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+* Refactored and improved error handling across all CLI scripts (main, database, documentation, development, tests)
+* Enhanced terminal output formatting with indent guides and improved utility functions
+* Modularized coverage command and browser handling
+* Improved table listing with progress indication and better query structure
+* Streamlined bot execution flow and startup process
+* Updated documentation build and serve scripts with better error handling and configuration checks
+* Restructured development checks with a new `Check` class
+* Updated `wrangler` deployment scripts with improved argument handling and error checks
 * **Package Manager Migration**: Migrated from Poetry to uv for faster dependency resolution
 * **Project Structure**: Reorganized from flat layout (tux/) to src layout (src/tux/) with clear separation: `core/`, `database/`, `services/`, `modules/`, `plugins/`, `ui/`, `shared/`, `help/`
 * **Documentation Structure**: Reorganized documentation from `developer-guide/` and `admin-guide/` to `developer/concepts/` with subdirectories (`core/`, `handlers/`, `tasks/`, `ui/`, `wrappers/`, `database/`) and `admin/` structure
@@ -58,6 +72,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+* Log level for prefix override in `prefix_manager` changed to trace
+* Configuration file validation paths
+* `KeyboardInterrupt` handling across database, coverage, and HTML report generation scripts
+* Error message clarity in database version function and coverage reports
+* Docker installation guide and storage requirements in documentation
+* CLI entry point organization
+* Graceful handling of `RuntimeError` and `SystemExit` in main execution flow
 * Error message truncation issues
 * AFK member ID deletion logic
 * Moderation logging references
@@ -73,6 +94,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Removed
 
+* Legacy CLI scripts in favor of the unified Typer-based CLI
 * **Poetry**: Removed Poetry package manager in favor of uv
 * **Prisma**: Removed Prisma client in favor of SQLModel for better Python integration
 * **Click CLI**: Removed Click framework in favor of Typer
@@ -87,6 +109,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Adminer Theme**: Removed custom CSS theme for Adminer
 * **ASCII Art Module**: Removed separate ASCII art module, integrated into banner system
 * **Various Documentation Files**: Reorganized and removed outdated documentation files during documentation restructuring
+
+### Security
+
+* Updated database nuke command with enhanced security prompts and confirmation requirements
+* Improved validation for configuration file paths and environment variables
 
 ## [0.1.0-rc.4] - 2025-06-15
 
@@ -369,3 +396,10 @@ Docker & Deployment
 
 * **Sentry Integration**: Enhanced error reporting and monitoring
 * **Non-root Containers**: Docker containers run as non-root user
+
+[Unreleased]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.4...HEAD
+[0.1.0-rc.4]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.3...v0.1.0-rc.4
+[0.1.0-rc.3]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.2...v0.1.0-rc.3
+[0.1.0-rc.2]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.1...v0.1.0-rc.2
+[0.1.0-rc.1]: https://github.com/allthingslinux/tux/compare/v0.0.0...v0.1.0-rc.1
+[0.0.0]: https://github.com/allthingslinux/tux/releases/tag/v0.0.0
