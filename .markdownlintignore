@@ -46,3 +46,6 @@ docs/db/README.md
 
 docs/content/reference/configuration.md
 docs/includes/abbreviations.md
+
+# Exclude CHANGELOG.md - it follows Keep-a-Changelog format which markdownlint may reformat incorrectly
+CHANGELOG.md
