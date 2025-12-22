@@ -218,8 +218,16 @@ bump_changelog_fixed() {
   local tag_prefix="v"
 
   # Find the previous version from the first link that has a compare URL
+  # Extract the version from compare URLs like: compare/v0.1.0-rc.4...HEAD or compare/v0.1.0-rc.4...v0.1.0-rc.5
+  # Extract everything between "compare/" and "..." using sed
   local previous_version
-  previous_version=$(grep -E "^\[.*\]:.*compare.*\.\.\." "$changelog" | head -1 | sed -E 's/\[.*\]:.*compare\/([^.]*)\..*/\1/' | sed 's/^v//' || echo "0.0.0")
+  previous_version=$(grep -E "^\[.*\]:.*compare.*\.\.\." "$changelog" | head -1 | sed -E 's/.*compare\/([^.]+\.[^.]+\.[^.]*?)\.\.\..*/\1/' | sed 's/^v//' || echo "0.0.0")
+
+  # If sed didn't match (e.g., version format is different), try a more permissive pattern
+  # Match everything between "compare/" and "..." (three dots)
+  if [[ "$previous_version" == *"github.com"* ]] || [[ "$previous_version" == *"http"* ]] || [[ -z "$previous_version" ]]; then
+    previous_version=$(grep -E "^\[.*\]:.*compare.*\.\.\." "$changelog" | head -1 | sed -E 's/.*compare\/(.*)\.\.\..*/\1/' | sed 's/^v//' || echo "0.0.0")
+  fi
 
   # Update Unreleased link to point from new version
   if grep -q "^\[Unreleased\]: " "$changelog"; then
