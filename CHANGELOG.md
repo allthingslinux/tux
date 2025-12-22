@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.1.0-rc.5] - 2025-12-22
+
 ### Added
 
 * `owner_id` to bot configuration and banner
@@ -397,7 +399,8 @@ Docker & Deployment
 * **Sentry Integration**: Enhanced error reporting and monitoring
 * **Non-root Containers**: Docker containers run as non-root user
 
-[Unreleased]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.4...HEAD
+[Unreleased]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.5...HEAD
+[0.1.0-rc.5]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.4...v0.1.0-rc.5
 [0.1.0-rc.4]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.3...v0.1.0-rc.4
 [0.1.0-rc.3]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.2...v0.1.0-rc.3
 [0.1.0-rc.2]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.1...v0.1.0-rc.2
