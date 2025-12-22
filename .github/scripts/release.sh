@@ -7,6 +7,14 @@ set -euo pipefail
 # shellcheck disable=SC2034
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Trim leading and trailing whitespace from a string
+trim_whitespace() {
+  local str="${1}"
+  str="${str#"${str%%[![:space:]]*}"}"  # trim leading whitespace
+  str="${str%"${str##*[![:space:]]}"}"  # trim trailing whitespace
+  echo -n "$str"
+}
+
 # Determine version from event or tag
 determine_version() {
   local event_name="${1}"
@@ -90,9 +98,13 @@ configure_git() {
 # This is used when we have a fixed version string (e.g., 0.1.0-rc.5)
 # instead of a version bump keyword (e.g., prerelease)
 bump_changelog_fixed() {
-  local version="${1}"
-  local changelog="${2:-CHANGELOG.md}"
-  local keep_unreleased="${3:-false}"
+  # Trim whitespace from parameters
+  local version
+  version="$(trim_whitespace "${1}")"
+  local changelog
+  changelog="$(trim_whitespace "${2:-CHANGELOG.md}")"
+  local keep_unreleased
+  keep_unreleased="$(trim_whitespace "${3:-false}")"
 
   # Get current date in ISO 8601 format (YYYY-MM-DD)
   local release_date
