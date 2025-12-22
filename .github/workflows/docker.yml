@@ -271,7 +271,7 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
           labels: |
             org.opencontainers.image.title=${{ env.DOCKER_IMAGE_TITLE }}
             org.opencontainers.image.description=${{ env.DOCKER_IMAGE_DESCRIPTION }}
@@ -281,6 +281,21 @@ jobs:
             org.opencontainers.image.vendor=${{ env.DOCKER_IMAGE_VENDOR }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.documentation=${{ env.DOCKER_IMAGE_DOCS }}
+          # GHCR often reads description from OCI annotations (manifest/index)
+          # rather than only image config labels, especially when Buildx produces
+          # an OCI index (e.g. when provenance/attestations are attached).
+          annotations: |
+            org.opencontainers.image.title=${{ env.DOCKER_IMAGE_TITLE }}
+            org.opencontainers.image.description=${{ env.DOCKER_IMAGE_DESCRIPTION }}
+            org.opencontainers.image.source=${{ env.DOCKER_IMAGE_SOURCE }}
+            org.opencontainers.image.licenses=${{ env.DOCKER_IMAGE_LICENSE }}
+            org.opencontainers.image.authors=${{ env.DOCKER_IMAGE_AUTHORS }}
+            org.opencontainers.image.vendor=${{ env.DOCKER_IMAGE_VENDOR }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.documentation=${{ env.DOCKER_IMAGE_DOCS }}
+        env:
+          # Place annotations on both the manifest and (when present) the index.
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
       - name: Generate Release Version
         id: release_version
         run: ./.github/scripts/docker.sh generate-release-version \ "${{ github.ref }}"
@@ -316,6 +331,8 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           # OCI labels for image metadata (title, description, source, license, etc.)
           labels: ${{ steps.meta.outputs.labels }}
+          # OCI annotations for registry UIs (e.g. GHCR package description)
+          annotations: ${{ steps.meta.outputs.annotations }}
           # Build-time variables passed to Containerfile
           build-args: |
             VERSION=${{ steps.release_version.outputs.version }}
