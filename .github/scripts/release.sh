@@ -159,6 +159,7 @@ bump_changelog_fixed() {
 }
 
 # Commit updated changelog
+# Creates a branch and PR if main is protected, otherwise pushes directly
 commit_changelog() {
   # Trim whitespace from parameters
   local version
@@ -166,12 +167,56 @@ commit_changelog() {
   local branch
   branch="$(trim_whitespace "${2}")"
 
-  if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
-    git add CHANGELOG.md
-    git commit -m "chore: bump changelog to $version"
-    git push origin "$branch"
-  else
+  if [ -z "$(git status --porcelain CHANGELOG.md)" ]; then
     echo "No changes to CHANGELOG.md"
+    return 0
+  fi
+
+  git add CHANGELOG.md
+  git commit -m "chore: bump changelog to $version"
+
+  # Try to push directly first
+  local push_output
+  push_output=$(git push origin "$branch" 2>&1) || true
+
+  if echo "$push_output" | grep -q "protected branch\|GH006"; then
+    echo "Branch $branch is protected, creating PR instead..."
+
+    # Create a release branch
+    local release_branch="chore/release-${version#v}"
+    git checkout -b "$release_branch" || git checkout "$release_branch"
+    git push origin "$release_branch" || true
+
+    # Create PR using GitHub API
+    local repo="${GITHUB_REPOSITORY:-}"
+    if [ -n "$repo" ] && [ -n "${GITHUB_TOKEN:-}" ]; then
+      local pr_response
+      pr_response=$(curl -s -X POST \
+        -H "Authorization: token ${GITHUB_TOKEN}" \
+        -H "Accept: application/vnd.github.v3+json" \
+        "https://api.github.com/repos/${repo}/pulls" \
+        -d "{
+          \"title\": \"chore: bump changelog to $version\",
+          \"head\": \"$release_branch\",
+          \"base\": \"$branch\",
+          \"body\": \"Automated changelog update for release $version\\n\\nThis PR updates the changelog after creating release $version.\"
+        }" 2>&1) || true
+
+      if echo "$pr_response" | grep -q '"number"'; then
+        local pr_number
+        pr_number=$(echo "$pr_response" | grep '"number"' | head -1 | sed 's/.*"number": *\([0-9]*\).*/\1/')
+        echo "Created PR #${pr_number}: https://github.com/${repo}/pull/${pr_number}"
+      else
+        echo "Failed to create PR via API. Response: $pr_response"
+        echo "Please create PR manually: $release_branch -> $branch"
+      fi
+    else
+      echo "GitHub API credentials not available. Please create PR manually:"
+      echo "  Branch: $release_branch -> $branch"
+      echo "  Title: chore: bump changelog to $version"
+    fi
+  else
+    echo "Successfully pushed changelog update to $branch"
   fi
 }
 

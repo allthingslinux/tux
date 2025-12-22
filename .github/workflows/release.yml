@@ -12,7 +12,7 @@ on:
 permissions:
   contents: write
   packages: write
-  pull-requests: read
+  pull-requests: write
 env:
   WAIT_INTERVAL_SECONDS: 30
 jobs:
@@ -78,6 +78,10 @@ jobs:
           tag-prefix: v
           keep-unreleased-section: true
       - name: Commit Updated Changelog
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: ./.github/scripts/release.sh commit-changelog "${{ needs.validate.outputs.version }}"
           "${{ steps.setup.outputs.branch }}"
       - name: Query Release Notes
