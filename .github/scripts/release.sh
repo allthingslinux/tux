@@ -135,7 +135,8 @@ bump_changelog_fixed() {
       in_unreleased = 0
       in_links = 0
       header = ""
-      version_sections = ""
+      new_version_header = ""
+      old_version_sections = ""
       links_section = ""
       found_unreleased = 0
       unreleased_content = ""
@@ -157,15 +158,15 @@ bump_changelog_fixed() {
       found_unreleased = 1
       in_unreleased = 1
       in_header = 0
-      # Replace Unreleased header with new version header
-      version_sections = version_sections "## [" version "] - " release_date "\n"
+      # Store new version header separately (will be output before its content)
+      new_version_header = "## [" version "] - " release_date "\n"
       next
     }
     in_unreleased == 1 {
       if (/^## \[/) {
         # Found next version section, end of unreleased
         in_unreleased = 0
-        version_sections = version_sections $0 "\n"
+        old_version_sections = old_version_sections $0 "\n"
         next
       } else if (/^\[.*\]:/) {
         # Found link definitions, end of unreleased (links come after sections)
@@ -180,9 +181,9 @@ bump_changelog_fixed() {
       }
     }
     /^## \[/ {
-      # Other version sections
+      # Other version sections (old versions)
       in_header = 0
-      version_sections = version_sections $0 "\n"
+      old_version_sections = old_version_sections $0 "\n"
       next
     }
     {
@@ -190,8 +191,8 @@ bump_changelog_fixed() {
         # Header content (before first ## section)
         header = header $0 "\n"
       } else {
-        # Content within version sections
-        version_sections = version_sections $0 "\n"
+        # Content within version sections (goes to old_version_sections)
+        old_version_sections = old_version_sections $0 "\n"
       }
     }
     END {
@@ -203,10 +204,12 @@ bump_changelog_fixed() {
         printf "## [Unreleased]\n\n"
       }
 
-      # Output version sections (includes the new version)
-      printf "%s", version_sections
-      # Output unreleased content under the new version
-      printf "%s", unreleased_content
+      # Output new version header, then its content, then old version sections
+      if (found_unreleased) {
+        printf "%s", new_version_header
+        printf "%s", unreleased_content
+      }
+      printf "%s", old_version_sections
 
       # Output link definitions last (they must be at the end)
       printf "%s", links_section
