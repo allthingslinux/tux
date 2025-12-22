@@ -4,6 +4,7 @@
 - [ ] Update docs on how to setup native discord roles in relation to our config approach.
 - [ ] Fix jail setup not being in the config wizard.
 - [ ] Make config reset button in wizard be smaller or move to a new command.
+- [ ] Fix --debug / DEBUG= / etc standardization and usage in the codebase.
 
 ## Plugin System Stability
 

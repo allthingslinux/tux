@@ -258,7 +258,7 @@ Use Sentry telemetry to monitor setup times. Slow setup phases indicate optimiza
 Check database configuration and connectivity:
 
 ```bash
-uv run tux db health
+uv run db health
 env | grep -E "(POSTGRES|DATABASE)"
 ```
 
@@ -267,8 +267,8 @@ env | grep -E "(POSTGRES|DATABASE)"
 Check database is accessible and migrations are up to date:
 
 ```bash
-uv run tux db status
-uv run tux db migrate-dev
+uv run db status
+uv run db dev
 ```
 
 **Cog Loading Failed:**

@@ -137,7 +137,7 @@ uv run tux start
 uv run tux start --debug
 
 # Check configuration first
-uv run tux config check
+uv run config validate
 ```
 
 The application layer handles all lifecycle management automatically. You don't need to interact with `TuxApp` directly unless you're embedding Tux in another application.
@@ -174,7 +174,7 @@ Check your database configuration:
 
 ```bash
 # Check database connectivity
-uv run tux db health
+uv run db health
 
 # Verify environment variables
 env | grep -E "(POSTGRES|DATABASE)"

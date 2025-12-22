@@ -37,7 +37,7 @@ def run() -> int:
 
     Notes
     -----
-    Logging is configured by the CLI script (scripts/base.py) before this is called.
+    Logging is configured by the CLI script (scripts/core.py) before this is called.
     """
     try:
         logger.info("🚀 Starting Tux...")
@@ -129,7 +129,7 @@ if __name__ == "__main__":
 
 ### CLI Script Delegation
 
-The main module is typically invoked through the CLI system (`scripts/tux.py`):
+The main module is typically invoked through the CLI system (`scripts/tux/start.py`):
 
 ```bash
 # CLI invocation (recommended)
@@ -146,6 +146,7 @@ python -m tux.main
 - Logging is configured by the CLI script before `run()` is called
 - Ensures consistent log formatting across all execution methods
 - Supports different log levels (DEBUG, INFO, WARNING, ERROR)
+- See `scripts/core.py` for bootstrapping logic
 
 ## Error Classification
 
@@ -291,17 +292,17 @@ def test_entry_point():
 docker compose ps | grep postgres
 
 # Test database connectivity
-uv run tux db health
+uv run db health
 
 # Reset database if needed
-uv run tux db reset
+uv run db reset
 ```
 
 **Configuration Problems:**
 
 ```bash
 # Validate configuration
-uv run tux config validate
+uv run config validate
 
 # Check environment variables
 env | grep -E "(BOT_TOKEN|DATABASE)"
@@ -346,7 +347,8 @@ echo "Exit code: $?"
 ## Resources
 
 - **Source Code**: `src/tux/main.py`
-- **CLI System**: `scripts/tux.py`
+- **CLI System**: `scripts/tux/start.py`
 - **Application Layer**: `src/tux/core/app.py`
+- **CLI Core**: `scripts/core.py`
 - **Error Handling**: See exception documentation
 - **Logging**: See logging configuration documentation

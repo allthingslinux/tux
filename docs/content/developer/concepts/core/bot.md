@@ -238,7 +238,7 @@ If you create custom resources, clean them up during cog unload. The bot handles
 Check database connectivity and configuration:
 
 ```bash
-uv run tux db health
+uv run db health
 env | grep -E "(POSTGRES|DATABASE)"
 ```
 
@@ -267,7 +267,6 @@ env | grep BOT_TOKEN
 Monitor task count and check for hanging tasks:
 
 ```bash
-uv run tux status
 ps aux | grep -E "(python|tux)"
 ```
 
@@ -276,7 +275,7 @@ ps aux | grep -E "(python|tux)"
 Check database connection pool and cache statistics:
 
 ```bash
-uv run tux db status
+uv run db status
 ```
 
 **Connection Issues:**
@@ -284,7 +283,8 @@ uv run tux db status
 Test Discord connectivity:
 
 ```bash
-uv run tux ping
+# Verify bot token and intents
+env | grep BOT_TOKEN
 ```
 
 ## Resources
