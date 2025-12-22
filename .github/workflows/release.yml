@@ -62,7 +62,13 @@ jobs:
       - name: Determine Version and Branch
         id: setup
         run: ./.github/scripts/release.sh determine-version-and-branch \ "${{ needs.validate.outputs.version }}"
-      - name: Bump Changelog Version
+      - name: Bump Changelog Version (Fixed)
+        if: steps.setup.outputs.is_fixed_version == 'true'
+        id: bump_fixed
+        run: ./.github/scripts/release.sh bump-changelog-fixed \ "${{ steps.setup.outputs.version_no_v }}"
+          \ "CHANGELOG.md" \ "true"
+      - name: Bump Changelog Version (Keyword)
+        if: steps.setup.outputs.is_fixed_version != 'true'
         id: bump
         uses: release-flow/keep-a-changelog-action@74931dec7ecdbfc8e38ac9ae7e8dd84c08db2f32  # v3
         with:

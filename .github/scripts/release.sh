@@ -39,6 +39,15 @@ determine_version_and_branch() {
   local version_no_v="${version#v}"
   echo "version_no_v=$version_no_v" >> "$GITHUB_OUTPUT"
 
+  # Check if this is a fixed version (contains numbers and dots/dashes) vs a keyword
+  # Keywords: major, premajor, minor, preminor, patch, prepatch, prerelease
+  # Fixed versions: 0.1.0, 0.1.0-rc.5, 1.2.3-beta.1, etc.
+  local is_fixed_version=false
+  if [[ "$version_no_v" =~ ^[0-9] ]]; then
+    is_fixed_version=true
+  fi
+  echo "is_fixed_version=$is_fixed_version" >> "$GITHUB_OUTPUT"
+
   # Determine target branch for committing changelog
   # Try to find the default branch, fallback to common branch names
   local default_branch
@@ -58,6 +67,7 @@ determine_version_and_branch() {
 
   echo "branch=$default_branch" >> "$GITHUB_OUTPUT"
   echo "Version (no v): $version_no_v"
+  echo "Is fixed version: $is_fixed_version"
   echo "Target branch: $default_branch"
 
   # Checkout the branch (not the tag) so we can commit changelog updates
@@ -69,6 +79,64 @@ determine_version_and_branch() {
 configure_git() {
   git config user.name "github-actions[bot]"
   git config user.email "github-actions[bot]@users.noreply.github.com"
+}
+
+# Manually bump changelog with fixed version
+# This is used when we have a fixed version string (e.g., 0.1.0-rc.5)
+# instead of a version bump keyword (e.g., prerelease)
+bump_changelog_fixed() {
+  local version="${1}"
+  local changelog="${2:-CHANGELOG.md}"
+  local keep_unreleased="${3:-false}"
+
+  # Get current date in ISO 8601 format (YYYY-MM-DD)
+  local release_date
+  release_date=$(date +%Y-%m-%d)
+
+  # Check if changelog exists
+  if [ ! -f "$changelog" ]; then
+    echo "Error: Changelog file '$changelog' not found"
+    exit 1
+  fi
+
+  # Check if Unreleased section exists
+  if ! grep -q "^## \[Unreleased\]" "$changelog"; then
+    echo "Error: No [Unreleased] section found in $changelog"
+    exit 1
+  fi
+
+  # Use awk to process the changelog
+  # This is more reliable than bash string manipulation
+  awk -v version="$version" -v release_date="$release_date" -v keep_unreleased="$keep_unreleased" '
+    BEGIN {
+      in_unreleased = 0
+      unreleased_start = 0
+    }
+    /^## \[Unreleased\]/ {
+      unreleased_start = NR
+      in_unreleased = 1
+      print "## [" version "] - " release_date
+      next
+    }
+    in_unreleased == 1 && /^## \[/ {
+      # Found next version section, end of unreleased
+      in_unreleased = 0
+      print
+      next
+    }
+    {
+      # Print all other lines
+      print
+    }
+    END {
+      if (keep_unreleased == "true" && unreleased_start > 0) {
+        print ""
+        print "## [Unreleased]"
+      }
+    }
+  ' "$changelog" > "${changelog}.tmp" && mv "${changelog}.tmp" "$changelog"
+
+  echo "Bumped changelog to version $version"
 }
 
 # Commit updated changelog
@@ -98,11 +166,14 @@ case "$COMMAND" in
   configure-git)
     configure_git "$@"
     ;;
+  bump-changelog-fixed)
+    bump_changelog_fixed "$@"
+    ;;
   commit-changelog)
     commit_changelog "$@"
     ;;
   *)
-    echo "Usage: release.sh {determine-version|determine-version-and-branch|configure-git|commit-changelog} [args...]"
+    echo "Usage: release.sh {determine-version|determine-version-and-branch|configure-git|bump-changelog-fixed|commit-changelog} [args...]"
     exit 1
     ;;
 esac
