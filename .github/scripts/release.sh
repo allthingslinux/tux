@@ -220,16 +220,23 @@ bump_changelog_fixed() {
   local repo="${GITHUB_REPOSITORY:-allthingslinux/tux}"
   local tag_prefix="v"
 
-  # Find the previous version from the first link that has a compare URL
-  # Extract the version from compare URLs like: compare/v0.1.0-rc.4...HEAD or compare/v0.1.0-rc.4...v0.1.0-rc.5
-  # Extract everything between "compare/" and "..." using sed
+  # Find the previous version from the last released version link (skip [Unreleased])
+  # We want the "to" version from the last released version link
+  # Example: [0.1.0-rc.4]: ...compare/v0.1.0-rc.3...v0.1.0-rc.4 -> extract "v0.1.0-rc.4"
+  # This is more reliable than using [Unreleased] link
   local previous_version
-  previous_version=$(grep -E "^\[.*\]:.*compare.*\.\.\." "$changelog" | head -1 | sed -E 's/.*compare\/([^.]+\.[^.]+\.[^.]*?)\.\.\..*/\1/' | sed 's/^v//' || echo "0.0.0")
+  # Get all version links with compare URLs, skip [Unreleased], get the first one (which is the latest release)
+  previous_version=$(grep -E "^\[[0-9]+\.[0-9]+\.[0-9]+.*\]:.*compare.*\.\.\." "$changelog" | head -1 | sed -E 's/.*\.\.\.(v?[0-9]+\.[0-9]+\.[0-9]+.*)/\1/' | sed 's/^v//' || echo "")
 
-  # If sed didn't match (e.g., version format is different), try a more permissive pattern
-  # Match everything between "compare/" and "..." (three dots)
-  if [[ "$previous_version" == *"github.com"* ]] || [[ "$previous_version" == *"http"* ]] || [[ -z "$previous_version" ]]; then
-    previous_version=$(grep -E "^\[.*\]:.*compare.*\.\.\." "$changelog" | head -1 | sed -E 's/.*compare\/(.*)\.\.\..*/\1/' | sed 's/^v//' || echo "0.0.0")
+  # If that didn't work, fall back to extracting from [Unreleased] link (the "from" version)
+  if [[ -z "$previous_version" ]]; then
+    previous_version=$(grep -E "^\[Unreleased\]:.*compare.*\.\.\." "$changelog" | head -1 | sed -E 's/.*compare\/(.*)\.\.\..*/\1/' | sed 's/^v//' || echo "")
+  fi
+
+  # If still empty, we have a problem - don't use 0.0.0 as it's a special marker
+  if [[ -z "$previous_version" ]]; then
+    echo "Error: Could not determine previous version from changelog links"
+    exit 1
   fi
 
   # Update Unreleased link to point from new version
