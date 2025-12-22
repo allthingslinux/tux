@@ -397,8 +397,8 @@ Docker & Deployment
 * **Sentry Integration**: Enhanced error reporting and monitoring
 * **Non-root Containers**: Docker containers run as non-root user
 
-
 ## [Unreleased]
+
 [Unreleased]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.5...HEAD
 [0.1.0-rc.5]: https://github.com/allthingslinux/tux/compare/v0...v0.1.0-rc.5
 [0.1.0-rc.4]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.3...v0.1.0-rc.4
