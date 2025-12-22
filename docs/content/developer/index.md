@@ -12,4 +12,4 @@ tags:
 
 This section contains documentation for developers working with Tux.
 
-<!-- AUTO_INDEX_START -->
+<!-- TODO: Consider adding quick guide here for people who know what they are doing -->
