@@ -41,11 +41,11 @@ class FileConfigSource(PydanticBaseSettingsSource, ABC):
         """
         super().__init__(settings_cls)
         self.config_file = config_file
-        self._data: dict[str, Any] = {}
+        raw_data: dict[str, Any] = {}
 
         if self.config_file.exists():
             try:
-                self._data = self._parse_file(self.config_file)
+                raw_data = self._parse_file(self.config_file)
             except Exception as e:
                 # Graceful degradation - log error but continue
                 format_name = self._get_format_name()
@@ -53,6 +53,31 @@ class FileConfigSource(PydanticBaseSettingsSource, ABC):
                     f"Failed to load {format_name} config from {self.config_file}: {e}",
                     stacklevel=2,
                 )
+
+        # Normalize data (recursive uppercase keys) to match Pydantic model fields
+        self._data = self._normalize_data(raw_data)
+
+    def _normalize_data(self, d: Any) -> Any:
+        """Recursively convert all dictionary keys to uppercase.
+
+        This ensures that configuration from files (which is often lowercase)
+        matches the Pydantic model field names (which are uppercase in Tux).
+
+        Parameters
+        ----------
+        d : Any
+            The data to normalize.
+
+        Returns
+        -------
+        Any
+            The normalized data.
+        """
+        if isinstance(d, dict):
+            return {k.upper(): self._normalize_data(v) for k, v in d.items()}
+        if isinstance(d, list):
+            return [self._normalize_data(v) for v in d]
+        return d
 
     def _get_format_name(self) -> str:
         """Get friendly format name for error messages.
@@ -110,8 +135,8 @@ class FileConfigSource(PydanticBaseSettingsSource, ABC):
         # Handle nested fields with double underscore delimiter
         value = self._data
         for key in field_name.split("__"):
-            if isinstance(value, dict) and key.lower() in value:
-                value = value[key.lower()]  # type: ignore[assignment]
+            if isinstance(value, dict) and key.upper() in value:
+                value = value[key.upper()]
             else:
                 return None, field_name, False
 
@@ -123,50 +148,9 @@ class FileConfigSource(PydanticBaseSettingsSource, ABC):
         Returns
         -------
         dict[str, Any]
-            Flattened configuration data
+            Normalized configuration data (nested dict with uppercase keys)
         """
-        return self._flatten_nested_dict(self._data)
-
-    @staticmethod
-    def _flatten_nested_dict(d: dict[str, Any], parent_key: str = "") -> dict[str, Any]:
-        """Flatten nested dict with double underscore delimiter.
-
-        Converts nested dictionaries into flat dictionaries with keys joined
-        by double underscores and uppercased, which matches pydantic-settings convention
-        for case-insensitive field matching.
-
-        Parameters
-        ----------
-        d : dict[str, Any]
-            Dictionary to flatten
-        parent_key : str, optional
-            Parent key prefix, by default ""
-
-        Returns
-        -------
-        dict[str, Any]
-            Flattened dictionary with uppercase keys
-
-        Examples
-        --------
-        >>> _flatten_nested_dict({"a": {"b": 1}})
-        {'A__B': 1}
-        >>> _flatten_nested_dict({"value_from_toml": "test"})
-        {'VALUE_FROM_TOML': 'test'}
-        """
-        items: list[tuple[str, Any]] = []
-
-        for k, v in d.items():
-            # Convert keys to uppercase to match pydantic field names
-            new_key = f"{parent_key}__{k}".upper() if parent_key else k.upper()
-
-            if isinstance(v, dict):
-                # Recursively flatten nested dicts
-                items.extend(FileConfigSource._flatten_nested_dict(v, new_key).items())  # type: ignore[arg-type]
-            else:
-                items.append((new_key, v))
-
-        return dict(items)
+        return self._data
 
 
 class TomlConfigSource(FileConfigSource):
