@@ -8,7 +8,113 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
-## [0.1.0-rc.5] - 2025-12-22
+### Added
+
+* `owner_id` to bot configuration and banner
+* Type reporting options for unknown variables and parameters in `pyproject.toml`
+* Rich representation for `BaseModel`
+* Utility functions for configuration checks in documentation scripts
+* Database initialization state inspection
+* Unified CLI entry point with comprehensive command groups for `tux`, `test`, `docs`, `dev`, `db`, and `config`
+* Git blame ignore configuration for formatting commits
+* Comprehensive error handling system with test registry and configuration
+* Documentation workflow for automated builds and deployment
+* Enhanced CI workflow scripts and updated action versions
+* Security policy improvements with main policy link
+* Communication service improvements with DM embed user reference updates
+* Regex pattern standardization and new pattern additions
+* Exception handling improvements with language input sanitization
+* Info command handling and documentation improvements
+* Dependency updates for Pillow and MkDocs Material
+* CI workflow improvements with shfmt flag updates
+* **Database System Migration**: Complete migration from Prisma to SQLModel (SQLAlchemy + Pydantic)
+  * SQLModel ORM implementation with async PostgreSQL support
+  * Database controllers with BaseController pattern
+  * DatabaseCoordinator facade for centralized access
+  * Alembic migration system with PostgreSQL enum support
+  * Connection pooling with retry logic and health checks
+* **CLI Framework Migration**: Migrated from Click to Typer for improved type safety and developer experience
+* **Type Checker Migration**: Switched from pyright to basedpyright for enhanced type checking
+* **Source Layout Migration**: Reorganized from flat layout (tux/) to src layout (src/tux/) following Python packaging best practices
+* **Configuration System**: Modular configuration management with multi-format support (TOML, YAML, JSON), priority-based loading, and pydantic-settings validation
+* **Plugin System**: Modular plugin architecture for extending functionality without modifying core code
+* **Task Monitoring**: Background task monitoring and management system
+* **Activity Rotation**: Dynamic bot activity rotation with placeholder substitution
+* **Cloudflare Workers Integration**: Documentation deployment via Cloudflare Workers with Wrangler CLI
+* **Database Testing**: py-pglite integration for in-memory PostgreSQL testing
+* **Plugins**: Deepfry (image manipulation), Flag Remover (flag emoji removal), Support Notifier (support channel notifications), Harmful Commands (detection and warning for potentially harmful shell commands), Fact (fun facts system)
+
+### Changed
+
+* Refactored and improved error handling across all CLI scripts (main, database, documentation, development, tests)
+* Enhanced terminal output formatting with indent guides and improved utility functions
+* Modularized coverage command and browser handling
+* Improved table listing with progress indication and better query structure
+* Streamlined bot execution flow and startup process
+* Updated documentation build and serve scripts with better error handling and configuration checks
+* Restructured development checks with a new `Check` class
+* Updated `wrangler` deployment scripts with improved argument handling and error checks
+* **Package Manager Migration**: Migrated from Poetry to uv for faster dependency resolution
+* **Project Structure**: Reorganized from flat layout (tux/) to src layout (src/tux/) with clear separation: `core/`, `database/`, `services/`, `modules/`, `plugins/`, `ui/`, `shared/`, `help/`
+* **Documentation Structure**: Reorganized documentation from `developer-guide/` and `admin-guide/` to `developer/concepts/` with subdirectories (`core/`, `handlers/`, `tasks/`, `ui/`, `wrappers/`, `database/`) and `admin/` structure
+* **Help System**: Refactored help command with separated components, improved pagination, and interactive navigation
+* **Bot Lifecycle**: Streamlined initialization process with dedicated setup services
+* **Database Controllers**: Improved session management with instance expunging and lazy loading
+* **Command Suggestions**: Enhanced accuracy with qualified name prioritization and alias support
+* **Logging Configuration**: Simplified to console-only logging, removed file logging configuration
+* Code formatting to 88 character line length
+* Pre-commit hooks and package version updates
+* Documentation workflow components renamed for clarity
+* Communication DM embed user reference updates
+* Regex variable naming standardization with new patterns
+* CI workflow scripts enhanced with updated action versions
+* Info command handling and documentation improvements
+
+### Fixed
+
+* Log level for prefix override in `prefix_manager` changed to trace
+* Configuration file validation paths
+* `KeyboardInterrupt` handling across database, coverage, and HTML report generation scripts
+* Error message clarity in database version function and coverage reports
+* Docker installation guide and storage requirements in documentation
+* CLI entry point organization
+* Graceful handling of `RuntimeError` and `SystemExit` in main execution flow
+* Error message truncation issues
+* AFK member ID deletion logic
+* Moderation logging references
+* Help command emoji additions for new categories
+* SQLAlchemy verbose logging
+* Communication DM embed user reference updates
+* CI workflow shfmt flag issues
+* Exception handling for language input sanitization
+* Security policy link additions
+* Command usage references to include dynamic prefix
+* Hardcoded loading emoji removal
+* Expired tempban checker log level adjustments
+
+### Removed
+
+* Legacy CLI scripts in favor of the unified Typer-based CLI
+* **Poetry**: Removed Poetry package manager in favor of uv
+* **Prisma**: Removed Prisma client in favor of SQLModel for better Python integration
+* **Click CLI**: Removed Click framework in favor of Typer
+* **pyright**: Removed pyright in favor of basedpyright
+* **Legacy Permission System**: ConditionChecker and hardcoded permission levels replaced with database-driven system
+* **File Logging**: Removed file logging configuration and related methods in favor of console-only logging
+* **Note Database Table**: Removed unused Note model and table
+* **Legacy Config Management**: Removed old config management.py and wizard.py files
+* **Deprecated Migration Commands**: Removed migrate_deploy and migrate_format commands from DatabaseCLI
+* **Legacy Database Methods**: Removed deprecated methods from BaseController
+* **Legacy CLI Scripts**: Removed old CLI architecture in favor of Click-based scripts
+* **Adminer Theme**: Removed custom CSS theme for Adminer
+* **ASCII Art Module**: Removed separate ASCII art module, integrated into banner system
+* **Various Documentation Files**: Reorganized and removed outdated documentation files during documentation restructuring
+
+### Security
+
+* Updated database nuke command with enhanced security prompts and confirmation requirements
+* Improved validation for configuration file paths and environment variables
+
 ## [0.1.0-rc.4] - 2025-06-15
 
 ### Added
@@ -291,116 +397,7 @@ Docker & Deployment
 * **Sentry Integration**: Enhanced error reporting and monitoring
 * **Non-root Containers**: Docker containers run as non-root user
 
-
-### Added
-
-* `owner_id` to bot configuration and banner
-* Type reporting options for unknown variables and parameters in `pyproject.toml`
-* Rich representation for `BaseModel`
-* Utility functions for configuration checks in documentation scripts
-* Database initialization state inspection
-* Unified CLI entry point with comprehensive command groups for `tux`, `test`, `docs`, `dev`, `db`, and `config`
-* Git blame ignore configuration for formatting commits
-* Comprehensive error handling system with test registry and configuration
-* Documentation workflow for automated builds and deployment
-* Enhanced CI workflow scripts and updated action versions
-* Security policy improvements with main policy link
-* Communication service improvements with DM embed user reference updates
-* Regex pattern standardization and new pattern additions
-* Exception handling improvements with language input sanitization
-* Info command handling and documentation improvements
-* Dependency updates for Pillow and MkDocs Material
-* CI workflow improvements with shfmt flag updates
-* **Database System Migration**: Complete migration from Prisma to SQLModel (SQLAlchemy + Pydantic)
-  * SQLModel ORM implementation with async PostgreSQL support
-  * Database controllers with BaseController pattern
-  * DatabaseCoordinator facade for centralized access
-  * Alembic migration system with PostgreSQL enum support
-  * Connection pooling with retry logic and health checks
-* **CLI Framework Migration**: Migrated from Click to Typer for improved type safety and developer experience
-* **Type Checker Migration**: Switched from pyright to basedpyright for enhanced type checking
-* **Source Layout Migration**: Reorganized from flat layout (tux/) to src layout (src/tux/) following Python packaging best practices
-* **Configuration System**: Modular configuration management with multi-format support (TOML, YAML, JSON), priority-based loading, and pydantic-settings validation
-* **Plugin System**: Modular plugin architecture for extending functionality without modifying core code
-* **Task Monitoring**: Background task monitoring and management system
-* **Activity Rotation**: Dynamic bot activity rotation with placeholder substitution
-* **Cloudflare Workers Integration**: Documentation deployment via Cloudflare Workers with Wrangler CLI
-* **Database Testing**: py-pglite integration for in-memory PostgreSQL testing
-* **Plugins**: Deepfry (image manipulation), Flag Remover (flag emoji removal), Support Notifier (support channel notifications), Harmful Commands (detection and warning for potentially harmful shell commands), Fact (fun facts system)
-
-### Changed
-
-* Refactored and improved error handling across all CLI scripts (main, database, documentation, development, tests)
-* Enhanced terminal output formatting with indent guides and improved utility functions
-* Modularized coverage command and browser handling
-* Improved table listing with progress indication and better query structure
-* Streamlined bot execution flow and startup process
-* Updated documentation build and serve scripts with better error handling and configuration checks
-* Restructured development checks with a new `Check` class
-* Updated `wrangler` deployment scripts with improved argument handling and error checks
-* **Package Manager Migration**: Migrated from Poetry to uv for faster dependency resolution
-* **Project Structure**: Reorganized from flat layout (tux/) to src layout (src/tux/) with clear separation: `core/`, `database/`, `services/`, `modules/`, `plugins/`, `ui/`, `shared/`, `help/`
-* **Documentation Structure**: Reorganized documentation from `developer-guide/` and `admin-guide/` to `developer/concepts/` with subdirectories (`core/`, `handlers/`, `tasks/`, `ui/`, `wrappers/`, `database/`) and `admin/` structure
-* **Help System**: Refactored help command with separated components, improved pagination, and interactive navigation
-* **Bot Lifecycle**: Streamlined initialization process with dedicated setup services
-* **Database Controllers**: Improved session management with instance expunging and lazy loading
-* **Command Suggestions**: Enhanced accuracy with qualified name prioritization and alias support
-* **Logging Configuration**: Simplified to console-only logging, removed file logging configuration
-* Code formatting to 88 character line length
-* Pre-commit hooks and package version updates
-* Documentation workflow components renamed for clarity
-* Communication DM embed user reference updates
-* Regex variable naming standardization with new patterns
-* CI workflow scripts enhanced with updated action versions
-* Info command handling and documentation improvements
-
-### Fixed
-
-* Log level for prefix override in `prefix_manager` changed to trace
-* Configuration file validation paths
-* `KeyboardInterrupt` handling across database, coverage, and HTML report generation scripts
-* Error message clarity in database version function and coverage reports
-* Docker installation guide and storage requirements in documentation
-* CLI entry point organization
-* Graceful handling of `RuntimeError` and `SystemExit` in main execution flow
-* Error message truncation issues
-* AFK member ID deletion logic
-* Moderation logging references
-* Help command emoji additions for new categories
-* SQLAlchemy verbose logging
-* Communication DM embed user reference updates
-* CI workflow shfmt flag issues
-* Exception handling for language input sanitization
-* Security policy link additions
-* Command usage references to include dynamic prefix
-* Hardcoded loading emoji removal
-* Expired tempban checker log level adjustments
-
-### Removed
-
-* Legacy CLI scripts in favor of the unified Typer-based CLI
-* **Poetry**: Removed Poetry package manager in favor of uv
-* **Prisma**: Removed Prisma client in favor of SQLModel for better Python integration
-* **Click CLI**: Removed Click framework in favor of Typer
-* **pyright**: Removed pyright in favor of basedpyright
-* **Legacy Permission System**: ConditionChecker and hardcoded permission levels replaced with database-driven system
-* **File Logging**: Removed file logging configuration and related methods in favor of console-only logging
-* **Note Database Table**: Removed unused Note model and table
-* **Legacy Config Management**: Removed old config management.py and wizard.py files
-* **Deprecated Migration Commands**: Removed migrate_deploy and migrate_format commands from DatabaseCLI
-* **Legacy Database Methods**: Removed deprecated methods from BaseController
-* **Legacy CLI Scripts**: Removed old CLI architecture in favor of Click-based scripts
-* **Adminer Theme**: Removed custom CSS theme for Adminer
-* **ASCII Art Module**: Removed separate ASCII art module, integrated into banner system
-* **Various Documentation Files**: Reorganized and removed outdated documentation files during documentation restructuring
-
-### Security
-
-* Updated database nuke command with enhanced security prompts and confirmation requirements
-* Improved validation for configuration file paths and environment variables
-
-[Unreleased]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.5...HEAD
-[0.1.0-rc.5]: https://github.com/allthingslinux/tux/compare/v0...v0.1.0-rc.5
+[Unreleased]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.4...HEAD
 [0.1.0-rc.4]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.3...v0.1.0-rc.4
 [0.1.0-rc.3]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.2...v0.1.0-rc.3
 [0.1.0-rc.2]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.1...v0.1.0-rc.2
