@@ -54,10 +54,8 @@ nav = [
     { "Self-Hoster Guide" = [
         "selfhost/index.md",
         { "Installation" = [
-            "selfhost/install/index.md",
-            "selfhost/install/database.md",
             "selfhost/install/docker.md",
-            "selfhost/install/systemd.md",
+            "selfhost/install/baremetal.md",
             "selfhost/install/first-run.md",
         ] },
         { "Configuration" = [
