@@ -58,8 +58,6 @@ class Tux(commands.Bot):
         Flag indicating if initial setup has completed successfully.
     start_time : float | None
         Unix timestamp when bot became ready, used for uptime calculations.
-    setup_task : asyncio.Task[None] | None
-        Background task that handles async initialization.
     task_monitor : TaskMonitor
         Manages background tasks and ensures proper cleanup.
     db_service : DatabaseService
@@ -78,11 +76,7 @@ class Tux(commands.Bot):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """
-        Initialize the Tux bot and schedule async setup.
-
-        The actual bot setup happens asynchronously in the setup task to avoid
-        blocking initialization. The setup task is created after a brief delay
-        to ensure the event loop is ready.
+        Initialize the Tux bot.
 
         Parameters
         ----------
@@ -97,7 +91,6 @@ class Tux(commands.Bot):
         self.is_shutting_down: bool = False
         self.setup_complete: bool = False
         self.start_time: float | None = None
-        self.setup_task: asyncio.Task[None] | None = None
 
         # Internal flags to prevent duplicate initialization
         self._emoji_manager_initialized: bool = False
@@ -121,56 +114,6 @@ class Tux(commands.Bot):
 
         logger.debug("Bot initialization complete")
 
-        # Schedule setup task creation on the next event loop iteration
-        # This ensures the event loop is fully ready before we create async tasks
-        asyncio.get_event_loop().call_soon(self.create_setup_task)
-
-    def create_setup_task(self) -> None:
-        """
-        Create the async setup task in the proper event loop context.
-
-        Called by ``call_soon`` to ensure we're in the event loop's execution
-        context. Prevents ``RuntimeError`` when creating tasks too early.
-        """
-        if self.setup_task is None:
-            logger.debug("Creating bot setup task")
-            self.setup_task = asyncio.create_task(self.setup(), name="bot_setup")
-
-    async def setup(self) -> None:
-        """
-        Perform one-time bot setup and initialization.
-
-        Delegates to BotSetupOrchestrator which handles database connection,
-        cog loading, cache initialization, and background task startup. Uses
-        lazy import of BotSetupOrchestrator to avoid circular dependencies.
-        All setup operations are traced with Sentry spans for monitoring.
-
-        Raises
-        ------
-        RuntimeError
-            If database setup fails (wrapped from connection errors).
-        """
-        try:
-            with start_span("bot.setup", "Bot setup process") as span:
-                orchestrator = BotSetupOrchestrator(self)
-                await orchestrator.setup(span)
-
-        except TuxDatabaseConnectionError as e:
-            # Database connection or migration failure is critical - provide helpful error message
-            # Error details already logged by database service, just provide hint
-            logger.info("To start the database, run: docker compose up")
-            logger.info("To run migrations manually, run: uv run db push")
-            capture_database_error(e, operation="connection")
-            # Re-raise the original exception to preserve error type
-            raise
-        except ConnectionError as e:
-            # Wrap generic connection errors in TuxDatabaseConnectionError
-            # Error details already logged by database service, just provide hint
-            logger.info("To start the database, run: docker compose up")
-            capture_database_error(e, operation="connection")
-            msg = "Database setup failed"
-            raise TuxDatabaseConnectionError(msg) from e
-
     @property
     def db(self) -> DatabaseCoordinator:
         """
@@ -193,24 +136,27 @@ class Tux(commands.Bot):
         """
         Discord.py lifecycle hook called before connecting to Discord.
 
-        Initializes the emoji manager, checks setup task status, and schedules
-        post-ready startup tasks. This is a discord.py callback that runs after
-        __init__ but before the bot connects to Discord.
+        Performs one-time bot setup including database connection, cog loading,
+        cache initialization, and scheduling post-ready startup tasks.
         """
+        # Guard against multiple calls to ensure setup only runs once.
+        # discord.py may call this automatically during login() or if used
+        # as a context manager (async with bot:).
+        if self.setup_complete:
+            logger.debug("Bot setup already complete, skipping setup_hook")
+            return
+
         # Initialize emoji manager (loads custom emojis, etc.)
         if not self._emoji_manager_initialized:
             await self.emoji_manager.init()
             self._emoji_manager_initialized = True
 
-        # Check if setup task has completed
-        if self.setup_task and self.setup_task.done():
-            # Check if setup raised an exception
-            if getattr(self.setup_task, "_exception", None) is not None:
-                self.setup_complete = False
-                # Don't schedule post-ready startup if setup failed
-                return
+        # Perform orchestrator setup (database, cogs, etc.)
+        try:
+            with start_span("bot.setup", "Bot setup process") as span:
+                orchestrator = BotSetupOrchestrator(self)
+                await orchestrator.setup(span)
 
-            # Setup completed successfully
             self.setup_complete = True
             logger.info("Bot setup completed successfully")
 
@@ -218,26 +164,31 @@ class Tux(commands.Bot):
             if self.sentry_manager.is_initialized:
                 self.sentry_manager.set_tag("bot.setup_complete", True)
 
+        except TuxDatabaseConnectionError as e:
+            # Critical error already logged by database service, just provide hints
+            logger.info("To start the database, run: docker compose up")
+            logger.info("To run migrations manually, run: uv run db push")
+            capture_database_error(e, operation="connection")
+            raise
+        except Exception as e:
+            logger.error(f"Setup failed: {type(e).__name__}: {e}")
+            capture_exception_safe(e)
+            raise
+
         # Schedule post-ready startup (banner, stats, instrumentation)
-        # Only schedule if setup succeeded or is still running
-        if (
-            self.setup_complete or (self.setup_task and not self.setup_task.done())
-        ) and (self._startup_task is None or self._startup_task.done()):
+        if self._startup_task is None or self._startup_task.done():
             self._startup_task = self.loop.create_task(self._post_ready_startup())
 
     async def _post_ready_startup(self) -> None:
         """
         Execute post-ready startup tasks after bot is fully connected.
 
-        Waits for both Discord READY and internal setup completion, then performs
-        final initialization: records start time, displays startup banner,
-        instruments commands for Sentry tracing, and records initial bot statistics.
+        Waits for Discord READY, then performs final initialization: records
+        start time, displays startup banner, instruments commands for Sentry tracing,
+        and records initial bot statistics.
         """
         # Wait for Discord connection and READY event
         await self.wait_until_ready()
-
-        # Wait for internal bot setup (cogs, database, caches) to complete
-        await self._wait_for_setup()
 
         # Record the timestamp when bot became fully operational
         if not self.start_time:
@@ -317,36 +268,14 @@ class Tux(commands.Bot):
                 level="info",
             )
 
-    async def _wait_for_setup(self) -> None:
-        """
-        Wait for the setup task to complete if still running.
-
-        If setup fails, triggers bot shutdown to prevent running in a partially
-        initialized state. Any exceptions from the setup task are logged and
-        captured, then the bot shuts down.
-        """
-        if self.setup_task and not self.setup_task.done():
-            with start_span("bot.wait_setup", "Waiting for setup to complete"):
-                try:
-                    await self.setup_task
-
-                except Exception as e:
-                    # Setup failure is critical - cannot continue in degraded state
-                    logger.error(
-                        f"Setup failed during on_ready: {type(e).__name__}: {e}",
-                    )
-                    capture_exception_safe(e)
-                    # Trigger shutdown to prevent running with incomplete setup
-                    await self.shutdown()
-
     async def shutdown(self) -> None:
         """
         Gracefully shut down the bot and clean up all resources.
 
-        Performs shutdown in three phases: cancel setup task if still running,
-        clean up background tasks, and close Discord, database, and HTTP connections.
-        This method is idempotent - calling it multiple times is safe. All phases
-        are traced with Sentry for monitoring shutdown performance.
+        Performs shutdown in three phases: clean up background tasks, and
+        close Discord, database, and HTTP connections. This method is idempotent
+        - calling it multiple times is safe. All phases are traced with Sentry
+        for monitoring shutdown performance.
         """
         with start_transaction("bot.shutdown", "Bot shutdown process") as transaction:
             # Idempotent guard - prevent duplicate shutdown attempts
@@ -359,9 +288,12 @@ class Tux(commands.Bot):
             transaction.set_data("shutdown.initiated", True)
             logger.info("Shutting down bot...")
 
-            # Phase 1: Handle setup task if still running
-            await self._handle_setup_task()
-            transaction.set_data("shutdown.setup_task_handled", True)
+            # Phase 1: Cancel startup task if it exists
+            if self._startup_task and not self._startup_task.done():
+                self._startup_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await self._startup_task
+            transaction.set_data("shutdown.startup_task_handled", True)
 
             # Phase 2: Clean up background tasks (task monitor)
             await self._cleanup_tasks()
@@ -372,30 +304,6 @@ class Tux(commands.Bot):
             transaction.set_data("shutdown.connections_closed", True)
 
             logger.info("Bot shutdown complete")
-
-    async def _handle_setup_task(self) -> None:
-        """
-        Cancel and wait for the setup task if still running.
-
-        Prevents the setup task from continuing to run during shutdown, which
-        could cause errors or resource leaks. Cancellation is graceful - we
-        suppress CancelledError and wait for the task to fully terminate.
-        """
-        with start_span("bot.handle_setup_task", "Handling setup task during shutdown"):
-            # Cancel startup task if it exists
-            if self._startup_task and not self._startup_task.done():
-                self._startup_task.cancel()
-                with contextlib.suppress(asyncio.CancelledError):
-                    await self._startup_task
-
-            # Cancel setup task if still running
-            if self.setup_task and not self.setup_task.done():
-                # Cancel the setup task to stop it from continuing
-                self.setup_task.cancel()
-
-                # Wait for cancellation to complete, suppressing the expected error
-                with contextlib.suppress(asyncio.CancelledError):
-                    await self.setup_task
 
     async def _cleanup_tasks(self) -> None:
         """
