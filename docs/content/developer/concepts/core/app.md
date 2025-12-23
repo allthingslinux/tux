@@ -33,7 +33,8 @@ When a message arrives, Tux checks prefixes in this order:
 1. **Environment Override** - If `BOT_INFO__PREFIX` is set, all guilds use that prefix
 2. **DM Channels** - Direct messages always use the default prefix (no guild context)
 3. **Guild Cache** - Fast in-memory lookup for guild-specific prefixes
-4. **Default Fallback** - Configuration default if cache is unavailable
+4. **Database Fallback** - Cache miss triggers a database lookup and cached result return
+5. **Default Fallback** - Configuration default if database lookup fails
 
 The prefix manager caches guild prefixes in memory for sub-millisecond lookups. If the database is unavailable, it gracefully falls back to the default prefix, so commands still work.
 
@@ -57,40 +58,30 @@ graph TD
     B --> C[Configuration Validation]
     C --> D[Owner ID Resolution]
     D --> E[Bot Instance Creation]
-    E --> F[Internal Setup Wait]
+    E --> F[Discord Login]
     F --> G[Discord Connection]
 ```
 
 **Startup Steps:**
 
 1. **Sentry Initialization** - Error tracking set up first to capture any startup failures
-2. **Signal Handler Registration** - SIGTERM/SIGINT handlers registered for graceful shutdown
+2. **Signal Handler Registration** - Event loop signal handlers registered for graceful shutdown
 3. **Configuration Validation** - Bot token and critical settings verified before proceeding
 4. **Owner ID Resolution** - Bot owner and optional sysadmin IDs determined
 5. **Bot Instance Creation** - Tux bot instance created with proper configuration
-6. **Internal Setup Wait** - Waits for database, cogs, and caches to initialize
+6. **Discord Login** - Performs authentication and triggers the core setup hook (database, cogs, etc.)
 7. **Discord Connection** - Establishes WebSocket connection to Discord gateway
 
 ### Signal Handling
 
-Tux handles shutdown signals gracefully, with different behavior based on when the signal is received.
+Tux handles shutdown signals gracefully using standard asynchronous patterns.
 
-**During Setup:**
+**Operation:**
 
-- Traditional signal handlers work with synchronous operations
-- SIGINT causes immediate exit (useful for interrupting migrations)
-- SIGTERM initiates graceful shutdown
-
-**After Connection:**
-
-- Asyncio signal handlers provide better integration
-- Both SIGINT and SIGTERM trigger graceful shutdown
-- Tasks are cancelled and resources cleaned up properly
-
-**Cross-Platform Support:**
-
-- Unix/Linux/macOS use event loop signal handlers for immediate response
-- Windows uses traditional signal module with KeyboardInterrupt raising
+- Event loop signal handlers provide immediate response to SIGINT and SIGTERM
+- Both signals trigger a graceful shutdown by calling `bot.close()`
+- The bot connection naturally terminates, allowing for clean resource disposal
+- Background tasks are cancelled and resources cleaned up properly
 
 ### Error Handling
 
@@ -106,9 +97,10 @@ All errors are captured by Sentry with context, and startup failures include hel
 
 When shutting down, Tux performs cleanup in this order:
 
-1. **Bot Shutdown** - Closes Discord connection, stops background tasks, closes database connections
-2. **Sentry Flush** - Sends any pending error reports (10-second timeout)
-3. **Exit Code Determination** - Returns appropriate exit code based on shutdown type
+1. **Bot Shutdown** - Closes Discord connection via `bot.close()`, stops background tasks
+2. **Resource Cleanup** - Closes database connections, HTTP clients
+3. **Sentry Flush** - Sends any pending error reports (timeout-protected)
+4. **Exit Code Determination** - Returns appropriate exit code based on shutdown type
 
 Shutdown always completes cleanup, even if errors occur during the process.
 

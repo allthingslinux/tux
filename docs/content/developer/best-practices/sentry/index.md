@@ -143,8 +143,9 @@ graph TD
 3. **SDK Initialization** - Configures Sentry with integrations and handlers
 4. **Integration Setup** - Integrations install hooks and patches
 5. **Bot Attachment** - `SentryManager` instance attached to bot
-6. **Command Instrumentation** - Automatic tracing for all commands
-7. **Event Listeners** - `SentryHandler` cog tracks command execution
+6. **Core Setup Hook** - `setup_hook()` triggered during `bot.login()`
+7. **Command Instrumentation** - Automatic tracing for all commands
+8. **Event Listeners** - `SentryHandler` cog tracks command execution
 
 ## Configuration
 

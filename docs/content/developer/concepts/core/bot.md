@@ -76,10 +76,11 @@ The bot uses Discord.py lifecycle hooks to coordinate startup and shutdown:
 
 ### Setup Hook
 
-The `setup_hook()` is called before connecting to Discord. It:
+The `setup_hook()` is called automatically by discord.py during the login phase. It:
 
 - Initializes the emoji manager
-- Checks setup task completion
+- Guards against duplicate initialization
+- Orchestrates specialized setup services (database, permissions, prefixes, cogs)
 - Schedules post-ready startup tasks
 
 This ensures services are ready before Discord connection begins.
@@ -88,7 +89,7 @@ This ensures services are ready before Discord connection begins.
 
 After the bot connects to Discord and becomes ready, post-ready tasks execute:
 
-1. **Wait for Setup** - Ensures database and cogs are fully initialized
+1. **Wait until Ready** - Ensures internal cache is fully populated
 2. **Record Timestamp** - Marks when bot became operational
 3. **Display Banner** - Shows formatted startup information
 4. **Enable Sentry Instrumentation** - Starts command performance tracking
@@ -174,9 +175,9 @@ The bot provides graceful shutdown with proper resource cleanup:
 
 **Shutdown Phases:**
 
-1. **Setup Task Cancellation** - Stops any ongoing initialization
-2. **Task Cleanup** - Cancels and awaits all background tasks
-3. **Connection Closure** - Closes Discord, database, and HTTP connections
+1. **Task Cleanup** - Cancels and awaits all background tasks
+2. **Connection Closure** - Closes Discord connection via `bot.close()`
+3. **External Resources** - Closes database and HTTP connections
 
 Shutdown is idempotent—calling it multiple times is safe. All connections are closed with error isolation, so one failure doesn't prevent others from closing.
 

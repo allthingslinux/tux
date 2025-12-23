@@ -24,52 +24,16 @@ The main module provides a clean separation between the command-line interface a
 
 ```python
 def run() -> int:
-    """
-    Instantiate and run the Tux application.
-
-    This function is the entry point for the Tux application.
-    It creates an instance of the TuxApp class.
-
-    Returns
-    -------
-    int
-        Exit code: 0 for success, non-zero for failure
-
-    Notes
-    -----
-    Logging is configured by the CLI script (scripts/core.py) before this is called.
-    """
-    try:
-        logger.info("🚀 Starting Tux...")
-        app = TuxApp()
-        return app.run()
-
-    except (TuxDatabaseError, TuxError, SystemExit, KeyboardInterrupt, Exception) as e:
-        # Handle all errors in one place
-        if isinstance(e, TuxDatabaseError):
-            logger.error("❌ Database connection failed")
-            logger.info("💡 To start the database, run: docker compose up")
-        elif isinstance(e, TuxError):
-            logger.error(f"❌ Bot startup failed: {e}")
-        elif isinstance(e, RuntimeError):
-            logger.critical(f"❌ Application failed to start: {e}")
-        elif isinstance(e, SystemExit):
-            return int(e.code) if e.code is not None else 1
-        elif isinstance(e, KeyboardInterrupt):
-            logger.info("Shutdown requested by user")
-            return 0
-        else:
-            logger.opt(exception=True).critical(f"Application failed to start: {e}")
-
-        return 1
-
-    else:
-        return 0
+    """Instantiate and run the Tux application."""
+    # The debug flag is currently used for logging info if needed,
+    # but actual logging is configured by the CLI script.
+    app = TuxApp()
+    return app.run()
 ```
 
 ### Error Handling Strategy
 
-The entry point implements comprehensive error handling with specific responses for different error types:
+The application layer handles the lifecycle, and the entry point delegates execution to `TuxApp`. Most error handling and logging now occur at the appropriate service or orchestrator level.
 
 **Database Errors:**
 
@@ -105,7 +69,7 @@ elif isinstance(e, KeyboardInterrupt):
 
 **Standard Exit Codes:**
 
-- **0** - Success (normal operation)
+- **0** - Success (normal operation or graceful shutdown)
 - **1** - Application error (startup failure, configuration error)
 - **130** - User-requested shutdown (SIGINT/Ctrl+C)
 

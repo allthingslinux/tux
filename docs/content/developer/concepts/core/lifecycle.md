@@ -19,10 +19,10 @@ The lifecycle orchestration system (`src/tux/core/setup/`) manages Tux's complet
 
 The orchestration system ensures reliable initialization with proper error handling and graceful degradation. It follows a layered architecture:
 
-- **Application Layer** - Signal handling, configuration validation, Discord connection
+- **Application Layer** - Entry point, signal handling, configuration validation, Discord connection
 - **Bot Core Layer** - Discord.py integration, service coordination, lifecycle hooks
-- **Setup Orchestration** - Coordinates all setup services with error handling
-- **Setup Services** - Specialized services for database, permissions, cogs, and caching
+- **Setup Orchestration** - Coordinates specialized setup services in a modular sequence
+- **Setup Services** - Individual services for database, permissions, prefixes, and cogs
 
 ## Startup Sequence
 
@@ -30,33 +30,33 @@ The bot startup follows a carefully orchestrated sequence with multiple phases:
 
 ### Application Layer Startup
 
-The `TuxApp` class handles initial startup:
+The `TuxApp` class handles initial startup via `asyncio.run()`:
 
 1. **Sentry Setup** - Error tracking initialized first to capture any failures
-2. **Signal Handler Registration** - SIGTERM/SIGINT handlers for graceful shutdown
+2. **Signal Handler Registration** - Native event loop handlers for graceful shutdown
 3. **Configuration Validation** - Bot token and critical settings verified
 4. **Owner ID Resolution** - Bot owner and optional sysadmin IDs determined
 5. **Bot Instance Creation** - Tux bot instance created with proper configuration
-6. **Internal Setup Wait** - Waits for database, cogs, and caches to initialize
+6. **Discord Login** - Performs authentication and triggers the core setup hook
 7. **Discord Connection** - Establishes WebSocket connection to Discord gateway
 
 ### Bot Core Setup
 
-The `Tux` bot class performs async setup:
+The `Tux` bot class performs async setup during the `setup_hook()` phase:
 
 **Initialization:**
 
 - Services created (database, Sentry, tasks, emoji)
-- Setup task scheduled for async execution
 - State flags initialized to track lifecycle
+- Guard added to prevent duplicate setup execution
 
 **Setup Orchestration:**
 
-The setup orchestrator coordinates specialized services:
+The `BotSetupOrchestrator` iterates through a list of specialized `BaseSetupService` implementations:
 
 1. **Database Setup** - Connection, migrations, schema validation
 2. **Permission Setup** - Authorization system initialization
-3. **Prefix Manager Setup** - Command prefix caching (non-critical)
+3. **Prefix Setup** - Command prefix caching and manager initialization
 4. **Cog Setup** - Extension loading via CogLoader
 5. **Monitoring Startup** - Background task monitoring begins
 
@@ -82,7 +82,7 @@ The setup orchestrator coordinates specialized services:
 - Loads all bot cogs via CogLoader with priority ordering
 - Loads hot reload system for development (optional)
 
-**Prefix Manager Setup:**
+**Prefix Setup Service:**
 
 - Initializes prefix caching system
 - Loads all guild prefixes into memory
@@ -91,9 +91,9 @@ The setup orchestrator coordinates specialized services:
 
 ### Post-Ready Startup
 
-After Discord connection, post-ready tasks execute:
+After Discord connection, post-ready tasks execute once the bot is fully ready:
 
-1. **Wait for Setup** - Ensures internal setup completes
+1. **Wait until Ready** - Ensures internal cache is populated
 2. **Record Timestamp** - Marks when bot became operational
 3. **Display Banner** - Shows formatted startup information
 4. **Enable Sentry Instrumentation** - Starts command performance tracking
