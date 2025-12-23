@@ -40,11 +40,11 @@ class FileConfigSource(PydanticBaseSettingsSource, ABC):
         """
         super().__init__(settings_cls)
         self.config_file = config_file
-        self._data: dict[str, Any] = {}
+        self._raw_data: dict[str, Any] = {}
 
         if self.config_file.exists():
             try:
-                self._data = self._parse_file(self.config_file)
+                self._raw_data = self._parse_file(self.config_file)
             except Exception as e:
                 # Graceful degradation - log error but continue
                 format_name = self._get_format_name()
@@ -85,6 +85,30 @@ class FileConfigSource(PydanticBaseSettingsSource, ABC):
             If file parsing fails
         """
 
+    def _flatten_dict(self, d: dict[str, Any], prefix: str = "") -> dict[str, Any]:
+        """Flatten a nested dictionary with double underscore delimiter and uppercase keys.
+
+        Parameters
+        ----------
+        d : dict[str, Any]
+            Dictionary to flatten
+        prefix : str, optional
+            Prefix for keys, by default ""
+
+        Returns
+        -------
+        dict[str, Any]
+            Flattened dictionary
+        """
+        result: dict[str, Any] = {}
+        for k, v in d.items():
+            key = f"{prefix}{k.upper()}"
+            if isinstance(v, dict):
+                result.update(self._flatten_dict(v, f"{key}__"))
+            else:
+                result[key] = v
+        return result
+
     def get_field_value(
         self,
         field: Any,
@@ -94,14 +118,14 @@ class FileConfigSource(PydanticBaseSettingsSource, ABC):
         return None, field_name, False
 
     def __call__(self) -> dict[str, Any]:
-        """Return all loaded config data.
+        """Return all loaded config data, flattened and uppercased.
 
         Returns
         -------
         dict[str, Any]
             Configuration data
         """
-        return self._data
+        return self._flatten_dict(self._raw_data)
 
 
 class TomlConfigSource(FileConfigSource):
