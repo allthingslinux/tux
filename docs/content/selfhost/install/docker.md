@@ -1,12 +1,12 @@
 ---
-title: Installation via Docker
+title: Docker Installation
 tags:
   - selfhost
   - installation
   - docker
 ---
 
-# Installation via Docker
+# Docker Installation
 
 !!! tip "Tip"
     You can use Podman instead of Docker.
