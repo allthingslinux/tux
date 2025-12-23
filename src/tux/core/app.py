@@ -8,11 +8,8 @@ and structured startup/shutdown flows with Sentry integration.
 
 import asyncio
 import contextlib
-import os
 import signal
-import sys
-from types import FrameType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import discord
 from loguru import logger
@@ -20,7 +17,6 @@ from loguru import logger
 from tux.help import TuxHelp
 from tux.services.sentry import SentryManager, capture_exception_safe
 from tux.shared.config import CONFIG
-from tux.shared.exceptions import TuxSetupError
 
 if TYPE_CHECKING:
     from tux.core.bot import Tux
@@ -30,11 +26,10 @@ __all__ = ["TuxApp", "get_prefix"]
 
 async def get_prefix(bot: "Tux", message: discord.Message) -> list[str]:
     """
-    Resolve the command prefix for a guild using the prefix manager.
+    Resolve the command prefix for a guild or DM using the prefix manager.
 
-    Uses in-memory prefix cache for optimal performance, falling back to
-    default prefix when guild is unavailable. Environment variable override
-    (BOT_INFO__PREFIX) takes priority over all other settings.
+    Uses in-memory prefix cache for optimal performance. Fallback to default
+    prefix when guild is unavailable or manager is not initialized.
 
     Parameters
     ----------
@@ -48,21 +43,14 @@ async def get_prefix(bot: "Tux", message: discord.Message) -> list[str]:
     list[str]
         A list containing the resolved command prefix.
     """
-    # Priority 1: Environment variable override for testing/development
-    if CONFIG.is_prefix_override_enabled():
-        return [CONFIG.get_prefix()]
+    guild_id = message.guild.id if message.guild else None
 
-    # Priority 2: DM channels always use default prefix (no guild context)
-    if not message.guild:
-        return [CONFIG.get_prefix()]
-
-    # Priority 3: Guild-specific prefix from cached database value
-    # Using hasattr check to handle early initialization before prefix_manager is ready
+    # Use prefix manager if initialized (handles override, DM, cache, and DB)
     if hasattr(bot, "prefix_manager") and bot.prefix_manager:
-        prefix = await bot.prefix_manager.get_prefix(message.guild.id)
+        prefix = await bot.prefix_manager.get_prefix(guild_id)
         return [prefix]
 
-    # Priority 4: Fallback to default if prefix manager not ready
+    # Fallback to default if prefix manager not ready
     return [CONFIG.get_prefix()]
 
 
@@ -78,200 +66,59 @@ class TuxApp:
     ----------
     bot : Tux | None
         The Discord bot instance, initialized in :meth:`start`.
-    _connect_task : asyncio.Task[None] | None
-        Background task for the Discord connection.
-    _shutdown_event : asyncio.Event | None
-        Event flag for coordinating graceful shutdown.
-    _in_setup : bool
-        Flag indicating if we're currently in the setup phase.
-    _bot_connected : bool
-        Flag indicating if the bot has successfully connected to Discord.
     """
 
     bot: "Tux | None"
-    _connect_task: asyncio.Task[None] | None
-    _shutdown_event: asyncio.Event | None
-    _in_setup: bool
-    _bot_connected: bool
 
     def __init__(self) -> None:
-        """
-        Initialize the application state.
-
-        The bot instance is not created until :meth:`start` to ensure the
-        event loop and configuration are properly initialized.
-        """
+        """Initialize the application state."""
         self.bot = None
-        self._connect_task = None
-        self._shutdown_event = None
         self._user_requested_shutdown = False
-        self._in_setup = False
-        self._bot_connected = False
+        self._background_tasks: set[asyncio.Task[Any]] = set()
 
     def run(self) -> int:
         """
         Run the Tux bot application.
 
-        Synchronous entrypoint typically invoked by the CLI. Creates a new
-        event loop, runs the bot, and handles shutdown gracefully.
+        Synchronous entrypoint typically invoked by the CLI. Handles the
+        event loop lifecycle and graceful shutdown.
 
         Returns
         -------
         int
             Exit code: 0 for success, 130 for user-requested shutdown, 1 for errors.
-
-        Raises
-        ------
-        TuxSetupError
-            If a critical application error occurs during startup.
         """
         try:
-            # Create a fresh event loop for this application run
-            # This ensures clean state and avoids conflicts with any existing loop
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
-            try:
-                # Block until the bot disconnects or shutdown is requested
-                return loop.run_until_complete(self.start())
-            finally:
-                # Always close the loop to free resources, even if start() raises
-                loop.close()
-
+            return asyncio.run(self.start())
         except KeyboardInterrupt:
-            # Ctrl+C pressed - this is a normal shutdown path
+            # Fallback for systems where signal handlers might not catch everything
             logger.info("Application interrupted by user")
             return 130
-        except RuntimeError as e:
-            # Special handling for expected "Event loop stopped" errors during shutdown
-            # These occur when signals force-stop the loop and are not actual errors
-            if "Event loop stopped" in str(e):
-                logger.debug("Event loop stopped during shutdown")
-                return 130  # Likely user-initiated shutdown
-            logger.error(f"Application error: {e}")
-            raise
         except Exception as e:
-            logger.error(f"Application error: {e}")
+            logger.error(f"Application failed to start: {e}")
             capture_exception_safe(e)
-            raise
+            return 1
 
-    def _handle_signal_shutdown(
-        self,
-        loop: asyncio.AbstractEventLoop,
-        signum: int,
-    ) -> None:
-        """
-        Handle shutdown signal with different behavior based on bot state.
+    def _setup_signals(self) -> None:
+        """Register signal handlers for graceful shutdown."""
+        loop = asyncio.get_running_loop()
 
-        During startup (before Discord connection), SIGINT uses immediate exit
-        since synchronous operations can't be interrupted gracefully. After
-        connection, uses graceful shutdown with task cancellation.
+        def _handle_signal():
+            if self._user_requested_shutdown:
+                return
 
-        Parameters
-        ----------
-        loop : asyncio.AbstractEventLoop
-            The event loop to stop (when using graceful shutdown).
-        signum : int
-            The signal number received (SIGTERM or SIGINT).
-        """
-        # Use immediate exit for SIGINT during startup (before Discord connection)
-        # to allow interrupting synchronous operations like migrations
-        if signum == signal.SIGINT and not self._bot_connected:
-            logger.info("SIGINT received during startup - using immediate exit")
-            os._exit(1)
+            logger.info("Shutdown signal received - initiating graceful shutdown")
+            self._user_requested_shutdown = True
+            if self.bot:
+                # bot.close() is a coroutine, we schedule it to stop connect()
+                # Store reference to prevent garbage collection (RUF006)
+                shutdown_task = loop.create_task(self.bot.close())
+                self._background_tasks.add(shutdown_task)
+                shutdown_task.add_done_callback(self._background_tasks.discard)
 
-        # After connection, use graceful shutdown
-        # Signal the shutdown monitor task to stop waiting
-        logger.info("SIGINT received after connection - using graceful shutdown")
-        self._user_requested_shutdown = True
-        if self._shutdown_event is not None:
-            self._shutdown_event.set()
-
-        # Cancel all running async tasks to force immediate shutdown
-        # This includes the bot connection task, cog tasks, etc.
-        # Note: We exclude the current task to avoid cancelling ourselves
-        current_task = asyncio.current_task(loop)
-        for task in asyncio.all_tasks(loop):
-            if not task.done() and task is not current_task:
-                task.cancel()
-
-        # Stop the event loop (will cause run_until_complete to return)
-        # The actual bot shutdown will happen in the finally block of start()
-        loop.call_soon_threadsafe(loop.stop)
-
-    def setup_signals(self, loop: asyncio.AbstractEventLoop) -> None:
-        """
-        Register signal handlers for graceful shutdown.
-
-        During bot setup (which includes synchronous operations like database migrations),
-        we use traditional signal handlers that can interrupt synchronous code. After setup
-        completes, we switch to asyncio signal handlers for better integration.
-
-        Parameters
-        ----------
-        loop : asyncio.AbstractEventLoop
-            The active event loop on which to register handlers.
-        """
-
-        # During setup, use traditional signal handlers that work with synchronous code
-        def _signal_handler(signum: int, frame: FrameType | None) -> None:
-            """Handle signals during setup - SIGINT causes immediate exit.
-
-            Parameters
-            ----------
-            signum : int
-                The signal number received.
-            frame : FrameType | None
-                The current stack frame when the signal was received.
-            """
-            # For SIGINT, exit immediately
-            if signum == signal.SIGINT:
-                os._exit(1)
-            # For other signals, raise exception
-            raise KeyboardInterrupt
-
-        # Register traditional signal handlers for setup phase
-        # Remove any existing asyncio handlers first
-        with contextlib.suppress(ValueError, NotImplementedError):
-            loop.remove_signal_handler(signal.SIGTERM)
-        with contextlib.suppress(ValueError, NotImplementedError):
-            loop.remove_signal_handler(signal.SIGINT)
-
-        # Set traditional signal handlers
-        signal.signal(signal.SIGTERM, _signal_handler)
-        signal.signal(signal.SIGINT, _signal_handler)
-
-    def _switch_to_asyncio_signals(self, loop: asyncio.AbstractEventLoop) -> None:
-        """
-        Switch from traditional signal handlers to asyncio signal handlers.
-
-        This is called after bot setup completes, when we can rely on asyncio
-        signal handlers for better integration with async operations.
-
-        Parameters
-        ----------
-        loop : asyncio.AbstractEventLoop
-            The event loop to use for signal handlers.
-        """
-
-        # Define signal handlers as closures to capture loop context
-        def _sigterm() -> None:
-            """Handle SIGTERM signal by initiating shutdown (graceful after connection)."""
-            self._handle_signal_shutdown(loop, signal.SIGTERM)
-
-        def _sigint() -> None:
-            """Handle SIGINT signal by initiating shutdown (immediate exit during startup)."""
-            self._handle_signal_shutdown(loop, signal.SIGINT)
-
-        try:
-            # Switch to asyncio signal handlers for better integration
-            loop.add_signal_handler(signal.SIGTERM, _sigterm)
-            loop.add_signal_handler(signal.SIGINT, _sigint)
-            logger.debug("Switched to asyncio signal handlers")
-
-        except NotImplementedError:
-            # If asyncio signal handlers aren't supported, keep traditional ones
-            logger.debug("Keeping traditional signal handlers (asyncio not supported)")
+        for sig in (signal.SIGTERM, signal.SIGINT):
+            with contextlib.suppress(NotImplementedError):
+                loop.add_signal_handler(sig, _handle_signal)
 
     async def start(self) -> int:
         """
@@ -285,131 +132,61 @@ class TuxApp:
         -------
         int
             Exit code: 0 for success, 130 for user-requested shutdown, 1 for errors.
-
-        Notes
-        -----
-        The bot is not created until this method is called to ensure proper
-        event loop and configuration initialization. Blocks until the bot
-        disconnects or a shutdown signal is received.
         """
-        # Initialize error tracking and monitoring before anything else
+        # Initialize telemetry
         SentryManager.setup()
 
-        # Mark that we're entering setup phase (before setting up signals)
-        self._in_setup = True
+        # Register signals
+        self._setup_signals()
 
-        # Register signal handlers for graceful shutdown (SIGTERM, SIGINT)
-        loop = asyncio.get_running_loop()
-        self.setup_signals(loop)
-
-        # Validate that the bot token is configured before attempting connection
+        # Validate token
         if not CONFIG.BOT_TOKEN:
             logger.critical("No bot token provided. Set BOT_TOKEN in your .env file.")
-            sys.exit(1)
+            return 1
 
-        # Resolve owner IDs and create the bot instance
+        # Resolve owner IDs and create bot instance
         owner_ids = self._resolve_owner_ids()
         self.bot = self._create_bot_instance(owner_ids)
 
-        startup_completed = False
-        exit_code = 0  # Default exit code
-        shutdown_code = 0  # Will be set by shutdown()
         try:
-            # Login to Discord first (required before cogs can use wait_until_ready)
+            # Login and connect to Discord
+            # Note: discord.py automatically calls setup_hook() during login.
+            # connect() blocks until the connection is closed (e.g. via signal).
             logger.info("Logging in to Discord...")
             await self.bot.login(CONFIG.BOT_TOKEN)
 
-            # Mark that bot is now connected (can handle graceful shutdown)
-            self._bot_connected = True
-            logger.debug("Bot connected, graceful shutdown now available")
+            logger.info("Connecting to Discord gateway...")
+            await self.bot.connect(reconnect=True)
 
-            # Wait for bot internal setup (database, caches, etc.) after login
-            await self._await_bot_setup()
-
-            # Mark that setup is complete
-            self._in_setup = False
-
-            # After setup completes, switch to asyncio signal handlers for better performance
-            self._switch_to_asyncio_signals(loop)
-
-            # Mark startup as complete after setup succeeds
-            startup_completed = True
-
-            # Establish WebSocket connection to Discord gateway
-            await self._connect_to_gateway()
-
-        except asyncio.CancelledError:
-            # Task was cancelled (likely by signal handler)
-            if startup_completed:
-                logger.info("Bot shutdown complete")
-            else:
-                logger.info("Bot startup was cancelled")
-            exit_code = 130 if self._user_requested_shutdown else 0
-        except KeyboardInterrupt:
-            # Ctrl+C or signal handler raised KeyboardInterrupt
-            logger.info("Shutdown requested (KeyboardInterrupt)")
-            exit_code = 130
         except Exception as e:
-            # Unexpected error during startup - log and report to Sentry
-            logger.critical(f"Bot failed to start: {type(e).__name__}")
-            logger.info(
-                "Check your configuration and ensure all services are properly set up",
-            )
+            logger.critical(f"Bot execution failed: {type(e).__name__}")
             capture_exception_safe(e)
-            exit_code = 1
-        else:
-            # Normal completion (shouldn't happen, but handle gracefully)
-            exit_code = 0
+            return 1
         finally:
-            # Always perform cleanup, regardless of how we exited
-            shutdown_code = await self.shutdown()
+            # Perform custom cleanup (DB, HTTP, Tasks)
+            await self.shutdown()
 
-        # Use shutdown code if available, otherwise use exception-based code
-        return shutdown_code if shutdown_code != 0 else exit_code
+        return 130 if self._user_requested_shutdown else 0
 
     def _resolve_owner_ids(self) -> set[int]:
         """
         Resolve owner IDs based on configuration and eval permission settings.
-
-        If ALLOW_SYSADMINS_EVAL is enabled, sysadmin IDs are added to the
-        owner set, granting them eval command access.
 
         Returns
         -------
         set[int]
             Set of user IDs with owner-level permissions.
         """
-        # Start with the bot owner (always has owner permissions)
         owner_ids = {CONFIG.USER_IDS.BOT_OWNER_ID}
 
-        # Optionally grant sysadmins eval access (dangerous but useful for debugging)
         if CONFIG.ALLOW_SYSADMINS_EVAL:
-            logger.warning(
-                "Eval is enabled for sysadmins, this is potentially dangerous; see .env file for more info.",
-            )
+            logger.warning("Eval is enabled for sysadmins.")
             owner_ids.update(CONFIG.USER_IDS.SYSADMINS)
-        else:
-            logger.warning(
-                "Eval is disabled for sysadmins; see .env file for more info.",
-            )
 
         return owner_ids
 
     def _create_bot_instance(self, owner_ids: set[int]) -> "Tux":
-        """
-        Create and configure the Tux bot instance.
-
-        Parameters
-        ----------
-        owner_ids : set[int]
-            Set of user IDs with owner-level permissions.
-
-        Returns
-        -------
-        Tux
-            Configured bot instance ready for connection.
-        """
-        # Import here to avoid circular import
+        """Create and configure the Tux bot instance."""
         from tux.core.bot import Tux  # noqa: PLC0415
 
         return Tux(
@@ -420,117 +197,17 @@ class TuxApp:
             owner_ids=owner_ids,
             allowed_mentions=discord.AllowedMentions(everyone=False, roles=False),
             help_command=TuxHelp(),
-            activity=None,
             status=discord.Status.online,
         )
 
-    async def _await_bot_setup(self) -> None:
-        """
-        Wait for bot internal setup to complete before connecting.
-
-        Ensures all database connections, caches, and internal services
-        are ready before attempting to connect to Discord.
-        """
-        logger.info("Waiting for bot setup to complete...")
-
-        # Ensure setup task is created and completed before connecting to Discord
-        if self.bot:
-            # If setup task doesn't exist yet, create it
-            if self.bot.setup_task is None:
-                logger.debug("Setup task not created yet, creating it now")
-                self.bot.create_setup_task()
-
-            # Wait for setup to complete
-            if self.bot.setup_task:
-                try:
-                    await self.bot.setup_task
-                    logger.info("Bot setup completed successfully")
-                except Exception as e:
-                    # If setup fails, raise TuxSetupError to be caught by run()
-                    msg = f"Bot setup failed: {e}"
-                    logger.critical(msg)
-                    raise TuxSetupError(msg) from e
-
-    async def _connect_to_gateway(self) -> None:
-        """
-        Establish WebSocket connection to Discord gateway with reconnection support.
-
-        Creates background tasks for the Discord connection and shutdown
-        monitoring, waiting for either to complete. The bot must already be
-        logged in before calling this method.
-        """
-        if not self.bot:
-            return
-
-        # Establish WebSocket connection to Discord gateway
-        logger.info("Connecting to Discord...")
-        self._connect_task = asyncio.create_task(
-            self.bot.connect(reconnect=True),  # Auto-reconnect on disconnections
-            name="bot_connect",
-        )
-
-        # Create monitor task to watch for shutdown signals concurrently
-        shutdown_task = asyncio.create_task(
-            self._monitor_shutdown(),
-            name="shutdown_monitor",
-        )
-
-        # Wait for either connection to end or shutdown to be requested
-        # FIRST_COMPLETED ensures we react immediately to whichever happens first
-        _, pending = await asyncio.wait(
-            [self._connect_task, shutdown_task],
-            return_when=asyncio.FIRST_COMPLETED,
-        )
-
-        # Cancel the task that didn't complete (either connection or monitor)
-        for task in pending:
-            task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await task
-
-    async def _monitor_shutdown(self) -> None:
-        """
-        Monitor for shutdown signals while the bot is running.
-
-        Creates and waits on a shutdown event that is set by signal handlers
-        when a termination signal is received. Runs concurrently with the bot
-        connection task.
-        """
-        # Create an event flag that signal handlers can set
-        self._shutdown_event = asyncio.Event()
-
-        # Block here until the event is set (by signal handler or other shutdown trigger)
-        await self._shutdown_event.wait()
-
-        logger.info("Shutdown requested via monitor")
-
     async def shutdown(self) -> int:
-        """
-        Gracefully shut down the bot and flush telemetry.
-
-        Ensures proper cleanup of all bot resources, including closing the
-        Discord connection and flushing any pending Sentry events. Called
-        automatically in the finally block of :meth:`start`.
-
-        Returns
-        -------
-        int
-            Exit code: 130 if user requested shutdown, 0 otherwise.
-        """
-        # Close the Discord WebSocket connection and cleanup bot resources
-        # (database connections, HTTP sessions, background tasks, etc.)
+        """Gracefully shut down the bot and flush telemetry."""
         if self.bot and not self.bot.is_closed():
             await self.bot.shutdown()
 
-        # Flush any pending Sentry events before exiting
-        # This ensures error reports aren't lost during shutdown
         await SentryManager.flush_async()
 
         logger.info(
             f"Shutdown complete (user_requested={self._user_requested_shutdown})",
         )
-        if self._user_requested_shutdown:
-            logger.info("Exiting with code 130 (user requested shutdown)")
-            return 130
-        logger.info("Shutdown completed normally")
-        return 0
+        return 130 if self._user_requested_shutdown else 0
