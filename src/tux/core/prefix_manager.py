@@ -76,35 +76,36 @@ class PrefixManager:
 
         logger.debug("PrefixManager initialized")
 
-    async def get_prefix(self, guild_id: int) -> str:
+    async def get_prefix(self, guild_id: int | None) -> str:
         """
-        Get the command prefix for a guild.
+        Get the command prefix for a guild or DM.
 
         Follows the resolution priority documented in the module docstring.
         Automatically caches results for O(1) subsequent lookups.
 
         Parameters
         ----------
-        guild_id : int
-            The Discord guild ID.
+        guild_id : int | None
+            The Discord guild ID, or None for DMs.
 
         Returns
         -------
         str
-            The command prefix for the guild, or default prefix if not found.
+            The command prefix, or default prefix if not found.
         """
         # Priority 1: Check if prefix override is enabled by environment variable
         if CONFIG.is_prefix_override_enabled():
-            logger.trace(
-                f"Prefix override enabled, using default prefix '{self._default_prefix}' for guild {guild_id}",
-            )
             return self._default_prefix
 
-        # Priority 2: Check cache first (fast path - O(1) lookup)
+        # Priority 2: DMs always use default prefix
+        if guild_id is None:
+            return self._default_prefix
+
+        # Priority 3: Check cache first (fast path - O(1) lookup)
         if guild_id in self._prefix_cache:
             return self._prefix_cache[guild_id]
 
-        # Priority 3: Cache miss - load from database and cache result
+        # Priority 4: Cache miss - load from database and cache result
         return await self._load_guild_prefix(guild_id)
 
     async def set_prefix(self, guild_id: int, prefix: str) -> None:
