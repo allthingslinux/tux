@@ -48,22 +48,14 @@ class BaseSetupService(ABC):
                 await self.setup()
                 self.logger.info(f"{self.name.title()} setup completed")
                 span.set_data("setup.status", "success")
-                span.set_data("setup.service", self.name)
             except KeyboardInterrupt:
-                # Re-raise KeyboardInterrupt to allow signal handling
-                self.logger.info(
-                    f"{self.name.title()} setup interrupted by user signal",
-                )
                 raise
             except Exception as e:
-                # Only log if error wasn't already logged by the service
-                # Database errors are already logged by database service
+                # Database errors are already logged with context by DatabaseService
                 if self.name != "database":
-                    # Use error() instead of exception() to avoid duplicate tracebacks
-                    # Sentry already captures full exception details
-                    self.logger.error(f"{self.name.title()} setup failed: {e}")  # noqa: TRY400
+                    self.logger.exception(f"{self.name.title()} setup failed")
+
                 span.set_data("setup.status", "failed")
-                span.set_data("setup.service", self.name)
                 span.set_data("setup.error", str(e))
                 span.set_data("setup.error_type", type(e).__name__)
                 capture_exception_safe(e)
