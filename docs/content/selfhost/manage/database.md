@@ -273,6 +273,6 @@ docker compose stop tux-adminer
 
 ## Related
 
-- **[Database Setup](../install/database.md)**
+- **[Bare Metal Installation](../install/baremetal.md)**
 - **[Database CLI Reference](../../reference/cli.md)**
 - **[Developer Migration Guide](../../developer/concepts/database/migrations.md)**
