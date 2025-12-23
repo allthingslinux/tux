@@ -27,20 +27,12 @@ class EventHandler(BaseCog):
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         """Register all guilds the bot is in on startup and reconnections."""
-        # Wait for bot setup to complete before registering guilds
-        # This ensures database and other services are ready
-        if self.bot.setup_task and not self.bot.setup_task.done():
-            logger.info(
-                "Waiting for bot setup to complete before registering guilds...",
-            )
-            try:
-                await self.bot.setup_task
-                logger.info("Bot setup completed, now registering guilds...")
-            except Exception as e:
-                logger.error(f"Bot setup failed, cannot register guilds: {e}")
-                return
-        else:
-            logger.info("Bot setup already completed, registering guilds...")
+        # Check if bot setup has completed
+        if not self.bot.setup_complete:
+            logger.warning("on_ready fired before setup_complete")
+            return
+
+        logger.info("Bot ready, registering guilds...")
 
         # Always register guilds on ready - Discord.py can reconnect and guilds may change
         logger.info("Registering all guilds in database...")
