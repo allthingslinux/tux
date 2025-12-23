@@ -11,7 +11,7 @@ tags:
 !!! warning "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
-Configure database connection settings for Tux. For installation instructions, see [Database Installation](../install/database.md).
+Configure database connection settings for Tux. For installation instructions, see [Bare Metal Installation](../install/baremetal.md).
 
 !!! tip "Quick Start"
     If you're using Docker Compose, the database is configured automatically. Just set your `POSTGRES_PASSWORD` in `.env` and start services.
