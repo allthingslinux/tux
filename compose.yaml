@@ -3,7 +3,7 @@ services:
   tux-postgres:
     container_name: tux-postgres
     hostname: tux-postgres
-    image: postgres:17-alpine
+    image: postgres:17-alpine@sha256:ff4ccc02b97e0ebb6b328ef9ff92522f95586f83be6801896b615088defc8ad2
     restart: 'no'
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
@@ -143,7 +143,7 @@ services:
           path: compose.yaml
           target: /app/compose.yaml
   tux-adminer:
-    image: adminer:latest@sha256:3bce505927f115e80dedfa3be4c2a7c79226ae8b1994fd5bf7517d83bb8abf60
+    image: adminer:latest@sha256:ae1d4d7774c544d084e42887a318e6b0f47ad8c60fe1661d9278ef169c8b4eaa
     container_name: tux-adminer
     hostname: tux-adminer
     restart: 'no'
