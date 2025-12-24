@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from loguru import logger
+
 from tux.core.prefix_manager import PrefixManager
 from tux.core.setup.base import BotSetupService
 
@@ -28,9 +30,9 @@ class PrefixSetupService(BotSetupService):
 
     async def setup(self) -> None:
         """Initialize the prefix manager and load all prefixes."""
-        self._log_step("Initializing prefix manager...")
+        logger.info("Initializing prefix manager...")
 
         self.bot.prefix_manager = PrefixManager(self.bot)
         await self.bot.prefix_manager.load_all_prefixes()
 
-        self._log_step("Prefix manager initialized successfully", "success")
+        logger.success("Prefix manager initialized successfully")
