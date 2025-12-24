@@ -28,7 +28,11 @@ from tux.services.sentry.tracing import (
     span,
 )
 from tux.shared.config import CONFIG
-from tux.shared.constants import COG_PRIORITIES, MILLISECONDS_PER_SECOND
+from tux.shared.constants import (
+    COG_PRIORITIES,
+    MILLISECONDS_PER_SECOND,
+    SLOW_COG_LOAD_THRESHOLD,
+)
 from tux.shared.exceptions import TuxCogLoadError, TuxConfigurationError
 
 __all__ = ["CogLoader"]
@@ -64,14 +68,8 @@ class CogLoader(commands.Cog):
             The bot instance to load cogs into.
         """
         self.bot = bot
-
-        # Load ignore list from configuration (cogs to skip)
         self.cog_ignore_list: set[str] = CONFIG.get_cog_ignore_list()
-
-        # Track load times for performance monitoring and optimization
         self.load_times: defaultdict[str, float] = defaultdict(float)
-
-        # Priority mapping determines load order (higher = loads first)
         self.load_priorities = COG_PRIORITIES
 
     async def is_cog_eligible(self, filepath: Path) -> bool:
@@ -91,14 +89,12 @@ class CogLoader(commands.Cog):
         bool
             True if the file passes basic eligibility checks, False otherwise.
         """
-        cog_name: str = filepath.stem
+        cog_name = filepath.stem
 
-        # Skip cogs explicitly ignored in configuration
         if cog_name in self.cog_ignore_list:
             logger.warning(f"Skipping {cog_name} as it is in the ignore list.")
             return False
 
-        # Basic file validation: must be a .py file, not private (_), and exist
         if (
             filepath.suffix != ".py"
             or cog_name.startswith("_")
@@ -106,7 +102,6 @@ class CogLoader(commands.Cog):
         ):
             return False
 
-        # Advanced validation: check if file contains a valid extension setup function
         return await self._contains_cog_or_extension(filepath)
 
     async def _contains_cog_or_extension(self, filepath: Path) -> bool:
@@ -129,10 +124,8 @@ class CogLoader(commands.Cog):
             async with aiofiles.open(filepath, encoding="utf-8") as f:
                 content = await f.read()
 
-            # Parse the AST
             tree = ast.parse(content, filename=str(filepath))
 
-            # Check for extension setup function
             return any(
                 isinstance(node, ast.AsyncFunctionDef)
                 and node.name == "setup"
@@ -167,7 +160,6 @@ class CogLoader(commands.Cog):
         while current_exception:
             if isinstance(current_exception, TuxConfigurationError):
                 return True
-            # Follow both __cause__ (explicit) and __context__ (implicit) chains
             current_exception = (
                 current_exception.__cause__ or current_exception.__context__
             )
@@ -244,7 +236,6 @@ class CogLoader(commands.Cog):
         """
         module_parts = module.split(".")
 
-        # Check each parent module level (from full path down to root)
         for i in range(len(module_parts), 1, -1):
             check_module = ".".join(module_parts[:i])
             if check_module in self.bot.extensions:
@@ -262,13 +253,7 @@ class CogLoader(commands.Cog):
 
     @span("cog.load_single")
     async def _load_single_cog(self, path: Path) -> None:
-        """
-        Load a single cog with timing, error tracking, and telemetry.
-
-        Orchestrates the complete loading process: resolves module path, checks
-        for duplicate loading, loads the extension via discord.py, records timing
-        metrics, and handles configuration errors gracefully. Configuration errors
-        are handled gracefully and logged as warnings rather than failures.
+        """Load a single cog with timing, error tracking, and telemetry.
 
         Parameters
         ----------
@@ -281,27 +266,20 @@ class CogLoader(commands.Cog):
             If the cog fails to load due to non-configuration errors.
         """
         start_time = time.perf_counter()
-
-        # Tag Sentry span with cog metadata for debugging
         set_span_attributes({"cog.name": path.stem, "cog.path": str(path)})
 
         try:
-            # Convert file path to Python module path (e.g., tux.modules.admin.dev)
             module = self._resolve_module_path(path)
             set_span_attributes({"cog.module": module})
 
-            # Check if module or any parent module is already loaded
             if self._is_duplicate_load(module):
-                return  # Skip silently (warning already logged)
+                return
 
-            # Load the extension using discord.py's extension system
             await self.bot.load_extension(name=module)
 
-            # Record load time for performance monitoring
             load_time = time.perf_counter() - start_time
             self.load_times[module] = load_time
 
-            # Add telemetry data to Sentry span
             set_span_attributes(
                 {
                     "cog.status": "loaded",
@@ -313,17 +291,14 @@ class CogLoader(commands.Cog):
             logger.debug(f"Loaded {module} in {load_time * 1000:.1f}ms")
 
         except TuxConfigurationError as config_error:
-            # Direct configuration error: Skip cog gracefully
             self._handle_configuration_skip(path, config_error)
             return
 
         except Exception as e:
-            # Check if exception chain contains a configuration error
             if self._is_configuration_error(e):
                 self._handle_configuration_skip(path, e)
                 return
 
-            # Real error: Capture for Sentry and raise
             set_span_attributes({"cog.status": "failed"})
             capture_span_exception(
                 e,
@@ -378,26 +353,20 @@ class CogLoader(commands.Cog):
         if not cogs:
             return
 
-        # Tag Sentry span with group metadata
         set_span_attributes({"cog_count": len(cogs)})
         if categories := {cog.parent.name for cog in cogs if cog.parent}:
             set_span_attributes({"categories": list(categories)})
 
-        # Load all cogs in this group concurrently
         start_time = time.perf_counter()
         results = await asyncio.gather(
             *[self._load_single_cog(cog) for cog in cogs],
-            return_exceptions=True,  # Don't fail entire group on single cog error
+            return_exceptions=True,
         )
         end_time = time.perf_counter()
 
-        # Calculate success/failure rates
-        # None = successful load or graceful config skip
-        # Exception = real failure (config errors already filtered in _load_single_cog)
         success_count = len([r for r in results if r is None])
         failure_count = len([r for r in results if isinstance(r, BaseException)])
 
-        # Record telemetry for this group's loading
         set_span_attributes(
             {
                 "load_time_s": end_time - start_time,
@@ -410,7 +379,6 @@ class CogLoader(commands.Cog):
             f"Loaded {success_count} cogs from {cogs[0].parent.name} cog group in {end_time - start_time:.2f}s",
         )
 
-        # Log any failures that occurred (excluding config errors)
         for result, cog in zip(results, cogs, strict=False):
             if isinstance(result, Exception):
                 logger.error(f"Error loading {cog}: {result}")
@@ -436,17 +404,14 @@ class CogLoader(commands.Cog):
         list[tuple[int, Path]]
             List of (priority, path) tuples sorted by priority (highest first).
         """
-        # Recursively find all Python files in directory
         all_py_files = list(directory.rglob("*.py"))
 
-        # Filter to eligible cogs and assign priorities
         cog_paths: list[tuple[int, Path]] = []
         for item in all_py_files:
             if await self.is_cog_eligible(item):
                 priority = self._get_cog_priority(item)
                 cog_paths.append((priority, item))
 
-        # Sort by priority (highest first for sequential loading)
         cog_paths.sort(key=lambda x: x[0], reverse=True)
 
         return cog_paths
@@ -486,7 +451,6 @@ class CogLoader(commands.Cog):
         current_priority: int | None = None
 
         for priority, cog_path in cog_paths:
-            # When priority changes, load accumulated group before starting new one
             if current_priority is not None and current_priority != priority:
                 await self._load_cog_group(current_group)
                 current_group = []
@@ -494,15 +458,11 @@ class CogLoader(commands.Cog):
             current_priority = priority
             current_group.append(cog_path)
 
-        # Load final accumulated group
         if current_group:
             await self._load_cog_group(current_group)
 
     async def _process_single_file(self, path: Path) -> None:
-        """
-        Process a single file for loading (non-directory path).
-
-        Checks eligibility before attempting to load the file as a cog.
+        """Process a single file for loading.
 
         Parameters
         ----------
@@ -514,13 +474,7 @@ class CogLoader(commands.Cog):
             await self._load_single_cog(path)
 
     async def _process_directory(self, path: Path) -> None:
-        """
-        Process a directory of cogs with priority-based loading.
-
-        Discovers all Python files recursively, validates each as an eligible cog,
-        groups cogs by priority, and loads each priority group sequentially (higher
-        priority first). Within each group, cogs load concurrently. This balances
-        dependency order with performance.
+        """Process a directory of cogs with priority-based loading.
 
         Parameters
         ----------
@@ -529,26 +483,14 @@ class CogLoader(commands.Cog):
         """
         set_span_attributes({"path.is_dir": True})
 
-        # Discover and prioritize eligible cogs
         cog_paths = await self._discover_and_prioritize_cogs(path)
-
         set_span_attributes({"eligible_cog_count": len(cog_paths)})
-
-        # Record priority distribution for telemetry
         self._record_priority_distribution(cog_paths)
-
-        # Load cogs sequentially by priority group
         await self._load_by_priority_groups(cog_paths)
 
     @span("cog.load_path")
     async def load_cogs(self, path: Path) -> None:
-        """
-        Load cogs from a file or directory path with priority-based ordering.
-
-        Automatically handles both single files and directories. Directories are
-        processed recursively with priority-based loading. This is the main entry
-        point for loading cogs from a path. Delegates to _process_single_file or
-        _process_directory based on path type.
+        """Load cogs from a file or directory path with priority-based ordering.
 
         Parameters
         ----------
@@ -560,18 +502,15 @@ class CogLoader(commands.Cog):
         TuxCogLoadError
             If an error occurs during cog discovery or loading.
         """
-        # Tag Sentry span with path for debugging
         set_span_attributes({"cog.path": str(path)})
 
         try:
-            # Route to appropriate handler based on path type
             if not await aiofiles.os.path.isdir(path):
                 await self._process_single_file(path)
             else:
                 await self._process_directory(path)
 
         except Exception as e:
-            # Log and capture any errors during loading
             path_str = path.as_posix()
             logger.error(f"An error occurred while processing {path_str}: {e}")
             capture_span_exception(e, path=path_str)
@@ -579,14 +518,7 @@ class CogLoader(commands.Cog):
             raise TuxCogLoadError(msg) from e
 
     async def load_cogs_from_folder(self, folder_name: str) -> None:
-        """
-        Load cogs from a named folder relative to the tux package with timing.
-
-        Provides performance monitoring and slow cog detection for a specific
-        folder. Used to load major cog categories like "services/handlers",
-        "modules", or "plugins". Skips gracefully if the folder doesn't exist
-        (useful for optional plugin directories). Logs warnings for cogs that
-        take >1s to load.
+        """Load cogs from a named folder relative to the tux package.
 
         Parameters
         ----------
@@ -600,23 +532,16 @@ class CogLoader(commands.Cog):
             If an error occurs during folder loading.
         """
         start_time = time.perf_counter()
-
-        # Resolve folder path relative to tux package
         cog_path: Path = Path(__file__).parent.parent / folder_name
 
-        # Skip if folder doesn't exist (e.g., optional plugins directory)
         if not await aiofiles.os.path.exists(cog_path):
             logger.info(f"Folder {folder_name} does not exist, skipping")
             return
 
         try:
-            # Load all cogs from this folder
-            # Note: Errors in cog initialization are captured separately,
-            # not attributed to the loader
             await self.load_cogs(path=cog_path)
             load_time = time.perf_counter() - start_time
 
-            # Record metrics for folder loading
             record_cog_metric(
                 cog_name=f"folder:{folder_name}",
                 operation="load_folder",
@@ -624,25 +549,20 @@ class CogLoader(commands.Cog):
                 success=True,
             )
 
-            if load_time:
-                # Count cogs that were successfully loaded from this folder
-                folder_module_prefix = folder_name.replace("/", ".")
-                folder_cogs = [k for k in self.load_times if folder_module_prefix in k]
-                logger.info(
-                    f"Loaded {len(folder_cogs)} cogs from {folder_name} in {load_time * 1000:.0f}ms",
+            folder_module_prefix = folder_name.replace("/", ".")
+            folder_cogs = [k for k in self.load_times if folder_module_prefix in k]
+            logger.info(
+                f"Loaded {len(folder_cogs)} cogs from {folder_name} in {load_time * 1000:.0f}ms",
+            )
+
+            if slow_cogs := {
+                k: v for k, v in self.load_times.items() if v > SLOW_COG_LOAD_THRESHOLD
+            }:
+                logger.warning(
+                    f"Slow loading cogs (>{SLOW_COG_LOAD_THRESHOLD * 1000:.0f}ms): {slow_cogs}",
                 )
 
-                # Detect and warn about slow-loading cogs (performance monitoring)
-                slow_threshold = 1.0  # seconds
-                if slow_cogs := {
-                    k: v for k, v in self.load_times.items() if v > slow_threshold
-                }:
-                    logger.warning(
-                        f"Slow loading cogs (>{slow_threshold * 1000:.0f}ms): {slow_cogs}",
-                    )
-
         except Exception as e:
-            # Record failure metric
             load_time = time.perf_counter() - start_time
 
             record_cog_metric(
@@ -653,7 +573,6 @@ class CogLoader(commands.Cog):
                 error_type=type(e).__name__,
             )
 
-            # Capture exception separately (not as part of a transaction)
             capture_exception_safe(
                 e,
                 extra_context={
@@ -671,14 +590,7 @@ class CogLoader(commands.Cog):
 
     @classmethod
     async def setup(cls, bot: commands.Bot) -> None:
-        """
-        Initialize the cog loader and load all bot cogs in priority order.
-
-        Main entrypoint for the cog loading system, called during bot startup.
-        Loads cogs in this order: services/handlers (highest priority), modules
-        (normal priority), then plugins (lowest priority). Creates a CogLoader
-        instance, loads all cog folders sequentially, registers the CogLoader
-        itself as a cog, and provides comprehensive telemetry via Sentry.
+        """Initialize the cog loader and load all bot cogs in priority order.
 
         Parameters
         ----------
@@ -694,21 +606,12 @@ class CogLoader(commands.Cog):
         cog_loader = cls(bot)
 
         try:
-            # Load handlers first (highest priority - event handlers, error handlers)
-            # These need to be ready before any commands are registered
             await cog_loader.load_cogs_from_folder(folder_name="services/handlers")
-
-            # Load modules (normal priority - bot commands and features)
-            # These are the main bot functionality
             await cog_loader.load_cogs_from_folder(folder_name="modules")
-
-            # Load plugins (lowest priority - user extensions)
-            # Optional folder for self-hosters to add custom cogs
             await cog_loader.load_cogs_from_folder(folder_name="plugins")
 
             total_time = time.perf_counter() - start_time
 
-            # Record metrics for setup (not a transaction - this is background setup)
             record_cog_metric(
                 cog_name="CogLoader",
                 operation="setup",
@@ -716,13 +619,11 @@ class CogLoader(commands.Cog):
                 success=True,
             )
 
-            # Register the CogLoader itself as a cog (for maintenance commands)
             await bot.add_cog(cog_loader)
 
             logger.info(f"Total cog loading time: {total_time * 1000:.0f}ms")
 
         except Exception as e:
-            # Critical error during cog loading - record metric and capture exception
             total_time = time.perf_counter() - start_time
 
             record_cog_metric(
@@ -733,7 +634,6 @@ class CogLoader(commands.Cog):
                 error_type=type(e).__name__,
             )
 
-            # Capture exception separately (not as part of a transaction)
             capture_exception_safe(
                 e,
                 extra_context={
