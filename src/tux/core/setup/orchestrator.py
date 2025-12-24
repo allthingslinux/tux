@@ -5,7 +5,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from tux.services.sentry.tracing import DummySpan, set_setup_phase_tag
-from tux.shared.exceptions import TuxDatabaseConnectionError
+from tux.shared.exceptions import (
+    TuxDatabaseConnectionError,
+    TuxSetupError,
+)
 
 if TYPE_CHECKING:
     from typing import Any
@@ -51,7 +54,7 @@ class BotSetupOrchestrator:
         ------
         TuxDatabaseConnectionError
             If database setup fails.
-        RuntimeError
+        TuxSetupError
             If any setup service fails.
         """
         set_setup_phase_tag(span, "starting")
@@ -64,12 +67,13 @@ class BotSetupOrchestrator:
                 if service.name == "database":
                     msg += (
                         ". Check logs and Sentry for the underlying error. "
-                        "Common causes: database not running, incorrect connection string, network issues, "
-                        "or migration failures. Run migrations manually with 'uv run db push' if needed."
+                        "Common causes: database not running, incorrect connection "
+                        "string, network issues, or migration failures. "
+                        "Run migrations manually with 'uv run db push' if needed."
                     )
                     raise TuxDatabaseConnectionError(msg)
 
-                raise RuntimeError(msg)
+                raise TuxSetupError(msg)
 
             set_setup_phase_tag(span, service.name, "finished")
 

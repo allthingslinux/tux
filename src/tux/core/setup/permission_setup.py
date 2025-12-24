@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from loguru import logger
+
 from tux.core.permission_system import init_permission_system
 from tux.core.setup.base import BotSetupService
 from tux.database.controllers import DatabaseCoordinator
@@ -33,9 +35,9 @@ class PermissionSetupService(BotSetupService):
 
     async def setup(self) -> None:
         """Set up the permission system for command authorization."""
-        self._log_step("Initializing permission system...")
+        logger.info("Initializing permission system...")
 
         db_coordinator = DatabaseCoordinator(self.db_service)
         init_permission_system(self.bot, db_coordinator)
 
-        self._log_step("Permission system initialized successfully", "success")
+        logger.success("Permission system initialized successfully")
