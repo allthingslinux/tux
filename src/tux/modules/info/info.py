@@ -216,50 +216,6 @@ class Info(BaseCog):
             f"❌ I couldn't find information about '{entity}'. Use `{prefix}info` without arguments to see available options.",
         )
 
-    # @info.command(
-    #     name="server",
-    #     aliases=["s"],
-    # )
-    # @commands.guild_only()
-    # async def server(self, ctx: commands.Context[Tux]) -> None:
-    #     """
-    #     Show information about the server.
-
-    #     Parameters
-    #     ----------
-    #     ctx : commands.Context
-    #         The context object associated with the command.
-    #     """
-    #     guild = ctx.guild
-    #     assert guild
-    #     assert guild.icon
-
-    #     embed: discord.Embed = (
-    #         EmbedCreator.create_embed(
-    #             embed_type=EmbedType.INFO,
-    #             title=guild.name,
-    #             description=guild.description or "No description available.",
-    #             custom_color=discord.Color.blurple(),
-    #             custom_author_text="Server Information",
-    #             custom_author_icon_url=guild.icon.url,
-    #             custom_footer_text=f"ID: {guild.id} | Created: {guild.created_at.strftime('%B %d, %Y')}",
-    #         )
-    #         .add_field(name="Owner", value=str(guild.owner.mention) if guild.owner else "Unknown")
-    #         .add_field(name="Vanity URL", value=guild.vanity_url_code or "None")
-    #         .add_field(name="Boosts", value=guild.premium_subscription_count)
-    #         .add_field(name="Text Channels", value=len(guild.text_channels))
-    #         .add_field(name="Voice Channels", value=len(guild.voice_channels))
-    #         .add_field(name="Forum Channels", value=len(guild.forums))
-    #         .add_field(name="Emojis", value=f"{len(guild.emojis)}/{2 * guild.emoji_limit}")
-    #         .add_field(name="Stickers", value=f"{len(guild.stickers)}/{guild.sticker_limit}")
-    #         .add_field(name="Roles", value=len(guild.roles))
-    #         .add_field(name="Humans", value=sum(not member.bot for member in guild.members))
-    #         .add_field(name="Bots", value=sum(member.bot for member in guild.members))
-    #         .add_field(name="Bans", value=len([entry async for entry in guild.bans(limit=BANS_LIMIT)]))
-    #     )
-
-    #     await ctx.send(embed=embed)
-
     async def _show_guild_info(
         self,
         ctx: commands.Context[Tux],
@@ -395,12 +351,10 @@ class Info(BaseCog):
         assert guild
 
         embed: discord.Embed = (
-            EmbedCreator.create_embed(
-                embed_type=EmbedType.INFO,
+            self._create_info_embed(
                 title=f"#{channel.name}",
-                custom_color=discord.Color.blurple(),
                 description=getattr(channel, "topic", None) or "No topic available.",
-                custom_footer_text=f"ID: {channel.id} | Created: {channel.created_at.strftime('%B %d, %Y')}",
+                footer_text=f"ID: {channel.id} | Created: {channel.created_at.strftime('%B %d, %Y')}",
             )
             .add_field(name="Type", value=channel.__class__.__name__, inline=True)
             .add_field(name="Position", value=channel.position, inline=True)
@@ -422,7 +376,7 @@ class Info(BaseCog):
             )
             embed.add_field(
                 name="NSFW",
-                value="✅" if channel.nsfw else "❌",
+                value=self._format_bool(channel.nsfw),
                 inline=True,
             )
         elif isinstance(channel, discord.VoiceChannel):
@@ -469,14 +423,13 @@ class Info(BaseCog):
         assert guild
 
         embed: discord.Embed = (
-            EmbedCreator.create_embed(
-                embed_type=EmbedType.INFO,
+            self._create_info_embed(
                 title=role.name,
+                description="Here is some information about the role.",
+                footer_text=f"ID: {role.id} | Created: {role.created_at.strftime('%B %d, %Y')}",
                 custom_color=role.color
                 if role.color != discord.Color.default()
                 else discord.Color.blurple(),
-                description="Here is some information about the role.",
-                custom_footer_text=f"ID: {role.id} | Created: {role.created_at.strftime('%B %d, %Y')}",
             )
             .add_field(
                 name="Color",
@@ -488,13 +441,13 @@ class Info(BaseCog):
             .add_field(name="Position", value=role.position, inline=True)
             .add_field(
                 name="Mentionable",
-                value="✅" if role.mentionable else "❌",
+                value=self._format_bool(role.mentionable),
                 inline=True,
             )
-            .add_field(name="Hoisted", value="✅" if role.hoist else "❌", inline=True)
+            .add_field(name="Hoisted", value=self._format_bool(role.hoist), inline=True)
             .add_field(
                 name="Managed",
-                value="✅" if role.managed else "❌",
+                value=self._format_bool(role.managed),
                 inline=True,
             )
             .add_field(name="Members", value=len(role.members), inline=True)
@@ -574,18 +527,16 @@ class Info(BaseCog):
             The sticker to get information about.
         """
         embed: discord.Embed = (
-            EmbedCreator.create_embed(
-                embed_type=EmbedType.INFO,
+            self._create_info_embed(
                 title=sticker.name,
-                custom_color=discord.Color.blurple(),
                 description="Here is some information about the sticker.",
                 thumbnail_url=sticker.url,
-                custom_footer_text=f"ID: {sticker.id} | Created: {sticker.created_at.strftime('%B %d, %Y')}",
+                footer_text=f"ID: {sticker.id} | Created: {sticker.created_at.strftime('%B %d, %Y')}",
             )
             .add_field(name="Format", value=str(sticker.format), inline=True)
             .add_field(
                 name="Available",
-                value="✅" if sticker.available else "❌",
+                value=self._format_bool(sticker.available),
                 inline=True,
             )
         )
@@ -626,13 +577,11 @@ class Info(BaseCog):
             channel_mention = str(message.channel)
 
         embed: discord.Embed = (
-            EmbedCreator.create_embed(
-                embed_type=EmbedType.INFO,
+            self._create_info_embed(
                 title=f"Message in {channel_display}",
-                custom_color=discord.Color.blurple(),
                 description=message.content[:2000]
                 + ("..." if len(message.content) > 2000 else ""),
-                custom_footer_text=f"ID: {message.id} | Created: {message.created_at.strftime('%B %d, %Y')}",
+                footer_text=f"ID: {message.id} | Created: {message.created_at.strftime('%B %d, %Y')}",
             )
             .add_field(name="Author", value=message.author.mention, inline=True)
             .add_field(name="Channel", value=channel_mention, inline=True)
@@ -664,12 +613,10 @@ class Info(BaseCog):
             The invite to get information about.
         """
         embed: discord.Embed = (
-            EmbedCreator.create_embed(
-                embed_type=EmbedType.INFO,
+            self._create_info_embed(
                 title=f"Invite to {getattr(invite.guild, 'name', 'Unknown Server') if invite.guild else 'Unknown Server'}",
-                custom_color=discord.Color.blurple(),
                 description=f"**Code:** {invite.code}",
-                custom_footer_text=f"ID: {invite.id} | Created: {invite.created_at.strftime('%B %d, %Y')}"
+                footer_text=f"ID: {invite.id} | Created: {invite.created_at.strftime('%B %d, %Y')}"
                 if invite.created_at
                 else f"ID: {invite.id}",
             )
@@ -710,7 +657,7 @@ class Info(BaseCog):
             )
             .add_field(
                 name="Temporary",
-                value="✅" if invite.temporary else "❌",
+                value=self._format_bool(invite.temporary or False),
                 inline=True,
             )
         )
@@ -733,12 +680,10 @@ class Info(BaseCog):
             The thread to get information about.
         """
         embed: discord.Embed = (
-            EmbedCreator.create_embed(
-                embed_type=EmbedType.INFO,
+            self._create_info_embed(
                 title=f"Thread: {thread.name}",
-                custom_color=discord.Color.blurple(),
                 description=getattr(thread, "topic", None) or "No topic available.",
-                custom_footer_text=f"ID: {thread.id} | Created: {thread.created_at.strftime('%B %d, %Y') if thread.created_at else 'Unknown'}",
+                footer_text=f"ID: {thread.id} | Created: {thread.created_at.strftime('%B %d, %Y') if thread.created_at else 'Unknown'}",
             )
             .add_field(name="Type", value=thread.__class__.__name__, inline=True)
             .add_field(
@@ -753,12 +698,12 @@ class Info(BaseCog):
             )
             .add_field(
                 name="Archived",
-                value="✅" if thread.archived else "❌",
+                value=self._format_bool(thread.archived),
                 inline=True,
             )
             .add_field(
                 name="Locked",
-                value="✅" if thread.locked else "❌",
+                value=self._format_bool(thread.locked),
                 inline=True,
             )
             .add_field(name="Message Count", value=thread.message_count, inline=True)
@@ -782,12 +727,10 @@ class Info(BaseCog):
             The scheduled event to get information about.
         """
         embed: discord.Embed = (
-            EmbedCreator.create_embed(
-                embed_type=EmbedType.INFO,
+            self._create_info_embed(
                 title=event.name,
-                custom_color=discord.Color.blurple(),
                 description=event.description or "No description available.",
-                custom_footer_text=f"ID: {event.id}",
+                footer_text=f"ID: {event.id}",
             )
             .add_field(name="Status", value=str(event.status).title(), inline=True)
             .add_field(
@@ -818,46 +761,6 @@ class Info(BaseCog):
         )
 
         await ctx.send(embed=embed)
-
-    # @info.command(
-    #     name="roles",
-    #     aliases=["r"],
-    # )
-    # @commands.guild_only()
-    # async def roles(self, ctx: commands.Context[Tux]) -> None:
-    #     """
-    #     List all roles in the server.
-
-    #     Parameters
-    #     ----------
-    #     ctx : commands.Context
-    #         The context object associated with the command.
-    #     """
-    #     guild = ctx.guild
-    #     assert guild
-
-    #     roles: list[str] = [role.mention for role in guild.roles]
-
-    #     await self.paginated_embed(ctx, "Server Roles", "roles", guild.name, roles, ROLES_PER_PAGE)
-
-    # @info.command(
-    #     name="emotes",
-    #     aliases=["e"],
-    # )
-    # async def emotes(self, ctx: commands.Context[Tux]) -> None:
-    #     """
-    #     List all emotes in the server.
-
-    #     Parameters
-    #     ----------
-    #     ctx : commands.Context
-    #         The context object associated with the command.
-    #     """
-    #     guild = ctx.guild
-    #     assert guild
-
-    #     emotes: list[str] = [str(emote) for emote in guild.emojis]
-    #     await self.paginated_embed(ctx, "Server Emotes", "emotes", guild.name, emotes, EMOTES_PER_PAGE)
 
     async def paginated_embed(
         self,
