@@ -61,17 +61,9 @@ class PrefixManager:
             The bot instance to manage prefixes for.
         """
         self.bot = bot
-
-        # In-memory cache for fast prefix lookups (guild_id -> prefix)
         self._prefix_cache: dict[int, str] = {}
-
-        # Track whether we've performed the initial cache load
         self._cache_loaded = False
-
-        # Default prefix from configuration (fallback)
         self._default_prefix = CONFIG.get_prefix()
-
-        # Lock to prevent race conditions during initial cache load
         self._loading_lock = asyncio.Lock()
 
         logger.debug("PrefixManager initialized")
@@ -93,19 +85,15 @@ class PrefixManager:
         str
             The command prefix, or default prefix if not found.
         """
-        # Priority 1: Check if prefix override is enabled by environment variable
         if CONFIG.is_prefix_override_enabled():
             return self._default_prefix
 
-        # Priority 2: DMs always use default prefix
         if guild_id is None:
             return self._default_prefix
 
-        # Priority 3: Check cache first (fast path - O(1) lookup)
         if guild_id in self._prefix_cache:
             return self._prefix_cache[guild_id]
 
-        # Priority 4: Cache miss - load from database and cache result
         return await self._load_guild_prefix(guild_id)
 
     async def set_prefix(self, guild_id: int, prefix: str) -> None:
@@ -122,24 +110,16 @@ class PrefixManager:
         prefix : str
             The new command prefix to set.
         """
-        # Check if prefix override is enabled - warn but don't update
-        # This prevents confusion when BOT_INFO__PREFIX is set
         if CONFIG.is_prefix_override_enabled():
             logger.warning(
                 f"Prefix override enabled - ignoring prefix change for guild {guild_id} to '{prefix}'. All guilds use default prefix '{self._default_prefix}'",
             )
             return
 
-        # Update cache immediately for instant effect
         self._prefix_cache[guild_id] = prefix
 
-        # Persist to database asynchronously (don't block command execution)
-        # Create task but don't await - persistence happens in background
-        persist_task = asyncio.create_task(self._persist_prefix(guild_id, prefix))
-
-        # Store reference to prevent garbage collection before task completes
-        # Python will GC tasks that have no references, even if they're running
-        _ = persist_task
+        # Fire-and-forget task to persist to database
+        _persist_task = asyncio.create_task(self._persist_prefix(guild_id, prefix))  # noqa: RUF006
 
         logger.info(f"Prefix updated for guild {guild_id}: '{prefix}'")
 
@@ -161,35 +141,28 @@ class PrefixManager:
             The guild's prefix, or default prefix if loading fails.
         """
         try:
-            # Get database controller (without fallback to avoid blocking)
             controller = get_db_controller_from(self.bot, fallback_to_direct=False)
             if controller is None:
                 logger.warning("Database unavailable; using default prefix")
                 return self._default_prefix
 
-            # Ensure guild record exists in database
             await controller.guild.get_or_create_guild(guild_id)
 
-            # Get or create guild config with default prefix
             guild_config = await controller.guild_config.get_or_create_config(
                 guild_id,
                 prefix=self._default_prefix,
             )
 
-            # Extract prefix from config and cache it
-            if guild_config and hasattr(guild_config, "prefix"):
-                prefix = guild_config.prefix
-                self._prefix_cache[guild_id] = prefix  # Cache for future lookups
-                return prefix
+            prefix = guild_config.prefix
+            self._prefix_cache[guild_id] = prefix
 
         except Exception as e:
-            # Log error but don't crash - prefix resolution must always succeed
             logger.warning(
                 f"Failed to load prefix for guild {guild_id}: {type(e).__name__}",
             )
-
-        # Fallback to default prefix if any step fails
-        return self._default_prefix
+            return self._default_prefix
+        else:
+            return prefix
 
     async def _persist_prefix(self, guild_id: int, prefix: str) -> None:
         """
@@ -206,16 +179,12 @@ class PrefixManager:
             The prefix to persist.
         """
         try:
-            # Get database controller
             controller = get_db_controller_from(self.bot, fallback_to_direct=False)
             if controller is None:
                 logger.warning("Database unavailable; prefix change not persisted")
                 return
 
-            # Ensure guild record exists
             await controller.guild.get_or_create_guild(guild_id)
-
-            # Update guild config with new prefix
             await controller.guild_config.update_config(guild_id, prefix=prefix)
 
             logger.debug(f"Prefix persisted for guild {guild_id}: '{prefix}'")
@@ -224,10 +193,7 @@ class PrefixManager:
             logger.error(
                 f"Failed to persist prefix for guild {guild_id}: {type(e).__name__}",
             )
-
-            # IMPORTANT: Remove from cache if persistence failed
-            # This maintains consistency - we don't want a prefix in cache
-            # that doesn't exist in the database (could cause issues on restart)
+            # Remove from cache on failure to maintain consistency
             self._prefix_cache.pop(guild_id, None)
 
     async def load_all_prefixes(self) -> None:
@@ -238,35 +204,28 @@ class PrefixManager:
         loading, has a 10-second timeout, and loads up to 1000 configs.
         Idempotent and safe to call multiple times.
         """
-        # Quick check before acquiring lock (fast path)
         if self._cache_loaded:
             return
 
-        # Acquire lock to prevent concurrent loading
         async with self._loading_lock:
-            # Check again after acquiring lock (double-check pattern)
             if self._cache_loaded:
                 return
 
             try:
-                # Get database controller
                 controller = get_db_controller_from(self.bot, fallback_to_direct=False)
                 if controller is None:
                     logger.warning("Database unavailable; prefix cache not loaded")
-                    self._cache_loaded = True  # Mark as loaded to prevent retries
+                    self._cache_loaded = True
                     return
 
-                # Load all guild configs with timeout to prevent blocking startup
                 logger.debug("Loading all guild prefixes into cache...")
                 all_configs = await asyncio.wait_for(
-                    controller.guild_config.find_all(limit=1000),  # Limit for safety
-                    timeout=10.0,  # Don't block startup for more than 10 seconds
+                    controller.guild_config.find_all(limit=1000),
+                    timeout=10.0,
                 )
 
-                # Populate cache with loaded configs
                 for config in all_configs:
-                    if hasattr(config, "id") and hasattr(config, "prefix"):
-                        self._prefix_cache[config.id] = config.prefix
+                    self._prefix_cache[config.id] = config.prefix
 
                 self._cache_loaded = True
                 logger.info(
@@ -274,16 +233,14 @@ class PrefixManager:
                 )
 
             except TimeoutError:
-                # Timeout is not fatal - bot can still work with empty cache
                 logger.warning(
                     "Timeout loading prefix cache - continuing without cache",
                 )
-                self._cache_loaded = True  # Mark as loaded to prevent retries
+                self._cache_loaded = True
 
             except Exception as e:
-                # Other errors are also not fatal - mark as loaded to prevent retries
                 logger.error(f"Failed to load prefix cache: {type(e).__name__}")
-                self._cache_loaded = True  # Prevent retry loops
+                self._cache_loaded = True
 
     def invalidate_cache(self, guild_id: int | None = None) -> None:
         """
@@ -301,12 +258,10 @@ class PrefixManager:
         >>> manager.invalidate_cache()  # All guilds
         """
         if guild_id is None:
-            # Clear entire cache and reset loaded flag
             self._prefix_cache.clear()
             self._cache_loaded = False
             logger.debug("All prefix cache invalidated")
         else:
-            # Remove specific guild from cache
             self._prefix_cache.pop(guild_id, None)
             logger.debug(f"Prefix cache invalidated for guild {guild_id}")
 
