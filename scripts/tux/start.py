@@ -16,16 +16,6 @@ from tux.main import run
 app = create_app()
 
 
-def _run_bot(debug: bool) -> int:
-    """Run the bot and return the exit code."""
-    if debug:
-        print_info("Debug mode enabled")
-
-    # The run() function in main.py already catches and logs exceptions
-    # and returns a proper exit code.
-    return run(debug=debug)
-
-
 @app.command(name="start")
 def start(
     debug: Annotated[bool, Option("--debug", help="Enable debug mode")] = False,
@@ -34,7 +24,10 @@ def start(
     print_section("Starting Tux Bot", "blue")
     rich_print("[bold blue]Starting Tux Discord bot...[/bold blue]")
 
-    exit_code = _run_bot(debug)
+    if debug:
+        print_info("Debug mode enabled")
+
+    exit_code = run()
 
     if exit_code == 0:
         print_success("Bot completed successfully")

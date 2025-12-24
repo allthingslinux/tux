@@ -166,7 +166,7 @@ class TuxApp:
             # Perform custom cleanup (DB, HTTP, Tasks)
             await self.shutdown()
 
-        return 130 if self._user_requested_shutdown else 0
+        return self._get_exit_code()
 
     def _resolve_owner_ids(self) -> set[int]:
         """
@@ -200,7 +200,7 @@ class TuxApp:
             status=discord.Status.online,
         )
 
-    async def shutdown(self) -> int:
+    async def shutdown(self) -> None:
         """Gracefully shut down the bot and flush telemetry."""
         if self.bot and not self.bot.is_closed():
             await self.bot.shutdown()
@@ -210,4 +210,7 @@ class TuxApp:
         logger.info(
             f"Shutdown complete (user_requested={self._user_requested_shutdown})",
         )
+
+    def _get_exit_code(self) -> int:
+        """Get the appropriate exit code based on shutdown type."""
         return 130 if self._user_requested_shutdown else 0
