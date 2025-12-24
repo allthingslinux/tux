@@ -264,7 +264,10 @@ class Tux(commands.Bot):
         if self.sentry_manager.is_initialized:
             self.sentry_manager.set_tag("event_type", "disconnect")
             self.sentry_manager.capture_message(
-                "Bot disconnected from Discord, this happens sometimes and is fine as long as it's not happening too often",
+                (
+                    "Bot disconnected from Discord, this happens sometimes "
+                    "and is fine as long as it's not happening too often"
+                ),
                 level="info",
             )
 
@@ -272,10 +275,10 @@ class Tux(commands.Bot):
         """
         Gracefully shut down the bot and clean up all resources.
 
-        Performs shutdown in three phases: clean up background tasks, and
-        close Discord, database, and HTTP connections. This method is idempotent
-        - calling it multiple times is safe. All phases are traced with Sentry
-        for monitoring shutdown performance.
+        Performs shutdown in three phases: cancel startup task, clean up
+        background tasks, and close Discord, database, and HTTP connections.
+        This method is idempotent - calling it multiple times is safe. All
+        phases are traced with Sentry for monitoring shutdown performance.
         """
         with start_transaction("bot.shutdown", "Bot shutdown process") as transaction:
             # Idempotent guard - prevent duplicate shutdown attempts
