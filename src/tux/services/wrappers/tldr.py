@@ -19,10 +19,10 @@ from urllib.request import Request, urlopen
 
 # Configuration constants following 12-factor app principles
 CACHE_DIR: Path = Path(os.getenv("TLDR_CACHE_DIR", ".cache/tldr"))
-MAX_CACHE_AGE_HOURS: int = int(
-    os.getenv("TLDR_CACHE_AGE_HOURS", "168"),
-)  # 7 days default
+MAX_CACHE_AGE_HOURS: int = int(os.getenv("TLDR_CACHE_AGE_HOURS", "168"))
 REQUEST_TIMEOUT_SECONDS: int = int(os.getenv("TLDR_REQUEST_TIMEOUT", "10"))
+ARCHIVE_DOWNLOAD_TIMEOUT_SECONDS: int = 30
+DISCORD_EMBED_MAX_LENGTH: int = 4000
 
 # TLDR API endpoints
 PAGES_SOURCE_URL = "https://raw.githubusercontent.com/tldr-pages/tldr/main/pages"
@@ -376,13 +376,7 @@ class TldrClient:
             if platform_filter != "common":
                 platforms_to_scan.append("common")
 
-        # Remove duplicates while keeping original order
-        unique_platforms_to_scan: list[str] = []
-        seen_platforms: set[str] = set()
-        for platform in platforms_to_scan:
-            if platform not in seen_platforms:
-                unique_platforms_to_scan.append(platform)
-                seen_platforms.add(platform)
+        unique_platforms_to_scan = list(dict.fromkeys(platforms_to_scan))
 
         for platform in unique_platforms_to_scan:
             path: Path = CACHE_DIR / pages_dir_name / platform
@@ -477,6 +471,19 @@ class TldrClient:
     ) -> tuple[list[str], int]:
         """Process consecutive description lines starting with '>'.
 
+        Parameters
+        ----------
+        lines : list[str]
+            All lines from the TLDR page.
+        i : int
+            Current line index.
+        show_short : bool
+            Show short options.
+        show_long : bool
+            Show long options.
+        show_both : bool
+            Show both options.
+
         Returns
         -------
         tuple[list[str], int]
@@ -508,6 +515,19 @@ class TldrClient:
     ) -> tuple[list[str], int]:
         """Process command examples and descriptions.
 
+        Parameters
+        ----------
+        lines : list[str]
+            All lines from the TLDR page.
+        i : int
+            Current line index.
+        show_short : bool
+            Show short options.
+        show_long : bool
+            Show long options.
+        show_both : bool
+            Show both options.
+
         Returns
         -------
         tuple[list[str], int]
@@ -524,15 +544,12 @@ class TldrClient:
                 continue
 
             if current_line.startswith("- "):
-                # Add spacing before first description to separate from initial description
                 if not first_description_found:
                     formatted.append("")
                     first_description_found = True
-                # If last item was a command, add spacing before new description
                 elif last_was_command:
                     formatted.append("")
 
-                # Command descriptions become regular text (no block quotes)
                 current_line = TldrClient.parse_placeholders(
                     current_line,
                     show_short,
@@ -540,12 +557,10 @@ class TldrClient:
                     show_both,
                     highlight=True,
                 )
-                description_content = current_line[2:]  # Remove "- " prefix
-                formatted.append(description_content)
+                formatted.append(current_line[2:])
                 last_was_command = False
 
             elif current_line.startswith("`") and current_line.endswith("`"):
-                # Command examples become bullet points
                 current_line = TldrClient.parse_placeholders(
                     current_line,
                     show_short,
@@ -553,8 +568,7 @@ class TldrClient:
                     show_both,
                     highlight=False,
                 )
-                code_content = current_line[1:-1]  # Remove backticks
-                formatted.append(f"- `{code_content}`")
+                formatted.append(f"- `{current_line[1:-1]}`")
                 last_was_command = True
 
             else:
@@ -602,7 +616,6 @@ class TldrClient:
         i = 0
         n = len(lines)
 
-        # Find and skip the title
         while i < n:
             line = lines[i].rstrip()
             if line.startswith("# "):
@@ -610,7 +623,6 @@ class TldrClient:
                 break
             i += 1
 
-        # Process description lines
         description_lines, i = TldrClient._process_description_lines(
             lines,
             i,
@@ -621,12 +633,9 @@ class TldrClient:
         if description_lines:
             formatted.append("> " + "\n> ".join(description_lines))
 
-        # Skip any standalone command name line after the description
         if i < n and lines[i].strip():
-            # Skip potential command name line
             i += 1
 
-        # Process command examples and descriptions
         command_formatted, _ = TldrClient._process_command_examples(
             lines,
             i,
@@ -690,21 +699,18 @@ class TldrClient:
                 },
             )
 
-            with urlopen(req, timeout=30) as resp:
+            with urlopen(req, timeout=ARCHIVE_DOWNLOAD_TIMEOUT_SECONDS) as resp:
                 content = resp.read()
 
-                # Validate content
                 if content.strip().lower().startswith((b"<!doctype html", b"<html>")):
                     return f"Failed to update cache for '{language}': Invalid content received"
 
                 target_path = CACHE_DIR / pages_dir_name
 
-                # More robust cache directory cleanup
                 if target_path.exists():
                     try:
                         shutil.rmtree(target_path)
                     except OSError:
-                        # If rmtree fails, try to remove contents manually
                         for item in target_path.rglob("*"):
                             try:
                                 if item.is_file():
@@ -713,13 +719,11 @@ class TldrClient:
                                     item.rmdir()
                             except OSError:
                                 continue
-                        # Try final cleanup
                         with contextlib.suppress(OSError):
                             target_path.rmdir()
 
                 target_path.mkdir(parents=True, exist_ok=True)
 
-                # Extract archive
                 with zipfile.ZipFile(BytesIO(content)) as archive:
                     archive.extractall(target_path)
 
@@ -766,7 +770,10 @@ class TldrClient:
             return hours_passed > MAX_CACHE_AGE_HOURS
 
     @staticmethod
-    def split_long_text(text: str, max_len: int = 4000) -> list[str]:
+    def split_long_text(
+        text: str,
+        max_len: int = DISCORD_EMBED_MAX_LENGTH,
+    ) -> list[str]:
         """
         Split long text into pages for Discord embeds.
 
