@@ -78,6 +78,7 @@ __all__ = [
     "SLASH_CMD_MAX_OPTIONS",
     "SLASH_CMD_NAME_LENGTH",
     "SLASH_OPTION_NAME_LENGTH",
+    "SLOW_COG_LOAD_THRESHOLD",
     "SLOW_RESOLUTION_THRESHOLD",
     "SNIPPET_ALLOWED_CHARS_REGEX",
     "SNIPPET_MAX_NAME_LENGTH",
@@ -190,6 +191,7 @@ COG_PRIORITIES: Final[dict[str, int]] = {
 
 # Performance thresholds
 SLOW_RESOLUTION_THRESHOLD: Final[float] = 0.001  # 1ms in seconds
+SLOW_COG_LOAD_THRESHOLD: Final[float] = 1.0  # seconds
 MILLISECONDS_PER_SECOND: Final[int] = 1000
 
 # Pagination limits
