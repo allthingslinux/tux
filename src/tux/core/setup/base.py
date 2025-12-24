@@ -28,7 +28,6 @@ class BaseSetupService(ABC):
             The name of the setup service for logging and tracing.
         """
         self.name = name
-        self.logger = logger.bind(service=name)
 
     @abstractmethod
     async def setup(self) -> None:
@@ -37,6 +36,9 @@ class BaseSetupService(ABC):
     async def safe_setup(self) -> bool:
         """Execute setup with standardized error handling and tracing.
 
+        Wraps the setup process with Sentry tracing and error handling.
+        Logs setup progress and captures exceptions for monitoring.
+
         Returns
         -------
         bool
@@ -44,16 +46,16 @@ class BaseSetupService(ABC):
         """
         with start_span(f"bot.setup_{self.name}", f"Setting up {self.name}") as span:
             try:
-                self.logger.info(f"Setting up {self.name}...")
+                logger.info(f"Setting up {self.name}...")
                 await self.setup()
-                self.logger.info(f"{self.name.title()} setup completed")
+                logger.info(f"{self.name.title()} setup completed")
                 span.set_data("setup.status", "success")
             except KeyboardInterrupt:
                 raise
             except Exception as e:
                 # Database errors are already logged with context by DatabaseService
                 if self.name != "database":
-                    self.logger.exception(f"{self.name.title()} setup failed")
+                    logger.exception(f"{self.name.title()} setup failed")
 
                 span.set_data("setup.status", "failed")
                 span.set_data("setup.error", str(e))
@@ -62,10 +64,6 @@ class BaseSetupService(ABC):
                 return False
             else:
                 return True
-
-    def _log_step(self, step: str, status: str = "info") -> None:
-        """Log a setup step with consistent formatting."""
-        getattr(self.logger, status)(step)
 
 
 class BotSetupService(BaseSetupService):
