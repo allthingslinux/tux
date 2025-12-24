@@ -24,7 +24,7 @@ async def getoutput(
     code: str,
     compiler: str,
     options: str | None,
-) -> dict[str, Any] | None:
+) -> dict[str, Any]:
     """
     Compile and execute code using a specified compiler and return the output.
 
@@ -39,9 +39,8 @@ async def getoutput(
 
     Returns
     -------
-    dict[str, Any] or None
-        A dictionary containing the compiler output if the request is successful,
-        otherwise `None`. Returns `None` on HTTP errors or read timeout.
+    dict[str, Any]
+        A dictionary containing the compiler output if the request is successful.
 
     Raises
     ------
@@ -59,25 +58,27 @@ async def getoutput(
     payload = {"compiler": compiler, "code": code, "options": copt}
 
     try:
-        uri = await http_client.post(url, json=payload, headers=headers, timeout=15.0)
-        uri.raise_for_status()
+        response = await http_client.post(
+            url,
+            json=payload,
+            headers=headers,
+            timeout=15.0,
+        )
+        response.raise_for_status()
     except httpx.ReadTimeout as e:
-        # Changed to raise TuxAPIConnectionError for timeouts
         raise TuxAPIConnectionError(service_name="Wandbox", original_error=e) from e
     except httpx.RequestError as e:
-        # General connection/request error
         raise TuxAPIConnectionError(service_name="Wandbox", original_error=e) from e
     except httpx.HTTPStatusError as e:
-        # Specific HTTP status errors
         if e.response.status_code == 404:
             raise TuxAPIResourceNotFoundError(
                 service_name="Wandbox",
                 resource_identifier=compiler,
-            ) from e  # Using compiler as resource identifier
+            ) from e
         raise TuxAPIRequestError(
             service_name="Wandbox",
             status_code=e.response.status_code,
             reason=e.response.text,
         ) from e
     else:
-        return uri.json() if uri.status_code == 200 else None
+        return response.json()
