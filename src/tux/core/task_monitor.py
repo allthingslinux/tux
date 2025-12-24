@@ -7,13 +7,16 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from discord.ext import tasks
 from loguru import logger
 
 from tux.services.sentry import capture_exception_safe
 from tux.services.sentry.tracing import start_span
+
+if TYPE_CHECKING:
+    from tux.core.bot import Tux
 
 __all__ = ["TaskMonitor"]
 
@@ -26,13 +29,13 @@ class TaskMonitor:
     to prevent resource leaks and ensure proper task cancellation.
     """
 
-    def __init__(self, bot: Any) -> None:
+    def __init__(self, bot: Tux) -> None:
         """
         Initialize the task monitor.
 
         Parameters
         ----------
-        bot : Any
+        bot : Tux
             The bot instance to monitor tasks for.
         """
         self.bot = bot
@@ -69,8 +72,8 @@ class TaskMonitor:
             except Exception as e:
                 logger.error(f"Task monitoring failed: {e}")
                 capture_exception_safe(e)
-                msg = "Critical failure in task monitoring system"
-                raise RuntimeError(msg) from e
+                error_msg = "Critical failure in task monitoring system"
+                raise RuntimeError(error_msg) from e
 
     def _categorize_tasks(
         self,
