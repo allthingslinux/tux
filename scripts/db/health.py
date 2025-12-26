@@ -23,7 +23,7 @@ from tux.shared.config import CONFIG
 app = create_app()
 
 
-def _fail():
+def _fail() -> None:
     """Raise Exit(1) to satisfy Ruff's TRY301 rule."""
     raise Exit(1)
 
@@ -34,7 +34,7 @@ def health() -> None:
     print_section("Database Health", "blue")
     rich_print("[bold blue]Checking database health...[/bold blue]")
 
-    async def _health_check():
+    async def _health_check() -> None:
         service = DatabaseService(echo=False)
         try:
             with create_status("Checking database health...") as status:

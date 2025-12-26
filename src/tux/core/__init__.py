@@ -18,13 +18,12 @@ from tux.core.permission_system import DEFAULT_RANKS, get_permission_system
 __all__ = [
     # Core classes
     "BaseCog",
+    "DEFAULT_RANKS",
     "Tux",
     "TuxApp",
     # Functions
-    "get_prefix",
     "get_channel_safe",
-    # Permission system
-    "requires_command_permission",
     "get_permission_system",
-    "DEFAULT_RANKS",
+    "get_prefix",
+    "requires_command_permission",
 ]

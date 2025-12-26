@@ -39,7 +39,7 @@ async def _drop_and_recreate_schema(session: AsyncSession) -> None:
     # The connection user should already have necessary permissions as owner.
 
 
-def _delete_migration_files():
+def _delete_migration_files() -> None:
     """Delete all migration files in the versions directory."""
     # Anchor to repo root via ROOT constant from core
     migration_dir = ROOT / "src" / "tux" / "database" / "migrations" / "versions"
@@ -59,7 +59,7 @@ def _delete_migration_files():
         raise Exit(1)
 
 
-async def _nuclear_reset(fresh: bool):
+async def _nuclear_reset(fresh: bool) -> None:
     """Perform a complete database reset by dropping all tables and schemas."""
     # Safety check: prevent running against production
     is_prod = (

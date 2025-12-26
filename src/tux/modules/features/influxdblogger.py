@@ -55,7 +55,7 @@ class InfluxLogger(BaseCog):
         influx_url: str = CONFIG.EXTERNAL_SERVICES.INFLUXDB_URL
         self.influx_org = CONFIG.EXTERNAL_SERVICES.INFLUXDB_ORG
 
-        if (influx_token != "") and (influx_url != "") and (self.influx_org != ""):
+        if influx_token and influx_url and self.influx_org:
             write_client = InfluxDBClient(
                 url=influx_url,
                 token=influx_token,

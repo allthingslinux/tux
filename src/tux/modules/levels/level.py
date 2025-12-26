@@ -36,8 +36,8 @@ class Level(BaseCog):
 
         # Check if XP roles are configured
         if self.unload_if_missing_config(
-            not CONFIG.XP_CONFIG.XP_ROLES,
-            "XP_ROLES configuration",
+            condition=not CONFIG.XP_CONFIG.XP_ROLES,
+            config_name="XP_ROLES configuration",
         ):
             return
 

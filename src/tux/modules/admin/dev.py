@@ -395,7 +395,7 @@ class Dev(BaseCog):
         """
         try:
             # Check if emoji manager is initialized by examining the cache
-            if len(self.bot.emoji_manager.cache) == 0:
+            if not self.bot.emoji_manager.cache:
                 await ctx.send(
                     "Emoji manager cache is empty. It might not be initialized yet.",
                 )

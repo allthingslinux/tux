@@ -35,8 +35,8 @@ class LevelsService(BaseCog):
 
         # Check if XP roles are configured
         if self.unload_if_missing_config(
-            not CONFIG.XP_CONFIG.XP_ROLES,
-            "XP_ROLES configuration",
+            condition=not CONFIG.XP_CONFIG.XP_ROLES,
+            config_name="XP_ROLES configuration",
         ):
             return
 
@@ -293,7 +293,13 @@ class LevelsService(BaseCog):
         """
         # Ensure XP is non-negative to prevent complex number errors
         xp = max(0.0, xp)
-        return int((xp / 500) ** (1 / self.levels_exponent) * 5)
+        # Guard against division by zero if levels_exponent is 0
+        if self.levels_exponent == 0:
+            logger.error("levels_exponent cannot be 0, using default value of 2")
+            exponent = 2.0
+        else:
+            exponent = self.levels_exponent
+        return int((xp / 500) ** (1 / exponent) * 5)
 
     # *NOTE* Do not move this function to utils.py, as this results in a circular import.
     def valid_xplevel_input(self, user_input: int) -> discord.Embed | None:
@@ -349,7 +355,8 @@ class LevelsService(BaseCog):
         str
             The formatted progress bar.
         """
-        progress: float = current_value / target_value
+        # Guard against division by zero - show full bar if target is 0
+        progress = 1.0 if target_value == 0 else current_value / target_value
 
         filled_length: int = int(bar_length * progress)
         empty_length: int = bar_length - filled_length
