@@ -86,6 +86,8 @@ class ErrorFormatter:
         try:
             return message_format.format(**kwargs)
         except Exception:
+            # format() can raise KeyError, ValueError, IndexError, etc. for invalid placeholders
+            # Catching Exception is appropriate here as we want to fall back to safe formatting
             return fallback_format_message(message_format, error)
 
     def _get_command_usage(self, ctx: commands.Context[Tux]) -> str | None:
