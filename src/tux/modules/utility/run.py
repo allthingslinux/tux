@@ -18,6 +18,9 @@ from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.services.wrappers import godbolt, wandbox
 from tux.shared.exceptions import (
+    TuxAPIConnectionError,
+    TuxAPIRequestError,
+    TuxAPIResourceNotFoundError,
     TuxCompilationError,
     TuxInvalidCodeFormatError,
     TuxMissingCodeError,
@@ -242,7 +245,16 @@ class GodboltService(CodeDispatch):
         str | None
             The execution output with header lines removed, or None if execution failed.
         """
-        output = await godbolt.getoutput(code, compiler, options)
+        try:
+            output = await godbolt.getoutput(code, compiler, options)
+        except (
+            TuxAPIConnectionError,
+            TuxAPIRequestError,
+            TuxAPIResourceNotFoundError,
+        ) as e:
+            logger.warning(f"Godbolt API error for compiler {compiler}: {e}")
+            return None
+
         if not output:
             logger.debug(f"Godbolt returned no output for compiler {compiler}")
             return None
@@ -286,7 +298,16 @@ class WandboxService(CodeDispatch):
         -----
         Nim compiler errors are filtered out due to excessive verbosity.
         """
-        result = await wandbox.getoutput(code, compiler, options)
+        try:
+            result = await wandbox.getoutput(code, compiler, options)
+        except (
+            TuxAPIConnectionError,
+            TuxAPIRequestError,
+            TuxAPIResourceNotFoundError,
+        ) as e:
+            logger.warning(f"Wandbox API error for compiler {compiler}: {e}")
+            return None
+
         if not result:
             logger.debug(f"Wandbox returned no output for compiler {compiler}")
             return None
