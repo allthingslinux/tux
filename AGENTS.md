@@ -30,7 +30,7 @@ tux/
 │   ├── shared/                 # Utils & config
 │   └── main.py                 # Entry point
 ├── scripts/                    # CLI scripts
-├── tests/                      # Tests (unit/integration/e2e)
+├── tests/                      # Tests (core/database/services/shared/modules)
 ├── docs/                       # Zensical documentation
 ├── docker/                     # Docker related files
 └── config/                     # Config examples
