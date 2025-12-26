@@ -112,7 +112,7 @@ jobs:
             --junitxml=junit.xml \
             -o junit_family=legacy \
             --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} \
-            tests/unit/ tests/integration/ tests/e2e/ | tee pytest-coverage.txt || true
+            tests/ | tee pytest-coverage.txt || true
           echo "Pytest exit code: $?"
           echo "Checking for coverage files..."
           ls -la coverage.xml 2>&1 || echo "coverage.xml not found"
