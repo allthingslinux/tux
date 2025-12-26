@@ -64,7 +64,10 @@ class TestModelRelationships:
             session.add(config)
 
             # This should raise a foreign key violation
-            with pytest.raises(Exception, match=r".*") as exc_info:
+            with pytest.raises(
+                Exception,
+                match=r".*(foreign key|constraint).*",
+            ) as exc_info:
                 await session.commit()
 
             # Check that it's a constraint violation
@@ -88,7 +91,7 @@ class TestModelRelationships:
             guild2 = Guild(id=TEST_GUILD_ID, case_count=1)  # Same ID
             session.add(guild2)
 
-            with pytest.raises(Exception, match=r".*") as exc_info:
+            with pytest.raises(Exception, match=r".*(unique|constraint).*") as exc_info:
                 await session.commit()
 
             # Check that it's a constraint violation
@@ -118,8 +121,11 @@ class TestModelRelationships:
             assert await session.get(GuildConfig, TEST_GUILD_ID) is not None
 
             # Delete guild (config should be handled based on cascade rules)
-            await session.delete(guild)
+            session.delete(guild)  # type: ignore[reportUnusedCoroutine]
             await session.commit()
 
             # Verify guild is deleted
             assert await session.get(Guild, TEST_GUILD_ID) is None
+
+            # Verify config was also deleted (cascade behavior)
+            assert await session.get(GuildConfig, TEST_GUILD_ID) is None

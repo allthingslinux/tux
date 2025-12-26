@@ -80,7 +80,7 @@ class TestDataIntegrity:
                 guild2 = Guild(id=TEST_GUILD_ID, case_count=1)  # Same ID - should fail
                 session.add(guild2)
                 await session.commit()  # This should fail due to unique constraint
-            except Exception:
+            except Exception:  # IntegrityError or similar constraint violation
                 await session.rollback()  # Rollback the failed transaction
 
             # Verify original guild still exists and wasn't affected by the rollback

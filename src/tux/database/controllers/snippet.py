@@ -17,9 +17,6 @@ from tux.database.models import Snippet
 if TYPE_CHECKING:
     from tux.database.service import DatabaseService
 
-if not TYPE_CHECKING:
-    from tux.database.service import DatabaseService
-
 
 class SnippetController(BaseController[Snippet]):
     """Clean Snippet controller using the new BaseController pattern."""

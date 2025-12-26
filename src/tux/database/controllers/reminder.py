@@ -16,9 +16,6 @@ from tux.database.models import Reminder
 if TYPE_CHECKING:
     from tux.database.service import DatabaseService
 
-if not TYPE_CHECKING:
-    from tux.database.service import DatabaseService
-
 
 class ReminderController(BaseController[Reminder]):
     """Clean Reminder controller using the new BaseController pattern."""

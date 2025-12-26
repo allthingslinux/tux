@@ -80,7 +80,7 @@ class TestModelPerformance:
 
             # Serialize all models
             results = []
-            for guild, config in zip(guilds, configs, strict=False):
+            for guild, config in zip(guilds, configs, strict=True):
                 guild_dict = guild.to_dict()
                 config_dict = config.to_dict()
                 results.append({"guild": guild_dict, "config": config_dict})

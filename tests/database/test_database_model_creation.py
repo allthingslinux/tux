@@ -111,4 +111,3 @@ class TestModelCreation:
             assert case.case_reason == "Test ban reason"
             assert case.case_user_id == 12345
             assert case.case_moderator_id == 67890
-            # Note: case_created_at field might not exist in current model

@@ -84,8 +84,11 @@ def test_generate_toml_format() -> None:
     assert "Enable debug mode" in toml_output or "debug" in toml_output.lower()
     assert "Server port" in toml_output or "port" in toml_output.lower()
     assert "Application name" in toml_output or "name" in toml_output.lower()
-    # Verify it's valid TOML (can be parsed)
-    assert len(toml_output) > 0
+
+    # Verify it's valid TOML by actually parsing it
+    parsed = tomllib.loads(toml_output)
+    assert isinstance(parsed, dict)
+    assert len(parsed) > 0
 
 
 def test_generate_yaml_format() -> None:

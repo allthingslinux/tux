@@ -50,6 +50,13 @@ class Tldr(BaseCog):
         self._cache_task = asyncio.create_task(self._initialize_cache_async())
         logger.debug("Cache initialization scheduled")
 
+    async def cog_unload(self) -> None:
+        """Clean up resources when the cog is unloaded."""
+        if self._cache_task and not self._cache_task.done():
+            self._cache_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._cache_task
+
     async def _initialize_cache_async(self) -> None:
         """Asynchronously initialize TLDR cache after event loop is ready."""
         try:
