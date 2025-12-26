@@ -16,6 +16,9 @@ from tux.shared.config.settings import Config
 
 app = create_app()
 
+# Constants
+DB_URL_DISPLAY_LENGTH = 50
+
 
 @app.command(name="validate")
 def validate() -> None:
@@ -43,7 +46,11 @@ def validate() -> None:
             "✓" if config.BOT_TOKEN else "✗",
         )
         db_url = config.database_url
-        db_url_display = f"{db_url[:50]}..." if len(db_url) > 50 else db_url
+        db_url_display = (
+            f"{db_url[:DB_URL_DISPLAY_LENGTH]}..."
+            if len(db_url) > DB_URL_DISPLAY_LENGTH
+            else db_url
+        )
         table.add_row("Database URL", db_url_display, "✓")
         table.add_row("Bot Name", config.BOT_INFO.BOT_NAME, "✓")
         table.add_row("Prefix", config.BOT_INFO.PREFIX, "✓")

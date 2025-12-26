@@ -149,9 +149,9 @@ class Poll(ModerationCogBase):
         # We can use  await interaction.original_response() to get the message object
         message = await interaction.original_response()
 
-        for num in range(len(options_list)):
+        for num, _ in enumerate(options_list, start=1):
             # Add the number emoji reaction to the message
-            await message.add_reaction(f"{num + 1}\u20e3")
+            await message.add_reaction(f"{num}\u20e3")
 
 
 async def setup(bot: Tux) -> None:

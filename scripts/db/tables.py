@@ -8,6 +8,7 @@ import asyncio
 from typing import Any
 
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 from typer import Exit
 
 from scripts.core import create_app
@@ -31,12 +32,12 @@ def tables() -> None:
     print_section("Database Tables", "blue")
     rich_print("[bold blue]Listing database tables...[/bold blue]")
 
-    async def _list_tables():
+    async def _list_tables() -> None:
         service = DatabaseService(echo=False)
         try:
             await service.connect(CONFIG.database_url)
 
-            async def _get_tables(session: Any) -> list[tuple[str, int]]:
+            async def _get_tables(session: AsyncSession) -> Any:
                 result = await session.execute(
                     text("""
                     SELECT

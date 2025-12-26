@@ -28,7 +28,7 @@ def schema() -> None:
     print_section("Schema Validation", "blue")
     rich_print("[bold blue]Validating database schema against models...[/bold blue]")
 
-    async def _schema_check():
+    async def _schema_check() -> None:
         service = DatabaseService(echo=False)
         try:
             with create_status("Validating schema against models...") as status:

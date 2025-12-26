@@ -132,14 +132,14 @@ class TempVc(BaseCog):
             return
 
         # Delete the channel if it is empty
-        if len(before_channel.members) == 0:
+        if not before_channel.members:
             await before_channel.delete()
 
         # Search and delete all empty temporary channels
         for channel in category.voice_channels:
             if (
                 not channel.name.startswith(self.base_vc_name)
-                or len(channel.members) != 0
+                or channel.members
                 or channel.id == temp_channel_id
             ):
                 continue

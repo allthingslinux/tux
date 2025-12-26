@@ -15,6 +15,10 @@ from tux.main import run
 
 app = create_app()
 
+# Constants
+SUCCESS_EXIT_CODE = 0
+USER_SHUTDOWN_EXIT_CODE = 130
+
 
 @app.command(name="start")
 def start(
@@ -29,9 +33,9 @@ def start(
 
     exit_code = run()
 
-    if exit_code == 0:
+    if exit_code == SUCCESS_EXIT_CODE:
         print_success("Bot completed successfully")
-    elif exit_code == 130:
+    elif exit_code == USER_SHUTDOWN_EXIT_CODE:
         print_info("Bot shutdown requested by user (Ctrl+C)")
     # For other exit codes, run() already logged the error
 

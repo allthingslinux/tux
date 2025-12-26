@@ -103,7 +103,7 @@ class TuxApp:
         """Register signal handlers for graceful shutdown."""
         loop = asyncio.get_running_loop()
 
-        def _handle_signal():
+        def _handle_signal() -> None:
             if self._user_requested_shutdown:
                 return
 

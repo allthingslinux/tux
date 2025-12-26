@@ -273,7 +273,7 @@ class HelpNavigation:
         if (
             self.current_command_obj
             and isinstance(self.current_command_obj, commands.Group)
-            and len(self.current_command_obj.commands) > 0
+            and self.current_command_obj.commands
         ):
             # Filter subcommands based on user permissions
             filtered_cmds = [

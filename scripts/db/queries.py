@@ -8,6 +8,7 @@ import asyncio
 from typing import Any
 
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 from typer import Exit
 
 from scripts.core import create_app
@@ -43,15 +44,15 @@ def queries() -> None:
     print_section("Query Analysis", "blue")
     rich_print("[bold blue]Checking for long-running queries...[/bold blue]")
 
-    async def _check_queries():
+    async def _check_queries() -> None:
         service = DatabaseService(echo=False)
         try:
             with create_status("Analyzing queries...") as status:
                 await service.connect(CONFIG.database_url)
 
                 async def _get_long_queries(
-                    session: Any,
-                ) -> list[tuple[Any, Any, str, str]]:
+                    session: AsyncSession,
+                ) -> Any:
                     result = await session.execute(text(LONG_RUNNING_QUERIES_SQL))
                     return result.fetchall()
 
