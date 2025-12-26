@@ -7,13 +7,15 @@ settings, providing methods for guild lifecycle management and configuration upd
 
 from __future__ import annotations
 
-from typing import Any
-
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import TYPE_CHECKING, Any
 
 from tux.database.controllers.base import BaseController
 from tux.database.models import Guild, GuildConfig
-from tux.database.service import DatabaseService
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from tux.database.service import DatabaseService
 
 
 class GuildController(BaseController[Guild]):
@@ -169,6 +171,11 @@ class GuildController(BaseController[Guild]):
     async def find_many(self, **filters: Any) -> list[Guild]:
         """
         Find many guilds with optional filters - alias for find_all.
+
+        Parameters
+        ----------
+        **filters : Any
+            Filter keyword arguments (currently unused, kept for API consistency).
 
         Returns
         -------

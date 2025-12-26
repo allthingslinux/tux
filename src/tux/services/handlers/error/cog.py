@@ -68,6 +68,8 @@ class ErrorHandler(commands.Cog):
                     importlib.reload(sys.modules[module_name])
                     logger.debug(f"Force reloaded {module_name}")
                 except Exception as e:
+                    # Module reloading can fail for various reasons (ImportError, AttributeError, etc.)
+                    # Catching Exception is appropriate here as we want to continue reloading other modules
                     logger.warning(f"Failed to reload {module_name}: {e}")
 
         logger.debug("Error handler reloaded with fresh modules")
@@ -94,7 +96,7 @@ class ErrorHandler(commands.Cog):
         # Send user response if configured
         if config.send_embed:
             embed = self.formatter.format_error_embed(root_error, source, config)
-            await self._send_error_response(source, embed, config)
+            await self._send_error_response(source, embed)
 
         # Report to Sentry if configured
         if config.send_to_sentry:
@@ -160,7 +162,6 @@ class ErrorHandler(commands.Cog):
         self,
         source: commands.Context[Tux] | discord.Interaction,
         embed: discord.Embed,
-        config: ErrorHandlerConfig,
     ) -> None:
         """Send error response to user."""
         try:

@@ -12,24 +12,19 @@ from loguru import logger
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
-# Explicitly register fixture modules with pytest using pytest_plugins
-# This ensures pytest discovers fixtures from these modules
+# Register fixture modules with pytest
 pytest_plugins = [
     "tests.fixtures.database_fixtures",
-    "tests.fixtures.test_data_fixtures",
+    "tests.fixtures.data_fixtures",
     "tests.fixtures.sentry_fixtures",
 ]
 
-# Track if cleanup has already been called to prevent duplicate logging
-_cleanup_called: bool = False
-
 
 def pytest_configure(config):
-    """Configure pytest with clean settings and custom logger.
+    """Configure pytest for testing.
 
-    Sets up test logging and initializes the test environment.
-    Test markers are defined in pyproject.toml and do not need to be
-    duplicated here.
+    Sets up test environment and logging. Test markers are defined
+    in pyproject.toml and do not need to be duplicated here.
 
     Parameters
     ----------
@@ -41,19 +36,11 @@ def pytest_configure(config):
 
     configure_testing_logging()
 
-    # Markers are defined in pyproject.toml [tool.pytest.ini_options.markers]
-    # No need to duplicate here - pytest will read them from pyproject.toml
-
 
 def pytest_sessionfinish(session, exitstatus):
     """Run hook after all tests finish.
 
-    This hook runs after the entire test session completes and ensures
-    any remaining pglite_manager.js processes are killed.
-
-    When running tests in parallel with pytest-xdist, pglite processes
-    may be left behind by worker processes. This cleanup ensures all
-    processes are terminated at the end of the test session.
+    Ensures cleanup of any remaining pglite processes.
 
     Parameters
     ----------
@@ -66,11 +53,11 @@ def pytest_sessionfinish(session, exitstatus):
 
 
 def _is_pglite_process(proc_info: dict[str, Any]) -> bool:
-    """Check if a process is a pglite_manager.js Node.js process.
+    """Check if a process is a pglite Node.js process.
 
     Parameters
     ----------
-    proc_info : dict[str, Any]
+    proc_info : dict
         Process information dictionary from psutil.
 
     Returns
@@ -84,16 +71,16 @@ def _is_pglite_process(proc_info: dict[str, Any]) -> bool:
         if exe and "node" not in exe.lower():
             return False
 
-    cmdline = proc_info.get("cmdline")
+    cmdline = proc_info.get("cmdline", [])
     if not cmdline:
         return False
 
     cmdline_str = " ".join(str(arg) for arg in cmdline).lower()
-    return "pglite_manager.js" in cmdline_str or "pglite" in cmdline_str
+    return "pglite_manager.js" in cmdline_str
 
 
 def _terminate_pglite_process(pid: int) -> bool:
-    """Terminate a pglite process gracefully or forcefully.
+    """Terminate a pglite process gracefully, then forcefully if needed.
 
     Parameters
     ----------
@@ -107,106 +94,94 @@ def _terminate_pglite_process(pid: int) -> bool:
     """
     try:
         process = psutil.Process(pid)
-    except psutil.NoSuchProcess:
-        logger.debug(f"Process {pid} no longer exists")
-        return False
-
-    try:
         process.terminate()
-        process.wait(timeout=2)
-        logger.info(f"Gracefully terminated pglite process (PID: {pid})")
+        process.wait(timeout=2.0)
     except psutil.TimeoutExpired:
-        logger.warning(f"Process {pid} didn't terminate, forcing kill")
+        # Process exists but didn't terminate in time, kill it
+        process = psutil.Process(pid)  # Re-fetch in case original was lost
         process.kill()
-        process.wait(timeout=1)
-        logger.info(f"Force killed pglite process (PID: {pid})")
+        process.wait(timeout=1.0)
+        return True
     except psutil.NoSuchProcess:
-        logger.debug(f"Process {pid} already terminated")
         return False
-
-    return True
+    else:
+        return True
 
 
 def cleanup_pglite_processes() -> None:
-    """Kill any remaining pglite_manager.js Node.js processes.
+    """Clean up any orphaned pglite processes.
 
-    Searches for and terminates any Node.js processes running
-    pglite_manager.js that may have been left behind from test execution,
-    especially when tests are interrupted or fail.
-
-    Uses psutil for process management. Attempts graceful termination
-    (SIGTERM) before force killing (SIGKILL).
-
-    Notes
-    -----
-    This function is registered as an atexit handler as a safety net,
-    ensuring cleanup even if pytest doesn't exit normally. The function
-    is idempotent and will only log at debug level if called multiple times
-    with no processes found.
+    Searches for and terminates Node.js processes running pglite_manager.js
+    that may have been left behind from test execution.
     """
-    # Use module-level variable to track if cleanup was already called
-    # This prevents duplicate logging when called from both pytest_sessionfinish
-    # and atexit.register
-    global _cleanup_called  # noqa: PLW0603
-
-    # If cleanup was already called and we're being called again (likely from atexit),
-    # do a quick silent check first
-    if _cleanup_called:
-        # Quick silent check - only proceed if we find something
-        for proc in psutil.process_iter(attrs=["pid", "name", "cmdline", "exe"]):
-            try:
-                if _is_pglite_process(proc.info):
-                    # Found new processes, continue with full cleanup
-                    break
-            except (
-                psutil.NoSuchProcess,
-                psutil.AccessDenied,
-                psutil.ZombieProcess,
-                Exception,
-            ):
-                continue
-        else:
-            # No processes found, skip silently
-            return
-
-    _cleanup_called = True
-    logger.info("Starting pglite process cleanup...")
     killed_count = 0
-    found_pids: list[int] = []
 
-    # Find all processes - use attrs parameter to get full process info
     for proc in psutil.process_iter(attrs=["pid", "name", "cmdline", "exe"]):
-        proc_info: dict[str, Any] | None = None
         try:
             proc_info = proc.info
-
-            if not _is_pglite_process(proc_info):
-                continue
-
-            pid = proc_info["pid"]
-            found_pids.append(pid)
-            logger.warning(
-                f"Found orphaned pglite process (PID: {pid}): {' '.join(str(arg) for arg in proc_info.get('cmdline', []))}",
-            )
-
-            if _terminate_pglite_process(pid):
+            if _is_pglite_process(proc_info) and _terminate_pglite_process(
+                proc_info["pid"],
+            ):
                 killed_count += 1
-
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            # Process may have terminated or we don't have permission
-            continue
-        except Exception as e:
-            pid = proc_info.get("pid", "unknown") if proc_info else "unknown"
-            logger.warning(f"Error checking process {pid}: {e}")
             continue
 
-    if found_pids:
-        logger.info(
-            f"Found {len(found_pids)} pglite process(es), cleaned up {killed_count}",
-        )
-    else:
-        logger.debug("No orphaned pglite processes found")
+    if killed_count > 0:
+        logger.info(f"Cleaned up {killed_count} pglite process(es)")
 
 
-# Register cleanup to run on exit as well (safety net)
+# Register cleanup to run on exit
 atexit.register(cleanup_pglite_processes)
+
+
+# Test utility functions (inspired by organizex patterns)
+def create_mock_guild(**overrides: Any) -> dict[str, Any]:
+    """Create mock Discord guild data for testing."""
+    default_data = {
+        "id": 123456789012345678,
+        "name": "Test Guild",
+        "member_count": 100,
+        "owner_id": 987654321098765432,
+    }
+    default_data.update(overrides)
+    return default_data
+
+
+def create_mock_user(**overrides: Any) -> dict[str, Any]:
+    """Create mock Discord user data for testing."""
+    default_data = {
+        "id": 987654321098765432,
+        "name": "testuser",
+        "discriminator": "1234",
+        "display_name": "Test User",
+        "bot": False,
+        "mention": "<@987654321098765432>",
+    }
+    default_data.update(overrides)
+    return default_data
+
+
+def create_mock_channel(**overrides: Any) -> dict[str, Any]:
+    """Create mock Discord channel data for testing."""
+    default_data = {
+        "id": 876543210987654321,
+        "name": "test-channel",
+        "mention": "<#876543210987654321>",
+        "type": "text",
+    }
+    default_data.update(overrides)
+    return default_data
+
+
+def create_mock_interaction(**overrides: Any) -> dict[str, Any]:
+    """Create mock Discord interaction data for testing."""
+    default_data = {
+        "user": create_mock_user(),
+        "guild": create_mock_guild(),
+        "guild_id": 123456789012345678,
+        "channel": create_mock_channel(),
+        "channel_id": 876543210987654321,
+        "command": {"qualified_name": "test_command"},
+    }
+    default_data.update(overrides)
+    return default_data

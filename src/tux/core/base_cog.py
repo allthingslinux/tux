@@ -219,7 +219,7 @@ class BaseCog(commands.Cog):
         bot_user = getattr(self.bot, "user", "Unknown")
         return f"<{self.__class__.__name__} bot={bot_user}>"
 
-    def unload_if_missing_config(self, condition: bool, config_name: str) -> bool:
+    def unload_if_missing_config(self, *, condition: bool, config_name: str) -> bool:
         """
         Check if required configuration is missing and log warning.
 
@@ -245,7 +245,8 @@ class BaseCog(commands.Cog):
         >>> def __init__(self, bot: Tux):
         ...     super().__init__(bot)
         ...     if self.unload_if_missing_config(
-        ...         not CONFIG.GITHUB_TOKEN, "GITHUB_TOKEN"
+        ...         condition=not CONFIG.GITHUB_TOKEN,
+        ...         config_name="GITHUB_TOKEN",
         ...     ):
         ...         return  # Exit early, cog will be partially loaded
         ...     self.github_client = GitHubClient()

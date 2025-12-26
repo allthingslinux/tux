@@ -32,8 +32,8 @@ class StatusRoles(BaseCog):
 
         # Check if mappings exist and are valid
         if self.unload_if_missing_config(
-            not CONFIG.STATUS_ROLES.MAPPINGS,
-            "Status role mappings",
+            condition=not CONFIG.STATUS_ROLES.MAPPINGS,
+            config_name="Status role mappings",
         ):
             return
 

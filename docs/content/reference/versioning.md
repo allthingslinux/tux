@@ -209,7 +209,7 @@ This ensures that even in a detached production environment without Git, the app
 
 ## Testing the Version System
 
-The version system includes comprehensive tests (`tests/unit/test_version_system.py`) that cover:
+The version system includes comprehensive tests (`tests/shared/test_version_system.py`) that cover:
 
 - Version detection from all sources
 - Priority order validation
@@ -221,7 +221,7 @@ The version system includes comprehensive tests (`tests/unit/test_version_system
 Run the tests with:
 
 ```sh
-uv run pytest tests/unit/test_version_system.py -v
+uv run pytest tests/shared/test_version_system.py -v
 ```
 
 ## Troubleshooting

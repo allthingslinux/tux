@@ -8,11 +8,13 @@ temporary and permanent AFK states with customizable messages and time limits.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tux.database.controllers.base import BaseController
 from tux.database.models import AFK
-from tux.database.service import DatabaseService
+
+if TYPE_CHECKING:
+    from tux.database.service import DatabaseService
 
 
 class AfkController(BaseController[AFK]):
@@ -63,19 +65,17 @@ class AfkController(BaseController[AFK]):
         # Check if member is already AFK in this guild
         existing = await self.get_afk_by_member(member_id, guild_id)
         if existing:
-            # Update existing AFK
-            return (
-                await self.update_by_id(
-                    existing.member_id,
-                    nickname=nickname,
-                    reason=reason,
-                    since=datetime.now(UTC),
-                    until=until,
-                    enforced=enforced,
-                    perm_afk=is_perm,
-                )
-                or existing
-            )  # Fallback to existing if update fails
+            # Update existing AFK using composite primary key
+            updated = await self.update_by_id(
+                (member_id, guild_id),
+                nickname=nickname,
+                reason=reason,
+                since=datetime.now(UTC),
+                until=until,
+                enforced=enforced,
+                perm_afk=is_perm,
+            )
+            return updated if updated is not None else existing
         # Create new AFK
         return await self.create(
             member_id=member_id,
@@ -201,16 +201,47 @@ class AfkController(BaseController[AFK]):
             enforced,
         )
 
-    async def find_many(self, **filters: Any) -> list[AFK]:
+    async def find_many(
+        self,
+        where: dict[str, Any] | None = None,
+        **filters: Any,
+    ) -> list[AFK]:
         """
         Find many AFK records with optional filters - alias for find_all.
+
+        Parameters
+        ----------
+        where : dict[str, Any] | None, optional
+            Filter criteria as a dictionary (e.g., {"guild_id": 123}).
+        **filters : Any
+            Additional filter criteria as keyword arguments.
 
         Returns
         -------
         list[AFK]
             List of AFK records matching the filters.
         """
-        return await self.find_all()
+        # Combine where dict with additional filters
+        combined_filters = dict(where) if where else {}
+        combined_filters.update(filters)
+
+        if not combined_filters:
+            return await self.find_all()
+
+        # Build filter expression from combined filters
+        filter_expr = None
+        for key, value in combined_filters.items():
+            if hasattr(AFK, key):
+                attr_filter = getattr(AFK, key) == value
+                filter_expr = (
+                    attr_filter if filter_expr is None else filter_expr & attr_filter
+                )
+
+        return (
+            await self.find_all(filters=filter_expr)
+            if filter_expr
+            else await self.find_all()
+        )
 
     async def is_perm_afk(self, member_id: int, guild_id: int) -> bool:
         """
@@ -227,11 +258,27 @@ class AfkController(BaseController[AFK]):
         """
         Get all expired AFK members in a guild.
 
+        Returns expired AFK entries where:
+        - until is not NULL
+        - until is in the past
+        - perm_afk is False (temporary AFK only)
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID to check for expired AFK entries.
+
         Returns
         -------
         list[AFK]
-            List of expired AFK records (currently returns empty list).
+            List of expired AFK records.
         """
-        # For now, return empty list to avoid complex datetime filtering issues
-        # In the future, implement proper expired AFK filtering
-        return []
+        now = datetime.now(UTC)
+        return await self.find_all(
+            filters=(
+                (AFK.guild_id == guild_id)
+                & (AFK.perm_afk == False)  # noqa: E712 - Temporary AFK only
+                & (AFK.until.is_not(None))  # type: ignore[attr-defined]
+                & (AFK.until < now)  # type: ignore[arg-type]
+            ),
+        )

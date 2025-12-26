@@ -8,11 +8,13 @@ based on reaction thresholds and user preferences.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tux.database.controllers.base import BaseController
 from tux.database.models import Starboard, StarboardMessage
-from tux.database.service import DatabaseService
+
+if TYPE_CHECKING:
+    from tux.database.service import DatabaseService
 
 
 class StarboardController(BaseController[Starboard]):
@@ -209,12 +211,12 @@ class StarboardMessageController(BaseController[StarboardMessage]):
         list[StarboardMessage]
             List of starboard messages sorted by star count (limited if specified).
         """
-        messages = await self.find_all(
+        # Use database-level sorting and limiting for better performance
+        return await self.find_all(
             filters=StarboardMessage.message_guild_id == guild_id,
+            order_by=[StarboardMessage.star_count.desc()],  # type: ignore[attr-defined]
+            limit=limit,
         )
-        # Sort by star count descending and limit
-        sorted_messages = sorted(messages, key=lambda x: x.star_count, reverse=True)
-        return sorted_messages[:limit] if limit else sorted_messages
 
     async def create_starboard_message(
         self,
@@ -281,12 +283,12 @@ class StarboardMessageController(BaseController[StarboardMessage]):
         list[StarboardMessage]
             List of top starboard messages sorted by star count.
         """
-        messages = await self.find_all(
+        # Use database-level sorting and limiting for better performance
+        return await self.find_all(
             filters=StarboardMessage.message_guild_id == guild_id,
+            order_by=[StarboardMessage.star_count.desc()],  # type: ignore[attr-defined]
+            limit=limit,
         )
-        # Sort by star count descending and limit
-        sorted_messages = sorted(messages, key=lambda x: x.star_count, reverse=True)
-        return sorted_messages[:limit]
 
     async def get_message_count_by_guild(self, guild_id: int) -> int:
         """

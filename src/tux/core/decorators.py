@@ -18,7 +18,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.core.permission_system import get_permission_system
+from tux.core.permission_system import PermissionSystem, get_permission_system
 from tux.shared.config import CONFIG
 from tux.shared.exceptions import TuxPermissionDeniedError
 
@@ -97,11 +97,11 @@ def requires_command_permission(
                 logger.error(
                     "Could not find context or interaction in command arguments",
                 )
-                msg = "Unable to find context or interaction parameter"
-                raise ValueError(msg)
+                error_msg = "Unable to find context or interaction parameter"
+                raise ValueError(error_msg)
 
             # Get guild from context or interaction
-            guild = ctx.guild if ctx else (interaction.guild if interaction else None)
+            guild = ctx.guild if ctx else interaction.guild if interaction else None
 
             # Only check in guilds (DMs bypass)
             if not guild:
@@ -109,7 +109,7 @@ def requires_command_permission(
 
             # Get user ID
             user_id = (
-                ctx.author.id if ctx else (interaction.user.id if interaction else 0)
+                ctx.author.id if ctx else interaction.user.id if interaction else 0
             )
 
             # Bot owners and sysadmins bypass ALL permission checks
@@ -163,7 +163,8 @@ def requires_command_permission(
                     interaction,
                 )
             else:
-                user_rank = 0  # Fallback
+                # This should never happen due to earlier check, but type checker needs it
+                user_rank = 0
 
             # Check if user meets required rank
             if user_rank < cmd_perm.required_rank:
@@ -185,7 +186,7 @@ def requires_command_permission(
 
 
 async def _get_user_rank_from_interaction(
-    permission_system: Any,
+    permission_system: PermissionSystem,
     interaction: discord.Interaction[Any],
 ) -> int:
     """
@@ -196,7 +197,7 @@ async def _get_user_rank_from_interaction(
 
     Parameters
     ----------
-    permission_system : Any
+    permission_system : PermissionSystem
         The permission system to use.
     interaction : discord.Interaction[Any]
         The interaction to get the user permission rank from.

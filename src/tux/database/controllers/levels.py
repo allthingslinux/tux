@@ -8,11 +8,13 @@ information for guilds, supporting features like leveling systems and leaderboar
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tux.database.controllers.base import BaseController
 from tux.database.models import Levels
-from tux.database.service import DatabaseService
+
+if TYPE_CHECKING:
+    from tux.database.service import DatabaseService
 
 
 class LevelsController(BaseController[Levels]):
@@ -169,10 +171,12 @@ class LevelsController(BaseController[Levels]):
         list[Levels]
             List of top members sorted by XP (highest first).
         """
-        all_members = await self.find_all(filters=Levels.guild_id == guild_id)
-        # Sort by XP descending and limit
-        sorted_members = sorted(all_members, key=lambda x: x.xp, reverse=True)
-        return sorted_members[:limit]
+        # Use database-level sorting and limiting for better performance
+        return await self.find_all(
+            filters=Levels.guild_id == guild_id,
+            order_by=[Levels.xp.desc()],  # type: ignore[attr-defined]
+            limit=limit,
+        )
 
     # Additional methods that module files expect
     async def get_xp(self, member_id: int, guild_id: int) -> float:

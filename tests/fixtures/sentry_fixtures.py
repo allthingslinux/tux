@@ -19,6 +19,9 @@ def mock_sentry_sdk():
         yield mock_sdk
 
 
+# Discord User/Member Fixtures
+
+
 @pytest.fixture
 def mock_discord_user():
     """Create mock Discord user."""
@@ -98,6 +101,7 @@ def mock_discord_interaction(mock_discord_user, mock_discord_guild, mock_discord
     return interaction
 
 
+# Discord Context Fixtures
 @pytest.fixture
 def mock_discord_context(mock_discord_user, mock_discord_guild, mock_discord_channel):
     """Create mock Discord command context."""
@@ -123,6 +127,7 @@ def mock_discord_context(mock_discord_user, mock_discord_guild, mock_discord_cha
     return ctx
 
 
+# Bot Fixtures
 @pytest.fixture
 def mock_tux_bot():
     """Create mock Tux bot."""
@@ -138,6 +143,7 @@ def mock_tux_bot():
     return bot
 
 
+# Error Fixtures
 @pytest.fixture
 def mock_command_error():
     """Create mock command error."""
@@ -150,6 +156,7 @@ def mock_app_command_error():
     return discord.app_commands.AppCommandError("Test app command error")
 
 
+# Sentry Tracking Fixtures
 @pytest.fixture
 def sentry_capture_calls():
     """Track Sentry capture calls for assertions."""

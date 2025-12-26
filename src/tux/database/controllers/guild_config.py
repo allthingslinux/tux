@@ -7,11 +7,13 @@ preferences, moderation settings, and feature toggles for each guild.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tux.database.controllers.base import BaseController
 from tux.database.models import GuildConfig
-from tux.database.service import DatabaseService
+
+if TYPE_CHECKING:
+    from tux.database.service import DatabaseService
 
 
 class GuildConfigController(BaseController[GuildConfig]):

@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from discord.ext import commands
+from loguru import logger
 
 from tux.core.cog_loader import CogLoader
 from tux.core.setup.base import BotSetupService
@@ -38,21 +39,21 @@ class CogSetupService(BotSetupService):
         """Load Jishaku development plugin."""
         try:
             await self.bot.load_extension("jishaku")
-            self._log_step("Jishaku plugin loaded", "success")
+            logger.success("Jishaku plugin loaded")
         except commands.ExtensionError as e:
-            self._log_step(f"Jishaku plugin not loaded: {e}", "warning")
+            logger.warning(f"Jishaku plugin not loaded: {e}")
 
     async def _load_cogs(self) -> None:
         """Load all bot cogs using CogLoader."""
-        self._log_step("Loading cogs...")
+        logger.info("Loading cogs...")
         await CogLoader.setup(self.bot)
-        self._log_step("All cogs loaded", "success")
+        logger.success("All cogs loaded")
 
     async def _load_hot_reload(self) -> None:
         """Load hot reload system."""
         if "tux.services.hot_reload" not in self.bot.extensions:
             try:
                 await self.bot.load_extension("tux.services.hot_reload")
-                self._log_step("Hot reload system initialized", "success")
+                logger.success("Hot reload system initialized")
             except Exception as e:
-                self._log_step(f"Hot reload failed to load: {e}", "warning")
+                logger.warning(f"Hot reload failed to load: {e}")

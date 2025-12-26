@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 class PermissionRankController(BaseController[PermissionRank]):
     """Controller for managing guild permission ranks."""
 
-    def __init__(self, db: DatabaseService | None = None):
+    def __init__(self, db: DatabaseService | None = None) -> None:
         """
         Initialize the guild permission rank controller.
 
@@ -236,6 +236,15 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
     ) -> int:
         """
         Get the highest permission rank a user has based on their roles.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID to check permissions for.
+        user_id : int
+            The user ID (currently unused, kept for API consistency).
+        user_roles : list[int]
+            List of role IDs the user has.
 
         Returns
         -------

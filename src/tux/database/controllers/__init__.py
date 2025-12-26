@@ -8,27 +8,26 @@ coordinated access to database functionality.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from tux.database.service import DatabaseService
+
 __all__ = [
-    # Core infrastructure
-    "BaseController",
-    "DatabaseCoordinator",
-    # Guild management
-    "GuildController",
-    "GuildConfigController",
-    # Moderation system
-    "CaseController",
-    # User features
     "AfkController",
+    "BaseController",
+    "CaseController",
+    "DatabaseCoordinator",
+    "GuildConfigController",
+    "GuildController",
     "LevelsController",
-    "SnippetController",
-    "ReminderController",
-    # Starboard system
-    "StarboardController",
-    "StarboardMessageController",
-    # Permission system
-    "PermissionRankController",
     "PermissionAssignmentController",
     "PermissionCommandController",
+    "PermissionRankController",
+    "ReminderController",
+    "SnippetController",
+    "StarboardController",
+    "StarboardMessageController",
 ]
 
 from tux.database.controllers.afk import AfkController
@@ -50,7 +49,6 @@ from tux.database.controllers.starboard import (
     StarboardController,
     StarboardMessageController,
 )
-from tux.database.service import DatabaseService
 
 
 class DatabaseCoordinator:
@@ -75,7 +73,7 @@ class DatabaseCoordinator:
         If no database service is provided.
     """
 
-    def __init__(self, db: DatabaseService | None = None):
+    def __init__(self, db: DatabaseService | None = None) -> None:
         """
         Initialize the database coordinator.
 

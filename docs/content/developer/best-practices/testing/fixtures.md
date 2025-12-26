@@ -25,8 +25,9 @@ All fixtures are located in `tests/fixtures/` and organized by category:
 tests/fixtures/
 ├── __init__.py              # Package initialization and exports
 ├── database_fixtures.py      # Database and PGlite-related fixtures
-├── test_data_fixtures.py    # Sample data fixtures and test constants
-└── sentry_fixtures.py       # Sentry and Discord mock fixtures
+├── data_fixtures.py          # Sample data fixtures and test constants
+├── sentry_fixtures.py        # Sentry and Discord mock fixtures
+└── utils.py                  # Validation and utility functions
 ```
 
 ### Package Structure
@@ -36,11 +37,11 @@ The `tests/fixtures/__init__.py` file handles fixture registration and exports n
 ```python
 # Import modules to register fixtures with pytest
 from . import database_fixtures
-from . import test_data_fixtures
+from . import data_fixtures
 from . import sentry_fixtures
 
 # Export test constants and utility functions
-from .test_data_fixtures import (
+from .data_fixtures import (
     TEST_CHANNEL_ID,
     TEST_GUILD_ID,
     TEST_MODERATOR_ID,
@@ -65,7 +66,7 @@ Fixtures are registered in `tests/conftest.py` using `pytest_plugins`:
 # tests/conftest.py
 pytest_plugins = [
     "tests.fixtures.database_fixtures",
-    "tests.fixtures.test_data_fixtures",
+    "tests.fixtures.data_fixtures",
     "tests.fixtures.sentry_fixtures",
 ]
 ```
@@ -110,7 +111,7 @@ The `conftest.py` file serves as a means of providing fixtures for an entire dir
 # tests/conftest.py
 pytest_plugins = [
     "tests.fixtures.database_fixtures",
-    "tests.fixtures.test_data_fixtures",
+    "tests.fixtures.data_fixtures",
     "tests.fixtures.sentry_fixtures",
 ]
 ```
@@ -145,7 +146,7 @@ Located in `tests/fixtures/database_fixtures.py`, these fixtures provide databas
 
 ### Test Data Fixtures
 
-Located in `tests/fixtures/test_data_fixtures.py`, these fixtures provide sample data:
+Located in `tests/fixtures/data_fixtures.py`, these fixtures provide sample data:
 
 - **`sample_guild`**: Sample guild for testing
 - **`sample_guild_with_config`**: Sample guild with config for testing
@@ -344,7 +345,7 @@ When creating new fixtures, follow these guidelines:
 ### 1. Place in Appropriate Module
 
 - Database-related fixtures → `database_fixtures.py`
-- Sample data fixtures → `test_data_fixtures.py`
+- Sample data fixtures → `data_fixtures.py`
 - Mock fixtures → `sentry_fixtures.py`
 
 ### 2. Use Proper Scoping
@@ -385,14 +386,14 @@ async def my_fixture(db_service: DatabaseService):
 If you create constants or utility functions, export them in `__init__.py`:
 
 ```python
-# In test_data_fixtures.py
+# In data_fixtures.py
 MY_CONSTANT = "value"
 
 def my_utility_function():
     pass
 
 # In __init__.py
-from .test_data_fixtures import MY_CONSTANT, my_utility_function
+from .data_fixtures import MY_CONSTANT, my_utility_function
 
 __all__ = [
     # ... existing exports

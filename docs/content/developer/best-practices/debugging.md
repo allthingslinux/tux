@@ -162,7 +162,7 @@ def debug_function():
 
 ```bash
 # Run specific test with debugging
-uv run pytest tests/unit/test_user.py::test_create_user -xvs
+uv run pytest tests/database/test_database_model_creation.py::TestModelCreation::test_guild_model_creation -xvs
 
 # Debug with pdb on failure
 uv run pytest --pdb --pdbcls=IPython.terminal.debugger:TerminalIPythonApp

@@ -15,15 +15,9 @@ from tux.main import run
 
 app = create_app()
 
-
-def _run_bot(debug: bool) -> int:
-    """Run the bot and return the exit code."""
-    if debug:
-        print_info("Debug mode enabled")
-
-    # The run() function in main.py already catches and logs exceptions
-    # and returns a proper exit code.
-    return run(debug=debug)
+# Constants
+SUCCESS_EXIT_CODE: int = 0
+USER_SHUTDOWN_EXIT_CODE: int = 130
 
 
 @app.command(name="start")
@@ -34,11 +28,14 @@ def start(
     print_section("Starting Tux Bot", "blue")
     rich_print("[bold blue]Starting Tux Discord bot...[/bold blue]")
 
-    exit_code = _run_bot(debug)
+    if debug:
+        print_info("Debug mode enabled")
 
-    if exit_code == 0:
+    exit_code = run()
+
+    if exit_code == SUCCESS_EXIT_CODE:
         print_success("Bot completed successfully")
-    elif exit_code == 130:
+    elif exit_code == USER_SHUTDOWN_EXIT_CODE:
         print_info("Bot shutdown requested by user (Ctrl+C)")
     # For other exit codes, run() already logged the error
 

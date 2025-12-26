@@ -17,6 +17,7 @@ from tux.shared.config import CONFIG
 from tux.shared.exceptions import (
     TuxDatabaseConnectionError,
     TuxDatabaseMigrationError,
+    TuxSetupError,
 )
 
 __all__ = ["DatabaseSetupService"]
@@ -93,7 +94,8 @@ class DatabaseSetupService(BaseSetupService):
 
         loop = asyncio.get_event_loop()
 
-        # Database is available (already connected in setup()), run migrations with a timeout
+        # Database is available (already connected in setup()),
+        # run migrations with a timeout
         def _run_migration_sync():
             try:
                 # Check current revision first (stdout already suppressed via Config)
@@ -109,12 +111,12 @@ class DatabaseSetupService(BaseSetupService):
                     logger.info("Running database migrations...")
                     # Run the upgrade
                     command.upgrade(cfg, "head")
-                    logger.info("Database migrations completed")
+                    logger.success("Database migrations completed")
                 else:
-                    logger.info("Database is already up to date")
+                    logger.success("Database is already up to date")
             except Exception as e:
                 error_msg = f"Failed to run database migrations: {e}"
-                logger.error(error_msg)
+                logger.exception(error_msg)
                 raise TuxDatabaseMigrationError(error_msg) from e
 
         try:
@@ -129,7 +131,7 @@ class DatabaseSetupService(BaseSetupService):
                 "Database may be slow or migrations may be blocking. "
                 "Run migrations manually with 'uv run db push'"
             )
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise TuxDatabaseMigrationError(error_msg) from e
         except TuxDatabaseMigrationError:
             # Re-raise migration errors as-is
@@ -139,7 +141,7 @@ class DatabaseSetupService(BaseSetupService):
                 f"Unexpected error during migration check: {e}. "
                 "Run migrations manually with 'uv run db push'"
             )
-            logger.error(error_msg)
+            logger.exception(error_msg)
             raise TuxDatabaseMigrationError(error_msg) from e
 
     async def setup(self) -> None:
@@ -151,7 +153,7 @@ class DatabaseSetupService(BaseSetupService):
         TuxDatabaseConnectionError
             If database connection or validation fails.
         """
-        self._log_step("Connecting to database...")
+        logger.info("Connecting to database...")
 
         await self.db_service.connect(CONFIG.database_url)
 
@@ -167,7 +169,7 @@ class DatabaseSetupService(BaseSetupService):
             error_msg = f"Database connection test failed: {e}"
             raise TuxDatabaseConnectionError(error_msg) from e
 
-        self._log_step("Database connected successfully", "success")
+        logger.success("Database connected successfully")
         await self._create_tables()
         await self._upgrade_head_if_needed()
         await self._validate_schema()
@@ -176,42 +178,34 @@ class DatabaseSetupService(BaseSetupService):
         """Create database tables if they don't exist."""
         try:
             if engine := self.db_service.engine:
-                self._log_step("Creating database tables...")
+                logger.info("Creating database tables...")
 
                 async with engine.begin() as conn:
                     await conn.run_sync(SQLModel.metadata.create_all, checkfirst=True)
 
-                self._log_step("Database tables created/verified", "success")
+                logger.success("Database tables created/verified")
 
         except Exception as table_error:
-            self._log_step(f"Could not create tables: {table_error}", "warning")
+            logger.warning(f"Could not create tables: {table_error}")
 
     async def _validate_schema(self) -> None:
         """Validate that the database schema matches model definitions."""
-
-        def _raise_schema_error(error_msg: str) -> None:
-            """Raise a RuntimeError for schema validation failures."""
-            msg = f"Schema validation failed: {error_msg}"
-            raise RuntimeError(msg)
-
         try:
-            self._log_step("Validating database schema...")
+            logger.info("Validating database schema...")
 
             schema_result = await self.db_service.validate_schema()
 
             if schema_result["status"] == "valid":
-                self._log_step("Database schema validation passed", "success")
+                logger.success("Database schema validation passed")
             else:
                 error_msg = schema_result.get(
                     "error",
                     "Unknown schema validation error",
                 )
-                self._log_step(
-                    f"Database schema validation failed: {error_msg}",
-                    "error",
-                )
-                _raise_schema_error(error_msg)
+                logger.error(f"Database schema validation failed: {error_msg}")
+                msg = f"Schema validation failed: {error_msg}"
+                raise TuxSetupError(msg)  # noqa: TRY301
 
         except Exception as schema_error:
-            self._log_step(f"Schema validation error: {schema_error}", "error")
+            logger.error(f"Schema validation error: {schema_error}")
             raise

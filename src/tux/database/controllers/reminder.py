@@ -8,11 +8,13 @@ to set timed notifications and messages to be delivered at specified times.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tux.database.controllers.base import BaseController
 from tux.database.models import Reminder
-from tux.database.service import DatabaseService
+
+if TYPE_CHECKING:
+    from tux.database.service import DatabaseService
 
 
 class ReminderController(BaseController[Reminder]):

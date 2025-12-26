@@ -7,13 +7,15 @@ users to save and retrieve frequently used code blocks and text templates.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import desc
 
 from tux.database.controllers.base import BaseController
 from tux.database.models import Snippet
-from tux.database.service import DatabaseService
+
+if TYPE_CHECKING:
+    from tux.database.service import DatabaseService
 
 
 class SnippetController(BaseController[Snippet]):
@@ -408,7 +410,7 @@ class SnippetController(BaseController[Snippet]):
             List of all alias snippets.
         """
         return await self.find_all(
-            filters=(Snippet.alias is not None) & (Snippet.guild_id == guild_id),
+            filters=(Snippet.alias.is_not(None)) & (Snippet.guild_id == guild_id),  # type: ignore[arg-type]
         )
 
     async def get_all_snippets_by_guild_id(

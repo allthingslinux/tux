@@ -7,7 +7,6 @@ the Tux bot, including AFK management and shared functionality.
 
 import contextlib
 from datetime import datetime
-from types import NoneType
 
 import discord
 
@@ -44,7 +43,7 @@ async def add_afk(
     target: discord.Member,
     guild_id: int,
     is_perm: bool,
-    until: datetime | NoneType | None = None,
+    until: datetime | None = None,
     enforced: bool = False,
 ) -> None:
     """Set a member as AFK, updates their nickname, and saves to the database."""

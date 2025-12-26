@@ -162,6 +162,7 @@ class Tux(commands.Bot):
 
             # Tag success in Sentry for monitoring
             if self.sentry_manager.is_initialized:
+                # Boolean is the value being set, not a flag (Sentry API design)
                 self.sentry_manager.set_tag("bot.setup_complete", True)
 
         except TuxDatabaseConnectionError as e:
@@ -264,7 +265,10 @@ class Tux(commands.Bot):
         if self.sentry_manager.is_initialized:
             self.sentry_manager.set_tag("event_type", "disconnect")
             self.sentry_manager.capture_message(
-                "Bot disconnected from Discord, this happens sometimes and is fine as long as it's not happening too often",
+                (
+                    "Bot disconnected from Discord, this happens sometimes "
+                    "and is fine as long as it's not happening too often"
+                ),
                 level="info",
             )
 
@@ -272,19 +276,21 @@ class Tux(commands.Bot):
         """
         Gracefully shut down the bot and clean up all resources.
 
-        Performs shutdown in three phases: clean up background tasks, and
-        close Discord, database, and HTTP connections. This method is idempotent
-        - calling it multiple times is safe. All phases are traced with Sentry
-        for monitoring shutdown performance.
+        Performs shutdown in three phases: cancel startup task, clean up
+        background tasks, and close Discord, database, and HTTP connections.
+        This method is idempotent - calling it multiple times is safe. All
+        phases are traced with Sentry for monitoring shutdown performance.
         """
         with start_transaction("bot.shutdown", "Bot shutdown process") as transaction:
             # Idempotent guard - prevent duplicate shutdown attempts
             if self.is_shutting_down:
                 logger.info("Shutdown already in progress")
+                # Boolean is the value being set, not a flag (Sentry API design)
                 transaction.set_data("already_shutting_down", True)
                 return
 
             self.is_shutting_down = True
+            # Boolean is the value being set, not a flag (Sentry API design)
             transaction.set_data("shutdown.initiated", True)
             logger.info("Shutting down bot...")
 
@@ -293,14 +299,17 @@ class Tux(commands.Bot):
                 self._startup_task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await self._startup_task
+            # Boolean is the value being set, not a flag (Sentry API design)
             transaction.set_data("shutdown.startup_task_handled", True)
 
             # Phase 2: Clean up background tasks (task monitor)
             await self._cleanup_tasks()
+            # Boolean is the value being set, not a flag (Sentry API design)
             transaction.set_data("shutdown.tasks_cleaned", True)
 
             # Phase 3: Close external connections (Discord, DB, HTTP)
             await self._close_connections()
+            # Boolean is the value being set, not a flag (Sentry API design)
             transaction.set_data("shutdown.connections_closed", True)
 
             logger.info("Bot shutdown complete")
@@ -330,10 +339,12 @@ class Tux(commands.Bot):
                 logger.debug("Closing Discord connections")
                 await self.close()  # discord.py's close method
                 logger.debug("Discord connections closed")
+                # Boolean is the value being set, not a flag (Sentry API design)
                 span.set_data("connections.discord_closed", True)
 
             except Exception as e:
                 logger.error(f"Error during Discord shutdown: {e}")
+                # Boolean is the value being set, not a flag (Sentry API design)
                 span.set_data("connections.discord_closed", False)
                 span.set_data("connections.discord_error", str(e))
                 span.set_data("connections.discord_error_type", type(e).__name__)
@@ -344,10 +355,12 @@ class Tux(commands.Bot):
                 logger.debug("Closing database connections")
                 await self.db_service.disconnect()
                 logger.debug("Database connections closed")
+                # Boolean is the value being set, not a flag (Sentry API design)
                 span.set_data("connections.db_closed", True)
 
             except Exception as e:
                 logger.error(f"Error during database disconnection: {e}")
+                # Boolean is the value being set, not a flag (Sentry API design)
                 span.set_data("connections.db_closed", False)
                 span.set_data("connections.db_error", str(e))
                 span.set_data("connections.db_error_type", type(e).__name__)
@@ -358,10 +371,12 @@ class Tux(commands.Bot):
                 logger.debug("Closing HTTP client connections")
                 await http_client.close()
                 logger.debug("HTTP client connections closed")
+                # Boolean is the value being set, not a flag (Sentry API design)
                 span.set_data("connections.http_closed", True)
 
             except Exception as e:
                 logger.error(f"Error during HTTP client shutdown: {e}")
+                # Boolean is the value being set, not a flag (Sentry API design)
                 span.set_data("connections.http_closed", False)
                 span.set_data("connections.http_error", str(e))
                 span.set_data("connections.http_error_type", type(e).__name__)
