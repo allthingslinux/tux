@@ -118,8 +118,8 @@ class PrefixManager:
 
         self._prefix_cache[guild_id] = prefix
 
-        # Fire-and-forget task to persist to database
-        _ = asyncio.create_task(self._persist_prefix(guild_id, prefix))  # noqa: RUF006
+        # Fire-and-forget: persist to database asynchronously
+        asyncio.create_task(self._persist_prefix(guild_id, prefix))  # noqa: RUF006
 
         logger.info(f"Prefix updated for guild {guild_id}: '{prefix}'")
 

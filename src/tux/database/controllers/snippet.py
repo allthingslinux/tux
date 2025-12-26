@@ -410,7 +410,7 @@ class SnippetController(BaseController[Snippet]):
             List of all alias snippets.
         """
         return await self.find_all(
-            filters=(Snippet.alias is not None) & (Snippet.guild_id == guild_id),
+            filters=(Snippet.alias.is_not(None)) & (Snippet.guild_id == guild_id),  # type: ignore[arg-type]
         )
 
     async def get_all_snippets_by_guild_id(
