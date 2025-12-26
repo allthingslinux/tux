@@ -62,9 +62,16 @@ def format_list(items: list[str]) -> str:
     return ", ".join(f"`{item}`" for item in items)
 
 
-def extract_missing_role_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
+def extract_missing_role_details(error: Exception, **_kwargs: Any) -> dict[str, Any]:
     """
     Extract missing role details.
+
+    Parameters
+    ----------
+    error : Exception
+        The missing role error.
+    **_kwargs : Any
+        Additional context (unused but part of extractor interface).
 
     Returns
     -------
@@ -77,9 +84,19 @@ def extract_missing_role_details(error: Exception, **kwargs: Any) -> dict[str, A
     return {"roles": f"`{role_id}`" if role_id else "unknown role"}
 
 
-def extract_missing_any_role_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
+def extract_missing_any_role_details(
+    error: Exception,
+    **_kwargs: Any,
+) -> dict[str, Any]:
     """
     Extract missing roles list.
+
+    Parameters
+    ----------
+    error : Exception
+        The missing any role error.
+    **_kwargs : Any
+        Additional context (unused but part of extractor interface).
 
     Returns
     -------
@@ -98,9 +115,16 @@ def extract_missing_any_role_details(error: Exception, **kwargs: Any) -> dict[st
     return {"roles": ", ".join(formatted_roles) if formatted_roles else "unknown roles"}
 
 
-def extract_permissions_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
+def extract_permissions_details(error: Exception, **_kwargs: Any) -> dict[str, Any]:
     """
     Extract missing permissions.
+
+    Parameters
+    ----------
+    error : Exception
+        The missing permissions error.
+    **_kwargs : Any
+        Additional context (unused but part of extractor interface).
 
     Returns
     -------
@@ -221,9 +245,16 @@ def extract_missing_flag_details(error: Exception, **kwargs: Any) -> dict[str, A
     return result
 
 
-def extract_httpx_status_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
+def extract_httpx_status_details(error: Exception, **_kwargs: Any) -> dict[str, Any]:
     """
     Extract HTTPX status error details.
+
+    Parameters
+    ----------
+    error : Exception
+        The HTTPX status error.
+    **_kwargs : Any
+        Additional context (unused but part of extractor interface).
 
     Returns
     -------
@@ -344,10 +375,13 @@ def extract_bad_union_argument_details(
             if hasattr(converter, "__name__"):
                 expected_types.append(str(converter.__name__))
             elif hasattr(converter, "_type"):
+                # Accessing discord.py internal _type attribute for error messages
                 expected_types.append(str(converter._type))
             else:
                 expected_types.append(str(converter))
         except Exception:
+            # str() conversion can fail for various converter types (AttributeError, TypeError, etc.)
+            # Catching Exception is appropriate here as we want to continue with "unknown" fallback
             expected_types.append("unknown")
 
     expected_types_str = (
@@ -424,7 +458,7 @@ def extract_permission_denied_details(
             and ctx.guild
         ):
             with contextlib.suppress(Exception):
-                # Access the cache directly (synchronous)
+                # Access the cache directly (synchronous) - accessing private member for performance
                 prefix_manager = ctx.bot.prefix_manager
                 if ctx.guild.id in prefix_manager._prefix_cache:
                     prefix = prefix_manager._prefix_cache[ctx.guild.id]
