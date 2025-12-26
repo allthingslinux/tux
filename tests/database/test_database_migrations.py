@@ -299,7 +299,6 @@ class TestSchemaErrorHandlingThroughService:
         self,
         disconnected_async_db_service: DatabaseService,
     ) -> None:
-        # sourcery skip: use-contextlib-suppress
         """Test behavior when trying to use disconnected service."""
         # Service starts disconnected
         assert disconnected_async_db_service.is_connected() is False
@@ -307,7 +306,7 @@ class TestSchemaErrorHandlingThroughService:
         guild_controller = GuildController(disconnected_async_db_service)
 
         # Operations should fail gracefully when not connected
-        with suppress(Exception):
+        with suppress(RuntimeError, ConnectionError):
             await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
             # If we get here, the service should handle disconnection gracefully
 

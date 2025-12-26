@@ -50,9 +50,6 @@ from tux.database.controllers.starboard import (
     StarboardMessageController,
 )
 
-if not TYPE_CHECKING:
-    from tux.database.service import DatabaseService
-
 
 class DatabaseCoordinator:
     """Coordinator for database controllers with lazy loading.

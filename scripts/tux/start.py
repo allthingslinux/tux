@@ -16,8 +16,8 @@ from tux.main import run
 app = create_app()
 
 # Constants
-SUCCESS_EXIT_CODE = 0
-USER_SHUTDOWN_EXIT_CODE = 130
+SUCCESS_EXIT_CODE: int = 0
+USER_SHUTDOWN_EXIT_CODE: int = 130
 
 
 @app.command(name="start")

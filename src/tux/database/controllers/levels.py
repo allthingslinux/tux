@@ -16,9 +16,6 @@ from tux.database.models import Levels
 if TYPE_CHECKING:
     from tux.database.service import DatabaseService
 
-if not TYPE_CHECKING:
-    from tux.database.service import DatabaseService
-
 
 class LevelsController(BaseController[Levels]):
     """Clean Levels controller using the new BaseController pattern."""

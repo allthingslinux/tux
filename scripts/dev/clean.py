@@ -39,7 +39,7 @@ def _remove_item(item: Path, project_root: Path) -> tuple[int, int]:
 
 
 def _clean_empty_directories(project_root: Path) -> int:
-    """Clean empty directories and replica structures in tests and scripts."""
+    """Clean empty directories and replica structures in scripts."""
     cleaned = 0
     for dir_path in [
         project_root / "scripts",

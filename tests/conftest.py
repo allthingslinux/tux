@@ -92,21 +92,20 @@ def _terminate_pglite_process(pid: int) -> bool:
     bool
         True if the process was successfully terminated.
     """
-    process = None
     try:
         process = psutil.Process(pid)
         process.terminate()
         process.wait(timeout=2.0)
     except psutil.TimeoutExpired:
-        if process is not None:
-            process.kill()
-            process.wait(timeout=1.0)
+        # Process exists but didn't terminate in time, kill it
+        process = psutil.Process(pid)  # Re-fetch in case original was lost
+        process.kill()
+        process.wait(timeout=1.0)
+        return True
     except psutil.NoSuchProcess:
         return False
     else:
         return True
-
-    return True
 
 
 def cleanup_pglite_processes() -> None:
@@ -136,7 +135,7 @@ atexit.register(cleanup_pglite_processes)
 
 
 # Test utility functions (inspired by organizex patterns)
-def create_mock_guild(**overrides):
+def create_mock_guild(**overrides: Any) -> dict[str, Any]:
     """Create mock Discord guild data for testing."""
     default_data = {
         "id": 123456789012345678,
@@ -148,7 +147,7 @@ def create_mock_guild(**overrides):
     return default_data
 
 
-def create_mock_user(**overrides):
+def create_mock_user(**overrides: Any) -> dict[str, Any]:
     """Create mock Discord user data for testing."""
     default_data = {
         "id": 987654321098765432,
@@ -162,7 +161,7 @@ def create_mock_user(**overrides):
     return default_data
 
 
-def create_mock_channel(**overrides):
+def create_mock_channel(**overrides: Any) -> dict[str, Any]:
     """Create mock Discord channel data for testing."""
     default_data = {
         "id": 876543210987654321,
@@ -174,7 +173,7 @@ def create_mock_channel(**overrides):
     return default_data
 
 
-def create_mock_interaction(**overrides):
+def create_mock_interaction(**overrides: Any) -> dict[str, Any]:
     """Create mock Discord interaction data for testing."""
     default_data = {
         "user": create_mock_user(),

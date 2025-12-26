@@ -29,8 +29,8 @@ async def pglite_async_manager():
     finally:
         try:
             manager.stop()
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.exception("Failed to stop PGlite manager during test teardown: {}", exc)
 
 
 @pytest.fixture(scope="function")
@@ -45,11 +45,12 @@ async def pglite_engine(pglite_async_manager):
     yield engine
 
     # Clean up tables after each test
+    # Cleanup failures are non-fatal and should not break tests
     try:
         async with engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.drop_all)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.exception("Failed to clean up tables during test teardown: {}", exc)
 
 
 @pytest.fixture(scope="function")

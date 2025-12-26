@@ -96,7 +96,7 @@ class ErrorHandler(commands.Cog):
         # Send user response if configured
         if config.send_embed:
             embed = self.formatter.format_error_embed(root_error, source, config)
-            await self._send_error_response(source, embed, config)
+            await self._send_error_response(source, embed)
 
         # Report to Sentry if configured
         if config.send_to_sentry:
@@ -162,7 +162,6 @@ class ErrorHandler(commands.Cog):
         self,
         source: commands.Context[Tux] | discord.Interaction,
         embed: discord.Embed,
-        _config: ErrorHandlerConfig,
     ) -> None:
         """Send error response to user."""
         try:

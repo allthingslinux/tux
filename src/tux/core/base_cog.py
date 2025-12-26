@@ -245,7 +245,8 @@ class BaseCog(commands.Cog):
         >>> def __init__(self, bot: Tux):
         ...     super().__init__(bot)
         ...     if self.unload_if_missing_config(
-        ...         not CONFIG.GITHUB_TOKEN, "GITHUB_TOKEN"
+        ...         condition=not CONFIG.GITHUB_TOKEN,
+        ...         config_name="GITHUB_TOKEN",
         ...     ):
         ...         return  # Exit early, cog will be partially loaded
         ...     self.github_client = GitHubClient()

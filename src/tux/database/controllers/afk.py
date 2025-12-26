@@ -16,9 +16,6 @@ from tux.database.models import AFK
 if TYPE_CHECKING:
     from tux.database.service import DatabaseService
 
-if not TYPE_CHECKING:
-    from tux.database.service import DatabaseService
-
 
 class AfkController(BaseController[AFK]):
     """Clean AFK controller using the new BaseController pattern."""

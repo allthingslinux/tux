@@ -95,4 +95,4 @@ class TestModelQueries:
             assert row is not None
             assert row[0] == TEST_GUILD_ID
             assert row[1] == 5
-        assert row[2] == "!j"
+            assert row[2] == "!j"

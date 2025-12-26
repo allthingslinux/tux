@@ -15,9 +15,6 @@ from tux.database.models import GuildConfig
 if TYPE_CHECKING:
     from tux.database.service import DatabaseService
 
-if not TYPE_CHECKING:
-    from tux.database.service import DatabaseService
-
 
 class GuildConfigController(BaseController[GuildConfig]):
     """Clean GuildConfig controller using the new BaseController pattern."""
