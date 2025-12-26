@@ -75,7 +75,7 @@ class GifLimiter(BaseCog):
             True if the message contains a GIF and was not sent in a blacklisted channel, False otherwise.
         """
         return not (
-            len(message.embeds) == 0
+            not message.embeds
             or "gif" not in message.content.lower()
             or message.channel.id in self.gif_limit_exclude
         )

@@ -219,7 +219,7 @@ class BaseCog(commands.Cog):
         bot_user = getattr(self.bot, "user", "Unknown")
         return f"<{self.__class__.__name__} bot={bot_user}>"
 
-    def unload_if_missing_config(self, condition: bool, config_name: str) -> bool:
+    def unload_if_missing_config(self, *, condition: bool, config_name: str) -> bool:
         """
         Check if required configuration is missing and log warning.
 

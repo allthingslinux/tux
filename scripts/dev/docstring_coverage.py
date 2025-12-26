@@ -12,6 +12,9 @@ from scripts.ui import print_error, print_section, print_success
 
 app = create_app()
 
+# Constants
+ERROR_EXIT_CODE_THRESHOLD = 100
+
 
 @app.command(name="docstring-coverage")
 def docstring_coverage() -> None:
@@ -25,7 +28,7 @@ def docstring_coverage() -> None:
         # docstr-coverage returns non-zero if coverage is below threshold
         # Exit codes 1-99 typically indicate coverage issues (show report)
         # Exit codes 100+ indicate actual errors
-        if e.returncode < 100:
+        if e.returncode < ERROR_EXIT_CODE_THRESHOLD:
             print_success(
                 "Docstring coverage report generated (coverage below threshold)",
             )

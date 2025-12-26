@@ -296,7 +296,8 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
             return
 
         try:
-            selected_value = interaction.data.get("values", [None])[0]  # type: ignore[index]
+            values = interaction.data.get("values", [])  # type: ignore[index]
+            selected_value = values[0] if values else None
 
             if selected_value == "unassign":
                 # Remove command permission
@@ -307,7 +308,7 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
                     ),
                 )
                 message = f"✅ Command `{command_name}` unassigned (now disabled)"
-            else:
+            elif selected_value is not None:
                 # Assign rank to command
                 rank_value = int(selected_value)
 
@@ -329,6 +330,13 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
                     required_rank=rank_value,
                 )
                 message = f"✅ Command `{command_name}` assigned to Rank {rank_value} ({rank_obj.name})"
+            else:
+                # No valid selection made
+                await interaction.response.send_message(
+                    "❌ No valid selection made.",
+                    ephemeral=True,
+                )
+                return
 
             await interaction.response.send_message(message, ephemeral=True)
 

@@ -32,8 +32,8 @@ class Git(BaseCog):
 
         # Check if GitHub configuration is available
         if self.unload_if_missing_config(
-            not CONFIG.EXTERNAL_SERVICES.GITHUB_APP_ID,
-            "GitHub App ID",
+            condition=not CONFIG.EXTERNAL_SERVICES.GITHUB_APP_ID,
+            config_name="GitHub App ID",
         ):
             return
 
@@ -122,7 +122,7 @@ class Git(BaseCog):
             The body of the issue.
         """
         try:
-            issue_body = body + "\n\nAuthor: " + str(ctx.author)
+            issue_body = f"{body}\n\nAuthor: {ctx.author}"
             created_issue = await self.github.create_issue(title, issue_body)
 
             embed = EmbedCreator.create_embed(

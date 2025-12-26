@@ -12,7 +12,7 @@ import tomllib
 import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import yaml
 from pydantic_settings import PydanticBaseSettingsSource
@@ -104,7 +104,7 @@ class FileConfigSource(PydanticBaseSettingsSource, ABC):
         for k, v in d.items():
             key = f"{prefix}{k.upper()}"
             if isinstance(v, dict):
-                result.update(self._flatten_dict(v, f"{key}__"))
+                result.update(self._flatten_dict(cast(dict[str, Any], v), f"{key}__"))
             else:
                 result[key] = v
         return result

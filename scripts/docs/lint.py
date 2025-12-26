@@ -20,6 +20,9 @@ from scripts.ui import (
 
 app = create_app()
 
+# Constants
+YAML_FRONTMATTER_PARTS = 3
+
 
 @app.command(name="lint")
 def lint() -> None:
@@ -47,7 +50,7 @@ def lint() -> None:
                 # Skip YAML frontmatter if present
                 if content.startswith("---"):
                     parts = content.split("---", 2)
-                    if len(parts) >= 3:
+                    if len(parts) >= YAML_FRONTMATTER_PARTS:
                         content = parts[2].strip()
                 else:
                     content = content.strip()
