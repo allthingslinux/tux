@@ -210,8 +210,9 @@ exclude = [
     # Exclude all Python files in tests, but allow conftest.py to be linted
     "tests/fixtures/**",
     "tests/e2e/**",
-    "tests/integration/**",
-    "tests/unit/**",
+    # Legacy test directories removed - using domain-based structure
+    # "tests/integration/**",  # Removed - tests moved to domain directories
+    # "tests/unit/**",  # Removed - tests moved to domain directories
     "typings/**",
     "venv",
 ]
@@ -255,6 +256,7 @@ select = [
     "INP",   # flake8-no-pep420
     "RSE",   # flake8-raise
     "ICN",   # flake8-import-conventions
+    "PT",    # flake8-pytest-style
     # "DOC",  # pydoclint (not implemented yet, see https://github.com/astral-sh/ruff/issues/12434 for progress)
     "D", # pydocstyle
     #"ERA",  # eradicate
@@ -393,8 +395,13 @@ python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 
+# Strict mode (recommended for better practices)
+strict = true
+
 # Default options for all pytest runs
 addopts = [
+    # Import mode (recommended for new projects)
+    "--import-mode=importlib",
     # Coverage
     "--cov=src/tux",
     "--cov-report=term-missing",
@@ -421,13 +428,32 @@ addopts = [
     "--asyncio-mode=auto",
 ]
 
-# Markers
+# Markers (comprehensive test categorization)
 markers = [
-    "unit: Unit tests (uses py-pglite)",
-    "integration: Integration tests (uses py-pglite)",
-    "slow: Slow tests (>5 seconds)",
+    # Test types
+    "unit: Unit tests with isolated components",
+    "integration: Integration tests combining multiple components",
+    "e2e: End-to-end tests covering complete workflows",
+    "slow: Slow-running tests (>5 seconds)",
+
+    # Test characteristics
     "database: Tests requiring database access",
-    "async: Async tests",
+    "async: Async tests using asyncio",
+    "network: Tests requiring network access",
+
+    # Component-specific
+    "core: Tests for core framework components",
+    "services: Tests for service layer components",
+    "modules: Tests for Discord bot modules",
+    "database_layer: Tests for database models and controllers",
+
+    # Performance and load
+    "performance: Performance benchmark tests",
+    "load: Load testing scenarios",
+
+    # Special cases
+    "manual: Manual tests (not run automatically)",
+    "flaky: Known flaky tests (may fail intermittently)",
 ]
 
 # Filter warnings
