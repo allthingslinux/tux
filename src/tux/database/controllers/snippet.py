@@ -7,13 +7,18 @@ users to save and retrieve frequently used code blocks and text templates.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import desc
 
 from tux.database.controllers.base import BaseController
 from tux.database.models import Snippet
-from tux.database.service import DatabaseService
+
+if TYPE_CHECKING:
+    from tux.database.service import DatabaseService
+
+if not TYPE_CHECKING:
+    from tux.database.service import DatabaseService
 
 
 class SnippetController(BaseController[Snippet]):

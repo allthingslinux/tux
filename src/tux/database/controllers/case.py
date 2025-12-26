@@ -8,17 +8,23 @@ automatic case numbering, status tracking, and audit logging for Discord guilds.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import noload
 
 from tux.database.controllers.base import BaseController
 from tux.database.models import Case, Guild
 from tux.database.models.enums import CaseType as DBCaseType
-from tux.database.service import DatabaseService
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from tux.database.service import DatabaseService
+
+if not TYPE_CHECKING:
+    from tux.database.service import DatabaseService
 
 
 class CaseController(BaseController[Case]):
@@ -275,12 +281,22 @@ class CaseController(BaseController[Case]):
         """
         Get cases created within the last N hours.
 
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID to filter cases by.
+        hours : int, optional
+            Number of hours to look back (default is 24). Currently unused as
+            created_at filtering is not yet implemented.
+
         Returns
         -------
         list[Case]
             List of recent cases.
         """
         # For now, just get all cases in the guild since we don't have a created_at field
+        # TODO: Implement created_at filtering when Case model has timestamp field
+        _ = hours  # Mark as intentionally unused until filtering is implemented
         return await self.find_all(filters=Case.guild_id == guild_id)
 
     async def get_case_count_by_guild(self, guild_id: int) -> int:
@@ -320,7 +336,7 @@ class CaseController(BaseController[Case]):
         # For now, just check if user has any active cases
         # In the future, you can implement specific restriction type checking
         active_cases = await self.get_active_cases_by_user(user_id, guild_id)
-        return len(active_cases) > 0
+        return bool(active_cases)
 
     async def get_case_by_number(self, case_number: int, guild_id: int) -> Case | None:
         """
@@ -412,14 +428,12 @@ class CaseController(BaseController[Case]):
         Case | None
             The most recent case if found, None otherwise.
         """
-        cases = await self.find_all(
-            filters=(Case.case_user_id == user_id) & (Case.guild_id == guild_id),
-        )
+        # Use database-level sorting for better performance
         # Sort by ID descending (assuming higher ID = newer case) and return the first one
-        if cases:
-            sorted_cases = sorted(cases, key=lambda x: x.id or 0, reverse=True)
-            return sorted_cases[0]
-        return None
+        return await self.find_one(
+            filters=(Case.case_user_id == user_id) & (Case.guild_id == guild_id),
+            order_by=[Case.id.desc()],  # type: ignore[attr-defined]
+        )
 
     async def set_tempban_expired(
         self,
@@ -428,6 +442,13 @@ class CaseController(BaseController[Case]):
     ) -> bool:
         """
         Mark a tempban case as processed after the user has been unbanned.
+
+        Parameters
+        ----------
+        case_id : int
+            The case ID to mark as expired.
+        guild_id : int | None, optional
+            The guild ID (currently unused, kept for API consistency).
 
         This sets case_processed=True to indicate the expiration has been handled.
         The case_status remains True (the case is still valid, just completed).
