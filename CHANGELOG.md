@@ -8,6 +8,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+* **Test Structure Reorganization**: Comprehensive test reorganization from flat structure to domain-based organization
+  * New test directories: `tests/core/`, `tests/database/`, `tests/services/`, `tests/shared/`, `tests/modules/`, `tests/help/`, `tests/plugins/`
+  * Database model tests: creation, queries, relationships, serialization, performance, and timestamp functionality
+  * Error extractor tests: arguments, flags, HTTP, permissions, roles, utilities, and integration tests
+  * Config loader tests: basic loading, environment variable handling, and generation
+  * Version system tests: module functions, version objects, and system integration
+* **Test Fixture Improvements**: Enhanced test fixture organization and utilities
+  * New `tests/fixtures/data_fixtures.py` for test constants and sample data
+  * New `tests/fixtures/utils.py` with validation utilities for guild configs, guilds, and relationship integrity
+  * Improved database fixture organization and PGlite management
+* Database controller improvements with enhanced error handling and logging
+
+### Changed
+
+* **Test Organization**: Reorganized tests from `tests/unit/` and `tests/integration/` to domain-specific directories
+  * Core permission system tests moved to `tests/core/`
+  * Database tests consolidated in `tests/database/` with comprehensive model coverage
+  * Service layer tests organized in `tests/services/` with error handler and HTTP client tests
+  * Shared utility tests moved to `tests/shared/` for config and version management
+  * Module integration tests organized in `tests/modules/`
+* **Test Fixtures**: Improved fixture organization with better separation of concerns
+  * Consolidated test constants and sample data fixtures
+  * Enhanced validation utilities for test data integrity
+  * Improved PGlite process management and cleanup
+* Database controller error handling and logging improvements
+* Documentation updates for debugging, testing fixtures, and versioning
+
+### Removed
+
+* **Legacy Test Structure**: Removed `tests/unit/` and `tests/integration/` directories in favor of domain-based organization
+* **Deprecated Fixtures**: Removed `tests/fixtures/pglite_fixtures.py` and `tests/fixtures/test_data_fixtures.py` in favor of reorganized fixture structure
+
 ## [0.1.0-rc.5] - 2025-12-22
 
 ### Added
