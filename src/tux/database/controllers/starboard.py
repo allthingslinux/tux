@@ -16,9 +16,6 @@ from tux.database.models import Starboard, StarboardMessage
 if TYPE_CHECKING:
     from tux.database.service import DatabaseService
 
-if not TYPE_CHECKING:
-    from tux.database.service import DatabaseService
-
 
 class StarboardController(BaseController[Starboard]):
     """Clean Starboard controller using the new BaseController pattern."""

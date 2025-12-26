@@ -193,7 +193,7 @@ class TestPermissionDecorator:
 
         @requires_command_permission()
         async def my_special_command(ctx: commands.Context[Tux]) -> None:
-            """Represent a special command."""
+            """Execute my special command."""
 
         # Should preserve function metadata
         assert my_special_command.__name__ == "my_special_command"

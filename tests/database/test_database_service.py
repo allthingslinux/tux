@@ -134,7 +134,10 @@ class TestDatabaseModelsUnit:
 
         # This should raise an integrity error
         db_session.add(guild2)
-        with pytest.raises(Exception, match=r".*"):  # SQLAlchemy integrity error
+        with pytest.raises(
+            Exception,
+            match=r".*(duplicate key|unique constraint|integrity)",
+        ):  # SQLAlchemy integrity error
             await db_session.commit()
 
         # Rollback the session to clean state after the expected error

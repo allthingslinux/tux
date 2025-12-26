@@ -23,9 +23,6 @@ if TYPE_CHECKING:
 
     from tux.database.service import DatabaseService
 
-if not TYPE_CHECKING:
-    from tux.database.service import DatabaseService
-
 
 class CaseController(BaseController[Case]):
     """Clean Case controller using the new BaseController pattern."""
@@ -453,13 +450,6 @@ class CaseController(BaseController[Case]):
         This sets case_processed=True to indicate the expiration has been handled.
         The case_status remains True (the case is still valid, just completed).
         The case_expires_at field remains unchanged as a historical record.
-
-        Parameters
-        ----------
-        case_id : int
-            The ID of the case to mark as processed
-        guild_id : int | None
-            Deprecated parameter kept for backward compatibility (unused)
 
         Returns
         -------

@@ -4,7 +4,6 @@ import pytest
 from typing import Any
 
 from tux.database.controllers import GuildConfigController, GuildController
-from .utils import validate_guild_structure, validate_guild_config_structure, validate_relationship_integrity
 
 # Test constants
 TEST_GUILD_ID = 123456789012345678
