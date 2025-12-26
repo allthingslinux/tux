@@ -8,11 +8,16 @@ temporary and permanent AFK states with customizable messages and time limits.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tux.database.controllers.base import BaseController
 from tux.database.models import AFK
-from tux.database.service import DatabaseService
+
+if TYPE_CHECKING:
+    from tux.database.service import DatabaseService
+
+if not TYPE_CHECKING:
+    from tux.database.service import DatabaseService
 
 
 class AfkController(BaseController[AFK]):
