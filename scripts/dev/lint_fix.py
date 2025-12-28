@@ -25,6 +25,9 @@ def lint_fix() -> None:
     except subprocess.CalledProcessError:
         print_error("Linting with fixes did not complete - see issues above")
         sys.exit(1)
+    except (FileNotFoundError, PermissionError, OSError) as e:
+        print_error(f"Failed to run linting tool: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
