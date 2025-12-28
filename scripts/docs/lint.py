@@ -61,7 +61,7 @@ def lint() -> None:
                     issues.append(f"Missing title: {md_file}")
                 elif "TODO" in content.upper() or "FIXME" in content.upper():
                     issues.append(f"Contains TODO/FIXME: {md_file}")
-            except Exception as e:
+            except (UnicodeDecodeError, OSError) as e:
                 issues.append(f"Could not read {md_file}: {e}")
 
             progress.advance(task)
