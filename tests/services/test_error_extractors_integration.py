@@ -57,6 +57,6 @@ class TestExtractorsWithRealErrors:
         assert "status_code" in context
         assert context["status_code"] == 404
         assert "url" in context
-        assert "api.example.com" in str(context["url"])
+        assert context["url"] == "https://api.example.com/not-found"
         assert "response_text" in context
         assert "Not Found" in context["response_text"]
