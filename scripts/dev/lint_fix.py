@@ -4,6 +4,7 @@ Command: dev lint-fix.
 Runs linting checks with Ruff and automatically applies fixes.
 """
 
+import subprocess
 import sys
 
 from scripts.core import create_app
@@ -21,7 +22,7 @@ def lint_fix() -> None:
     try:
         run_command(["uv", "run", "ruff", "check", "--fix", "."])
         print_success("Linting with fixes completed successfully")
-    except Exception:
+    except subprocess.CalledProcessError:
         print_error("Linting with fixes did not complete - see issues above")
         sys.exit(1)
 
