@@ -95,7 +95,8 @@ class TuxApp:
             logger.info("Application interrupted by user")
             return 130
         except Exception as e:
-            logger.error(f"Application failed to start: {e}")
+            # Top-level exception handler for application startup - all exceptions should be caught
+            logger.exception("Application failed to start")
             capture_exception_safe(e)
             return 1
 
@@ -124,16 +125,23 @@ class TuxApp:
         """
         Start the Tux bot with full lifecycle management.
 
-        Orchestrates the complete bot startup sequence: Sentry initialization,
-        signal handler registration, configuration validation, bot instance
-        creation, Discord connection, and background task monitoring.
+        Orchestrates the complete bot startup sequence: logging configuration,
+        Sentry initialization, signal handler registration, configuration validation,
+        bot instance creation, Discord connection, and background task monitoring.
 
         Returns
         -------
         int
             Exit code: 0 for success, 130 for user-requested shutdown, 1 for errors.
         """
-        # Initialize telemetry
+        # Configure logging FIRST (before any other initialization)
+        # This is a fallback - normally configured in scripts/tux/start.py
+        # CRITICAL: Must be before SentryManager.setup() because Sentry uses logger
+        from tux.core.logging import configure_logging  # noqa: PLC0415
+
+        configure_logging(config=CONFIG)
+
+        # Initialize telemetry (uses logger, so must be after logging config)
         SentryManager.setup()
 
         # Register signals
@@ -159,7 +167,7 @@ class TuxApp:
             await self.bot.connect(reconnect=True)
 
         except Exception as e:
-            logger.critical(f"Bot execution failed: {type(e).__name__}")
+            logger.exception("Bot execution failed")
             capture_exception_safe(e)
             return 1
         finally:

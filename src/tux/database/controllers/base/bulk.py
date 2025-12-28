@@ -47,7 +47,9 @@ class BulkOperationsController[ModelT]:
             for instance in instances:
                 await session.refresh(instance)
 
-            logger.info(f"Bulk created {len(instances)} {self.model.__name__} records")
+            logger.success(
+                f"Bulk created {len(instances)} {self.model.__name__} records",
+            )
             return instances
 
     async def bulk_update(self, updates: list[tuple[Any, dict[str, Any]]]) -> int:

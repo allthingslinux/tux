@@ -130,12 +130,12 @@ class ModerationCoordinator:
 
         # Prepare DM action description
         action_desc = dm_action or self._get_default_dm_action(case_type)
-        logger.debug(f"DM action description: {action_desc}, silent: {silent}")
+        logger.trace(f"DM action description: {action_desc}, silent: {silent}")
 
         # Handle DM timing based on action type
         dm_sent = False
         try:
-            logger.debug(f"Handling DM timing for {case_type.value}")
+            logger.trace(f"Handling DM timing for {case_type.value}")
             dm_sent = await self._handle_dm_timing(
                 ctx,
                 case_type,
@@ -144,7 +144,7 @@ class ModerationCoordinator:
                 action_desc,
                 silent,
             )
-            logger.debug(f"DM sent status (pre-action): {dm_sent}")
+            logger.trace(f"DM sent status (pre-action): {dm_sent}")
         except Exception as e:
             # DM failed, but continue with the workflow
             logger.warning(f"Failed to send pre-action DM to user {user.id}: {e}")
@@ -152,12 +152,12 @@ class ModerationCoordinator:
 
         # Execute Discord actions
         if actions:
-            logger.debug(
+            logger.trace(
                 f"Executing {len(actions)} Discord actions for {case_type.value}",
             )
             try:
                 await self._execute_actions(ctx, case_type, user, actions)
-                logger.info(
+                logger.success(
                     f"Successfully executed Discord actions for {case_type.value}",
                 )
             except Exception as e:
@@ -172,27 +172,27 @@ class ModerationCoordinator:
         try:
             # Calculate case_expires_at from duration if needed
             # Duration is in seconds, convert to datetime
-            logger.debug(
+            logger.trace(
                 f"Duration/expires_at conversion: duration={duration}, expires_at={expires_at}",
             )
 
             case_expires_at = expires_at
             if duration is not None and expires_at is None:
                 case_expires_at = datetime.now(UTC) + timedelta(seconds=duration)
-                logger.info(
+                logger.debug(
                     f"Converted duration {duration}s → expires_at {case_expires_at}",
                 )
             elif expires_at is not None:
-                logger.info(f"Using provided expires_at: {expires_at}")
+                logger.debug(f"Using provided expires_at: {expires_at}")
             else:
-                logger.debug("No expiration set (permanent action)")
+                logger.trace("No expiration set (permanent action)")
 
             # Build kwargs for optional case fields
             case_kwargs = {**extra_case_data}
             if case_expires_at is not None:
                 case_kwargs["case_expires_at"] = case_expires_at
 
-            logger.debug(
+            logger.trace(
                 f"Creating case: type={case_type.value}, user={user.id}, moderator={ctx.author.id}, "
                 f"guild={ctx.guild.id}, case_kwargs={case_kwargs!r}",
             )
@@ -204,7 +204,7 @@ class ModerationCoordinator:
                 reason=reason,
                 **case_kwargs,  # All optional Case fields (expires_at, user_roles, metadata, etc.)
             )
-            logger.info(
+            logger.success(
                 f"Successfully created case #{case.case_number} (ID: {case.id}) for {case_type.value}",
             )
 
@@ -219,28 +219,28 @@ class ModerationCoordinator:
         # Handle post-action DM for non-removal actions
         if case_type not in self.REMOVAL_ACTIONS and not silent:
             try:
-                logger.debug(f"Sending post-action DM for {case_type.value}")
+                logger.trace(f"Sending post-action DM for {case_type.value}")
                 dm_sent = await self._handle_post_action_dm(
                     ctx,
                     user,
                     reason,
                     action_desc,
                 )
-                logger.debug(f"DM sent status (post-action): {dm_sent}")
+                logger.trace(f"DM sent status (post-action): {dm_sent}")
             except Exception as e:
                 # DM failed, but continue
                 logger.warning(f"Failed to send post-action DM to user {user.id}: {e}")
                 dm_sent = False
 
         # Send response embed to moderator
-        logger.debug(
+        logger.trace(
             f"Sending response embed, case={'None' if case is None else case.id}, dm_sent={dm_sent}",
         )
         await self._send_response_embed(ctx, case, user, dm_sent)
 
         # Send response embed to mod log channel and update case
         if case is not None:
-            logger.debug(
+            logger.trace(
                 f"Sending response embed to mod log for case #{case.case_number}",
             )
             mod_log_message = await self._send_mod_log_embed(ctx, case, user, dm_sent)
@@ -263,7 +263,9 @@ class ModerationCoordinator:
                         f"Failed to update mod log message ID for case #{case.case_number}: {e}",
                     )
 
-        logger.info(f"Completed moderation action {case_type.value} on user {user.id}")
+        logger.success(
+            f"Completed moderation action {case_type.value} on user {user.id}",
+        )
         return case
 
     async def _handle_dm_timing(
@@ -320,7 +322,7 @@ class ModerationCoordinator:
 
         for idx, (action, _expected_type) in enumerate(actions, 1):
             operation_type = self._execution.get_operation_type(case_type)
-            logger.debug(
+            logger.trace(
                 f"Executing action {idx}/{len(actions)} for {case_type.value} (operation: {operation_type})",
             )
             try:
@@ -329,7 +331,7 @@ class ModerationCoordinator:
                     action,
                 )
                 results.append(result)
-                logger.debug(f"Action {idx}/{len(actions)} completed successfully")
+                logger.trace(f"Action {idx}/{len(actions)} completed successfully")
             except Exception as e:
                 logger.error(
                     f"Action {idx}/{len(actions)} failed for {case_type.value}: {e}",
@@ -366,7 +368,7 @@ class ModerationCoordinator:
             logger.warning(f"Failed to send post-action DM to user {user.id}: {e}")
             return False
         else:
-            logger.debug(f"Post-action DM sent to user {user.id}: {result}")
+            logger.trace(f"Post-action DM sent to user {user.id}: {result}")
             return result
 
     async def _send_response_embed(
@@ -377,7 +379,7 @@ class ModerationCoordinator:
         dm_sent: bool,
     ) -> None:
         """Send the response embed for the moderation action."""
-        logger.debug(
+        logger.trace(
             f"Preparing response embed, case={'present' if case else 'None'}, dm_sent={dm_sent}",
         )
 
@@ -414,7 +416,7 @@ class ModerationCoordinator:
                 ),
             ]
         else:
-            logger.debug(
+            logger.trace(
                 f"Sending response embed for case #{case.case_number} (ID: {case.id})",
             )
             title = f"Case #{case.case_number} ({case.case_type.value if case.case_type else 'Unknown'})"
@@ -435,7 +437,7 @@ class ModerationCoordinator:
             embed.add_field(name=name, value=value, inline=inline)
 
         await self._communication.send_embed(ctx, embed)
-        logger.debug("Response embed sent successfully")
+        logger.trace("Response embed sent successfully")
 
     async def _send_mod_log_embed(
         self,
@@ -445,7 +447,7 @@ class ModerationCoordinator:
         dm_sent: bool,
     ) -> discord.Message | None:
         """Send the response embed to the mod log channel."""
-        logger.debug(f"Preparing mod log embed for case #{case.case_number}")
+        logger.trace(f"Preparing mod log embed for case #{case.case_number}")
 
         # Create a copy of the embed for mod log with different footer
         embed = EmbedCreator.create_embed(

@@ -162,7 +162,7 @@ class HotReload(commands.Cog):
 
             if success:
                 self._reload_stats["successful_reloads"] += 1
-                logger.info(f"Successfully reloaded {extension}")
+                logger.success(f"Successfully reloaded {extension}")
             else:
                 self._reload_stats["failed_reloads"] += 1
                 logger.error(f"Failed to reload {extension}")

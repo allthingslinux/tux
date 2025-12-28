@@ -48,7 +48,7 @@ class BaseSetupService(ABC):
             try:
                 logger.info(f"Setting up {self.name}...")
                 await self.setup()
-                logger.info(f"{self.name.title()} setup completed")
+                logger.success(f"{self.name.title()} setup completed")
                 span.set_data("setup.status", "success")
             except KeyboardInterrupt:
                 raise

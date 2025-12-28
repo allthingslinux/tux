@@ -138,16 +138,16 @@ class PermissionSystem:
         guild_id : int
             The Discord guild ID to initialize.
         """
-        logger.info(f"PermissionSystem.initialize_guild called for guild {guild_id}")
+        logger.debug(f"PermissionSystem.initialize_guild called for guild {guild_id}")
 
         # Get existing ranks for this guild
-        logger.debug(f"Checking existing ranks for guild {guild_id}")
+        logger.trace(f"Checking existing ranks for guild {guild_id}")
         try:
             existing_ranks = (
                 await self.db.permission_ranks.get_permission_ranks_by_guild(guild_id)
             )
             existing_rank_numbers = {r.rank for r in existing_ranks}
-            logger.debug(
+            logger.trace(
                 f"Found {len(existing_ranks)} existing ranks for guild {guild_id}",
             )
         except Exception as e:
@@ -163,7 +163,7 @@ class PermissionSystem:
         for rank, default_data in DEFAULT_RANKS.items():
             if rank not in existing_rank_numbers:
                 ranks_to_create.append((rank, default_data))
-                logger.debug(f"Will create missing rank {rank}: {default_data['name']}")
+                logger.trace(f"Will create missing rank {rank}: {default_data['name']}")
 
         if not ranks_to_create:
             logger.info(
@@ -177,7 +177,7 @@ class PermissionSystem:
         )
         for rank, default_data in ranks_to_create:
             try:
-                logger.debug(f"Creating rank {rank}: {default_data}")
+                logger.trace(f"Creating rank {rank}: {default_data}")
                 await self.db.permission_ranks.create_permission_rank(
                     guild_id=guild_id,
                     rank=rank,
@@ -193,7 +193,7 @@ class PermissionSystem:
                 logger.error(f"Rank data: {default_data}")
                 raise
 
-        logger.info(
+        logger.success(
             f"Successfully initialized missing default ranks for guild {guild_id}",
         )
 

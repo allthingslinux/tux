@@ -35,14 +35,18 @@ INTERCEPTED_LIBRARIES = [
     "discord.client",
     "discord.gateway",
     "discord.http",
+    "discord.app_commands",  # Slash commands and app command tree
+    "discord.ui",  # UI components (buttons, modals, views)
     "jishaku",
     "aiohttp",
     "httpx",
     "urllib3",
+    "h2",  # HTTP/2 library (used by httpx)
     "asyncio",
     "sqlalchemy",
     "sqlalchemy.engine",
     "sqlalchemy.pool",
+    "sqlalchemy.pool.impl",  # Pool implementation details (very verbose)
     "sqlalchemy.orm",
     "sqlalchemy.dialects",
     "alembic",
@@ -52,30 +56,65 @@ INTERCEPTED_LIBRARIES = [
     "githubkit",
     "influxdb_client",
     "watchdog",
+    "pydantic",  # Data validation (validation errors)
+    "pydantic_settings",  # Settings management (config loading)
+    "typer",  # CLI framework (CLI operations)
+    "reactionmenu",  # Discord reaction menu library
 ]
 
 # These override the global level to either reduce spam or set appropriate levels
 THIRD_PARTY_LOG_LEVELS = {
     # Discord.py - Suppress verbose DEBUG spam (websocket events, API payloads)
+    # Gateway and HTTP are INFO to show connection events but suppress DEBUG spam
     "discord.gateway": logging.INFO,
     "discord.client": logging.INFO,
     "discord.http": logging.INFO,
+    # App commands and UI components - INFO for important events
+    "discord.app_commands": logging.INFO,
+    "discord.ui": logging.INFO,
     "jishaku": logging.INFO,
     # File watching - Suppress file I/O spam
     "watchdog": logging.WARNING,
     "watchdog.observers": logging.WARNING,
-    # HTTP clients - Suppress request/response details
+    # HTTP clients - Suppress request/response details (very verbose)
     "urllib3": logging.WARNING,
     "httpx": logging.WARNING,
     "aiohttp": logging.WARNING,
     # Database - Fine-grained control per subsystem
-    "sqlalchemy.engine": logging.WARNING,  # SQL queries and parameters (not result sets)
-    "sqlalchemy.pool": logging.DEBUG,  # Connection pool events (not checkin/checkout spam)
-    "sqlalchemy.orm": logging.WARNING,  # ORM internals (very noisy)
-    "sqlalchemy.dialects": logging.WARNING,  # Dialect-specific details
+    # Engine: WARNING to suppress SQL query spam (use DEBUG when needed for query debugging)
+    "sqlalchemy.engine": logging.WARNING,
+    # Pool: WARNING to suppress very verbose connection pool operations
+    # Pool operations (checkout, return, reset, pre-ping) are step-by-step execution tracking
+    # that are TRACE-level detail. These logs show every connection lifecycle event:
+    # - checkout: Getting a connection from the pool
+    # - pre-ping: Validating connection is alive before use
+    # - __connect: Creating new connection when pool is empty
+    # - return/finalize: Returning connection back to pool after use
+    # - reset: Cleaning up connection (rollback) before returning to pool
+    # These are too verbose for normal DEBUG logging. Set to DEBUG only when debugging
+    # connection pool issues (leaks, timeouts, connection problems).
+    "sqlalchemy.pool": logging.WARNING,
+    # Pool implementation details - even more verbose than sqlalchemy.pool
+    "sqlalchemy.pool.impl": logging.WARNING,
+    # ORM: WARNING to suppress very noisy ORM internals
+    "sqlalchemy.orm": logging.WARNING,
+    # Dialects: WARNING to suppress dialect-specific details
+    "sqlalchemy.dialects": logging.WARNING,
+    # Migration tooling - INFO for migration progress
     "alembic": logging.INFO,
+    # Database drivers - INFO for connection events
     "asyncpg": logging.INFO,
     "psycopg": logging.INFO,
+    # HTTP/2 - Suppress HTTP/2 protocol details (very verbose)
+    "h2": logging.WARNING,
+    # Data validation - INFO for validation errors (useful for debugging)
+    "pydantic": logging.INFO,
+    # Settings management - INFO for config loading events
+    "pydantic_settings": logging.INFO,
+    # CLI framework - INFO for CLI operations
+    "typer": logging.INFO,
+    # Discord reaction menu - INFO for menu operations
+    "reactionmenu": logging.INFO,
     # Use global level (no override needed, just for explicitness)
     "asyncio": logging.NOTSET,
     "discord": logging.NOTSET,  # Parent logger, children have specific levels
@@ -98,6 +137,9 @@ LEVEL_COLORS = {
 
 # Maximum message length before truncation (prevents recursion errors with huge JSON)
 MAX_MESSAGE_LENGTH = 500
+
+# Valid loguru log levels
+VALID_LOG_LEVELS = {"TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"}
 
 
 class _LoggingState:
@@ -176,6 +218,33 @@ def _configure_level_colors() -> None:
         logger.level(level_name, color=color)
 
 
+def _validate_log_level(level: str) -> str:
+    """
+    Validate and normalize log level name.
+
+    Parameters
+    ----------
+    level : str
+        Log level name to validate.
+
+    Returns
+    -------
+    str
+        Normalized (uppercase) log level name.
+
+    Raises
+    ------
+    ValueError
+        If the log level is not a valid loguru level.
+    """
+    level_upper = level.upper()
+    if level_upper not in VALID_LOG_LEVELS:
+        valid_levels = ", ".join(sorted(VALID_LOG_LEVELS))
+        error_msg = f"Invalid log level '{level}'. Must be one of: {valid_levels}"
+        raise ValueError(error_msg)
+    return level_upper
+
+
 def _determine_log_level(level: str | None, config: Config | None) -> str:
     # sourcery skip: assign-if-exp, reintroduce-else
     """
@@ -194,17 +263,21 @@ def _determine_log_level(level: str | None, config: Config | None) -> str:
     Returns
     -------
     str
-        The determined log level.
+        The determined log level (normalized to uppercase and validated).
     """
+    # Explicit level parameter (highest priority - for testing)
     if level:
-        return level
+        return _validate_log_level(level)
 
-    if config and config.LOG_LEVEL and config.LOG_LEVEL != "INFO":
-        return config.LOG_LEVEL
+    # Config LOG_LEVEL (from .env file)
+    if config and config.LOG_LEVEL:
+        return _validate_log_level(config.LOG_LEVEL)
 
+    # DEBUG flag (sets DEBUG level)
     if config and config.DEBUG:
         return "DEBUG"
 
+    # Default
     return "INFO"
 
 
@@ -383,10 +456,21 @@ def _configure_third_party_logging() -> None:
             record : logging.LogRecord
                 The standard library log record to route to loguru.
             """
-            # Get loguru level name or fallback to numeric level
+            # Map standard library level names to loguru level names
+            level_mapping = {
+                "DEBUG": "DEBUG",
+                "INFO": "INFO",
+                "WARNING": "WARNING",
+                "ERROR": "ERROR",
+                "CRITICAL": "CRITICAL",
+            }
+
+            # Try mapping first, then loguru lookup, then numeric fallback
+            level_name = level_mapping.get(record.levelname, record.levelname)
             try:
-                level = logger.level(record.levelname).name
+                level = logger.level(level_name).name
             except ValueError:
+                # Fallback to numeric level (loguru will handle it)
                 level = str(record.levelno)
 
             # Route to loguru with original source information

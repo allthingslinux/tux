@@ -18,7 +18,9 @@ Effective logging is essential for understanding what your bot is doing, debuggi
 
 Tux uses loguru for all logging, configured centrally in `src/tux/core/logging.py`. This setup provides a single global logger that's ready to use—just import and start logging. The configuration handles environment-based log levels, intercepts third-party library logs, and formats output for easy reading.
 
-The logger is pre-configured when Tux starts. You don't need to configure it yourself—just import `logger` from loguru and use it.
+The logger is configured automatically when Tux starts. Logging is initialized in the CLI start script (`scripts/tux/start.py`) before any other code runs, ensuring all log statements respect the configured level.
+
+As a defensive fallback, logging is also configured in `TuxApp.start()` before Sentry initialization. You don't need to configure it yourself—just import `logger` from loguru and use it.
 
 The configuration automatically routes logs from Discord.py, SQLAlchemy, httpx, and other libraries through loguru, giving you consistent log formatting across your entire application.
 
@@ -194,7 +196,7 @@ Log important milestones, not every step. Log operation start and completion, no
 
 Set `LOG_LEVEL=DEBUG` in your `.env` file for development. This enables detailed logging that helps you understand what your code is doing. DEBUG logs include SQL queries, API calls, and detailed execution flow.
 
-Use the `--debug` flag when starting the bot for even more verbose output. This enables DEBUG level logging without modifying your `.env` file.
+Use the `--debug` flag when starting the bot for even more verbose output. This enables DEBUG level logging without modifying your `.env` file. The `--debug` flag has the highest priority and will override any `LOG_LEVEL` setting in your `.env` file.
 
 ### Production Setup
 

@@ -171,7 +171,7 @@ class ActivityHandler(commands.Cog):
                 try:
                     new_activity = self._create_activity_with_substitution(activity)
                     await self.bot.change_presence(activity=new_activity)
-                    logger.debug(f"Set activity: {new_activity.name}")
+                    logger.trace(f"Set activity: {new_activity.name}")
                 except Exception as e:
                     logger.warning(f"Failed to set activity: {e}")
 

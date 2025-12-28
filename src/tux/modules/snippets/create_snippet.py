@@ -132,7 +132,7 @@ class CreateSnippet(SnippetsBaseCog):
             )
 
             await ctx.send("Snippet created.", ephemeral=True)
-            logger.info(f"{ctx.author} created snippet '{name}'.")
+            logger.success(f"{ctx.author} created snippet '{name}'.")
 
         except Exception as e:
             logger.error(f"Failed to create snippet: {e}")

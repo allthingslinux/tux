@@ -29,7 +29,7 @@ class Wolfram(BaseCog):
             The bot instance.
         """
         super().__init__(bot)
-        logger.info("Wolfram Alpha cog initialized successfully.")
+        logger.success("Wolfram Alpha cog initialized successfully.")
 
     @commands.hybrid_command(
         name="wolfram",
