@@ -164,7 +164,7 @@ def check_vscode_settings() -> bool:
     # Read and check key settings
     try:
         settings = json.loads(vscode_settings.read_text())
-    except json.JSONDecodeError as e:
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
         print_error(f"Failed to parse settings.json: {e}")
         return False
 
