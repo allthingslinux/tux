@@ -179,12 +179,12 @@ def test_toml_loader_invalid_file(tmp_path: Path) -> None:
     invalid_toml = tmp_path / "invalid.toml"
     invalid_toml.write_text("this is [ not valid toml")
 
-    loader = TomlConfigSource(SimpleSettings, invalid_toml)
-
+    # Warning is emitted during initialization, not when calling loader()
     with pytest.warns(UserWarning, match="Failed to load TOML config"):
-        data = loader()
+        loader = TomlConfigSource(SimpleSettings, invalid_toml)
 
     # Should return empty dict for invalid file
+    data = loader()
     assert data == {}
 
 
@@ -200,12 +200,12 @@ def test_yaml_loader_invalid_file(tmp_path: Path) -> None:
     invalid_yaml = tmp_path / "invalid.yaml"
     invalid_yaml.write_text("this: is: not: valid: yaml:")
 
-    loader = YamlConfigSource(SimpleSettings, invalid_yaml)
-
+    # Warning is emitted during initialization, not when calling loader()
     with pytest.warns(UserWarning, match="Failed to load YAML config"):
-        data = loader()
+        loader = YamlConfigSource(SimpleSettings, invalid_yaml)
 
     # Should return empty dict for invalid file
+    data = loader()
     assert data == {}
 
 
@@ -221,12 +221,12 @@ def test_json_loader_invalid_file(tmp_path: Path) -> None:
     invalid_json = tmp_path / "invalid.json"
     invalid_json.write_text("{this is not valid json")
 
-    loader = JsonConfigSource(SimpleSettings, invalid_json)
-
+    # Warning is emitted during initialization, not when calling loader()
     with pytest.warns(UserWarning, match="Failed to load JSON config"):
-        data = loader()
+        loader = JsonConfigSource(SimpleSettings, invalid_json)
 
     # Should return empty dict for invalid file
+    data = loader()
     assert data == {}
 
 

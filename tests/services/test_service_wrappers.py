@@ -204,9 +204,9 @@ class TestServiceWrapperIntegration:
 
         service = GodboltService(GODBOLT_COMPILERS)
 
-        # The service should handle the exception gracefully
-        with pytest.raises(TuxAPIConnectionError):
-            await service._execute("python3", "print('test')", None)
+        # The service should handle the exception gracefully and return None
+        result = await service._execute("python3", "print('test')", None)
+        assert result is None
 
 
 class TestServiceWrapperConfiguration:

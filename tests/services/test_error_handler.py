@@ -162,9 +162,8 @@ class TestErrorHandler:
         mock_interaction.response.send_message = AsyncMock()
 
         embed = MagicMock(spec=discord.Embed)
-        config = ErrorHandlerConfig()
 
-        await error_handler._send_error_response(mock_interaction, embed, config)
+        await error_handler._send_error_response(mock_interaction, embed)
 
         mock_interaction.response.send_message.assert_called_once_with(
             embed=embed,
@@ -182,9 +181,8 @@ class TestErrorHandler:
         mock_interaction.followup.send = AsyncMock()
 
         embed = MagicMock(spec=discord.Embed)
-        config = ErrorHandlerConfig()
 
-        await error_handler._send_error_response(mock_interaction, embed, config)
+        await error_handler._send_error_response(mock_interaction, embed)
 
         mock_interaction.followup.send.assert_called_once_with(
             embed=embed,
@@ -201,9 +199,8 @@ class TestErrorHandler:
         mock_ctx.reply = AsyncMock()
 
         embed = MagicMock(spec=discord.Embed)
-        config = ErrorHandlerConfig()
 
-        await error_handler._send_error_response(mock_ctx, embed, config)
+        await error_handler._send_error_response(mock_ctx, embed)
 
         mock_ctx.reply.assert_called_once_with(
             embed=embed,
