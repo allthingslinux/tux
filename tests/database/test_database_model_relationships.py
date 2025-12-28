@@ -5,6 +5,7 @@ Tests for model relationships and database constraints.
 """
 
 import pytest
+from sqlmodel import delete as sql_delete
 
 from tests.fixtures import (
     TEST_CHANNEL_ID,
@@ -121,11 +122,16 @@ class TestModelRelationships:
             assert await session.get(GuildConfig, TEST_GUILD_ID) is not None
 
             # Delete guild (config should be handled based on cascade rules)
-            session.delete(guild)  # type: ignore[reportUnusedCoroutine]
+            # Load the relationship first to ensure cascade works
+            await session.refresh(guild, ["guild_config"])
+            # Use delete statement to ensure cascade works at database level
+            await session.execute(sql_delete(Guild).where(Guild.id == TEST_GUILD_ID))
             await session.commit()
 
+        # Use a fresh session to verify deletion (previous session may have cached objects)
+        async with db_service.session() as fresh_session:
             # Verify guild is deleted
-            assert await session.get(Guild, TEST_GUILD_ID) is None
+            assert await fresh_session.get(Guild, TEST_GUILD_ID) is None
 
             # Verify config was also deleted (cascade behavior)
-            assert await session.get(GuildConfig, TEST_GUILD_ID) is None
+            assert await fresh_session.get(GuildConfig, TEST_GUILD_ID) is None
