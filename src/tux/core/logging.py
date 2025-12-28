@@ -26,6 +26,7 @@ __all__ = [
     "configure_testing_logging",
     "StructuredLogger",
     "verify_logging_interception",
+    "VALID_LOG_LEVELS",
 ]
 
 
