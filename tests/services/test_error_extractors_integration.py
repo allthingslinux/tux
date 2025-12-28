@@ -6,6 +6,8 @@ Tests for extractors with actual Discord.py/httpx error objects.
 
 import httpx
 
+from tux.services.handlers.error.extractors import extract_httpx_status_details
+
 
 class TestExtractorsWithRealErrors:
     """Test extractors with actual Discord.py/httpx error objects where possible."""
@@ -19,8 +21,10 @@ class TestExtractorsWithRealErrors:
         assert hasattr(error, "request")
         assert error.request.url == "https://api.example.com/timeout"
 
-        # Note: TimeoutException doesn't have a response attribute, so extract_httpx_status_details
-        # won't work directly, but we verify the error object structure is correct
+        # Test that extractor handles TimeoutException gracefully
+        # (returns empty dict since it doesn't have a response attribute)
+        context = extract_httpx_status_details(error)
+        assert context == {}  # TimeoutException has no response, so returns empty dict
 
     def test_httpx_connect_error(self) -> None:
         """Test extractor with real httpx ConnectError."""
@@ -31,5 +35,28 @@ class TestExtractorsWithRealErrors:
         assert hasattr(error, "request")
         assert error.request is not None
 
-        # Note: ConnectError doesn't have a response attribute, so extract_httpx_status_details
-        # won't work directly, but we verify the error object structure is correct
+        # Test that extractor handles ConnectError gracefully
+        # (returns empty dict since it doesn't have a response attribute)
+        context = extract_httpx_status_details(error)
+        assert context == {}  # ConnectError has no response, so returns empty dict
+
+    def test_httpx_status_error(self) -> None:
+        """Test extractor with real httpx HTTPStatusError."""
+        request = httpx.Request("GET", "https://api.example.com/not-found")
+        # Create a mock response for HTTPStatusError
+        response = httpx.Response(
+            404,
+            request=request,
+            text="Not Found: Resource does not exist",
+        )
+        error = httpx.HTTPStatusError("Not Found", request=request, response=response)
+
+        # Test that extractor extracts details from HTTPStatusError
+        context = extract_httpx_status_details(error)
+
+        assert "status_code" in context
+        assert context["status_code"] == 404
+        assert "url" in context
+        assert "api.example.com" in str(context["url"])
+        assert "response_text" in context
+        assert "Not Found" in context["response_text"]
