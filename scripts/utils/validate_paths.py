@@ -229,7 +229,6 @@ def check_pytest_config() -> bool:
         )
     except (
         subprocess.TimeoutExpired,
-        subprocess.CalledProcessError,
         FileNotFoundError,
     ) as e:
         print_warning(f"Could not test pytest discovery: {e}")
