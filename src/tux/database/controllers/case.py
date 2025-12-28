@@ -274,26 +274,25 @@ class CaseController(BaseController[Case]):
             filters=(Case.guild_id == guild_id) & (Case.case_type == case_type),
         )
 
-    async def get_recent_cases(self, guild_id: int, hours: int = 24) -> list[Case]:
+    async def get_recent_cases(self, guild_id: int) -> list[Case]:
         """
-        Get cases created within the last N hours.
+        Get cases for a guild.
 
         Parameters
         ----------
         guild_id : int
             The guild ID to filter cases by.
-        hours : int, optional
-            Number of hours to look back (default is 24). Currently unused as
-            created_at filtering is not yet implemented.
 
         Returns
         -------
         list[Case]
-            List of recent cases.
+            List of cases for the guild.
+
+        Notes
+        -----
+        Time-based filtering is not yet implemented as the Case model lacks
+        a created_at field. This currently returns all cases for the guild.
         """
-        # For now, just get all cases in the guild since we don't have a created_at field
-        # TODO: Implement created_at filtering when Case model has timestamp field
-        _ = hours  # Mark as intentionally unused until filtering is implemented
         return await self.find_all(filters=Case.guild_id == guild_id)
 
     async def get_case_count_by_guild(self, guild_id: int) -> int:
