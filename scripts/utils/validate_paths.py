@@ -164,7 +164,7 @@ def check_vscode_settings() -> bool:
     # Read and check key settings
     try:
         settings = json.loads(vscode_settings.read_text())
-    except Exception as e:
+    except json.JSONDecodeError as e:
         print_error(f"Failed to parse settings.json: {e}")
         return False
 
@@ -227,7 +227,11 @@ def check_pytest_config() -> bool:
             text=True,
             timeout=10,
         )
-    except Exception as e:
+    except (
+        subprocess.TimeoutExpired,
+        subprocess.CalledProcessError,
+        FileNotFoundError,
+    ) as e:
         print_warning(f"Could not test pytest discovery: {e}")
         return False
     else:
