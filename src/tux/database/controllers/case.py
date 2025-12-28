@@ -179,12 +179,12 @@ class CaseController(BaseController[Case]):
             case_data.update(kwargs)
 
             # Create the case
-            logger.debug(f"Creating Case object with data: {case_data}")
+            logger.trace(f"Creating Case object with data: {case_data}")
             case = Case(**case_data)
             session.add(case)
             await session.flush()
             await session.refresh(case)
-            logger.info(
+            logger.success(
                 f"Case created successfully: ID={case.id}, number={case.case_number}, expires_at={case.case_expires_at}",
             )
             return case
@@ -478,7 +478,7 @@ class CaseController(BaseController[Case]):
             case_processed=False, and case_status=True.
         """
         now = datetime.now(UTC)
-        logger.debug(
+        logger.trace(
             f"Checking for unprocessed expired tempbans in guild {guild_id}, current time: {now}",
         )
 
@@ -495,13 +495,20 @@ class CaseController(BaseController[Case]):
             ),
         )
 
-        logger.debug(
-            f"Found {len(expired_cases)} unprocessed expired tempbans in guild {guild_id}",
-        )
-        for case in expired_cases:
-            logger.debug(
-                f"Unprocessed expired tempban: case_id={case.id}, user={case.case_user_id}, "
-                f"expires_at={case.case_expires_at}, processed={case.case_processed}",
+        if expired_cases:
+            # Only log if we found expired cases (INFO for actual work being done)
+            logger.info(
+                f"Found {len(expired_cases)} unprocessed expired tempbans in guild {guild_id}",
+            )
+            for case in expired_cases:
+                logger.debug(
+                    f"Unprocessed expired tempban: case_id={case.id}, user={case.case_user_id}, "
+                    f"expires_at={case.case_expires_at}, processed={case.case_processed}",
+                )
+        else:
+            # TRACE for routine checks that find nothing
+            logger.trace(
+                f"No unprocessed expired tempbans found in guild {guild_id}",
             )
 
         return expired_cases

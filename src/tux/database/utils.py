@@ -79,7 +79,7 @@ def get_db_service_from(
             if db_service is not None:
                 return db_service
         except Exception as e:
-            logger.debug(f"Failed to resolve DatabaseService from container: {e}")
+            logger.trace(f"Failed to resolve DatabaseService from container: {e}")
 
     # Fallback: try to get db_service directly from bot
     db_service = getattr(bot, "db_service", None)
@@ -116,7 +116,7 @@ def get_db_controller_from(
             # Create a simple coordinator wrapper
             return DatabaseCoordinator(db_service)
         except Exception as e:
-            logger.debug(f"Failed to get coordinator from DatabaseService: {e}")
+            logger.trace(f"Failed to get coordinator from DatabaseService: {e}")
     return DatabaseCoordinator() if fallback_to_direct else None
 
 

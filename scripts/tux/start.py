@@ -25,6 +25,14 @@ def start(
     debug: Annotated[bool, Option("--debug", help="Enable debug mode")] = False,
 ) -> None:
     """Start the Tux Discord bot."""
+    # Configure logging FIRST (before any other code runs)
+    from tux.core.logging import configure_logging  # noqa: PLC0415
+    from tux.shared.config import CONFIG  # noqa: PLC0415
+
+    # Use --debug flag to override log level if provided
+    log_level = "DEBUG" if debug else None
+    configure_logging(level=log_level, config=CONFIG)
+
     print_section("Starting Tux Bot", "blue")
     rich_print("[bold blue]Starting Tux Discord bot...[/bold blue]")
 

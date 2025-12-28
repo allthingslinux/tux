@@ -123,7 +123,7 @@ class HelpData:
             return True  # noqa: TRY300
 
         except Exception as e:
-            logger.debug(f"Error checking command permission for {command.name}: {e}")
+            logger.trace(f"Error checking command permission for {command.name}: {e}")
             # On error, default to hiding the command for safety
             return False
 
@@ -220,7 +220,7 @@ class HelpData:
             user_rank = await permission_system.get_user_permission_rank(self.ctx)
             return user_rank >= cmd_perm.required_rank  # noqa: TRY300
         except Exception as e:
-            logger.debug(f"Error checking permission rank for {command.name}: {e}")
+            logger.trace(f"Error checking permission rank for {command.name}: {e}")
             # On error, default to hiding the command for safety
             return False
 

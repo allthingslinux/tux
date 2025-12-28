@@ -850,7 +850,7 @@ class ConfigDashboard(discord.ui.LayoutView):
                 return
 
             rank_id = int(custom_id.split("_")[-1])
-            logger.debug(f"Processing assign role request for rank {rank_id}")
+            logger.trace(f"Processing assign role request for rank {rank_id}")
 
             # Validate rank
             rank_db_id = await self._validate_rank_for_assignment(rank_id)
@@ -861,7 +861,7 @@ class ConfigDashboard(discord.ui.LayoutView):
                 )
                 return
 
-            logger.debug(f"Found rank {rank_id} with database ID {rank_db_id}")
+            logger.trace(f"Found rank {rank_id} with database ID {rank_db_id}")
 
             # Create role selector
             role_select: discord.ui.RoleSelect[discord.ui.LayoutView] = (
@@ -1772,7 +1772,7 @@ class ConfigDashboard(discord.ui.LayoutView):
                 )
                 try:
                     await self.bot.db.guild.insert_guild_by_id(self.guild.id)
-                    logger.info(f"Successfully registered guild {self.guild.id}")
+                    logger.success(f"Successfully registered guild {self.guild.id}")
                 except Exception as reg_error:
                     logger.error(
                         f"Failed to register guild {self.guild.id}: {reg_error}",
@@ -1785,13 +1785,13 @@ class ConfigDashboard(discord.ui.LayoutView):
                     return
 
             # Check if ranks already exist
-            logger.debug(f"Checking existing ranks for guild {self.guild.id}")
+            logger.trace(f"Checking existing ranks for guild {self.guild.id}")
             existing_ranks = (
                 await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
                     self.guild.id,
                 )
             )
-            logger.debug(
+            logger.trace(
                 f"Found {len(existing_ranks)} existing ranks for guild {self.guild.id}",
             )
 
@@ -1811,7 +1811,7 @@ class ConfigDashboard(discord.ui.LayoutView):
             logger.info(f"Initializing default ranks for guild {self.guild.id}")
             try:
                 permission_system = get_permission_system()
-                logger.debug("Got permission system instance, calling initialize_guild")
+                logger.trace("Got permission system instance, calling initialize_guild")
                 await permission_system.initialize_guild(self.guild.id)
                 logger.info(
                     f"Successfully initialized ranks via permission system for guild {self.guild.id}",

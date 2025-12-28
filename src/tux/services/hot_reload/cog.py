@@ -15,4 +15,4 @@ async def setup(bot: Tux) -> None:
         The bot instance.
     """
     await bot.add_cog(HotReload(bot))
-    logger.debug("Hot reload cog loaded")
+    logger.trace("Hot reload cog loaded")

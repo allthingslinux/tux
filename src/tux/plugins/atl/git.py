@@ -147,7 +147,7 @@ class Git(BaseCog):
 
         else:
             await ctx.send(embed=embed, view=GithubButton(created_issue.html_url))
-            logger.info(f"{ctx.author} created an issue.")
+            logger.success(f"{ctx.author} created an issue.")
 
     @git.command(
         name="get_issue",

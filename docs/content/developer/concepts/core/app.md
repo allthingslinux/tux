@@ -54,23 +54,25 @@ The bot startup follows a carefully orchestrated sequence:
 
 ```mermaid
 graph TD
-    A[Sentry Setup] --> B[Signal Handler Registration]
-    B --> C[Configuration Validation]
-    C --> D[Owner ID Resolution]
-    D --> E[Bot Instance Creation]
-    E --> F[Discord Login]
-    F --> G[Discord Connection]
+    A[Logging Configuration] --> B[Sentry Setup]
+    B --> C[Signal Handler Registration]
+    C --> D[Configuration Validation]
+    D --> E[Owner ID Resolution]
+    E --> F[Bot Instance Creation]
+    F --> G[Discord Login]
+    G --> H[Discord Connection]
 ```
 
 **Startup Steps:**
 
-1. **Sentry Initialization** - Error tracking set up first to capture any startup failures
-2. **Signal Handler Registration** - Event loop signal handlers registered for graceful shutdown
-3. **Configuration Validation** - Bot token and critical settings verified before proceeding
-4. **Owner ID Resolution** - Bot owner and optional sysadmin IDs determined
-5. **Bot Instance Creation** - Tux bot instance created with proper configuration
-6. **Discord Login** - Performs authentication and triggers the core setup hook (database, cogs, etc.)
-7. **Discord Connection** - Establishes WebSocket connection to Discord gateway
+1. **Logging Configuration** - Logging configured as fallback (normally done in CLI script). Must be before Sentry since Sentry uses the logger
+2. **Sentry Initialization** - Error tracking set up to capture any startup failures
+3. **Signal Handler Registration** - Event loop signal handlers registered for graceful shutdown
+4. **Configuration Validation** - Bot token and critical settings verified before proceeding
+5. **Owner ID Resolution** - Bot owner and optional sysadmin IDs determined
+6. **Bot Instance Creation** - Tux bot instance created with proper configuration
+7. **Discord Login** - Performs authentication and triggers the core setup hook (database, cogs, etc.)
+8. **Discord Connection** - Establishes WebSocket connection to Discord gateway
 
 ### Signal Handling
 

@@ -38,7 +38,9 @@ logger.warning("Rate limit approaching", remaining=5)
 logger.error("Database connection failed", error=str(e))
 ```
 
-The logger is configured automatically when Tux starts. You don't need to set it up yourself.
+The logger is configured automatically when Tux starts. The primary configuration happens in the CLI script (`scripts/tux/start.py`) before any other code runs, ensuring the `--debug` flag and environment variables are respected.
+
+As a defensive fallback, logging is also configured in `TuxApp.start()` (`src/tux/core/app.py`) before Sentry initialization. You don't need to set it up yourself.
 
 ## Log Levels
 
@@ -113,10 +115,12 @@ logger.critical("Missing required configuration", setting="BOT_TOKEN")
 
 Log levels are determined in this order (highest to lowest priority):
 
-1. **Explicit Parameter** - `configure_logging(level="DEBUG")` for testing
+1. **Explicit Parameter** - `--debug` flag (converts to `level="DEBUG"`) or `configure_logging(level="...")` (highest priority)
 2. **Environment Variable** - `LOG_LEVEL=DEBUG` in `.env` file
 3. **Debug Flag** - `DEBUG=1` in `.env` sets DEBUG level automatically
 4. **Default** - `INFO` level if nothing is configured
+
+The `--debug` flag is handled by the CLI script (`scripts/tux/start.py`) which passes `level="DEBUG"` to `configure_logging()`, making it an explicit parameter with the highest priority.
 
 ### Environment Configuration
 

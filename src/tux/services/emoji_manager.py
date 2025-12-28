@@ -190,7 +190,9 @@ class EmojiManager:
                     if _is_valid_emoji_name(emoji.name)
                 }
 
-                logger.info(f"Initialized emoji cache with {len(self.cache)} emojis.")
+                logger.success(
+                    f"Initialized emoji cache with {len(self.cache)} emojis.",
+                )
                 self._initialized = True
 
             except discord.HTTPException as e:
@@ -283,7 +285,7 @@ class EmojiManager:
                 image=image_bytes,
             )
             self.cache[name] = emoji  # Update cache immediately
-            logger.info(f"Successfully created emoji '{name}'. ID: {emoji.id}")
+            logger.success(f"Successfully created emoji '{name}'. ID: {emoji.id}")
             return emoji  # noqa: TRY300
 
         except discord.HTTPException as e:
@@ -443,7 +445,7 @@ class EmojiManager:
 
         try:
             await existing_emoji.delete()
-            logger.info(f"Successfully deleted existing application emoji '{name}'.")
+            logger.success(f"Successfully deleted existing application emoji '{name}'.")
             deleted_on_discord = True
 
         except discord.NotFound:

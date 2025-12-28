@@ -92,7 +92,7 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             return
 
         file_path = Path(str(event.src_path))
-        logger.info(f"Processing file: {file_path}")
+        logger.debug(f"Processing file: {file_path}")
 
         if not self.should_process_file(file_path):
             logger.info(f"File {file_path} filtered out by should_process_file")
@@ -201,7 +201,7 @@ class FileWatcher:
 
         try:
             current_dir = Path.cwd()
-            logger.info(f"Current working directory: {current_dir}")
+            logger.debug(f"Current working directory: {current_dir}")
             logger.info(
                 f"Hot reload config watch directories: {self.config.watch_directories}",
             )
@@ -235,7 +235,7 @@ class FileWatcher:
                 logger.info(f"Watching directory: {abs_watch_dir}")
 
             self.observer.start()
-            logger.info("File watcher started successfully")
+            logger.success("File watcher started successfully")
 
         except Exception as e:
             logger.error(f"Failed to start file watcher: {e}")

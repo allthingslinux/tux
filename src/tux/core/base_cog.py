@@ -133,7 +133,7 @@ class BaseCog(commands.Cog):
 
         except Exception:
             # If signature inspection fails, fall back to minimal usage
-            logger.debug(
+            logger.trace(
                 f"Signature inspection failed for {command.qualified_name}, using fallback",
             )
             return command.qualified_name
@@ -143,7 +143,7 @@ class BaseCog(commands.Cog):
             return generate_usage(command, flag_converter)
         except Exception:
             # Final fallback: just return the command name
-            logger.debug(
+            logger.trace(
                 f"Usage generation failed for {command.qualified_name}, using fallback",
             )
             return command.qualified_name

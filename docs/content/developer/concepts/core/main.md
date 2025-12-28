@@ -107,10 +107,11 @@ python -m tux.main
 
 **Logging Setup:**
 
-- Logging is configured by the CLI script before `run()` is called
+- Logging is configured in the CLI start script (`scripts/tux/start.py`) before `run()` is called
+- As a defensive fallback, logging is also configured in `TuxApp.start()` before Sentry initialization
 - Ensures consistent log formatting across all execution methods
-- Supports different log levels (DEBUG, INFO, WARNING, ERROR)
-- See `scripts/core.py` for bootstrapping logic
+- Supports different log levels via `--debug` flag, `LOG_LEVEL` environment variable, or `DEBUG=1` flag
+- The `--debug` flag has highest priority and overrides environment variables
 
 ## Error Classification
 

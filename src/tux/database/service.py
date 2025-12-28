@@ -95,7 +95,7 @@ class DatabaseService:
                 expire_on_commit=False,
             )
 
-            logger.info("Successfully connected to database")
+            logger.success("Successfully connected to database")
 
         except Exception as e:
             logger.error(f"Failed to connect to database: {type(e).__name__}")

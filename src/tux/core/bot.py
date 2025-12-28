@@ -158,7 +158,7 @@ class Tux(commands.Bot):
                 await orchestrator.setup(span)
 
             self.setup_complete = True
-            logger.info("Bot setup completed successfully")
+            logger.success("Bot setup completed successfully")
 
             # Tag success in Sentry for monitoring
             if self.sentry_manager.is_initialized:
