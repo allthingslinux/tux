@@ -4,7 +4,7 @@
 <div align="center">
     <p align="center">
         <a href="https://github.com/allthingslinux/tux/releases">
-            <img alt="GitHub Release" src="https://img.shields.io/github/v/release/allthingslinux/tux?logo=github&logoColor=white"></a>
+            <img alt="GitHub Release" src="https://img.shields.io/github/v/release/allthingslinux/tux?logo=github&logoColor=white&include_prereleases=true"></a>
         <a href="https://python.org">
             <img alt="Python" src="https://img.shields.io/badge/python-3.13.2+-blue?logo=python&logoColor=white"></a>
         <a href="https://docs.astral.sh/uv">
