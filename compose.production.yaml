@@ -1,0 +1,127 @@
+---
+# Docker Compose configuration for PRODUCTION deployments
+# This file removes development-specific features like volume bindings and hot reload
+#
+# Usage:
+#   docker compose -f compose.production.yaml up -d
+#
+# Note: Ensure .env file is configured with all required secrets before deployment
+services:
+  tux-postgres:
+    container_name: tux-postgres
+    hostname: tux-postgres
+    image: postgres:17-alpine@sha256:ff4ccc02b97e0ebb6b328ef9ff92522f95586f83be6801896b615088defc8ad2
+    restart: false
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
+      POSTGRES_USER: ${POSTGRES_USER:-tuxuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
+      POSTGRES_INITDB_ARGS: --encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    ports: ['127.0.0.1:${POSTGRES_PORT:-5432}:5432']
+    volumes:
+      - tux_postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+        compress: 'true'
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${POSTGRES_USER:-tuxuser} -d ${POSTGRES_DB:-tuxdb} -h localhost
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    stop_grace_period: 30s
+  tux:
+    container_name: tux
+    hostname: tux
+    # Production: Use published image, not local build
+    image: ${TUX_IMAGE:-ghcr.io/allthingslinux/tux}:${TUX_IMAGE_TAG:-latest}
+    # No build configuration in production - use pre-built images
+    # No volume bindings for source code in production - everything is in the image
+    volumes:
+      # Only mount configuration and data directories (not source code)
+      - ./config:/app/config:ro
+      - ./src/tux/plugins:/app/tux/plugins:ro
+      - ./assets:/app/assets:ro
+      - ./docker/entrypoint.sh:/entrypoint.sh:ro
+      - ./data/cache:/app/.cache
+      - ./data/temp:/app/temp
+      - ./data/user-home:/home/nonroot
+      # Note: Plugins are drop-in extensions - mount from host for easy updates
+    env_file: [.env]
+    environment:
+      TUX_VERSION: ${VERSION:-dev}
+      DEBUG: ${DEBUG:-false}
+      FORCE_MIGRATE: ${FORCE_MIGRATE:-false}
+      MAX_STARTUP_ATTEMPTS: ${MAX_STARTUP_ATTEMPTS:-3}
+      STARTUP_DELAY: ${STARTUP_DELAY:-5}
+      # Database configuration for Docker
+      POSTGRES_HOST: tux-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
+      POSTGRES_USER: ${POSTGRES_USER:-tuxuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
+    restart: unless-stopped
+    depends_on:
+      tux-postgres:
+        condition: service_healthy
+    healthcheck:
+      # Lightweight health check - verify Python process is running
+      # The bot logs configuration errors at startup, healthcheck just needs to verify it's alive
+      test:
+        - CMD-SHELL
+        - ps aux | grep -v grep | grep -q "tux start" || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    stop_grace_period: 30s
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp:size=100m, /var/tmp:size=50m]
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+    # No 'develop' section in production - hot reload is development-only
+
+  # Adminer is a development/admin tool - not included in production by default
+  # To enable it, uncomment below or use: docker compose -f compose.production.yaml --profile dev up -d adminer
+  # tux-adminer:
+  #   image: adminer:latest@sha256:ae1d4d7774c544d084e42887a318e6b0f47ad8c60fe1661d9278ef169c8b4eaa
+  #   container_name: tux-adminer
+  #   hostname: tux-adminer
+  #   profiles: [dev]
+  #   restart: false
+  #   depends_on:
+  #     tux-postgres:
+  #       condition: service_healthy
+  #   ports: ['${ADMINER_PORT:-8080}:8080']
+  #   environment:
+  #     ADMINER_DEFAULT_DRIVER: pgsql
+  #     ADMINER_DEFAULT_SERVER: tux-postgres
+  #     ADMINER_DEFAULT_DB: ${POSTGRES_DB:-tuxdb}
+  #     ADMINER_DEFAULT_USERNAME: ${POSTGRES_USER:-tuxuser}
+  #     ADMINER_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
+  #     ADMINER_AUTO_LOGIN: ${ADMINER_AUTO_LOGIN:-true}
+  #     ADMINER_PLUGINS: backward-keys tables-filter dump-date dump-json dump-xml dump-zip
+  #       edit-calendar edit-foreign enum-option foreign-system json-column pretty-json-column
+  #       table-indexes-structure table-structure row-numbers config
+  #     ADMINER_THEME: dracula
+  #   configs:
+  #     - source: adminer-index.php
+  #       target: /var/www/html/index.php
+volumes:
+  tux_postgres_data:
+    driver: local
+# No configs needed in production (adminer is commented out)
+# configs:
+#   adminer-index.php:
+#     file: ./docker/adminer/index.php
