@@ -6,8 +6,6 @@ on:
   pull_request:
     branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
   workflow_dispatch:
-  schedule:
-    - cron: 0 2 15 * *  # Monthly: Test build (15th at 2 AM UTC)
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -60,6 +58,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      packages: write  # Required for registry cache backend
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
@@ -70,14 +69,14 @@ jobs:
       #
       # Default behavior (no explicit config needed):
       # - Creates builder with docker-container driver (enables BuildKit features)
-      # - Supports GitHub Actions cache (type=gha) for faster builds
+      # - Supports registry cache and GitHub Actions cache for faster builds
       # - Caches buildx binary to GitHub Actions cache backend
       # - Automatically cleans up builder and temp files at end of job
       # - Switches to this builder instance for subsequent build steps
       #
       # Why we use Buildx:
       # - Required for docker/build-push-action@v6 advanced features
-      # - Enables GitHub Actions cache (cache-from/cache-to type=gha)
+      # - Enables hybrid cache (registry + GHA cache) for better cache persistence
       # - Supports build-time features (secrets, remote cache, etc.)
       # - Future-proof for multi-platform builds if needed
       #
@@ -87,6 +86,15 @@ jobs:
       # - Custom builder name: Add name: my-builder for persistent builders
       - name: Setup Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f  # v3
+
+      # Login to registry for registry cache access and Docker Scout (read/write cache, not pushing images)
+      # Docker Scout requires authentication to access environments and compare images
+      - name: Login to Registry
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef  # v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       # Extract Docker image metadata for PR validation builds
       # Uses docker/metadata-action@v5 to generate tags and labels
@@ -127,12 +135,15 @@ jobs:
         id: pr_version
         run: ./.github/scripts/docker.sh generate-pr-version \ "${{ github.event.number }}"
           \ "${{ github.sha }}" \ "${{ env.SHA_PREFIX_LENGTH }}"
+      - name: Generate Build Date
+        id: build_date
+        run: echo "date=$(./.github/scripts/docker.sh generate-build-date)" >> "$GITHUB_OUTPUT"
 
       # Build Docker image for validation (does not push to registry)
       # Uses docker/build-push-action@v6 with Buildx for advanced features
       # Docs: https://github.com/docker/build-push-action
       # Features used:
-      # - GitHub Actions cache (type=gha) for faster builds
+      # - Hybrid cache (registry + GHA) for faster builds with better persistence
       # - Load into Docker daemon (load: true) for image scanning
       # - Build metadata (tags/labels) for image identification
       # - Build-time variables for versioning and traceability
@@ -148,12 +159,17 @@ jobs:
           target: production
           # Don't push to registry (validation builds only)
           push: false
-          # Load image into Docker daemon for scanning with Trivy
+          # Load image into Docker daemon for scanning with Docker Scout
           load: true
-          # Use GitHub Actions cache for faster builds
-          # Cache strategy: read from previous builds, write with max mode for future builds
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Hybrid cache: Registry cache (persistent, shared) + GHA cache (fast fallback)
+          # Registry cache persists across all builds/branches/PRs for better cache hits
+          # GHA cache provides fast local fallback if registry cache unavailable
+          cache-from: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+            type=gha
+          cache-to: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+            type=gha,mode=max
           # Image tags for identification (from metadata extraction step)
           tags: ${{ steps.meta.outputs.tags }}
           # OCI labels for image metadata (title, description, source, etc.)
@@ -166,35 +182,38 @@ jobs:
           build-args: |
             VERSION=${{ steps.pr_version.outputs.version }}
             GIT_SHA=${{ github.sha }}
-            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-      # Run Trivy scans in parallel for faster validation
-      # Both scans are independent and can run simultaneously
-      - name: Scan Containerfile
-        uses: reviewdog/action-trivy@a1e6d7dd5520369c076d7ce639a16442938535d8  # v1
+            BUILD_DATE=${{ steps.build_date.outputs.date }}
+      # Run Docker Scout analysis for vulnerability scanning
+      # For PRs: Compare against production environment to show what changed
+      # For other events: Run quickview and recommendations for general analysis
+      - name: Docker Scout Compare
+        if: github.event_name == 'pull_request'
+        uses: docker/scout-action@v1
         continue-on-error: true
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          trivy_command: config
-          trivy_target: ./Containerfile
-          trivy_version: v0.63.0
-          level: error
-          reporter: github-pr-review
-          tool_name: trivy-dockerfile
-          filter_mode: added
-          trivy_flags: --severity HIGH,CRITICAL --no-progress --quiet --skip-db-update
-      - name: Scan Image
-        uses: reviewdog/action-trivy@a1e6d7dd5520369c076d7ce639a16442938535d8  # v1
+          command: compare
+          image: ${{ steps.meta.outputs.tags }}
+          to-env: production
+          ignore-unchanged: true
+          only-severities: critical,high
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Docker Scout Quickview
+        if: github.event_name != 'pull_request'
+        uses: docker/scout-action@v1
         continue-on-error: true
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          trivy_command: image
-          trivy_target: ${{ steps.meta.outputs.tags }}
-          trivy_version: v0.63.0
-          level: error
-          reporter: github-pr-review
-          tool_name: trivy-image
-          filter_mode: added
-          trivy_flags: --severity HIGH,CRITICAL --no-progress --quiet --skip-db-update
+          command: quickview
+          image: ${{ steps.meta.outputs.tags }}
+          only-severities: critical,high
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Docker Scout Recommendations
+        if: github.event_name != 'pull_request'
+        uses: docker/scout-action@v1
+        continue-on-error: true
+        with:
+          command: recommendations
+          image: ${{ steps.meta.outputs.tags }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
   build:
     name: Build & Push
     runs-on: ubuntu-latest
@@ -213,14 +232,14 @@ jobs:
       #
       # Default behavior (no explicit config needed):
       # - Creates builder with docker-container driver (enables BuildKit features)
-      # - Supports GitHub Actions cache (type=gha) for faster builds
+      # - Supports registry cache and GitHub Actions cache for faster builds
       # - Caches buildx binary to GitHub Actions cache backend
       # - Automatically cleans up builder and temp files at end of job
       # - Switches to this builder instance for subsequent build steps
       #
       # Why we use Buildx:
       # - Required for docker/build-push-action@v6 advanced features
-      # - Enables GitHub Actions cache (cache-from/cache-to type=gha)
+      # - Enables hybrid cache (registry + GHA cache) for better cache persistence
       # - Supports build-time features (secrets, remote cache, etc.)
       # - Future-proof for multi-platform builds if needed
       #
@@ -304,19 +323,91 @@ jobs:
         id: release_version
         run: ./.github/scripts/docker.sh generate-release-version \ "${{ github.ref }}"
           \ "${{ env.SHA_PREFIX_LENGTH }}"
-
-      # Build and push Docker image to GitHub Container Registry (GHCR)
+      - name: Validate Build Configuration
+        run: ./.github/scripts/docker.sh validate-build-config "${{ github.sha }}"
+      - name: Calculate SOURCE_DATE_EPOCH
+        id: source_date
+        run: ./.github/scripts/docker.sh calculate-source-date-epoch \ "${{ github.event.head_commit.timestamp }}"
+          \ "${{ github.event.repository.created_at }}"
+      - name: Generate Build Date
+        id: build_date
+        run: echo "date=$(./.github/scripts/docker.sh generate-build-date)" >> "$GITHUB_OUTPUT"
+      # Build Docker image for validation (does not push to registry)
+      # Test-before-push pattern: Build, validate, then push only if validation passes
       # Uses docker/build-push-action@v6 with Buildx for advanced features
       # Docs: https://github.com/docker/build-push-action
       # Features used:
-      # - GitHub Actions cache (type=gha) for faster builds
-      # - Push to registry (push: true) for production images
+      # - Hybrid cache (registry + GHA) for faster builds
+      # - Load into Docker daemon (load: true) for image scanning
       # - Build metadata (tags/labels) for image identification
       # - Build-time variables for versioning and traceability
-      # - Multi-tag support (semver versions + latest tag)
-      - name: Build & Push
+      - name: Build for Validation
+        id: build_validate
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83  # v6
         timeout-minutes: 15
+        env:
+          # Set SOURCE_DATE_EPOCH for reproducible builds
+          SOURCE_DATE_EPOCH: ${{ steps.source_date.outputs.epoch }}
+        with:
+          # Build context directory (current directory)
+          context: .
+          # Path to Containerfile (Dockerfile)
+          file: Containerfile
+          # Target stage to build (production stage in Containerfile)
+          target: production
+          # Don't push to registry yet (validation builds only)
+          push: false
+          # Load image into Docker daemon for scanning with Docker Scout
+          load: true
+          # Hybrid cache: Registry cache (persistent, shared) + GHA cache (fast fallback)
+          # Registry cache persists across all builds/branches/PRs for better cache hits
+          # GHA cache provides fast local fallback if registry cache unavailable
+          cache-from: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+            type=gha
+          cache-to: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+            type=gha,mode=max
+          # Image tags for identification (semver versions + latest from metadata extraction)
+          # Multiple tags created: v1.2.3, 1.2, 1, latest (for default branch)
+          tags: ${{ steps.meta.outputs.tags }}
+          # OCI labels for image metadata (title, description, source, license, etc.)
+          labels: ${{ steps.meta.outputs.labels }}
+          # OCI annotations for registry UIs (e.g. GHCR package description)
+          annotations: ${{ steps.meta.outputs.annotations }}
+          # Disable attestations for validation build (faster validation, attestations added in push step)
+          # Note: Attestations (SBOM/provenance) are only generated when pushing, not when loading to daemon
+          provenance: false
+          sbom: false
+          # Always pull base images to ensure we get latest security updates
+          pull: true
+          # Build-time variables passed to Containerfile
+          build-args: |
+            VERSION=${{ steps.release_version.outputs.version }}
+            GIT_SHA=${{ github.sha }}
+            BUILD_DATE=${{ steps.build_date.outputs.date }}
+      # Validate image before pushing (test-before-push pattern)
+      # Run Docker Scout CVE scan to ensure image is safe before pushing to registry
+      # Fails the workflow if critical or high-severity vulnerabilities are found
+      - name: Docker Scout CVEs Before Push
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: ${{ steps.meta.outputs.tags }}
+          only-severities: critical,high
+          exit-code: 1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      # Push validated image to GitHub Container Registry (GHCR) with SBOM and provenance
+      # Only runs if validation step passed (implicit dependency via step order)
+      # Rebuild with push enabled to generate and push SBOM/provenance attestations
+      # This second build will be fast due to BuildKit cache from validation build
+      - name: Push Validated Image with Attestations
+        if: success()
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83  # v6
+        timeout-minutes: 5
+        env:
+          # Set SOURCE_DATE_EPOCH for reproducible builds
+          SOURCE_DATE_EPOCH: ${{ steps.source_date.outputs.epoch }}
         with:
           # Build context directory (current directory)
           context: .
@@ -326,10 +417,17 @@ jobs:
           target: production
           # Push image to GitHub Container Registry (ghcr.io)
           push: true
-          # Use GitHub Actions cache for faster builds
-          # Cache strategy: read from previous builds, write with max mode for future builds
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Don't load into Docker daemon (just push)
+          load: false
+          # Hybrid cache: Registry cache (persistent, shared) + GHA cache (fast fallback)
+          # Registry cache persists across all builds/branches/PRs for better cache hits
+          # GHA cache provides fast local fallback if registry cache unavailable
+          cache-from: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+            type=gha
+          cache-to: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+            type=gha,mode=max
           # Image tags for identification (semver versions + latest from metadata extraction)
           # Multiple tags created: v1.2.3, 1.2, 1, latest (for default branch)
           tags: ${{ steps.meta.outputs.tags }}
@@ -337,25 +435,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           # OCI annotations for registry UIs (e.g. GHCR package description)
           annotations: ${{ steps.meta.outputs.annotations }}
-          # Disable attestations to prevent unknown/unknown architecture in GHCR UI
-          # See: https://github.com/orgs/community/discussions/45969
-          provenance: false
-          sbom: false
+          # Enable SBOM and provenance for supply chain security
+          # SBOM: Software Bill of Materials for dependency tracking
+          # Provenance: Build attestations for supply chain security (mode=max includes all metadata)
+          provenance: mode=max
+          sbom: true
+          # Always pull base images to ensure we get latest security updates
+          pull: true
           # Build-time variables passed to Containerfile
-          build-args: |
+          build-args: |-
             VERSION=${{ steps.release_version.outputs.version }}
             GIT_SHA=${{ github.sha }}
-            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-      - name: Scan Final Image
-        if: always()
-        uses: reviewdog/action-trivy@a1e6d7dd5520369c076d7ce639a16442938535d8  # v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          trivy_command: image
-          trivy_target: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-          trivy_version: v0.63.0
-          level: error
-          reporter: github-pr-review
-          tool_name: trivy-final
-          filter_mode: nofilter
-          trivy_flags: --severity HIGH,CRITICAL
+            BUILD_DATE=${{ steps.build_date.outputs.date }}
