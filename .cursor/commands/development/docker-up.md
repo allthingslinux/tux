@@ -7,7 +7,7 @@ Start Docker services (PostgreSQL, Adminer) for local development.
 ## Steps
 
 1. **Start Docker Services**
-   - Run `uv run docker up`
+   - Run `docker compose up -d`
    - Wait for services to start
    - Verify containers are running
    - Check service health
@@ -37,4 +37,4 @@ Start Docker services (PostgreSQL, Adminer) for local development.
 
 - Related command: `/docker-down`
 - Related command: `/setup-project`
-- Related command: `/database-health`
+- Related command: `/health`

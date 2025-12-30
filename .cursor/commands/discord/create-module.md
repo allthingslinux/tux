@@ -48,4 +48,3 @@ Create a new Discord bot module (cog) following Tux project patterns and structu
 - Related rule: @modules/cogs.mdc
 - Related rule: @modules/commands.mdc
 - Related command: `/discord-test-command`
-- Related command: `/discord-sync-commands`

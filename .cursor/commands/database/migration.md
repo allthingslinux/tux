@@ -7,7 +7,7 @@ Create and apply Alembic database migrations for schema changes in the Tux proje
 ## Steps
 
 1. **Create Migration**
-   - Run `uv run db migrate-dev "description of changes"`
+   - Run `uv run db dev "description of changes"`
    - Review generated migration file in `src/tux/database/migrations/versions/`
    - Verify upgrade and downgrade functions are correct
    - Check for proper constraint naming

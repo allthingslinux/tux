@@ -107,10 +107,10 @@ Nested rules inherit parent rules and auto-apply within their directory scope.
 
 ### `globs` Field
 
-- Array of glob pattern strings
+- Comma-separated glob pattern strings
 - Patterns relative to project root
 - Supports: `*`, `**`, `?`, `[abc]`, `{a,b}`
-- Examples: `["src/**/*.py", "tests/unit/**"]`
+- Examples: `src/**/*.py, tests/unit/**`
 
 ### `alwaysApply` Field
 

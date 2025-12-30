@@ -21,7 +21,7 @@ Update documentation to reflect code changes, new features, or configuration upd
 3. **Follow Documentation Standards**
    - Use Diátaxis framework (tutorial, how-to, reference, explanation)
    - Follow writing style guidelines
-   - Use appropriate Zensical syntax
+   - Use appropriate Zensical syntax (see @docs/style.mdc)
    - Include practical examples
 
 4. **Test Documentation**

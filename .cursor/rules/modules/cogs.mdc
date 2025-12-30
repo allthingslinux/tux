@@ -202,7 +202,7 @@ class Warn(ModerationCogBase):
 2. **Organize by domain** - Group related cogs in directories
 3. **One cog per file** - Keep cogs focused and maintainable
 4. **Use setup function** - Required for cog loading
-5. **Initialize in **init**** - Set up services and state
+5. **Initialize in `__init__`** - Set up services and state
 6. **Handle lifecycle** - Implement cog_load/cog_unload if needed
 7. **Type hints** - Always type bot parameter and return types
 
