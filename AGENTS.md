@@ -134,7 +134,7 @@ uv run config validate      # Validate the current configuration
 **Cursor:**
 
 ```bash
-uv run rules validate      # Validate Cursor rules and commands
+uv run ai validate-rules   # Validate Cursor rules and commands
 ```
 
 ## Development Workflow
@@ -251,7 +251,7 @@ uv run basedpyright --verbose
 uv run pytest -v -s
 
 # Cursor validation
-uv run rules validate
+uv run ai validate-rules
 ```
 
 ## Resources
