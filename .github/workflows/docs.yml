@@ -117,6 +117,7 @@ jobs:
       contents: read
       deployments: write
       pull-requests: write
+      issues: write
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
@@ -262,6 +263,7 @@ jobs:
         if: github.event_name == 'pull_request' || steps.find_pr.outputs.number !=
           ''
         uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9  # v5
+        continue-on-error: true
         with:
           comment-id: ${{ steps.find_comment.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number || steps.find_pr.outputs.number }}
