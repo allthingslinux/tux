@@ -34,6 +34,45 @@ generate_release_version() {
   echo "Generated release version: $release_version"
 }
 
+# Validate build configuration
+validate_build_config() {
+  local git_sha="${1}"
+
+  # Validate that required build args are available
+  if [ -z "$git_sha" ]; then
+    echo "Error: GIT_SHA is required"
+    exit 1
+  fi
+  echo "✓ Build configuration validated"
+}
+
+# Calculate SOURCE_DATE_EPOCH for reproducible builds
+calculate_source_date_epoch() {
+  local commit_timestamp="${1:-}"
+  local repo_created_at="${2:-}"
+
+  # Calculate SOURCE_DATE_EPOCH for reproducible builds
+  # Priority: commit timestamp > repository creation date > current time
+  local source_date_epoch
+  if [ -n "$commit_timestamp" ]; then
+    # Use commit timestamp (convert from milliseconds to seconds)
+    source_date_epoch=$((commit_timestamp / 1000))
+  elif [ -n "$repo_created_at" ]; then
+    # Fallback to repository creation date
+    source_date_epoch=$((repo_created_at / 1000))
+  else
+    # Fallback to current time
+    source_date_epoch=$(date +%s)
+  fi
+  echo "epoch=$source_date_epoch" >> "$GITHUB_OUTPUT"
+  echo "SOURCE_DATE_EPOCH=$source_date_epoch"
+}
+
+# Generate BUILD_DATE in ISO 8601 format
+generate_build_date() {
+  date -u +'%Y-%m-%dT%H:%M:%SZ'
+}
+
 COMMAND="${1:-}"
 shift || true
 
@@ -44,8 +83,17 @@ case "$COMMAND" in
   generate-release-version)
     generate_release_version "$@"
     ;;
+  validate-build-config)
+    validate_build_config "$@"
+    ;;
+  calculate-source-date-epoch)
+    calculate_source_date_epoch "$@"
+    ;;
+  generate-build-date)
+    generate_build_date "$@"
+    ;;
   *)
-    echo "Usage: docker.sh {generate-pr-version|generate-release-version} [args...]"
+    echo "Usage: docker.sh {generate-pr-version|generate-release-version|validate-build-config|calculate-source-date-epoch|generate-build-date} [args...]"
     exit 1
     ;;
 esac
