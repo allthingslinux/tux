@@ -147,6 +147,14 @@ jobs:
         if: github.ref != 'refs/heads/main' || github.event_name == 'pull_request'
         id: preview_upload
         run: |
+          # Check if Cloudflare API token is available
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "⚠️ CLOUDFLARE_API_TOKEN not available - skipping preview deployment" >> "$GITHUB_STEP_SUMMARY"
+            echo "preview_url=🚀 Preview deployment skipped (no Cloudflare API token)" >> "$GITHUB_OUTPUT"
+            echo "version_id=skipped" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           # Debug: Check if site directory exists
           {
             echo "Checking site directory..."
@@ -206,6 +214,12 @@ jobs:
         if: github.ref != 'refs/heads/main' || github.event_name == 'pull_request'
         id: preview_deploy
         run: |
+          # Skip deployment if upload was skipped due to missing token
+          if [ "${{ steps.preview_upload.outputs.version_id }}" = "skipped" ]; then
+            echo "⚠️ Skipping preview deployment - no Cloudflare API token available" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
           # Deploy the uploaded version
           npx wrangler@4 versions deploy "${{ steps.preview_upload.outputs.version_id }}" -y --config wrangler.toml --env preview --message="Preview: tux@${{ github.sha }} on ${{ github.ref_name }} by ${{ github.actor }} (run ${{ github.run_number }})"
         env:
@@ -231,7 +245,11 @@ jobs:
           ''
         id: prepare_url
         run: |
-          if [ -n "${{ steps.preview_upload.outputs.preview_url }}" ]; then
+          if [ "${{ steps.preview_upload.outputs.version_id }}" = "skipped" ]; then
+            echo "preview_url=🚀 Preview deployment skipped (no Cloudflare API token)" >> "$GITHUB_OUTPUT"
+            echo "is_url=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Preview deployment skipped due to missing Cloudflare API token" >> "$GITHUB_STEP_SUMMARY"
+          elif [ -n "${{ steps.preview_upload.outputs.preview_url }}" ]; then
             echo "preview_url=${{ steps.preview_upload.outputs.preview_url }}" >> "$GITHUB_OUTPUT"
             echo "is_url=true" >> "$GITHUB_OUTPUT"
             echo "✅ Using preview URL from wrangler upload output" >> "$GITHUB_STEP_SUMMARY"
