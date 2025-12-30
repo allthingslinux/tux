@@ -17,6 +17,9 @@ from scripts.ui import console
 
 app = create_app()
 
+# Files exempt from the 500-line limit
+LARGE_FILE_EXCEPTIONS: set[str] = {"**/ui/cv2.mdc"}
+
 
 def _check_rule_frontmatter(
     file_path: Path,
@@ -198,7 +201,9 @@ def _validate_rule(file_path: Path) -> list[str]:
     is_reference = file_path.name == "rules.mdc"
     is_spec = "meta" in file_path.parts
     is_docs_rule = "docs" in file_path.parts
-    is_large_reference = file_path.match("**/ui/cv2.mdc")
+    is_large_reference = any(
+        file_path.match(pattern) for pattern in LARGE_FILE_EXCEPTIONS
+    )
 
     # Check frontmatter
     frontmatter_errors, frontmatter = _check_rule_frontmatter(
