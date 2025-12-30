@@ -26,7 +26,7 @@ DANGEROUS_RM_COMMANDS = (
     # rm options
     r"(?:-[frR]+|--force|--recursive|--no-preserve-root|\s+)*"
     # Root/home indicators
-    r"(?:[/\∕~/.]\s*|\*|"  # noqa: RUF001
+    r"(?:[/\∕~]\s*|\.(?:/|\.)\s*|\*|"  # noqa: RUF001
     # Critical system paths
     r"/(?:bin|boot|etc|lib|proc|rooin|sys|tmp|usr|var(?:/log)?|network\.|system))"
     # Additional dangerous flags
