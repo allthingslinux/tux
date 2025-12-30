@@ -231,7 +231,7 @@ docker compose up -d
 docker inspect tux --format='{{json .State.Health}}' | jq
 
 # Check all health statuses
-docker compose ps --format json | jq '.[] | {name: .Name, health: .State.Health}'
+docker compose ps --format json | jq '.[] | {name: .Name, health: .Health}'
 ```
 
 ### Resource Usage

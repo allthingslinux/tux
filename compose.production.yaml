@@ -11,7 +11,7 @@ services:
     container_name: tux-postgres
     hostname: tux-postgres
     image: postgres:17-alpine@sha256:ff4ccc02b97e0ebb6b328ef9ff92522f95586f83be6801896b615088defc8ad2
-    restart: false
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
       POSTGRES_USER: ${POSTGRES_USER:-tuxuser}
@@ -46,10 +46,10 @@ services:
     # No volume bindings for source code in production - everything is in the image
     volumes:
       # Only mount configuration and data directories (not source code)
+      # Note: entrypoint.sh is included in the image, no need to mount from host
       - ./config:/app/config:ro
       - ./src/tux/plugins:/app/tux/plugins:ro
       - ./assets:/app/assets:ro
-      - ./docker/entrypoint.sh:/entrypoint.sh:ro
       - ./data/cache:/app/.cache
       - ./data/temp:/app/temp
       - ./data/user-home:/home/nonroot

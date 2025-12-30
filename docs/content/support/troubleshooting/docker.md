@@ -136,8 +136,8 @@ Check `.dockerignore` excludes unnecessary files:
 # Verify .dockerignore
 cat .dockerignore
 
-# Test build context size
-docker build --dry-run -f Containerfile --target production . 2>&1 | grep "Sending build context"
+# Test build context size (observe the "Sending build context" output when starting a build)
+docker build -f Containerfile --target production . 2>&1 | head -5 | grep -E "Sending|context"
 ```
 
 ## Container Startup Issues

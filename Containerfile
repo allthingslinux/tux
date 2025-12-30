@@ -220,7 +220,7 @@ RUN set -eux; \
 USER nonroot
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-        CMD python -c "import tux.shared.config.env; print('Health check passed')" || exit 1
+        CMD python -c "import tux.shared.config.settings; print('Health check passed')" || exit 1
 
 COPY --chmod=755 docker/entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
