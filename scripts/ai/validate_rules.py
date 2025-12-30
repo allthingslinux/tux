@@ -40,13 +40,13 @@ def _check_rule_frontmatter(
 
     if not content.startswith("---"):
         errors.append(f"{file_path}: Rule must start with frontmatter (---)")
-
-    if "---\n" not in content[4:]:
-        errors.append(f"{file_path}: Rule must have closing frontmatter (---)")
+        return errors, None
 
     frontmatter_match = re.match(r"^---\n(.*?)\n---\n", content, re.DOTALL)
     if not frontmatter_match:
-        errors.append(f"{file_path}: Invalid frontmatter format")
+        errors.append(
+            f"{file_path}: Invalid or missing closing frontmatter (---)",
+        )
         return errors, None
 
     frontmatter = frontmatter_match[1]
@@ -187,13 +187,18 @@ def _validate_rule(file_path: Path) -> list[str]:
         List of error messages, empty if valid.
     """
     errors: list[str] = []
-    content = file_path.read_text(encoding="utf-8")
+    try:
+        content = file_path.read_text(encoding="utf-8")
+    except OSError as e:
+        return [f"{file_path}: Failed to read file: {e}"]
+    except UnicodeDecodeError as e:
+        return [f"{file_path}: Invalid encoding: {e}"]
 
     # Special cases: reference files, specifications, and documentation rules
     is_reference = file_path.name == "rules.mdc"
-    is_spec = "meta/" in str(file_path)
-    is_docs_rule = "docs/" in str(file_path)
-    is_large_reference = "ui/cv2.mdc" in str(file_path)  # Large reference file
+    is_spec = "meta" in file_path.parts
+    is_docs_rule = "docs" in file_path.parts
+    is_large_reference = file_path.match("**/ui/cv2.mdc")
 
     # Check frontmatter
     frontmatter_errors, frontmatter = _check_rule_frontmatter(
@@ -246,7 +251,12 @@ def _validate_command(file_path: Path) -> list[str]:
         List of error messages, empty if valid.
     """
     errors: list[str] = []
-    content = file_path.read_text(encoding="utf-8")
+    try:
+        content = file_path.read_text(encoding="utf-8")
+    except OSError as e:
+        return [f"{file_path}: Failed to read file: {e}"]
+    except UnicodeDecodeError as e:
+        return [f"{file_path}: Invalid encoding: {e}"]
 
     # Check for frontmatter (commands should NOT have frontmatter)
     if content.startswith("---"):
