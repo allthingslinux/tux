@@ -19,6 +19,7 @@ This validates the REAL production database behavior and async architecture.
 from contextlib import suppress
 
 import pytest
+import sqlalchemy.exc
 from sqlalchemy import text
 
 from tux.database.controllers import (
@@ -306,7 +307,8 @@ class TestSchemaErrorHandlingThroughService:
         guild_controller = GuildController(disconnected_async_db_service)
 
         # Operations should fail gracefully when not connected
-        with suppress(RuntimeError, ConnectionError):
+        # SQLAlchemy raises OperationalError when trying to use a disconnected service
+        with suppress(RuntimeError, ConnectionError, sqlalchemy.exc.OperationalError):
             await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
             # If we get here, the service should handle disconnection gracefully
 
