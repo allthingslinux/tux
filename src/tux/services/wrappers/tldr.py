@@ -18,7 +18,13 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 # Configuration constants following 12-factor app principles
-CACHE_DIR: Path = Path(os.getenv("TLDR_CACHE_DIR", ".cache/tldr"))
+# Resolve relative paths to absolute to avoid permission issues
+_cache_dir = os.getenv("TLDR_CACHE_DIR", ".cache/tldr")
+CACHE_DIR: Path = (
+    Path(_cache_dir).resolve()
+    if not Path(_cache_dir).is_absolute()
+    else Path(_cache_dir)
+)
 MAX_CACHE_AGE_HOURS: int = int(os.getenv("TLDR_CACHE_AGE_HOURS", "168"))
 REQUEST_TIMEOUT_SECONDS: int = int(os.getenv("TLDR_REQUEST_TIMEOUT", "10"))
 ARCHIVE_DOWNLOAD_TIMEOUT_SECONDS: int = 30
