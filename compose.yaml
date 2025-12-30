@@ -1,10 +1,26 @@
 ---
+# Docker Compose configuration for DEVELOPMENT
+#
+# This file is optimized for local development with:
+# - Hot reload for source code changes (requires docker compose watch)
+# - Local builds from source
+# - Source code volume mounts for plugins and assets
+# - Adminer enabled by default (dev profile)
+# - Development-friendly defaults (restart: no, debug mode)
+#
+# Usage:
+#   docker compose up -d  # Start all services
+#   docker compose up --watch  # Start with hot reload
+#   docker compose --profile dev up -d  # Explicitly enable dev profile
+#
+# For production deployments, use: docker compose -f compose.production.yaml up -d
+#
 services:
   tux-postgres:
     container_name: tux-postgres
     hostname: tux-postgres
     image: postgres:17-alpine@sha256:ff4ccc02b97e0ebb6b328ef9ff92522f95586f83be6801896b615088defc8ad2
-    restart: false
+    restart: 'no'
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
       POSTGRES_USER: ${POSTGRES_USER:-tuxuser}
@@ -16,7 +32,7 @@ services:
       - ./docker/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
 
-    # Enhanced logging configuration
+    # Logging configuration
     logging:
       driver: json-file
       options:
@@ -35,6 +51,7 @@ services:
   tux:
     container_name: tux
     hostname: tux
+    # Development: Build from source by default, or use pre-built image
     image: ${TUX_IMAGE:-ghcr.io/allthingslinux/tux}:${TUX_IMAGE_TAG:-latest}
     build:
       context: .
@@ -46,37 +63,35 @@ services:
         BUILD_DATE: ${BUILD_DATE:-}
         DEVCONTAINER: ${DEVCONTAINER:-0}
     volumes:
-      - ./config:/app/config:ro
-      - ./src/tux/plugins:/app/tux/plugins:ro
-      - ./assets:/app/assets:ro
-      - ./docker/entrypoint.sh:/entrypoint.sh:ro
-      - ./data/cache:/app/.cache
-      - ./data/temp:/app/temp
-      - ./data/user-home:/home/nonroot
+      # Mount source code for development (hot reload via watch mode)
+      - ./config:/app/config:ro  # Configuration files
+      - ./src/tux/plugins:/app/tux/plugins:ro  # Custom plugins
+      - ./assets:/app/assets:ro  # Static assets
+      - ./docker/entrypoint.sh:/entrypoint.sh:ro  # Entrypoint script
+      - ./data/cache:/app/.cache  # Application cache
+      - ./data/temp:/app/temp  # Temporary files
+      - ./data/user-home:/home/nonroot  # User home directory
+      # Note: Source code changes are synced via docker compose watch (see develop section)
     env_file: [.env]
     environment:
       TUX_VERSION: ${VERSION:-dev}
-      # Development-specific overrides
+      # Development settings
       DEBUG: ${DEBUG:-false}
-      # Migration control (not currently implemented - migration mount controls behavior)
-      # If migration mount is removed, image migrations are used automatically
-      FORCE_MIGRATE: ${FORCE_MIGRATE:-false}
       # Startup configuration
       MAX_STARTUP_ATTEMPTS: ${MAX_STARTUP_ATTEMPTS:-3}
       STARTUP_DELAY: ${STARTUP_DELAY:-5}
-      # Database configuration for Docker
+      # Database connection (Docker Compose service names)
       POSTGRES_HOST: tux-postgres
       POSTGRES_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
       POSTGRES_USER: ${POSTGRES_USER:-tuxuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
-    restart: unless-stopped
+    restart: no  # Development: manual restart control
     depends_on:
       tux-postgres:
         condition: service_healthy
     healthcheck:
-      # Lightweight health check - verify Python process is running
-      # The bot logs configuration errors at startup, healthcheck just needs to verify it's alive
+      # Verify the bot process is running
       test:
         - CMD-SHELL
         - ps aux | grep -v grep | grep -q "tux start" || exit 1
@@ -85,19 +100,19 @@ services:
       retries: 3
       start_period: 40s
     stop_grace_period: 30s
-    security_opt: [no-new-privileges:true]
-    read_only: true
-    tmpfs: [/tmp:size=100m, /var/tmp:size=50m]
+    # Development: Security settings disabled for easier debugging
+    # Production compose file enables: security_opt, read_only, tmpfs
     logging:
       driver: json-file
       options:
         max-size: 10m
         max-file: '3'
 
-    # Development mode with hot reload (only active when using --watch)
+    # Hot reload configuration (enabled with: docker compose --watch up)
+    # Syncs source code changes without rebuilding the container
     develop:
       watch:
-        # Sync Python source code changes for hot reload
+        # Python source code (hot reload)
         - action: sync
           path: ./src
           target: /app/src
@@ -134,33 +149,33 @@ services:
           path: compose.yaml
           target: /app/compose.yaml
   tux-adminer:
+    # Database management UI - enabled by default in development
     image: adminer:latest@sha256:ae1d4d7774c544d084e42887a318e6b0f47ad8c60fe1661d9278ef169c8b4eaa
     container_name: tux-adminer
     hostname: tux-adminer
-    # Development profile - adminer is part of dev tooling
-    profiles: [dev]
-    restart: false
+    profiles: [dev]  # Enable with: docker compose --profile dev up -d
+    restart: 'no'
     depends_on:
       tux-postgres:
         condition: service_healthy
     ports: ['${ADMINER_PORT:-8080}:8080']
     environment:
-      ADMINER_DEFAULT_DRIVER: pgsql
+      # Plugin configuration for autologin
+      ADMINER_DEFAULT_SYSTEM: pgsql
       ADMINER_DEFAULT_SERVER: tux-postgres
-      ADMINER_DEFAULT_DB: ${POSTGRES_DB:-tuxdb}
-      ADMINER_DEFAULT_USERNAME: ${POSTGRES_USER:-tuxuser}
-      ADMINER_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
-      ADMINER_AUTO_LOGIN: ${ADMINER_AUTO_LOGIN:-true}
+      ADMINER_DEFAULT_NAME: ${POSTGRES_USER:-tuxuser}
+      ADMINER_DEFAULT_PASS: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
+      ADMINER_DEFAULT_DATABASE: ${POSTGRES_DB:-tuxdb}
+      ADMINER_AUTOLOGIN_AUTOSUBMIT: ${ADMINER_AUTO_LOGIN:-true}
+      # Additional plugins
       ADMINER_PLUGINS: backward-keys tables-filter dump-date dump-json dump-xml dump-zip
         edit-calendar edit-foreign enum-option foreign-system json-column pretty-json-column
         table-indexes-structure table-structure row-numbers config
       ADMINER_THEME: dracula
-    configs:
-      - source: adminer-index.php
-        target: /var/www/html/index.php
+    volumes:
+      # Mount autologin plugin to plugins-enabled directory
+      # Adminer automatically loads plugins from this directory
+      - ./docker/adminer/autologin-form.php:/var/www/html/plugins-enabled/autologin-form.php:ro
 volumes:
   tux_postgres_data:
     driver: local
-configs:
-  adminer-index.php:
-    file: ./docker/adminer/index.php

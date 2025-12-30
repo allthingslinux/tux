@@ -1,11 +1,23 @@
 ---
 # Docker Compose configuration for PRODUCTION deployments
-# This file removes development-specific features like volume bindings and hot reload
+#
+# This file is optimized for production with:
+# - Pre-built images from GitHub Container Registry (no local builds)
+# - No source code volume mounts (everything is in the image)
+# - Production security settings (read-only filesystem, no-new-privileges)
+# - Automatic restart policies (unless-stopped)
+# - Adminer disabled by default (enable with --profile dev if needed)
 #
 # Usage:
-#   docker compose -f compose.production.yaml up -d
+#   docker compose -f compose.production.yaml up -d  # Start all services
+#   docker compose -f compose.production.yaml --profile dev up -d adminer  # Enable Adminer
 #
-# Note: Ensure .env file is configured with all required secrets before deployment
+# Prerequisites:
+#   - .env file configured with all required secrets (BOT_TOKEN, POSTGRES_PASSWORD, etc.)
+#   - Pre-built image available at ghcr.io/allthingslinux/tux (or set TUX_IMAGE/TUX_IMAGE_TAG)
+#
+# For development, use compose.yaml instead.
+#
 services:
   tux-postgres:
     container_name: tux-postgres
@@ -40,25 +52,22 @@ services:
   tux:
     container_name: tux
     hostname: tux
-    # Production: Use published image, not local build
+    # Production: Use pre-built images from GitHub Container Registry
+    # No build configuration - images must be built and published separately
     image: ${TUX_IMAGE:-ghcr.io/allthingslinux/tux}:${TUX_IMAGE_TAG:-latest}
-    # No build configuration in production - use pre-built images
-    # No volume bindings for source code in production - everything is in the image
     volumes:
-      # Only mount configuration and data directories (not source code)
-      # Note: entrypoint.sh is included in the image, no need to mount from host
-      - ./config:/app/config:ro
-      - ./src/tux/plugins:/app/tux/plugins:ro
-      - ./assets:/app/assets:ro
-      - ./data/cache:/app/.cache
-      - ./data/temp:/app/temp
-      - ./data/user-home:/home/nonroot
-      # Note: Plugins are drop-in extensions - mount from host for easy updates
+      # Mount configuration, plugins, assets, and data directories
+      # Note: Plugins and assets directories must exist on the host (create if needed)
+      - ./config:/app/config:ro  # User configuration
+      - ./src/tux/plugins:/app/tux/plugins:ro  # Custom plugins (required)
+      - ./assets:/app/assets:ro  # Static assets (required)
+      - ./data/cache:/app/.cache  # Application cache
+      - ./data/temp:/app/temp  # Temporary files
+      - ./data/user-home:/home/nonroot  # User home directory
     env_file: [.env]
     environment:
       TUX_VERSION: ${VERSION:-dev}
       DEBUG: ${DEBUG:-false}
-      FORCE_MIGRATE: ${FORCE_MIGRATE:-false}
       MAX_STARTUP_ATTEMPTS: ${MAX_STARTUP_ATTEMPTS:-3}
       STARTUP_DELAY: ${STARTUP_DELAY:-5}
       # Database configuration for Docker
@@ -72,8 +81,8 @@ services:
       tux-postgres:
         condition: service_healthy
     healthcheck:
-      # Lightweight health check - verify Python process is running
-      # The bot logs configuration errors at startup, healthcheck just needs to verify it's alive
+      # Verify the bot process is running (lightweight check)
+      # Configuration errors are logged at startup, this just confirms the process is alive
       test:
         - CMD-SHELL
         - ps aux | grep -v grep | grep -q "tux start" || exit 1
@@ -82,46 +91,50 @@ services:
       retries: 3
       start_period: 40s
     stop_grace_period: 30s
+    # Production security hardening
     security_opt: [no-new-privileges:true]
-    read_only: true
-    tmpfs: [/tmp:size=100m, /var/tmp:size=50m]
+    read_only: true  # Read-only root filesystem
+    tmpfs: [/tmp:size=100m, /var/tmp:size=50m]  # Writable tmpfs for temporary files
     logging:
       driver: json-file
       options:
         max-size: 10m
         max-file: '3'
-    # No 'develop' section in production - hot reload is development-only
 
-  # Adminer is a development/admin tool - not included in production by default
-  # To enable it, uncomment below or use: docker compose -f compose.production.yaml --profile dev up -d adminer
+  # Adminer (Database Management UI) - Optional
+  #
+  # Adminer is disabled by default in production for security. To enable, uncomment
+  # the service below. Ensure ADMINER_AUTO_LOGIN=false in your .env file for production!
+  #
+  # For temporary access without uncommenting, use the development compose file:
+  #   docker compose -f compose.yaml --profile dev up -d adminer
   # tux-adminer:
   #   image: adminer:latest@sha256:ae1d4d7774c544d084e42887a318e6b0f47ad8c60fe1661d9278ef169c8b4eaa
   #   container_name: tux-adminer
   #   hostname: tux-adminer
   #   profiles: [dev]
-  #   restart: false
+  #   restart: "no"
   #   depends_on:
   #     tux-postgres:
   #       condition: service_healthy
   #   ports: ['${ADMINER_PORT:-8080}:8080']
   #   environment:
-  #     ADMINER_DEFAULT_DRIVER: pgsql
+  #  # Plugin configuration for autologin
+  #     ADMINER_DEFAULT_SYSTEM: pgsql
   #     ADMINER_DEFAULT_SERVER: tux-postgres
-  #     ADMINER_DEFAULT_DB: ${POSTGRES_DB:-tuxdb}
-  #     ADMINER_DEFAULT_USERNAME: ${POSTGRES_USER:-tuxuser}
-  #     ADMINER_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
-  #     ADMINER_AUTO_LOGIN: ${ADMINER_AUTO_LOGIN:-true}
+  #     ADMINER_DEFAULT_NAME: ${POSTGRES_USER:-tuxuser}
+  #     ADMINER_DEFAULT_PASS: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
+  #     ADMINER_DEFAULT_DATABASE: ${POSTGRES_DB:-tuxdb}
+  #     ADMINER_AUTOLOGIN_AUTOSUBMIT: ${ADMINER_AUTO_LOGIN:-true}
+  #  # Additional plugins
   #     ADMINER_PLUGINS: backward-keys tables-filter dump-date dump-json dump-xml dump-zip
   #       edit-calendar edit-foreign enum-option foreign-system json-column pretty-json-column
   #       table-indexes-structure table-structure row-numbers config
   #     ADMINER_THEME: dracula
-  #   configs:
-  #     - source: adminer-index.php
-  #       target: /var/www/html/index.php
+  #   volumes:
+  #  # Mount autologin plugin to plugins-enabled directory
+  #  # Adminer automatically loads plugins from this directory
+  #     - ./docker/adminer/autologin-form.php:/var/www/html/plugins-enabled/autologin-form.php:ro
 volumes:
   tux_postgres_data:
     driver: local
-# No configs needed in production (adminer is commented out)
-# configs:
-#   adminer-index.php:
-#     file: ./docker/adminer/index.php
