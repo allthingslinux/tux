@@ -92,9 +92,6 @@ LOG_LEVEL=DEBUG
 
 # Use local migrations
 USE_LOCAL_MIGRATIONS=true
-
-# Force migrations
-FORCE_MIGRATE=true
 ```
 
 ### Startup Configuration

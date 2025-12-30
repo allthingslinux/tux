@@ -51,17 +51,6 @@ Migrations run automatically on Tux startup. The bot:
 3. Applies any pending migrations
 4. Starts normally
 
-**Manual Migration Control:**
-
-```env
-# Force migration on startup (use with caution)
-# When true, stamps database as head without running migrations
-FORCE_MIGRATE=true
-```
-
-!!! warning "Force Migration Warning"
-    `FORCE_MIGRATE=true` bypasses normal migration execution and stamps the database as "head". Only use this if you understand the risks and have data backups.
-
 !!! tip "Migration Files"
     In Docker, migration files are automatically mounted from `./src/tux/database/migrations` into the container. No additional configuration needed.
 
@@ -182,9 +171,9 @@ telnet localhost 5432  # Manual
 uv run db status
 uv run db show head
 
-# Reset (WARNING: destroys data!) or force migration
+# Reset (WARNING: destroys data!)
 uv run db reset
-FORCE_MIGRATE=true docker compose up -d tux
+docker compose up -d tux
 ```
 
 **Performance Issues:**
