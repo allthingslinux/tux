@@ -53,13 +53,14 @@ calculate_source_date_epoch() {
 
   # Calculate SOURCE_DATE_EPOCH for reproducible builds
   # Priority: commit timestamp > repository creation date > current time
+  # Note: Input timestamps are ISO 8601 strings (e.g., 2025-01-01T12:34:56Z) from GitHub context
   local source_date_epoch
   if [ -n "$commit_timestamp" ]; then
-    # Use commit timestamp (convert from milliseconds to seconds)
-    source_date_epoch=$((commit_timestamp / 1000))
+    # Parse ISO 8601 timestamp string to Unix epoch (seconds)
+    source_date_epoch=$(date -d "$commit_timestamp" +%s)
   elif [ -n "$repo_created_at" ]; then
-    # Fallback to repository creation date
-    source_date_epoch=$((repo_created_at / 1000))
+    # Parse ISO 8601 timestamp string to Unix epoch (seconds)
+    source_date_epoch=$(date -d "$repo_created_at" +%s)
   else
     # Fallback to current time
     source_date_epoch=$(date +%s)

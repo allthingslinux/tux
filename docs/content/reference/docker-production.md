@@ -54,9 +54,6 @@ TUX_IMAGE_TAG=latest
 
 # Or use specific version
 TUX_IMAGE_TAG=v1.0.0
-
-# Or use release tag
-TUX_IMAGE_TAG=main  # Latest main branch build
 ```
 
 ### Pull and Verify

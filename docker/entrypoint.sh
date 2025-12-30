@@ -33,17 +33,17 @@ try:
     sys.exit(0 if result == 0 else 1)
 except Exception as e:
     sys.exit(1)
-" 2>/dev/null; do
+" 2> /dev/null; do
         attempts=$((attempts + 1))
         if [ $attempts -ge $max_attempts ]; then
             echo "❌ Database connection timeout after $max_attempts attempts"
             echo "   Host: $db_host, Port: $db_port"
             echo "   Make sure the database container is running and accessible"
             exit 1
-        fi
+    fi
         echo "⏳ Database is unavailable - sleeping (attempt $attempts/$max_attempts)"
         sleep 2
-    done
+  done
     echo "✅ Database is ready!"
 }
 
@@ -83,11 +83,11 @@ start_bot_with_retry() {
             if [ $attempts -ge "$MAX_STARTUP_ATTEMPTS" ]; then
                 echo "Maximum startup attempts reached. Exiting."
                 exit 1
-            fi
+      fi
             echo "Waiting ${STARTUP_DELAY}s before retry..."
             sleep "$STARTUP_DELAY"
             continue
-        fi
+    fi
 
         # Configuration validated, start the bot
         # Use exec to replace shell process for proper signal handling (SIGTERM, SIGINT)
@@ -95,7 +95,7 @@ start_bot_with_retry() {
         echo "Configuration validated. Starting bot..."
         # shellcheck disable=SC2093
         exec tux start
-    done
+  done
 }
 
 # Signal handlers for graceful shutdown
