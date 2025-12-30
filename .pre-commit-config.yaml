@@ -87,7 +87,7 @@ repos:
     hooks:
       - id: validate-rules
         name: Validate Rules & Commands
-        entry: uv run rules validate
+        entry: uv run ai validate-rules
         language: system
         args: [--rules-dir, .cursor/rules, --commands-dir, .cursor/commands]
         files: \.cursor/(rules|commands)/.*(\.mdc|\.md)$

@@ -241,7 +241,7 @@ Brief description of the rule's purpose and scope.
 Run validation before committing:
 
 ```bash
-uv run rules validate
+uv run ai validate-rules
 ```
 
 This checks:

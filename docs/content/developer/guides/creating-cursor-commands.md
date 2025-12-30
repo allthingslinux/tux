@@ -244,7 +244,7 @@ If operation fails:
 Run validation before committing:
 
 ```bash
-uv run rules validate
+uv run ai validate-rules
 ```
 
 This checks:

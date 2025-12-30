@@ -63,7 +63,7 @@ test = "scripts.test:main"
 tests = "scripts.test:main"
 docs = "scripts.docs:main"
 config = "scripts.config:main"
-rules = "scripts.rules:main"
+ai = "scripts.ai:main"
 
 [dependency-groups]
 dev = [
