@@ -18,7 +18,10 @@ Configure database connection settings for Tux. For installation instructions, s
 
 ## Configuration Details
 
-The `compose.yaml` includes a PostgreSQL service (`tux-postgres`) using `postgres:17-alpine` with optimized settings (256MB shared buffers, 100 max connections, UTC timezone). Connection details:
+The `compose.yaml` includes a PostgreSQL service (`tux-postgres`) using the Alpine-based `postgres:17-alpine` image with optimized settings (256MB shared buffers, 100 max connections, UTC timezone). Connection details:
+
+!!! note "Base Images"
+    The Tux application uses `python:3.13.8-slim` (Debian-based), while PostgreSQL uses `postgres:17-alpine` (Alpine-based) for a smaller database image size.
 
 - **Host:** `tux-postgres` (Docker network)
 - **Database:** `tuxdb` (from `POSTGRES_DB`)

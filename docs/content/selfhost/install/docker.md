@@ -11,10 +11,15 @@ tags:
 !!! tip "Tip"
     You can use Podman instead of Docker.
 
-!!! warning "Work in progress"
-    This section is a work in progress. Please help us by contributing to the documentation.
-
 Deploy Tux using Docker Compose for easy setup and management. Docker Compose handles PostgreSQL, Tux, and optional Adminer (database management UI).
+
+Tux Docker images are optimized for production use with:
+
+- Multi-stage builds for minimal image size (~400MB)
+- Non-root user for security
+- Read-only root filesystem
+- Automatic health checks
+- Production-ready configuration
 
 ## Prerequisites
 
@@ -93,6 +98,8 @@ DEBUG=false
 
 ### 3. Start Services
 
+**Development (recommended for testing):**
+
 ```bash
 # Start all services in background
 docker compose up -d
@@ -101,11 +108,18 @@ docker compose up -d
 docker compose up -d --build
 ```
 
+**Production deployment:**
+
+```bash
+# Use production compose file (no source code bindings, uses pre-built images)
+docker compose -f compose.production.yaml up -d
+```
+
 The Docker Compose setup includes:
 
 - **tux-postgres** - PostgreSQL database
 - **tux** - Tux Discord bot
-- **tux-adminer** (optional) - Database management UI at `http://localhost:8080`
+- **tux-adminer** (optional) - Database management UI at `http://localhost:8080` (dev mode only)
 
 ## Services Overview
 
@@ -116,7 +130,7 @@ The main Tux container runs with:
 - Automatic database migrations on startup
 - Health checks to ensure bot is running
 - Volume mounts for configuration, plugins, and assets
-- Read-only root filesystem for security
+- Read-only root filesystem for security (production)
 - Automatic restart on failure
 
 ### PostgreSQL Service
@@ -187,7 +201,7 @@ Persistent volumes:
 - `tux_temp` - Temporary files
 - `tux_user_home` - User home directory
 
-## Service Management
+## Basic Service Management
 
 ### View Logs
 
@@ -200,55 +214,22 @@ docker compose logs -f tux
 
 # Last 100 lines
 docker compose logs --tail=100 tux
-
-# Since timestamp
-docker compose logs --since "1 hour ago" tux
 ```
 
-### Start Services
+### Start/Stop Services
 
 ```bash
 # Start all services
 docker compose up -d
 
-# Start specific service
-docker compose up -d tux
-```
-
-### Stop Services
-
-```bash
 # Stop all services
 docker compose down
 
-# Stop services (keep volumes)
-docker compose stop
-
-# Stop and remove volumes (⚠️ deletes database)
-docker compose down -v
-```
-
-### Restart Services
-
-```bash
-# Restart all services
+# Restart services
 docker compose restart
 
-# Restart specific service
-docker compose restart tux
-```
-
-### Check Status
-
-```bash
-# View running containers
+# Check status
 docker compose ps
-
-# View detailed status
-docker compose ps -a
-
-# Check service health
-docker compose ps --format json | jq '.[] | {name: .Name, status: .State, health: .Health}'
 ```
 
 ## Updates
@@ -315,221 +296,16 @@ Watch mode automatically:
 - Rebuilds on dependency changes
 - Restarts on environment changes
 
-## Adminer (Database Management)
-
-Access Adminer at `http://localhost:8080`:
-
-- **System**: PostgreSQL
-- **Server**: `tux-postgres`
-- **Username**: Value from `POSTGRES_USER` (default: `tuxuser`)
-- **Password**: Value from `POSTGRES_PASSWORD`
-- **Database**: Value from `POSTGRES_DB` (default: `tuxdb`)
-
-To change Adminer port:
-
-```env
-ADMINER_PORT=9000
-```
-
-To disable Adminer, comment out the service in `compose.yaml` or remove it.
-
-## Troubleshooting
-
-### Bot Not Starting
-
-**Check logs:**
-
-```bash
-docker compose logs tux
-```
-
-**Common causes:**
-
-- Invalid `BOT_TOKEN` - Verify token is correct
-- Database not ready - Wait for PostgreSQL health check
-- Missing environment variables - Check `.env` file
-
-**Verify configuration:**
-
-```bash
-# Check environment variables are loaded
-docker compose exec tux env | grep BOT_TOKEN
-
-# Test database connection
-docker compose exec tux uv run db health
-```
-
-### Database Connection Errors
-
-**Check PostgreSQL is running:**
-
-```bash
-docker compose ps tux-postgres
-```
-
-**Verify connection:**
-
-```bash
-# Test PostgreSQL connection
-docker compose exec tux-postgres pg_isready -U tuxuser
-
-# Check database exists
-docker compose exec tux-postgres psql -U tuxuser -d tuxdb -c "SELECT version();"
-```
-
-**Check environment variables:**
-
-```bash
-# Verify database credentials
-docker compose exec tux env | grep POSTGRES
-```
-
-### Container Keeps Restarting
-
-**Check restart reason:**
-
-```bash
-docker compose ps
-docker compose logs tux --tail=50
-```
-
-**Common issues:**
-
-- Health check failing - Check bot token is set
-- Database connection timeout - Verify PostgreSQL is healthy
-- Configuration errors - Check `.env` file syntax
-
-### Permission Errors
-
-**Fix volume permissions:**
-
-```bash
-# Ensure files are readable
-chmod -R 755 config assets src/tux/plugins
-chmod 644 .env
-```
-
-**Check container user:**
-
-```bash
-docker compose exec tux whoami
-# Should show: nonroot
-```
-
-### Health Check Failures
-
-**Manual health check:**
-
-```bash
-docker compose exec tux python -c "from tux.shared.config import CONFIG; print('Token set:', bool(CONFIG.BOT_TOKEN))"
-```
-
-**Check health status:**
-
-```bash
-docker inspect tux --format='{{json .State.Health}}' | jq
-```
-
-### View Container Resources
-
-```bash
-# Resource usage
-docker stats tux tux-postgres
-
-# Container details
-docker compose exec tux ps aux
-docker compose exec tux df -h
-```
-
-## Advanced Configuration
-
-### Custom Image
-
-Use a custom Tux image:
-
-```env
-TUX_IMAGE=ghcr.io/allthingslinux/tux
-TUX_IMAGE_TAG=v0.1.0
-```
-
-### Development Overrides
-
-```env
-# Enable debug mode
-DEBUG=true
-LOG_LEVEL=DEBUG
-
-# Use local migrations
-USE_LOCAL_MIGRATIONS=true
-
-# Force migrations
-FORCE_MIGRATE=true
-```
-
-### Startup Configuration
-
-```env
-# Maximum startup attempts
-MAX_STARTUP_ATTEMPTS=5
-
-# Delay between attempts (seconds)
-STARTUP_DELAY=10
-```
-
-### Database Port Mapping
-
-Expose PostgreSQL port to host:
-
-```env
-POSTGRES_PORT=5432
-```
-
-Access from host: `postgresql://tuxuser:password@localhost:5432/tuxdb`
-
-### Disable Adminer
-
-Comment out or remove the `tux-adminer` service in `compose.yaml`, or set:
-
-```env
-ADMINER_PORT=
-```
-
-## Backup and Restore
-
-### Backup Database
-
-```bash
-# Create backup
-docker compose exec tux-postgres pg_dump -U tuxuser tuxdb > backup_$(date +%Y%m%d).sql
-
-# Or using Adminer
-# Navigate to http://localhost:8080 → Export → SQL
-```
-
-### Restore Database
-
-```bash
-# Restore from backup
-docker compose exec -T tux-postgres psql -U tuxuser -d tuxdb < backup_20240101.sql
-```
-
-### Backup Volumes
-
-```bash
-# List volumes
-docker volume ls | grep tux
-
-# Backup volume
-docker run --rm -v tux_postgres_data:/data -v $(pwd):/backup alpine tar czf /backup/postgres_backup.tar.gz /data
-```
-
 ## Related Documentation
 
+- **[Docker Operations](../manage/docker.md)** - Detailed service management, backups, and operations
+- **[Production Deployment](../../reference/docker-production.md)** - Production deployment guide
+- **[Docker Troubleshooting](../../support/troubleshooting/docker.md)** - Common issues and solutions
+- **[Building Docker Images](../../developer/guides/docker-images.md)** - Building and optimizing images
 - **[Environment Configuration](../config/environment.md)** - Complete environment variable reference
 - **[Database Setup](../config/database.md)** - Database configuration details
 - **[First Run](first-run.md)** - Initial setup verification
-- **[System Operations](../manage/operations.md)** - Monitoring and maintenance
 
 ---
 
-**Next Steps:** After deploying with Docker, verify your installation with the [First Run Guide](first-run.md).
+**Next Steps:** After deploying with Docker, verify your installation with the [First Run Guide](first-run.md). For detailed operations, see the [Docker Operations](../manage/docker.md) guide.

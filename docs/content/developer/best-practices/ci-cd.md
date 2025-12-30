@@ -143,7 +143,7 @@ jobs:
 **Security Tools:**
 
 - **CodeQL**: GitHub's semantic code analysis
-- **Trivy**: Container vulnerability scanning
+- **Docker Scout**: Container vulnerability scanning and policy evaluation
 - **Safety**: Python dependency security
 - **Gitleaks**: Secret detection
 
@@ -181,7 +181,7 @@ jobs:
 
 - **Multi-stage builds** for smaller images
 - **Build caching** with GitHub Actions cache
-- **Security scanning** with Trivy
+- **Security scanning** with Docker Scout (compare against production for PRs)
 - **Metadata labeling** with OCI standards
 
 ### Registry Management
