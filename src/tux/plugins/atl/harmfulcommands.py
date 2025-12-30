@@ -22,13 +22,13 @@ DANGEROUS_RM_COMMANDS = (
     # Privilege escalation prefixes
     r"(?:sudo\s+|doas\s+|run0\s+)?"
     # rm command
-    r"rm\s+"
+    r"\brm\b\s+"
     # rm options
     r"(?:-[frR]+|--force|--recursive|--no-preserve-root|\s+)*"
     # Root/home indicators
-    r"(?:[/\∕~]\s*|\*|"  # noqa: RUF001
+    r"(?:[/\∕~]\s*|\.(?:/|\.)\s*|\*|"  # noqa: RUF001
     # Critical system paths
-    r"/(?:bin|boot|etc|lib|proc|rooin|sys|tmp|usr|var(?:/log)?|network\.|system))"
+    r"/(?:bin|boot|etc|lib|proc|root|sys|tmp|usr|var(?:/log)?|network\.|system))"
     # Additional dangerous flags
     r"(?:\s+--no-preserve-root|\s+\*)*"
 )
