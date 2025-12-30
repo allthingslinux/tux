@@ -19,7 +19,7 @@ See [.cursor/rules/rules.mdc](.cursor/rules/rules.mdc) for the complete catalog 
 **Validation:**
 
 ```bash
-uv run rules validate      # Validate all rules and commands
+uv run ai validate-rules      # Validate all rules and commands
 ```
 
 **Documentation:**
@@ -142,7 +142,7 @@ uv run rules validate      # Validate Cursor rules and commands
 1. **Setup:** `uv sync` → configure `.env` & `config.toml`
 2. **Develop:** Make changes → `uv run dev all` → `uv run test quick`
 3. **Database:** Modify models → `uv run db new "description"` → `uv run db dev`
-4. **Rules:** Validate rules/commands → `uv run rules validate`
+4. **Rules:** Validate rules/commands → `uv run ai validate-rules`
 5. **Commit:** `uv run dev pre-commit` → `uv run test all`
 
 ## Conventional Commits
@@ -176,7 +176,7 @@ refactor(database): optimize query performance
 - All tests pass (`uv run test all`)
 - Quality checks pass (`uv run dev all`)
 - Migrations tested (`uv run db dev`)
-- Cursor rules/commands validated (`uv run rules validate`)
+- Cursor rules/commands validated (`uv run ai validate-rules`)
 - Documentation updated
 - Type hints complete
 - Docstrings for public APIs

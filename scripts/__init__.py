@@ -5,7 +5,7 @@ Aggregates all command groups (config, db, dev, docs, test, tux)
 into a single root application.
 """
 
-from scripts import config, db, dev, docs, test, tux
+from scripts import ai, config, db, dev, docs, test, tux
 from scripts.core import create_app
 
 # Create the root app
@@ -15,6 +15,7 @@ app = create_app(
 )
 
 # Add command groups
+app.add_typer(ai.app, name="ai")
 app.add_typer(config.app, name="config")
 app.add_typer(db.app, name="db")
 app.add_typer(dev.app, name="dev")
