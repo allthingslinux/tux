@@ -280,7 +280,9 @@ def _validate_command(file_path: Path) -> list[str]:
 
     # Check for numbered steps
     if not re.search(r"^\d+\.\s+\*\*", content, re.MULTILINE):
-        errors.append(f"{file_path}: Steps should be numbered (1., 2., etc.)")
+        errors.append(
+            f"{file_path}: Steps should be numbered and bolded (1. **Title**, 2. **Title**)",
+        )
 
     # Check checklist format
     if not re.search(r"- \[ \]", content):

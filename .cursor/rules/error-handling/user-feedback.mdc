@@ -19,7 +19,8 @@ from tux.services.handlers.error.formatter import ErrorFormatter
 
 # ✅ GOOD: Use ErrorFormatter for consistent error messages
 formatter = ErrorFormatter()
-embed = formatter.format_error_embed(error, ctx, config)
+# source can be commands.Context[Tux] or discord.Interaction
+embed = formatter.format_error_embed(error, source, config)
 await ctx.send(embed=embed)
 ```
 
@@ -31,7 +32,8 @@ await ctx.send(embed=embed)
 from tux.ui.embeds import EmbedCreator
 
 # ✅ GOOD: Use EmbedCreator for error embeds
-embed = EmbedCreator.error(
+embed = EmbedCreator.create_embed(
+    embed_type=EmbedCreator.ERROR,
     title="Error Title",
     description="User-friendly error message"
 )

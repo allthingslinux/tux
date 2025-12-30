@@ -110,13 +110,17 @@ Filenames MUST:
 
 ```text
 .cursor/commands/
-├── code-review.md
-├── create-pr.md
-├── run-tests.md
-└── security-audit.md
+├── code-quality/
+│   └── lint.md
+├── database/
+│   └── migration.md
+├── debugging/
+│   └── debug.md
+└── development/
+    └── setup-project.md
 ```
 
-No nested directories supported. All commands in flat structure.
+Commands are organized into subdirectories by domain/category.
 
 ## Parameter Handling
 

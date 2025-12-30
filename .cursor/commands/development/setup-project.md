@@ -25,7 +25,7 @@ Set up the Tux project for local development with all required dependencies and 
    - Test configuration loading
 
 4. **Start Services**
-   - Start Docker services: `uv run docker up`
+   - Start Docker services: `docker compose up -d`
    - Wait for PostgreSQL to be ready
    - Verify database connection: `uv run db health`
    - Check all services are running

@@ -105,15 +105,19 @@ mytest.py
 
 ### Markers
 
-Markers are defined in `pyproject.toml`:
+Markers are defined in `pyproject.toml` under `[tool.pytest.ini_options]`:
 
 ```toml
-[tool.pytest.ini_options.markers]
-unit = "Unit tests (uses py-pglite)"
-integration = "Integration tests (uses py-pglite)"
-slow = "Slow tests (>5 seconds)"
-database = "Tests requiring database access"
-async = "Async tests"
+markers = [
+    # Test types
+    "unit: Unit tests with isolated components",
+    "integration: Integration tests combining multiple components",
+    "slow: Slow-running tests (>5 seconds)",
+
+    # Test characteristics
+    "database: Tests requiring database access",
+    "async: Async tests using asyncio",
+]
 ```
 
 ✅ **GOOD:** Always use appropriate markers
