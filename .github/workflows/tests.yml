@@ -183,3 +183,10 @@ jobs:
           # Note: If this step fails with authentication errors, the action may not support OIDC.
           # In that case, uncomment the token line below and add CODECOV_TOKEN to repository secrets.
           # token: ${{ secrets.CODECOV_TOKEN }}
+
+      # Optimize cache for CI: Remove pre-built wheels, keep source-built wheels
+      # This improves cache efficiency by only keeping wheels that take time to build
+      # Docs: https://docs.astral.sh/uv/concepts/cache/#caching-in-continuous-integration
+      - name: Prune uv cache for CI
+        if: always()
+        run: uv cache prune --ci

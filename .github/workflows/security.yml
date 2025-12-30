@@ -120,3 +120,10 @@ jobs:
           name: safety-report
           path: safety-report.json
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+
+      # Optimize cache for CI: Remove pre-built wheels, keep source-built wheels
+      # This improves cache efficiency by only keeping wheels that take time to build
+      # Docs: https://docs.astral.sh/uv/concepts/cache/#caching-in-continuous-integration
+      - name: Prune uv cache for CI
+        if: always()
+        run: uv cache prune --ci

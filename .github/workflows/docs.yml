@@ -107,6 +107,13 @@ jobs:
           path: site
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
           if-no-files-found: warn
+
+      # Optimize cache for CI: Remove pre-built wheels, keep source-built wheels
+      # This improves cache efficiency by only keeping wheels that take time to build
+      # Docs: https://docs.astral.sh/uv/concepts/cache/#caching-in-continuous-integration
+      - name: Prune uv cache for CI
+        if: always()
+        run: uv cache prune --ci
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
