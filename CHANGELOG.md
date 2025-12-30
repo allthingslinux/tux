@@ -10,6 +10,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+* **Cursor Rules & Commands System**: Comprehensive system for managing AI-assisted development patterns
+  * CLI tool for validating Cursor rules and commands (`uv run ai validate-rules`)
+  * Comprehensive guides for creating Cursor rules and commands
+  * Templates for rule and command documentation
+  * Enhanced validation with frontmatter checking and large file exception support
+  * README for Cursor rules and commands system
+* **Docker Improvements**: Enhanced Docker setup and deployment
+  * Production Docker Compose configuration (`compose.production.yaml`)
+  * Multi-stage Containerfile build with common setup stage
+  * Auto-login form plugin for Adminer database administration
+  * Validation and date generation functions in Docker scripts
+  * Enhanced CI/CD pipeline with validation and caching improvements
+* **Documentation**: New self-hosting and installation guides
+  * Bare metal installation guide
+  * Enhanced self-hosting guide with detailed requirements and installation methods
+  * CI/CD best practices documentation
+* **Bot Infrastructure**: Improved initialization and setup
+  * Prefix manager setup service for bot initialization
+  * `VALID_LOG_LEVELS` constant exported from logging module
+  * `SLOW_COG_LOAD_THRESHOLD` constant for performance monitoring
 * **Test Structure Reorganization**: Comprehensive test reorganization from flat structure to domain-based organization
   * New test directories: `tests/core/`, `tests/database/`, `tests/services/`, `tests/shared/`, `tests/modules/`, `tests/help/`, `tests/plugins/`
   * Database model tests: creation, queries, relationships, serialization, performance, and timestamp functionality
@@ -24,6 +44,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+* **Cursor Rules System**: Refactored validation command structure and enhanced documentation
+  * Updated AGENTS.md with Cursor rules and commands overview
+  * Expanded and organized Cursor rules and commands documentation
+  * Enhanced pre-commit configuration for commit message handling
+* **Docker Configuration**: Updated Docker Compose and build processes
+  * Updated Docker Compose configurations for production and development environments
+  * Enhanced health checks and service management
+  * Restructured Containerfile into multi-stage build with common setup
+  * Enhanced database connection handling and startup logic in entrypoint script
+  * Expanded `.dockerignore` to include additional files and directories
+  * Disabled attestations in GitHub Actions for improved architecture visibility
+* **Bot Architecture**: Improved initialization and error handling
+  * Consolidated setup services with improved error handling
+  * Simplified bot startup and enhanced shutdown handling
+  * Streamlined prefix resolution
+  * Enhanced configuration loading and data handling
+  * Improved bot readiness checks and logging
+* **Code Quality**: Enhanced error handling and type annotations across modules
+  * Improved error handling in database migration tests
+  * Enhanced logging configuration and error handling
+  * Improved type annotations across multiple modules (AFK, Godbolt, TLDR, info, task monitor, decorators)
+  * Enhanced error handling in validation, linting, and VSCode settings parsing
+  * Improved error extractor tests for httpx exceptions
+  * Enhanced database model relationship tests
+* **Module Refactoring**: Improved code organization and functionality
+  * Streamlined embed creation and improved boolean formatting in info module
+  * Enhanced cache handling and command processing in TLDR module
+  * Enhanced AFK management and filtering capabilities
+  * Streamlined prefix management and improved cache handling
+  * Enhanced cog loading process and improved performance monitoring
+  * Replaced custom logging methods with loguru for consistency
+  * Simplified `get_recent_cases` method and updated documentation
+* **Documentation**: Updated guides and references
+  * Updated command syntax in migration and development documentation
+  * Updated validation command in AGENTS.md for consistency
+  * Standardized command usage across documentation
+  * Updated lifecycle and setup documentation for clarity
+  * Removed outdated installation links and updated database installation references
+* **CI/CD**: Enhanced workflows and automation
+  * Optimized cache management in CI workflows
+  * Updated workflows with improved permissions and error handling
+  * Added checks for Cloudflare API token in preview deployment
 * **Test Organization**: Reorganized tests from `tests/unit/` and `tests/integration/` to domain-specific directories
   * Core permission system tests moved to `tests/core/`
   * Database tests consolidated in `tests/database/` with comprehensive model coverage
@@ -37,10 +99,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Database controller error handling and logging improvements
 * Documentation updates for debugging, testing fixtures, and versioning
 
+### Fixed
+
+* **Validation**: Improved rule validation system
+  * Added support for large file exceptions in rule validation
+  * Enhanced error handling and frontmatter validation in rule files
+  * Fixed pre-commit hook entry for cursor validation
+* **Documentation**: Fixed command syntax and references
+  * Updated command syntax in migration and development documentation
+  * Fixed validation command in AGENTS.md for consistency
+  * Updated related links in database management documentation
+  * Fixed database installation link in configuration documentation
+* **Testing**: Enhanced test reliability and accuracy
+  * Enhanced error handling in database migration tests
+  * Improved database model relationship tests and error handler assertions
+  * Updated URL assertion in error extractor tests for accuracy
+  * Enhanced logging tests to verify handler behavior
+* **Configuration**: Fixed configuration and validation issues
+  * Enhanced exception handling for VSCode settings parsing
+  * Updated markdownlint configuration format
+  * Specified exception types for improved error handling in validation and linting
+* **TLDR Module**: Resolved cache directory path to avoid permission issues
+* **Workflows**: Fixed CI/CD workflow issues
+  * Updated permissions and error handling in docs workflow
+  * Added checks for Cloudflare API token in preview deployment
+  * Removed unnecessary exception handling for subprocess errors
+* **Harmful Commands**: Fixed edge cases in harmful command detection
+* **GitHub Badge**: Adjusted GitHub release badge boolean parameter
+* **Base Cog**: Enhanced error handling and logging
+
 ### Removed
 
+* **Legacy Files**: Cleaned up deprecated and outdated files
+  * Removed `.trivyignore` file for deprecated vulnerability tracking
+  * Removed FORCE_MIGRATE references from Docker and database documentation
+  * Removed example Docker Compose override file
 * **Legacy Test Structure**: Removed `tests/unit/` and `tests/integration/` directories in favor of domain-based organization
 * **Deprecated Fixtures**: Removed `tests/fixtures/pglite_fixtures.py` and `tests/fixtures/test_data_fixtures.py` in favor of reorganized fixture structure
+
+### Security
+
+* Enhanced error handling and exception type specification for improved security posture
 
 ## [0.1.0-rc.5] - 2025-12-22
 
