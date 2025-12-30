@@ -52,7 +52,50 @@ logs/
 # Docker files (prevent recursive inclusion)
 Containerfile*
 compose.yaml
+compose.production.yaml
+compose.override.yaml.example
 .dockerignore
 
 # Cache directories
 .cache/
+
+# Plugins (drop-in extensions, should be mounted as volumes at runtime, not in image)
+src/tux/plugins/
+tux/plugins/
+
+# Test files and directories
+tests/
+test_container.sh
+
+# Example code
+examples/
+
+# Type stubs (development-only, not needed at runtime)
+typings/
+*.pyi
+
+# Coverage reports
+coverage.json
+coverage.xml
+lcov.info
+codecov.yml
+
+# Nix development files
+flake.lock
+flake.nix
+shell.nix
+
+# Cloudflare Workers config (not needed for Docker)
+wrangler.toml
+
+# Documentation build config
+zensical.toml
+
+# Documentation source files
+docs/
+
+# Runtime data (should be mounted as volumes, not in image)
+data/
+
+# Cursor IDE files
+.cursor/
