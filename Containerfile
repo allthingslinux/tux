@@ -1,5 +1,9 @@
-FROM python:3.13.8-slim AS base
+# ============================================================================
+# STAGE 1: Common Setup (shared by base and production stages)
+# ============================================================================
+FROM python:3.13.8-slim@sha256:087a9f3b880e8b2c7688debb9df2a5106e060225ebd18c264d5f1d7a73399db0 AS common
 
+# Common labels (shared across all final images)
 LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
         org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community" \
         org.opencontainers.image.licenses="GPL-3.0" \
@@ -8,12 +12,15 @@ LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
         org.opencontainers.image.title="Tux" \
         org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
 
+# Common user setup (non-root user)
 RUN groupadd --system --gid 1001 nonroot && \
         useradd --create-home --system --uid 1001 --gid nonroot nonroot
 
+# Common environment variables
 ENV DEBIAN_FRONTEND=noninteractive \
         DEBCONF_NONINTERACTIVE_SEEN=true
 
+# Common dpkg configuration (reduce package size)
 RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
         echo 'path-include /usr/share/doc/*/copyright' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
         echo 'path-exclude /usr/share/man/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
@@ -21,6 +28,17 @@ RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
         echo 'path-exclude /usr/share/info/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
         echo 'path-exclude /usr/share/lintian/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
         echo 'path-exclude /usr/share/linda/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc
+
+# Common Python environment variables
+ENV PYTHONUNBUFFERED=1 \
+        PYTHONDONTWRITEBYTECODE=1 \
+        PIP_DISABLE_PIP_VERSION_CHECK=on \
+        PIP_NO_CACHE_DIR=1
+
+# ============================================================================
+# STAGE 2: Base (extends common with build dependencies)
+# ============================================================================
+FROM common AS base
 
 # hadolint ignore=DL3008
 RUN apt-get update && \
@@ -34,11 +52,6 @@ RUN apt-get update && \
         shared-mime-info \
         && apt-get clean \
         && rm -rf /var/lib/apt/lists/*
-
-ENV PYTHONUNBUFFERED=1 \
-        PYTHONDONTWRITEBYTECODE=1 \
-        PIP_DISABLE_PIP_VERSION_CHECK=on \
-        PIP_NO_CACHE_DIR=1
 
 FROM base AS build
 
@@ -64,12 +77,18 @@ COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
         --mount=type=bind,source=uv.lock,target=uv.lock \
         --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-        uv sync --locked --no-install-project
+        uv sync --locked --no-install-project --no-default-groups
 
 COPY src/tux/database/migrations/ ./src/tux/database/migrations/
 
+# Copy source code (plugins excluded via .dockerignore)
+# Plugins are drop-in extensions that should be mounted as volumes at runtime, not in image
 COPY src/ ./src/
 RUN cp -a src/tux ./tux
+# Ensure plugins directory exists (empty) for runtime volume mounts
+# .dockerignore excludes plugin files, but directory structure is needed for mounts
+RUN mkdir -p ./src/tux/plugins ./tux/plugins && \
+        touch ./src/tux/plugins/.gitkeep ./tux/plugins/.gitkeep
 
 COPY README.md LICENSE pyproject.toml alembic.ini ./
 COPY scripts/ ./scripts/
@@ -88,9 +107,9 @@ RUN set -eux; \
         fi; \
         echo "Building version: $(cat /app/VERSION)"
 
-# Sync the project
+# Sync the project (exclude dev/test/docs/types groups for production)
 RUN --mount=type=cache,target=/root/.cache/uv \
-        uv sync --locked
+        uv sync --locked --no-default-groups
 
 FROM build AS dev
 
@@ -107,8 +126,9 @@ RUN set -eux; \
         chsh -s /usr/bin/zsh && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/*; \
-        fi; \
-        COPY --from=build --chown=nonroot:nonroot /app /app
+        fi
+
+COPY --from=build --chown=nonroot:nonroot /app /app
 
 RUN set -eux; \
         mkdir -p /app/.cache/tldr /app/temp; \
@@ -122,7 +142,8 @@ ENV VIRTUAL_ENV=/app/.venv \
         PATH="/app/.venv/bin:$PATH" \
         PYTHONPATH="/app" \
         PYTHONUNBUFFERED=1 \
-        PYTHONDONTWRITEBYTECODE=1
+        PYTHONDONTWRITEBYTECODE=1 \
+        TLDR_CACHE_DIR=/app/.cache/tldr
 
 USER nonroot
 
@@ -130,29 +151,12 @@ COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 CMD ["/entrypoint.sh"]
 
-FROM python:3.13.8-slim AS production
+# ============================================================================
+# STAGE 5: Production (extends common with runtime dependencies only)
+# ============================================================================
+FROM common AS production
 
-LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
-        org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community" \
-        org.opencontainers.image.licenses="GPL-3.0" \
-        org.opencontainers.image.authors="All Things Linux" \
-        org.opencontainers.image.vendor="All Things Linux" \
-        org.opencontainers.image.title="Tux" \
-        org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
-
-RUN groupadd --system --gid 1001 nonroot && \
-        useradd --create-home --system --uid 1001 --gid nonroot nonroot
-
-ENV DEBIAN_FRONTEND=noninteractive \
-        DEBCONF_NONINTERACTIVE_SEEN=true
-
-RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
-        echo 'path-include /usr/share/doc/*/copyright' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
-        echo 'path-exclude /usr/share/man/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
-        echo 'path-exclude /usr/share/groff/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
-        echo 'path-exclude /usr/share/info/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
-        echo 'path-exclude /usr/share/lintian/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc
-
+# Production runtime dependencies only (no git, no build tools)
 # hadolint ignore=DL3008
 RUN apt-get update && \
         apt-get upgrade -y && \
@@ -168,14 +172,12 @@ RUN apt-get update && \
 
 WORKDIR /app
 
+# Production-specific environment variables (extends common Python env vars)
 ENV VIRTUAL_ENV=/app/.venv \
         PATH="/app/.venv/bin:$PATH" \
         PYTHONPATH="/app:/app/src" \
         PYTHONOPTIMIZE=2 \
-        PYTHONUNBUFFERED=1 \
-        PYTHONDONTWRITEBYTECODE=1 \
-        PIP_DISABLE_PIP_VERSION_CHECK=on \
-        PIP_NO_CACHE_DIR=1
+        TLDR_CACHE_DIR=/app/.cache/tldr
 
 COPY --from=build --chown=nonroot:nonroot /app/.venv /app/.venv
 COPY --from=build --chown=nonroot:nonroot /app/tux /app/tux
@@ -195,27 +197,25 @@ RUN set -eux; \
         chown -R nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm; \
         chmod -R 755 /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm
 
-USER nonroot
-
-USER root
-
-# TODO: Replace hardcoded python3.13 paths with dynamic version detection
-# These paths need manual updates when upgrading to Python 3.14+
+# Cleanup build artifacts and optimize image size
+# Use dynamic Python version detection instead of hardcoded paths
 RUN set -eux; \
-        find /app/.venv -name "*.pyc" -delete; \
+        PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")'); \
+        PYTHON_LIB_PATH="/app/.venv/lib/python${PYTHON_VERSION:?}/site-packages"; \
+        find /app/.venv -name "*.pyc" -delete 2>/dev/null || true; \
         find /app/.venv -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true; \
         for test_dir in tests testing "test*"; do \
-        find /app/.venv -name "$test_dir" -type d -not -path "*/prisma*" -exec rm -rf {} + 2>/dev/null || true; \
+        find /app/.venv -name "$test_dir" -type d -exec rm -rf {} + 2>/dev/null || true; \
         done; \
         for doc_pattern in "*.md" "*.txt" "*.rst" "LICENSE*" "NOTICE*" "COPYING*" "CHANGELOG*" "README*" "HISTORY*" "AUTHORS*" "CONTRIBUTORS*"; do \
-        find /app/.venv -name "$doc_pattern" -not -path "*/prisma*" -delete 2>/dev/null || true; \
+        find /app/.venv -name "$doc_pattern" -delete 2>/dev/null || true; \
         done; \
         for pkg in setuptools wheel pkg_resources; do \
-        rm -rf /app/.venv/lib/python3.13/site-packages/${pkg}* 2>/dev/null || true; \
+        rm -rf "${PYTHON_LIB_PATH:?}/${pkg}"* 2>/dev/null || true; \
         rm -rf /app/.venv/bin/${pkg}* 2>/dev/null || true; \
         done; \
         rm -rf /app/.venv/bin/easy_install* 2>/dev/null || true; \
-        /app/.venv/bin/python -m compileall -b -q /app/tux /app/.venv/lib/python3.13/site-packages 2>/dev/null || true
+        /app/.venv/bin/python -m compileall -b -q /app/tux "${PYTHON_LIB_PATH:?}" 2>/dev/null || true
 
 USER nonroot
 
