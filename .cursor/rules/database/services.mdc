@@ -21,7 +21,7 @@ from tux.database.service import DatabaseService
 db = DatabaseService(echo=False)  # echo=True for SQL logging
 
 # Connect to database
-await db.connect(CONFIG.DATABASE_URL)
+await db.connect(CONFIG.database_url)
 ```
 
 ❌ **BAD:** Creating multiple service instances or not using service
@@ -37,12 +37,15 @@ db2 = DatabaseService()  # Don't create multiple!
 ### Using Sessions
 
 ```python
-# ✅ GOOD: Use session context manager
+# ✅ GOOD: Use session context manager (auto-connects if needed)
 async with db.session() as session:
     # Use session for operations
     result = await session.execute(select(MyModel))
     models = result.scalars().all()
+    # Automatically commits on success, rolls back on error
 ```
+
+**Note:** The `session()` method automatically connects if not already connected using `CONFIG.database_url`.
 
 ❌ **BAD:** Manual session creation or not using context manager
 
@@ -76,9 +79,8 @@ async with db.session() as session:
 DatabaseService automatically manages connection pooling:
 
 - **pool_pre_ping**: Tests connections before use
-- **pool_recycle**: Recycles connections after 1 hour
-- **connect_timeout**: 10-second connection timeout
-- **statement_timeout**: 5-minute query timeout
+- **pool_recycle**: Recycles connections after 1 hour (3600 seconds)
+- **expire_on_commit**: False (objects remain accessible after commit)
 
 ✅ **GOOD:** Service handles pooling automatically
 
@@ -87,11 +89,15 @@ DatabaseService automatically manages connection pooling:
 ### Health Checks
 
 ```python
-# ✅ GOOD: Use health check method
-is_healthy = await db.health_check()
+# ✅ GOOD: Use health check method (returns dict)
+health = await db.health_check()
 
-if not is_healthy:
-    logger.error("Database connection unhealthy")
+if health["status"] != "healthy":
+    logger.error(f"Database unhealthy: {health.get('error')}")
+
+# Check connection status
+if db.is_connected():
+    await db.test_connection()  # Test with actual query
 ```
 
 ## Async Operations
@@ -118,7 +124,7 @@ async with db.session() as session:
 ### Transaction Management
 
 ```python
-# ✅ GOOD: Use async transaction
+# ✅ GOOD: Use async transaction with session context manager
 async with db.session() as session:
     async with session.begin():
         model1 = MyModel(name="Model 1")
@@ -126,6 +132,16 @@ async with db.session() as session:
         session.add(model1)
         session.add(model2)
         # Committed automatically, or rolled back on error
+
+# ✅ GOOD: Use execute_transaction for callback-based transactions
+async def create_models():
+    model1 = MyModel(name="Model 1")
+    model2 = MyModel(name="Model 2")
+    async with db.session() as session:
+        session.add(model1)
+        session.add(model2)
+
+await db.execute_transaction(create_models)
 ```
 
 ## Error Handling
@@ -135,13 +151,25 @@ async with db.session() as session:
 ```python
 # ✅ GOOD: Handle connection errors
 try:
-    await db.connect(CONFIG.DATABASE_URL)
+    await db.connect(CONFIG.database_url)
 except Exception as e:
     logger.error(f"Failed to connect to database: {e}")
     # Handle error appropriately
 ```
 
-### Query Errors
+### Query Errors with Retry Logic
+
+```python
+# ✅ GOOD: Use execute_query for automatic retry with exponential backoff
+async def fetch_user(session: AsyncSession) -> User:
+    result = await session.execute(select(User).where(User.id == 123))
+    return result.scalar_one()
+
+user = await db.execute_query(fetch_user, "get_user:123")
+# Automatically retries on transient failures (DisconnectionError, OperationalError, TimeoutError)
+```
+
+### Query Errors in Controllers
 
 ```python
 # ✅ GOOD: Let controllers handle query errors
@@ -160,16 +188,46 @@ except Exception as e:
 # ✅ GOOD: Connect on startup
 async def startup():
     db = DatabaseService()
-    await db.connect(CONFIG.DATABASE_URL)
+    await db.connect(CONFIG.database_url)
     return db
 ```
 
 ### Shutdown
 
 ```python
-# ✅ GOOD: Close connections on shutdown
+# ✅ GOOD: Disconnect on shutdown
 async def shutdown(db: DatabaseService):
-    await db.close()
+    await db.disconnect()  # Disposes engine and clears session factory
+```
+
+## Advanced Features
+
+### Schema Validation
+
+```python
+# ✅ GOOD: Validate database schema matches models
+result = await db.validate_schema()
+if result["status"] != "valid":
+    logger.error(f"Schema invalid: {result.get('error')}")
+    # Run migrations: uv run db reset
+```
+
+### Retry Logic with Monitoring
+
+The `execute_query()` method provides:
+
+- **Automatic retry** on transient failures (max 3 attempts)
+- **Exponential backoff** (0.5s, 1s, 2s delays)
+- **Sentry integration** for performance monitoring
+- **Metrics recording** for operation tracking
+
+```python
+# ✅ GOOD: Use execute_query for operations that need retry
+async def complex_operation(session: AsyncSession) -> Result:
+    # Your database operations here
+    pass
+
+result = await db.execute_query(complex_operation, "operation_name:context")
 ```
 
 ## Best Practices
@@ -178,8 +236,10 @@ async def shutdown(db: DatabaseService):
 2. **Use context managers** - Always use `async with db.session()`
 3. **Let controllers handle sessions** - Don't pass sessions to controllers
 4. **Handle errors properly** - Catch and log database errors
-5. **Use health checks** - Monitor database connectivity
-6. **Close on shutdown** - Properly close connections
+5. **Use health checks** - Monitor database connectivity with `health_check()`
+6. **Disconnect on shutdown** - Properly disconnect with `disconnect()`
+7. **Use execute_query for critical operations** - Automatic retry and monitoring
+8. **Validate schema on startup** - Use `validate_schema()` to catch migration issues
 
 ## Anti-Patterns
 
@@ -187,7 +247,10 @@ async def shutdown(db: DatabaseService):
 2. ❌ **Manual session management** - Use context managers
 3. ❌ **Passing sessions to controllers** - Controllers manage sessions
 4. ❌ **Not handling errors** - Always catch database errors
-5. ❌ **Not closing connections** - Close on shutdown
+5. ❌ **Not disconnecting on shutdown** - Use `disconnect()` not `close()`
+6. ❌ **Accessing `_session_factory` directly** - Use `session()` method
+7. ❌ **Ignoring schema validation** - Validate schema matches models
+8. ❌ **Not using retry logic** - Use `execute_query()` for operations that may fail
 
 ## See Also
 
