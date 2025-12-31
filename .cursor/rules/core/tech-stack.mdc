@@ -6,7 +6,7 @@ alwaysApply: false
 
 ## Core Runtime
 
-**Python:** 3.13+ • **Discord:** `discord-py` • **Package Manager:** `uv`
+**Python:** `>=3.13.2,<3.14` • **Discord:** `discord-py` • **Package Manager:** `uv` • **Build System:** `hatchling`
 
 ## Key Configuration Files
 
@@ -22,12 +22,29 @@ alwaysApply: false
 **Core Runtime:**
 
 - `discord-py`, `jishaku` (Discord bot framework)
-- `sqlmodel`, `sqlalchemy`, `alembic` (Database ORM & migrations)
-- `httpx`, `aiofiles`, `aiocache`, `redis` (Async I/O)
+- `sqlmodel`, `sqlalchemy`, `alembic`, `alembic-postgresql-enum`, `alembic-utils` (Database ORM & migrations)
+- `psycopg[binary,pool]` (PostgreSQL driver)
+- `httpx`, `aiofiles`, `aiocache`, `h2` (Async I/O & HTTP/2)
 - `loguru`, `sentry-sdk[httpx,loguru]` (Logging & monitoring)
 - `pydantic`, `pydantic-settings` (Data validation & config)
-- `typer`, `rich`, `click` (CLI & output)
+- `typer`, `rich` (CLI & output)
 - `pillow`, `cairosvg` (Image processing)
+- `influxdb-client` (Metrics & monitoring)
+- `githubkit[auth-app]` (GitHub API integration)
+- `psutil` (System & process utilities)
+- `pynacl` (Cryptography)
+- `python-dotenv` (Environment variable loading)
+- `pytz` (Timezone handling)
+- `pyyaml` (YAML parsing)
+- `reactionmenu` (Discord reaction menus)
+- `rsa` (RSA encryption)
+- `audioop-lts` (Audio operations)
+- `watchdog` (File system monitoring)
+- `arrow` (Date/time library)
+- `levenshtein` (String similarity)
+- `jinja2` (Templating)
+- `semver` (Semantic versioning)
+- `tomli-w`, `tomlkit` (TOML parsing/writing)
 
 **Development:**
 
@@ -36,20 +53,21 @@ alwaysApply: false
 - `pre-commit` (Git hooks)
 - `pydoclint` (Docstring linting - NumPy style)
 - `yamllint`, `yamlfix` (YAML tools)
+- `docstr-coverage` (Documentation coverage)
+- `pydantic-settings-export[email,regions,toml]` (Config generation)
 
 **Testing:**
 
-- `pytest` + plugins (`asyncio`, `mock`, `cov`, `sugar`, `randomly`, `timeout`, `html`, `benchmark`, `alembic`, `loguru`, `parallel`, `httpx`)
+- `pytest` + plugins (`asyncio`, `mock`, `cov`, `sugar`, `randomly`, `timeout`, `html`, `benchmark`, `alembic`, `loguru`, `parallel`, `httpx`, `xdist`)
 - `py-pglite[all]` (In-memory PostgreSQL for tests)
 
 **Documentation:**
 
 - `zensical` (Documentation platform)
-- `pymdown-extensions` (Markdown extensions)
 
 **Type Stubs:**
 
-- `types-*` packages for external libraries
+- `types-pytz`, `types-click`, `types-psutil`, `types-pillow`, `types-pyyaml`, `types-aiofiles`, `types-influxdb-client`, `types-jinja2`, `types-mock`
 - `asyncpg-stubs`
 - `annotated-types`
 
@@ -59,18 +77,19 @@ See `pyproject.toml` for a more full and up to date list of dependencies.
 
 **ORM:** SQLModel (SQLAlchemy + Pydantic integration)
 **Migrations:** Alembic + `alembic-postgresql-enum` + `alembic-utils`
-**Drivers:** `asyncpg` (primary), `psycopg[binary,pool]` (backup)
+**Driver:** `psycopg[binary,pool]` (PostgreSQL async driver)
 **Database:** PostgreSQL 17+ (Docker: `postgres:17-alpine`)
-**Testing:** `py-pglite` (in-memory PostgreSQL)
+**Testing:** `py-pglite[all]` (in-memory PostgreSQL)
 
 ## Development Tools
 
 **Code Quality:**
 
-- `ruff` - Linting & formatting (120 char line length, Python 3.13 target)
+- `ruff` - Linting & formatting (88 char line length, Python 3.13 target)
 - `basedpyright` - Strict type checking with execution environments
 - `pydoclint` - NumPy-style docstring validation
 - `pre-commit` - Automated git hooks
+- `docstr-coverage` - Documentation coverage tracking
 
 **Testing Framework:**
 
@@ -91,11 +110,18 @@ All scripts use `typer` and are defined in `pyproject.toml`:
 ```bash
 # Core commands
 uv run tux start [--debug]     # Start bot
-uv run db migrate-dev          # Database operations
+uv run db dev                  # Create & apply migration
+uv run db init                 # Initialize database
+uv run db push                 # Apply pending migrations
+uv run db status               # Show migration status
 uv run dev all                 # All quality checks
-uv run tests run               # Run tests with coverage
+uv run test all                # Full test suite with coverage
+uv run test quick              # Fast test run (no coverage)
 uv run docs serve              # Documentation server
+uv run docs build              # Build documentation
 uv run config generate         # Generate config examples
+uv run config validate         # Validate configuration
+uv run ai validate-rules       # Validate Cursor rules
 ```
 
 ## Project Structure
@@ -107,11 +133,12 @@ tux/
 │   ├── database/              # Models, migrations, controllers
 │   ├── services/              # Business logic services
 │   ├── modules/               # Discord cogs/commands
+│   ├── plugins/               # Plugin system
 │   ├── ui/                    # Embeds, views, components
 │   ├── shared/                # Utilities, constants, config
 │   └── help/                  # Help system
 ├── scripts/                   # CLI scripts (typer-based)
-├── tests/                     # Test suite (unit/integration/e2e)
+├── tests/                     # Test suite (core/database/services/shared/modules)
 ├── docs/                      # Zensical documentation
 ├── config/                    # Configuration examples
 └── docker/                    # Docker-related files
@@ -123,13 +150,13 @@ tux/
 
 ```bash
 # Setup
-uv sync                        # Install all dependencies
+uv sync                       # Install all dependencies
 cp .env.example .env          # Configure environment
 cp config/config.toml.example config/config.toml
 
 # Development
 uv run dev all                # Run all quality checks
-uv run tests quick            # Fast test run
+uv run test quick             # Fast test run
 uv run tux start --debug      # Start bot in debug mode
 ```
 
@@ -177,12 +204,12 @@ python src/tux/main.py
 
 ## Quality Standards
 
-- **Type Safety:** Strict basedpyright configuration
-- **Code Style:** Ruff with 120-char lines, Python 3.13 target
-- **Documentation:** NumPy-style docstrings, comprehensive API docs
-- **Testing:** High coverage, multiple test types, async support
-- **Dependencies:** Locked versions, security scanning
-- **Git:** Conventional commits, automated hooks
+- **Type Safety:** Strict basedpyright configuration with execution environments
+- **Code Style:** Ruff with 88-char lines, Python 3.13 target
+- **Documentation:** NumPy-style docstrings, comprehensive API docs, docstring coverage tracking
+- **Testing:** High coverage, multiple test types, async support, parallel execution
+- **Dependencies:** Locked versions via `uv.lock`, security scanning
+- **Git:** Conventional commits, automated hooks via pre-commit
 
 ## Best Practices
 
