@@ -16,6 +16,8 @@ Tux uses a database-driven permission system where command permissions are confi
 
 ```python
 from tux.core.checks import requires_command_permission
+# or
+from tux.core.decorators import requires_command_permission
 
 @commands.hybrid_command(name="command")
 @commands.guild_only()
@@ -23,10 +25,27 @@ from tux.core.checks import requires_command_permission
 async def command(self, ctx: commands.Context[Tux]) -> None:
     """Command description."""
     # Permission checked automatically
+    # Reads required rank from database per-guild
+    # Commands denied by default if not configured (safe mode)
     pass
 ```
 
-✅ **GOOD:** Always use requires_command_permission() decorator
+✅ **GOOD:** Always use `@requires_command_permission()` decorator
+
+### Allow Unconfigured Commands
+
+For commands that should work even without database configuration:
+
+```python
+# ✅ GOOD: Allow command without database configuration
+@requires_command_permission(allow_unconfigured=True)
+async def command(self, ctx: commands.Context[Tux]) -> None:
+    # Command works even if not configured in database
+    # Use with caution - breaks safe default behavior
+    pass
+```
+
+⚠️ **WARNING:** Only use `allow_unconfigured=True` for commands that should be accessible to everyone by default
 
 ❌ **BAD:** Manual permission checks or missing decorator
 
@@ -54,13 +73,24 @@ Permissions are configured per-guild in the database:
 
 ### Permission Ranks
 
-Permission ranks are stored in the database:
+Permission ranks are stored in the database (0-10 hierarchy):
 
 ```python
-# Permission ranks are numeric
+# Permission ranks are numeric (0-10)
 # Higher rank = more permissions
-# Rank 0 = no permissions (default)
-# Rank 100 = maximum permissions
+# Rank 0 = Member (lowest, default)
+# Rank 7 = Server Owner (highest default)
+# Ranks 8-10 = Custom ranks (guild-specific)
+
+# Default ranks (0-7):
+# 0: Member - Regular community member
+# 1: Trusted - Trusted community member
+# 2: Junior Moderator - Entry-level moderation
+# 3: Moderator - Experienced moderator
+# 4: Senior Moderator - Senior moderator with oversight
+# 5: Administrator - Server administrator
+# 6: Head Administrator - Head administrator
+# 7: Server Owner - Server owner with ultimate authority
 ```
 
 ### Role-to-Rank Mapping
@@ -69,9 +99,13 @@ Roles are assigned to permission ranks:
 
 ```python
 # Example configuration:
-# @Admin role → Rank 100
-# @Moderator role → Rank 50
-# @Member role → Rank 10
+# @Admin role → Rank 5 (Administrator)
+# @Moderator role → Rank 3 (Moderator)
+# @Trusted role → Rank 1 (Trusted)
+# @Member role → Rank 0 (Member)
+
+# Users get the highest rank among all their roles
+# If user has roles mapped to rank 2 and rank 4, they have rank 4
 ```
 
 ### Command Requirements
@@ -79,21 +113,45 @@ Roles are assigned to permission ranks:
 Commands require specific permission ranks:
 
 ```python
-# Commands are configured in database:
-# /ban → Requires Rank 50
-# /warn → Requires Rank 30
-# /info → Requires Rank 0 (everyone)
+# Commands are configured in database per-guild:
+# /ban → Requires Rank 3 (Moderator)
+# /warn → Requires Rank 2 (Junior Moderator)
+# /info → Requires Rank 0 (Member, everyone)
+# /config → Requires Rank 5 (Administrator)
+
+# Commands without configuration are denied by default (safe mode)
+```
+
+### Restricted Commands
+
+Some commands can never be assigned to permission ranks:
+
+```python
+# Restricted commands (owner/sysadmin only):
+# - eval, e, jsk, jishaku
+
+# These commands are blocked from being assigned to ranks
+# for security reasons
 ```
 
 ## Permission Checking Flow
 
 1. **User invokes command** - Command is called
-2. **Get user's rank** - Look up user's highest role rank
-3. **Check command requirement** - Get required rank from database
-4. **Compare ranks** - User rank >= command requirement
-5. **Allow or deny** - Execute command or raise TuxPermissionDeniedError
+2. **Check bypasses** - Bot owners, sysadmins, and guild owners bypass all checks
+3. **Check DM context** - Commands in DMs bypass permission checks
+4. **Get user's rank** - Look up user's highest role rank (among all their roles)
+5. **Check command requirement** - Get required rank from database
+6. **Compare ranks** - User rank >= command requirement
+7. **Allow or deny** - Execute command or raise TuxPermissionDeniedError
 
-✅ **GOOD:** Automatic, database-driven checking
+✅ **GOOD:** Automatic, database-driven checking with bypass rules
+
+**Bypass Rules:**
+
+- Bot owners (CONFIG.USER_IDS.BOT_OWNER_ID) - Always allowed
+- Sysadmins (CONFIG.USER_IDS.SYSADMINS) - Always allowed
+- Guild owners (guild.owner_id) - Always allowed
+- Direct messages - Permissions don't apply to DMs
 
 ## Permission Exceptions
 
@@ -113,39 +171,73 @@ from tux.shared.exceptions import TuxPermissionDeniedError
 Error handler automatically sends permission denied message:
 
 ```python
-# Error handler sends appropriate message:
-# "You don't have permission to use this command."
+# Error handler formats and sends user-friendly message:
+# "You need permission rank **5** to use `admin`. Your rank: **2**"
+
+# TuxPermissionDeniedError includes:
+# - required_rank: The rank needed for the command
+# - user_rank: The user's current rank
+# - command_name: The command that was denied
 ```
 
 ## Permission Best Practices
 
-1. **Always use decorator** - Use @requires_command_permission()
-2. **Database-driven** - Don't hard-code permissions
+1. **Always use decorator** - Use `@requires_command_permission()` on all commands
+2. **Database-driven** - Don't hard-code permissions in code
 3. **Per-guild configuration** - Each guild configures independently
-4. **Safe defaults** - Commands denied by default if not configured
-5. **Rank-based system** - Use numeric ranks for flexibility
+4. **Safe defaults** - Commands denied by default if not configured (safe mode)
+5. **Rank-based system** - Use numeric ranks (0-10) for flexibility
 6. **Role assignments** - Map roles to ranks, not individual commands
+7. **Bypass rules** - Bot owners, sysadmins, and guild owners bypass automatically
+8. **DM handling** - Commands in DMs bypass permission checks
+9. **Restricted commands** - Never assign eval/jsk commands to ranks
+10. **Use default ranks** - Use ranks 0-7 for standard hierarchy, 8-10 for custom
 
 ## Anti-Patterns
 
-1. ❌ **Manual permission checks** - Use decorator
-2. ❌ **Hard-coded permissions** - Use database configuration
-3. ❌ **Missing decorator** - Always use requires_command_permission()
-4. ❌ **Global permissions** - Configure per-guild
-5. ❌ **Command-specific roles** - Use rank-based system
+1. ❌ **Manual permission checks** - Use `@requires_command_permission()` decorator
+2. ❌ **Hard-coded permissions** - Use database configuration per-guild
+3. ❌ **Missing decorator** - Always use `@requires_command_permission()` on commands
+4. ❌ **Global permissions** - Configure permissions per-guild, not globally
+5. ❌ **Command-specific roles** - Use rank-based system, not role-based
+6. ❌ **Using allow_unconfigured=True** - Breaks safe default behavior, use sparingly
+7. ❌ **Assigning restricted commands** - Never assign eval/jsk to ranks
+8. ❌ **Assuming rank 100** - Ranks are 0-10, not 0-100
+9. ❌ **Not initializing guild** - Call `initialize_guild()` to create default ranks
+10. ❌ **Checking permissions manually** - Decorator handles all checks automatically
 
-## Permission Configuration Commands
+## Permission Configuration and Setup
 
-Guild administrators configure permissions through bot commands:
+Guild administrators configure permissions through the unified configuration dashboard:
 
 ```python
-# Configuration commands (in config cog):
-# /config ranks create <name> <rank>
-# /config ranks assign <role> <rank>
-# /config commands set <command> <rank>
+# Configuration via dashboard:
+# /config overview → Permission Ranks → Create/Edit ranks
+# /config overview → Role Assignments → Assign roles to ranks
+# /config overview → Command Permissions → Set command requirements
+
+# Or via commands:
+# /config ranks init - Initialize default ranks (0-7)
+# /config ranks create <name> <rank> - Create custom rank
+# /config ranks assign <role> <rank> - Assign role to rank
+# /config commands set <command> <rank> - Set command requirement
 ```
 
-✅ **GOOD:** User-friendly configuration interface
+✅ **GOOD:** User-friendly configuration interface with dashboard
+
+### Initializing Guild Permissions
+
+Guilds need to initialize default ranks before configuring:
+
+```python
+# ✅ GOOD: Initialize default ranks for new guilds
+from tux.core.permission_system import get_permission_system
+
+permission_system = get_permission_system()
+await permission_system.initialize_guild(guild_id)
+# Creates default ranks 0-7 if they don't exist
+# Preserves existing customizations
+```
 
 ## See Also
 
