@@ -123,6 +123,7 @@ Complete catalog of all rules and commands in the Tux project.
 ### Meta Commands
 
 - `meta/create-rule.md` - Create new Cursor rule
+- `meta/update-rule.md` - Audit and update existing Cursor rule
 
 ## See Also
 
