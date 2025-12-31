@@ -12,32 +12,55 @@ Tux provides user-friendly error messages through embeds and formatted responses
 
 ## Error Embeds
 
-### Using ErrorFormatter
+### Using EmbedCreator
 
 ```python
-from tux.services.handlers.error.formatter import ErrorFormatter
-
-# ✅ GOOD: Use ErrorFormatter for consistent error messages
-formatter = ErrorFormatter()
-# source can be commands.Context[Tux] or discord.Interaction
-embed = formatter.format_error_embed(error, source, config)
-await ctx.send(embed=embed)
-```
-
-✅ **GOOD:** Consistent error formatting
-
-### Manual Error Embeds
-
-```python
-from tux.ui.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator, EmbedType
 
 # ✅ GOOD: Use EmbedCreator for error embeds
 embed = EmbedCreator.create_embed(
-    embed_type=EmbedCreator.ERROR,
+    embed_type=EmbedType.ERROR,  # or EmbedCreator.ERROR (alias)
     title="Error Title",
     description="User-friendly error message"
 )
 await ctx.send(embed=embed)
+```
+
+✅ **GOOD:** Consistent error formatting with standardized colors and icons
+
+### Using BaseConfigManager Helpers
+
+For config managers, use helper methods:
+
+```python
+from tux.modules.config.base import BaseConfigManager
+
+class MyConfigManager(BaseConfigManager):
+    async def my_operation(self, ctx: commands.Context[Tux]) -> None:
+        try:
+            # operation
+            pass
+        except Exception as e:
+            # ✅ GOOD: Use helper method
+            await self.handle_error(ctx, e, "perform operation")
+            # Or create embed manually
+            embed = self.create_error_embed(
+                title="Operation Failed",
+                description="User-friendly error message"
+            )
+            await ctx.send(embed=embed)
+```
+
+### Global Error Handler (Automatic)
+
+The global error handler automatically formats and sends error embeds:
+
+```python
+# ✅ GOOD: Let global handler format errors automatically
+# ErrorHandler cog uses ErrorFormatter internally
+# No manual formatting needed - just raise exceptions
+raise commands.MissingRequiredArgument("member")
+# Global handler formats and sends error embed automatically
 ```
 
 ❌ **BAD:** Exposing internal errors
@@ -56,47 +79,109 @@ except Exception as e:
 
 ```python
 # ✅ GOOD: Clear permission error message
-embed = EmbedCreator.error(
+from tux.ui.embeds import EmbedCreator, EmbedType
+
+embed = EmbedCreator.create_embed(
+    embed_type=EmbedType.ERROR,
     title="Permission Denied",
     description="You don't have permission to use this command."
 )
 await ctx.send(embed=embed)
+
+# ✅ GOOD: Use TuxPermissionDeniedError (handled by global handler)
+from tux.shared.exceptions import TuxPermissionDeniedError
+
+raise TuxPermissionDeniedError(
+    required_rank=5,
+    user_rank=2,
+    command_name="admin"
+)
+# Global handler formats this automatically with user-friendly message
 ```
 
 ### Validation Errors
 
 ```python
 # ✅ GOOD: Clear validation error message
-embed = EmbedCreator.error(
+embed = EmbedCreator.create_embed(
+    embed_type=EmbedType.ERROR,
     title="Invalid Input",
     description="Reason must be 500 characters or less."
 )
 await ctx.send(embed=embed)
+
+# ✅ GOOD: Use commands.BadArgument (handled by global handler)
+raise commands.BadArgument("Reason must be 500 characters or less.")
+# Global handler formats this automatically
 ```
 
 ### Generic Errors
 
 ```python
 # ✅ GOOD: Generic error for unexpected errors
-embed = EmbedCreator.error(
+embed = EmbedCreator.create_embed(
+    embed_type=EmbedType.ERROR,
     title="Error",
     description="An unexpected error occurred. Please try again later."
 )
 await ctx.send(embed=embed)
+
+# ✅ GOOD: Let global handler format unexpected errors
+# Just raise the exception - global handler formats it
+raise Exception("Something went wrong")
+# Global handler formats with generic message, logs full error
 ```
 
 ## Error Handler Messages
 
-The error handler automatically formats error messages:
+The global error handler automatically formats error messages based on error type:
 
 ```python
 # ✅ GOOD: Error handler formats messages automatically
-# ErrorHandler cog formats errors based on error type
+# ErrorHandler cog formats errors based on error type from ERROR_CONFIG_MAP
+# Each error type has a configured message format
+
+# Examples of automatic formatting:
+raise commands.MissingRequiredArgument("member")
+# → "Missing required argument: `member`"
+
+raise commands.BadArgument("Invalid input")
+# → "Invalid argument: Invalid input"
+
+raise discord.Forbidden("Missing permissions")
+# → "Permission denied: Missing permissions"
+
+raise discord.RateLimited(retry_after=5.0)
+# → "Rate limited. Try again in 5.0s."
+
+raise TuxPermissionDeniedError(required_rank=5, user_rank=2, command_name="admin")
+# → "You need permission rank **5** to use `admin`. Your rank: **2**"
 ```
+
+**Error Handler Features:**
+
+- Configurable message formats per error type
+- Automatic usage information for prefix commands
+- Ephemeral responses for interactions
+- Command suggestions for CommandNotFound
+- Sentry integration for error tracking
 
 ## Interaction Error Responses
 
-### Ephemeral Responses
+### Global Handler (Automatic)
+
+The global error handler automatically handles interaction responses:
+
+```python
+# ✅ GOOD: Global handler automatically sends ephemeral responses
+# No manual handling needed - just raise exceptions
+raise commands.MissingRequiredArgument("member")
+# Global handler sends ephemeral response automatically
+```
+
+### Manual Interaction Error Responses
+
+If you need to send error responses manually:
 
 ```python
 # ✅ GOOD: Use ephemeral for error responses
@@ -122,27 +207,56 @@ else:
     )
 ```
 
+### Error Handling in Callbacks
+
+```python
+# ✅ GOOD: Use helper function for callback errors
+from tux.ui.views.config.callbacks import handle_callback_error
+
+async def button_callback(interaction: discord.Interaction) -> None:
+    try:
+        await operation()
+    except Exception as e:
+        await handle_callback_error(
+            interaction,
+            e,
+            operation="perform action",
+            context="button callback"
+        )
+```
+
 ## Best Practices
 
-1. **User-friendly messages** - Clear, helpful error messages
-2. **Use embeds** - Use error embeds for consistency
-3. **Don't expose internals** - Generic messages for unexpected errors
-4. **Be specific** - Specific messages for validation/permission errors
-5. **Ephemeral responses** - Use ephemeral for error responses
-6. **Consistent formatting** - Use ErrorFormatter or EmbedCreator
+1. **Let global handler work** - Don't manually format errors unless needed
+2. **Use custom exceptions** - Raise Tux-specific exceptions for automatic formatting
+3. **User-friendly messages** - Clear, helpful error messages (no technical jargon)
+4. **Use embeds** - Use error embeds for consistency (EmbedCreator or global handler)
+5. **Don't expose internals** - Generic messages for unexpected errors
+6. **Be specific** - Specific messages for validation/permission errors
+7. **Ephemeral responses** - Global handler uses ephemeral for interactions automatically
+8. **Consistent formatting** - Use EmbedCreator or let global handler format
+9. **Include context** - Error messages should include what went wrong and why
+10. **Command usage** - Global handler includes usage for prefix commands automatically
 
 ## Anti-Patterns
 
-1. ❌ **Exposing internals** - Don't show internal error details
-2. ❌ **Generic messages** - Be specific when possible
-3. ❌ **Plain text** - Use embeds for errors
-4. ❌ **Not ephemeral** - Use ephemeral for error responses
-5. ❌ **Inconsistent formatting** - Use standard formatters
+1. ❌ **Exposing internals** - Don't show internal error details (stack traces, file paths, etc.)
+2. ❌ **Generic messages** - Be specific when possible (validation errors, permission errors)
+3. ❌ **Plain text** - Use embeds for errors, not plain text messages
+4. ❌ **Not ephemeral** - Global handler uses ephemeral automatically, don't disable it
+5. ❌ **Inconsistent formatting** - Use EmbedCreator or let global handler format
+6. ❌ **Manual error formatting** - Don't manually format errors that global handler handles
+7. ❌ **Using ErrorFormatter directly** - Let global handler use it, don't use it in commands
+8. ❌ **Not using custom exceptions** - Use Tux exceptions for automatic formatting
+9. ❌ **Technical jargon** - Use user-friendly language, not technical terms
+10. ❌ **Missing context** - Include what went wrong and how to fix it
 
 ## See Also
 
 - @error-handling/patterns.mdc - Error handling patterns
-- @ui/embeds.mdc - Embed patterns (if exists)
+- @error-handling/logging.mdc - Logging patterns
+- @error-handling/sentry.mdc - Sentry integration
 - @modules/interactions.mdc - Interaction patterns
+- @modules/commands.mdc - Command patterns
 - @AGENTS.md - General coding standards
 - @rules.mdc - Complete catalog of all rules and commands
