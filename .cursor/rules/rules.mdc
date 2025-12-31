@@ -41,7 +41,6 @@ Complete catalog of all rules and commands in the Tux project.
 - `security/patterns.mdc` - Security patterns
 - `security/secrets.mdc` - Secret management
 - `security/validation.mdc` - Input validation
-- `security/dependencies.mdc` - Dependency security
 
 ### Error Handling Rules
 
