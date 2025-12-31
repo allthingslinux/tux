@@ -136,9 +136,15 @@ async def command(self, ctx: commands.Context[Tux]) -> None:
 
 ```python
 # ✅ GOOD: Use permission decorator
+from tux.core.decorators import requires_command_permission
+# or
+from tux.core.checks import requires_command_permission
+
 @requires_command_permission()
 async def command(self, ctx: commands.Context[Tux]) -> None:
     # Permission checked automatically
+    # Reads required rank from database per-guild
+    # Bot owners, sysadmins, and guild owners bypass automatically
     pass
 ```
 
@@ -227,32 +233,90 @@ await ctx.send(view=view)  # With view/components
 For long-running operations:
 
 ```python
-# ✅ GOOD: Defer for long operations
-if ctx.interaction:
-    await ctx.interaction.response.defer()
+# ✅ GOOD: Defer for long operations (works for both slash and prefix)
+await ctx.defer(ephemeral=True)  # For user-only responses
+# or
+await ctx.defer()  # For public responses
 
 # Do long operation
 result = await long_operation()
 
-# Edit or follow up
-if ctx.interaction:
-    await ctx.interaction.followup.send(result)
-else:
-    await ctx.send(result)
+# Send result (ctx.defer handles both slash and prefix automatically)
+await ctx.send(result)
+# or
+await ctx.reply(result, ephemeral=True)
 ```
 
 ### Error Responses
 
 ```python
 # ✅ GOOD: Use error embeds
-from tux.ui.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator, EmbedType
 
-embed = EmbedCreator.error(
+embed = EmbedCreator.create_embed(
+    embed_type=EmbedType.ERROR,
     title="Error",
     description="Something went wrong"
 )
 await ctx.send(embed=embed)
+
+# ✅ GOOD: Use ctx.reply() for ephemeral error responses
+await ctx.reply(
+    content="An error occurred",
+    ephemeral=True,
+    allowed_mentions=discord.AllowedMentions(users=False, roles=False, everyone=False)
+)
 ```
+
+### Reply Patterns
+
+```python
+# ✅ GOOD: Use ctx.reply() for command responses
+await ctx.reply(
+    content="Response message",
+    embed=embed,  # Optional embed
+    ephemeral=True,  # User-only response
+    allowed_mentions=discord.AllowedMentions(users=False)  # Control mentions
+)
+
+# ✅ GOOD: Use ctx.send() for general messages
+await ctx.send("Message")
+await ctx.send(embed=embed)
+
+# ✅ GOOD: Use ctx.send_help() for command help
+await ctx.send_help("command_name")
+```
+
+## Slash-Only Commands
+
+For commands that only work as slash commands:
+
+```python
+from discord import app_commands
+
+@app_commands.command(name="tldr")
+@app_commands.guild_only()
+@app_commands.describe(
+    command="The command to look up",
+    platform="Platform (e.g. linux, osx)",
+)
+@app_commands.autocomplete(platform=platform_autocomplete)
+@app_commands.choices(encoding=[
+    app_commands.Choice(name="base16", value="base16"),
+    app_commands.Choice(name="base32", value="base32"),
+])
+async def slash_tldr(
+    self,
+    interaction: discord.Interaction,
+    command: str,
+    platform: str | None = None,
+) -> None:
+    """Show a TLDR page for a CLI command."""
+    # Implementation
+    pass
+```
+
+✅ **GOOD:** Use `@app_commands.command()` for pure slash commands with autocomplete and choices
 
 ## Command Error Handling
 
@@ -260,20 +324,27 @@ await ctx.send(embed=embed)
 
 ```python
 # ✅ GOOD: Handle errors properly
+from tux.ui.embeds import EmbedCreator, EmbedType
+from loguru import logger
+
 async def command(self, ctx: commands.Context[Tux]) -> None:
     try:
         # Command logic
         pass
     except discord.Forbidden:
-        embed = EmbedCreator.error(
+        embed = EmbedCreator.create_embed(
+            embed_type=EmbedType.ERROR,
             title="Permission Denied",
             description="I don't have permission to do that."
         )
         await ctx.send(embed=embed)
     except Exception as e:
         logger.exception("Command failed")
-        await ctx.send("An error occurred.")
+        # Let global error handler format and send error
+        raise  # Global handler will format and send user-friendly error
 ```
+
+✅ **GOOD:** Let global error handler format errors automatically
 
 ### Error Handler Cogs
 
@@ -292,22 +363,33 @@ async def on_command_error(
 
 ## Best Practices
 
-1. **Use hybrid commands** - Support both slash and traditional
+1. **Use hybrid commands** - Support both slash and traditional commands
 2. **Always type hints** - Type all parameters and return types
-3. **Use decorators** - guild_only, requires_command_permission
-4. **Document commands** - NumPy docstrings
-5. **Handle errors** - Try-except with appropriate responses
-6. **Use embeds** - For rich responses
-7. **Assert ctx.guild** - After guild_only decorator
+3. **Use decorators** - `@commands.guild_only()`, `@requires_command_permission()`
+4. **Document commands** - NumPy docstrings with Parameters section
+5. **Handle errors** - Let global error handler format errors, or handle specific exceptions
+6. **Use embeds** - For rich responses (EmbedCreator.create_embed)
+7. **Assert ctx.guild** - After `@commands.guild_only()` decorator for type narrowing
+8. **Use ctx.defer()** - For long-running operations (works for both slash and prefix)
+9. **Use ctx.reply()** - For command responses with ephemeral support
+10. **Use ctx.send_help()** - For showing command help
+11. **Control mentions** - Use `allowed_mentions` parameter to prevent unwanted pings
+12. **Use flags** - For complex parameters, use FlagConverter classes
 
 ## Anti-Patterns
 
-1. ❌ **Missing type hints** - Always type parameters
-2. ❌ **Missing decorators** - Use required decorators
-3. ❌ **No error handling** - Always handle errors
-4. ❌ **Plain text responses** - Use embeds for rich responses
-5. ❌ **Manual permission checks** - Use decorators
-6. ❌ **No docstrings** - Document all commands
+1. ❌ **Missing type hints** - Always type parameters and return types
+2. ❌ **Missing decorators** - Use `@commands.guild_only()` and `@requires_command_permission()`
+3. ❌ **No error handling** - Let global error handler work, or handle specific exceptions
+4. ❌ **Plain text responses** - Use embeds for rich responses (EmbedCreator.create_embed)
+5. ❌ **Manual permission checks** - Use `@requires_command_permission()` decorator
+6. ❌ **No docstrings** - Document all commands with NumPy docstrings
+7. ❌ **Using EmbedCreator.error()** - Use `EmbedCreator.create_embed(embed_type=EmbedType.ERROR)`
+8. ❌ **Manual interaction handling** - Use `ctx.defer()` instead of `ctx.interaction.response.defer()`
+9. ❌ **Not using ctx.reply()** - Use `ctx.reply()` for command responses
+10. ❌ **Uncontrolled mentions** - Always specify `allowed_mentions` to prevent unwanted pings
+11. ❌ **Not deferring long operations** - Use `ctx.defer()` for operations that take > 2 seconds
+12. ❌ **Missing assert ctx.guild** - Assert after `@commands.guild_only()` for type narrowing
 
 ## See Also
 
