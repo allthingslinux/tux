@@ -1,5 +1,6 @@
 ---
 description: Documentation frameworks, methodologies, and principles (Diátaxis, Write the Docs)
+globs: docs/**/*.md, .cursor/rules/docs/**/*.mdc
 alwaysApply: false
 ---
 # Documentation Principles & Frameworks

@@ -1,7 +1,7 @@
 ---
-globs: docs/**
-alwaysApply: false
 description: Master guide for AI agents working with Tux documentation rules and workflows
+globs: docs/**/*.md, .cursor/rules/docs/**/*.mdc
+alwaysApply: false
 ---
 
 # Tux Documentation Rules Master Guide

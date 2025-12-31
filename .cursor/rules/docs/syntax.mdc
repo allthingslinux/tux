@@ -1,5 +1,6 @@
 ---
 description: Zensical syntax reference, advanced formatting features, and interactive elements
+globs: docs/**/*.md, .cursor/rules/docs/**/*.mdc
 alwaysApply: false
 ---
 # Zensical Syntax

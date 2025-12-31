@@ -1,5 +1,6 @@
 ---
 description: Documentation organization, navigation structure, and content hierarchy guidelines
+globs: docs/**/*.md, zensical.toml, .cursor/rules/docs/**/*.mdc
 alwaysApply: false
 ---
 # Documentation Structure & Organization

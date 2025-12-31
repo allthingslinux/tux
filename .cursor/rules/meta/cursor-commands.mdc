@@ -1,5 +1,6 @@
 ---
-globs: *.mdc,AGENTS.md
+description: Cursor commands specification and format guidelines
+globs: .cursor/commands/**/*.md, AGENTS.md
 alwaysApply: false
 ---
 # Cursor Commands Specification

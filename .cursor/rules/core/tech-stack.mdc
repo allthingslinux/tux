@@ -1,5 +1,6 @@
 ---
 description: Tech stack, dependencies, project structure, and development tools for Tux Discord bot
+globs: pyproject.toml, uv.lock, flake.nix, shell.nix, compose.yaml, Containerfile, Dockerfile
 alwaysApply: false
 ---
 # Tech Stack & Dependencies

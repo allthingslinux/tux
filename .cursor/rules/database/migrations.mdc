@@ -1,6 +1,6 @@
 ---
 description: Alembic migration patterns, creating migrations, upgrade/downgrade functions, and migration safety for Tux
-globs: src/tux/database/migrations/**/*.py, alembic.ini
+globs: src/tux/database/migrations/**/*.py, alembic.ini, scripts/db/**/*.py
 alwaysApply: false
 ---
 
@@ -16,7 +16,10 @@ Tux uses Alembic for database schema migrations with async PostgreSQL support. M
 
 ```bash
 # ✅ GOOD: Use the db script command
-uv run db migrate-dev "description of changes"
+uv run db new "description of changes"
+
+# Or for development workflow (create and apply):
+uv run db dev
 
 # This creates a new migration file in:
 # src/tux/database/migrations/versions/
@@ -84,10 +87,13 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP")),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index("ix_my_table_name", "my_table", ["name"])
+    # Use batch_alter_table for indexes (better ALTER TABLE support)
+    with op.batch_alter_table("my_table", schema=None) as batch_op:
+        batch_op.create_index("idx_my_table_name", ["name"], unique=False)
 
 def downgrade() -> None:
-    op.drop_index("ix_my_table_name", table_name="my_table")
+    with op.batch_alter_table("my_table", schema=None) as batch_op:
+        batch_op.drop_index("idx_my_table_name")
     op.drop_table("my_table")
 ```
 
@@ -167,19 +173,28 @@ def downgrade() -> None:
 
 ```python
 def upgrade() -> None:
-    # Create enum type
-    case_type_enum = sa.Enum("WARN", "TIMEOUT", "KICK", "BAN", name="case_type")
-    case_type_enum.create(op.get_bind(), checkfirst=True)
-
-    # Use enum in column
-    op.add_column("cases", sa.Column("type", case_type_enum, nullable=False))
+    # Alembic auto-generates enums inline when creating columns
+    op.add_column(
+        "cases",
+        sa.Column(
+            "case_type",
+            sa.Enum(
+                "WARN", "TIMEOUT", "KICK", "BAN",
+                name="case_type_enum"
+            ),
+            nullable=False
+        )
+    )
 
 def downgrade() -> None:
-    op.drop_column("cases", "type")
-    op.execute("DROP TYPE IF EXISTS case_type")
+    op.drop_column("cases", "case_type")
+    # Drop enum type if no longer used
+    op.execute("DROP TYPE IF EXISTS case_type_enum")
 ```
 
-✅ **GOOD:** Creates enum type, uses checkfirst=True
+✅ **GOOD:** Enum created inline with column, proper type name, cleanup in downgrade
+
+**Note:** Alembic auto-generates enum types when creating columns. For manual enum creation, use the pattern above.
 
 ## Migration Safety
 
@@ -204,7 +219,8 @@ Always test both upgrade and downgrade:
 
 ```bash
 # ✅ GOOD: Test migration up and down
-uv run db migrate-dev "test migration"
+uv run db new "test migration"
+uv run db push  # Apply migration
 uv run db reset  # Test full migration chain
 ```
 
@@ -237,7 +253,7 @@ The migration environment (`env.py`) handles:
 1. ❌ **Missing downgrade** - Always implement rollback
 2. ❌ **Unnamed constraints** - Always name constraints
 3. ❌ **Missing indexes** - Don't forget index operations
-4. ❌ **Direct alembic usage** - Use `uv run db migrate-dev`
+4. ❌ **Direct alembic usage** - Use `uv run db new` or `uv run db dev`
 5. ❌ **Not testing downgrade** - Always test rollback
 6. ❌ **Empty migrations** - Prevented by env.py, but check manually
 

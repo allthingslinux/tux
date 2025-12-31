@@ -1,5 +1,6 @@
 ---
 description: Practical examples, documentation templates, and decision guides for common scenarios
+globs: docs/**/*.md, .cursor/rules/docs/**/*.mdc
 alwaysApply: false
 ---
 # Documentation Patterns & Quick Reference

@@ -1,5 +1,6 @@
 ---
 description: Writing standards, formatting guidelines, and style principles for Tux documentation
+globs: docs/**/*.md, .cursor/rules/docs/**/*.mdc
 alwaysApply: false
 ---
 # Documentation Writing Style & Formatting

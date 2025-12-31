@@ -1,6 +1,6 @@
 ---
 description: User-facing error messages, error embeds, user-friendly error responses, and error communication for Tux
-globs: src/tux/**/*.py
+globs: src/tux/modules/**/*.py, src/tux/ui/**/*.py, src/tux/services/**/*.py
 alwaysApply: false
 ---
 

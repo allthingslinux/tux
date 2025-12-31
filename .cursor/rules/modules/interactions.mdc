@@ -1,6 +1,6 @@
 ---
 description: Discord interaction patterns, interaction responses, modals, components, and interaction handling for Tux
-globs: src/tux/**/*.py
+globs: src/tux/modules/**/*.py, src/tux/ui/**/*.py, src/tux/core/**/*.py
 alwaysApply: false
 ---
 

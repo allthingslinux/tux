@@ -1,5 +1,6 @@
 ---
-globs: *.mdc,AGENTS.md
+description: Cursor rules specification and format guidelines
+globs: .cursor/rules/**/*.mdc, AGENTS.md
 alwaysApply: false
 ---
 # Cursor Rules Specification

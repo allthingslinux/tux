@@ -1,5 +1,6 @@
 ---
 description: Zensical setup, configuration, extensions, theme customization, and deployment workflows
+globs: docs/**/*.md, zensical.toml, wrangler.toml, scripts/docs/**/*.py
 alwaysApply: false
 ---
 # Zensical Documentation Rules

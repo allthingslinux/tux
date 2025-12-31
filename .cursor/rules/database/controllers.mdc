@@ -1,6 +1,7 @@
 ---
-alwaysApply: true
 description: Database controller patterns, composition, and usage guidelines
+globs: src/tux/database/controllers/**/*.py, src/tux/database/utils.py
+alwaysApply: false
 ---
 
 # Database Controller Rules

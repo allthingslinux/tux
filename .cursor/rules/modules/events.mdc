@@ -1,6 +1,6 @@
 ---
 description: Discord event handler patterns, Cog listeners, event organization, and event handling best practices for Tux
-globs: src/tux/**/*.py
+globs: src/tux/modules/**/*.py, src/tux/services/handlers/**/*.py, src/tux/core/**/*.py
 alwaysApply: false
 ---
 
