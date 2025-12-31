@@ -107,7 +107,8 @@ class UserController(BaseController[User]):
             user = await session.get(User, user_id)
             if user:
                 user.role = "admin"
-                await session.commit()
+                # Transaction auto-commits on successful exit
+                await session.flush()  # Flush to get updated data
                 await session.refresh(user)
             return user
 
@@ -171,17 +172,26 @@ user, created = await controller.get_or_create(
 **Explicit transaction control:**
 
 ```python
-# With session context
+# With session context (manual commit required)
 async def operation(session):
     user = await session.get(User, user_id)
     user.balance += 100
-    await session.commit()
+    await session.commit()  # Must commit manually
+    await session.refresh(user)
     return user
 
 result = await controller.with_session(operation)
 
-# With transaction context
-result = await controller.with_transaction(operation)
+# With transaction context (auto-commits on success)
+async def transaction_operation(session):
+    user = await session.get(User, user_id)
+    user.balance += 100
+    # Auto-commits when context exits successfully
+    await session.flush()  # Optional: flush to get updated data
+    await session.refresh(user)
+    return user
+
+result = await controller.with_transaction(transaction_operation)
 ```
 
 ### Advanced Querying
@@ -195,24 +205,11 @@ users = await controller.find_all_with_options(
     load_relationships=["profile", "settings"]
 )
 
-# JSON column queries
-results = await controller.find_with_json_query(
-    json_column="metadata",
-    json_path="$.preferences.theme",
-    value="dark"
-)
+# Custom queries using execute_query
+from sqlmodel import select, func
 
-# Array contains
-results = await controller.find_with_array_contains(
-    array_column="tags",
-    value="admin"
-)
-
-# Full-text search
-results = await controller.find_with_full_text_search(
-    search_columns=["name", "email"],
-    search_term="alice"
-)
+query = select(User).where(User.status == "active").limit(10)
+results = await controller.execute_query(query)
 ```
 
 ## Best Practices
@@ -426,8 +423,11 @@ users = await controller.find_all()  # Could be thousands
 users = await controller.find_all(filters={"active": True}, limit=20, offset=0)
 ```
 
-## Related Rules
+## See Also
 
-- [`overview.mdc`](overview.mdc) - Architecture overview
-- [`service.mdc`](service.mdc) - Underlying database service
-- [`models.mdc`](models.mdc) - Models used by controllers
+- @database/services.mdc - Underlying database service
+- @database/models.mdc - Models used by controllers
+- @database/queries.mdc - Advanced query patterns
+- @database/migrations.mdc - Migration patterns
+- @AGENTS.md - General coding standards
+- @rules.mdc - Complete catalog of all rules and commands
