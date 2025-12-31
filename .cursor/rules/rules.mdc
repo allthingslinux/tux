@@ -120,6 +120,10 @@ Complete catalog of all rules and commands in the Tux project.
 - `development/docker-up.md` - Start Docker services
 - `development/docker-down.md` - Stop Docker services
 
+### Meta Commands
+
+- `meta/create-rule.md` - Create new Cursor rule
+
 ## See Also
 
 - [AGENTS.md](../../AGENTS.md) - High-level project overview and standards
