@@ -1,6 +1,6 @@
 ---
 description: Sentry integration, error tracking, performance monitoring, and Sentry best practices for Tux
-globs: src/tux/services/sentry/**/*.py, src/tux/**/*.py
+globs: src/tux/services/sentry/**/*.py
 alwaysApply: false
 ---
 
@@ -12,30 +12,90 @@ Tux uses Sentry for error tracking and performance monitoring. Errors are automa
 
 ## Error Capture
 
-### Automatic Capture
+### Global Error Handler (Automatic)
+
+The global error handler automatically captures errors to Sentry:
+
+```python
+# ✅ GOOD: Error handler automatically captures to Sentry
+# ErrorHandler cog sets context and captures errors automatically
+raise commands.MissingRequiredArgument("member")
+# Error handler sets context and captures to Sentry if configured
+```
+
+✅ **GOOD:** Automatic context capture and error reporting
+
+### Manual Capture
+
+For manual error capture, use specialized capture functions:
 
 ```python
 from tux.services.sentry import capture_exception_safe
 
-# ✅ GOOD: Capture exceptions safely
+# ✅ GOOD: Capture exceptions safely with optional context
 try:
     await operation()
 except Exception as e:
-    capture_exception_safe(e)
-    # Error sent to Sentry with context
+    capture_exception_safe(
+        e,
+        extra_context={"guild_id": guild_id, "user_id": user_id},
+        capture_locals=True,  # Include local variables from calling frame
+    )
 ```
 
-✅ **GOOD:** Automatic context capture
+### Specialized Capture Functions
 
-### Manual Capture
+Use domain-specific capture functions for better context:
 
 ```python
-# ✅ GOOD: Manual capture with extra context
-capture_exception_safe(
-    error,
-    extra_context={"guild_id": guild_id, "user_id": user_id},
-    capture_locals=True,
+from tux.services.sentry import (
+    capture_tux_exception,
+    capture_database_error,
+    capture_api_error,
+    capture_cog_error,
 )
+
+# ✅ GOOD: Capture Tux-specific exceptions
+try:
+    raise TuxPermissionDeniedError(required_rank=5, user_rank=2, command_name="admin")
+except TuxError as e:
+    capture_tux_exception(
+        e,
+        command_name="admin",
+        user_id=str(ctx.author.id),
+        guild_id=str(ctx.guild.id) if ctx.guild else None,
+    )
+
+# ✅ GOOD: Capture database errors with query context
+try:
+    await db.execute_query("SELECT * FROM users WHERE id = ?", user_id)
+except Exception as e:
+    capture_database_error(
+        e,
+        query="SELECT * FROM users WHERE id = ?",
+        table="users",
+        operation="select",
+    )
+
+# ✅ GOOD: Capture API errors with endpoint context
+try:
+    response = await httpx.get("https://api.example.com/data")
+except Exception as e:
+    capture_api_error(
+        e,
+        endpoint="api.example.com/data",
+        status_code=response.status_code if hasattr(e, "response") else None,
+    )
+
+# ✅ GOOD: Capture cog errors with cog context
+try:
+    await self.cog_operation()
+except Exception as e:
+    capture_cog_error(
+        e,
+        cog_name=self.__class__.__name__,
+        command_name=ctx.command.qualified_name if ctx.command else None,
+    )
 ```
 
 ## Context Setting
@@ -68,65 +128,185 @@ set_user_context(ctx.author)
 
 ## Error Handler Integration
 
-The error handler automatically sets Sentry context:
+The error handler automatically sets Sentry context and captures errors:
 
 ```python
-# ✅ GOOD: Error handler sets context automatically
-# ErrorHandler cog sets context before capturing errors
+# ✅ GOOD: Error handler sets context and captures automatically
+# ErrorHandler cog:
+# 1. Sets command context (command, user, guild info)
+# 2. Sets user context (permissions, roles, etc.)
+# 3. Tracks command performance metrics
+# 4. Captures exception to Sentry (if send_to_sentry=True in config)
+# 5. Logs error with appropriate level
+
+# Example: Error handler automatically handles this
+raise commands.MissingRequiredArgument("member")
+# → Sets context, tracks metrics, captures to Sentry
 ```
+
+**Error Handler Sentry Features:**
+
+- Automatic context setting (command, user, guild)
+- Performance tracking (command execution time)
+- Configurable per error type (via `ERROR_CONFIG_MAP`)
+- Sentry integration controlled by `send_to_sentry` flag
 
 ## Data Sanitization
 
 ### Automatic Sanitization
 
-Sentry automatically sanitizes sensitive data:
+Sentry automatically sanitizes sensitive data via `before_send` handler:
 
 ```python
-from tux.services.sentry.handlers import _sanitize_sensitive_data
+# ✅ GOOD: Sensitive data is automatically sanitized
+# before_send handler sanitizes:
+# - Database connection strings (postgresql://user:password@host)
+# - API keys in URLs (?api_key=xxx, &token=xxx)
+# - Bearer tokens (Bearer xxxxx)
+# - Authorization headers (Authorization: xxxxx)
 
-# ✅ GOOD: Sensitive data is sanitized
-# Database URLs, API keys, tokens are masked
+# No manual sanitization needed - handled automatically
+capture_exception_safe(error)
+# Sensitive data is masked before sending to Sentry
 ```
 
 ✅ **GOOD:** Sensitive data never sent to Sentry
+
+**Sanitized Patterns:**
+
+- Database URLs: `postgresql://***:***@host`
+- API keys: `?api_key=***`, `&token=***`
+- Bearer tokens: `Bearer ***`
+- Authorization headers: `Authorization: ***`
 
 ## Performance Monitoring
 
 ### Command Tracking
 
+Command tracking is automatically handled by the error handler:
+
 ```python
+# ✅ GOOD: Error handler automatically tracks commands
+# set_command_context() automatically calls track_command_start()
+# track_command_end() is called on error or success
+
+# Manual tracking (if needed):
 from tux.services.sentry import track_command_start, track_command_end
 
-# ✅ GOOD: Track command performance
-track_command_start(command_name)
+track_command_start("my_command")
 try:
     await execute_command()
-    track_command_end(command_name, success=True)
+    track_command_end("my_command", success=True)
 except Exception as e:
-    track_command_end(command_name, success=False, error=e)
+    track_command_end("my_command", success=False, error=e)
+```
+
+### Distributed Tracing
+
+Use Sentry transactions and spans for performance monitoring:
+
+```python
+from tux.services.sentry import (
+    start_transaction,
+    start_span,
+    transaction,
+    span,
+)
+
+# ✅ GOOD: Use transaction decorator for entire operations
+@transaction(op="command", name="my_command")
+async def my_command(ctx: commands.Context[Tux]) -> None:
+    # Entire function is traced as a transaction
+    await operation()
+
+# ✅ GOOD: Use span context manager for specific operations
+async def complex_operation() -> None:
+    with start_transaction(op="operation", name="complex_operation") as transaction:
+        with start_span(op="db", name="fetch_data") as span:
+            data = await db.fetch()
+            span.set_tag("rows", len(data))
+
+        with start_span(op="api", name="process_data") as span:
+            result = await api.process(data)
+            span.set_tag("items", len(result))
+
+# ✅ GOOD: Use span decorator for functions
+@span(op="db", name="fetch_user")
+async def fetch_user(user_id: int) -> dict:
+    return await db.fetch_one("SELECT * FROM users WHERE id = ?", user_id)
+```
+
+### Metrics Recording
+
+Record performance metrics for analysis:
+
+```python
+from tux.services.sentry import (
+    record_command_metric,
+    record_database_metric,
+    record_api_metric,
+    record_cache_metric,
+    record_task_metric,
+    record_cog_metric,
+)
+
+# ✅ GOOD: Record command metrics
+record_command_metric(
+    command_name="warn",
+    execution_time_ms=150.5,
+    success=True,
+    error_type=None,
+    command_type="prefix",  # or "slash"
+)
+
+# ✅ GOOD: Record database metrics
+record_database_metric(
+    operation="select",
+    table="users",
+    execution_time_ms=25.3,
+    success=True,
+)
+
+# ✅ GOOD: Record API metrics
+record_api_metric(
+    endpoint="github.com/repos",
+    execution_time_ms=320.1,
+    status_code=200,
+    success=True,
+)
 ```
 
 ## Best Practices
 
-1. **Use capture_exception_safe** - Safe error capture
-2. **Set context** - Always set command and user context
-3. **Sanitize data** - Sensitive data is automatically sanitized
-4. **Track performance** - Use performance tracking for commands
-5. **Don't capture manually** - Let error handler capture automatically
-6. **Extra context** - Add extra context when needed
+1. **Let error handler work** - Don't manually capture errors that error handler handles
+2. **Use specialized capture functions** - Use domain-specific functions (capture_database_error, capture_api_error, etc.)
+3. **Set context** - Error handler sets context automatically, or use set_command_context/set_user_context manually
+4. **Sanitize data** - Sensitive data is automatically sanitized via before_send handler
+5. **Track performance** - Use transactions and spans for performance monitoring
+6. **Record metrics** - Use metric recording functions for analytics
+7. **Extra context** - Add extra_context when using capture_exception_safe
+8. **Check initialization** - Functions check is_initialized() automatically, no manual checks needed
+9. **Use tracing decorators** - Use @transaction and @span decorators for easy instrumentation
+10. **Don't use sentry_sdk directly** - Use Tux's wrapper functions for consistency
 
 ## Anti-Patterns
 
-1. ❌ **Direct sentry_sdk.capture_exception** - Use capture_exception_safe
-2. ❌ **Missing context** - Always set context
-3. ❌ **Logging secrets** - Sanitization handles this
-4. ❌ **Manual capture everywhere** - Let error handler work
-5. ❌ **No performance tracking** - Track important operations
+1. ❌ **Direct sentry_sdk.capture_exception** - Use capture_exception_safe or specialized functions
+2. ❌ **Missing context** - Error handler sets context automatically, or set manually
+3. ❌ **Logging secrets** - Sanitization handles this automatically
+4. ❌ **Manual capture everywhere** - Let error handler capture automatically
+5. ❌ **No performance tracking** - Use transactions and spans for monitoring
+6. ❌ **Not using specialized functions** - Use capture_database_error, capture_api_error, etc. for better context
+7. ❌ **Manual initialization checks** - Functions check is_initialized() automatically
+8. ❌ **Not recording metrics** - Use metric recording functions for analytics
+9. ❌ **Using sentry_sdk directly** - Use Tux's wrapper functions for consistency
+10. ❌ **Capturing user-facing errors** - Don't capture errors that are user-facing (validation errors, permission errors)
 
 ## See Also
 
 - @error-handling/patterns.mdc - Error handling patterns
 - @error-handling/logging.mdc - Logging patterns
-- @security/secrets.mdc - Secret sanitization
+- @error-handling/user-feedback.mdc - User-facing error messages
+- @security/secrets.mdc - Secret management
 - @AGENTS.md - General coding standards
 - @rules.mdc - Complete catalog of all rules and commands
