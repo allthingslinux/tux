@@ -51,20 +51,22 @@ class MyCog(commands.Cog):
 
 Cogs are organized by feature domain:
 
-```
+```text
 src/tux/modules/
-├── admin/          # Administrative commands
-├── config/         # Configuration management
-├── features/       # Feature modules (levels, starboard, etc.)
-├── fun/            # Fun/entertainment commands
-├── guild/          # Guild-specific features
-├── info/           # Information commands
-├── levels/         # Leveling system
-├── moderation/     # Moderation commands
-├── snippets/       # Snippet management
-├── tools/          # Utility tools
-└── utility/        # Utility commands
+├── admin/          # Administrative commands (dev, eval)
+├── config/         # Configuration management (special: uses commands.Cog, not BaseCog)
+├── features/       # Feature modules (bookmarks, gif_limiter, levels, starboard, etc.)
+├── fun/            # Fun/entertainment commands (random, xkcd)
+├── guild/          # Guild-specific features (member_count)
+├── info/           # Information commands (avatar, info)
+├── levels/         # Leveling system (level, levels)
+├── moderation/     # Moderation commands (ban, warn, kick, etc.)
+├── snippets/       # Snippet management (create, delete, edit, etc.)
+├── tools/          # Utility tools (tldr, wolfram)
+└── utility/        # Utility commands (afk, poll, remindme, wiki, etc.)
 ```
+
+**Note:** The `config` module uses `commands.Cog` directly (not `BaseCog`) as it's a composite cog with sub-managers.
 
 ✅ **GOOD:** Domain-based organization, clear separation
 
@@ -104,11 +106,15 @@ async def my_command(self, ctx: commands.Context[Tux]) -> None:
 
 ### Configuration Access
 
-BaseCog provides `self.config` for guild configuration:
+BaseCog provides `self.get_config()` for accessing CONFIG values:
 
 ```python
-# ✅ GOOD: Use self.config for guild config
-guild_config = await self.config.get_guild_config(ctx.guild.id)
+# ✅ GOOD: Use self.get_config() for CONFIG values
+bot_name = self.get_config("BOT_INFO.BOT_NAME", "Tux")
+# Supports dot notation for nested keys
+
+# ✅ GOOD: Access database for guild-specific config
+guild_config = await self.db.guild_config.get_guild_config(ctx.guild.id)
 ```
 
 ### Automatic Usage Generation
@@ -153,8 +159,32 @@ async def cog_load(self) -> None:
 async def cog_unload(self) -> None:
     """Called when cog is unloaded."""
     # Cleanup tasks, close connections, etc.
-    pass
+    if self._cache_task and not self._cache_task.done():
+        self._cache_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await self._cache_task
 ```
+
+### Missing Configuration Handling
+
+BaseCog provides `unload_if_missing_config()` for graceful handling of missing config:
+
+```python
+def __init__(self, bot: Tux) -> None:
+    super().__init__(bot)
+
+    # ✅ GOOD: Check for required config and unload if missing
+    if self.unload_if_missing_config(
+        condition=not CONFIG.GITHUB_TOKEN,
+        config_name="GITHUB_TOKEN",
+    ):
+        return  # Exit early, cog will be unloaded automatically
+
+    # Initialize services that require config
+    self.github_client = GitHubClient()
+```
+
+✅ **GOOD:** Graceful handling of missing configuration
 
 ## Cog Setup Function
 
@@ -180,7 +210,7 @@ async def setup(bot: Tux) -> None:
 
 ### ModerationCogBase
 
-For moderation cogs:
+For moderation cogs, use `ModerationCogBase` which provides `self.moderation`:
 
 ```python
 from tux.modules.moderation import ModerationCogBase
@@ -192,28 +222,60 @@ class Warn(ModerationCogBase):
         super().__init__(bot)
         # Moderation services automatically available
         # self.moderation - ModerationCoordinator
+        # Provides REMOVAL_ACTIONS class variable
+        # Provides moderate_user() helper method
 ```
 
 ✅ **GOOD:** Use specialized base classes when available
 
+### SnippetsBaseCog
+
+For snippet cogs, use `SnippetsBaseCog` which provides snippet utilities:
+
+```python
+from tux.modules.snippets import SnippetsBaseCog
+
+class CreateSnippet(SnippetsBaseCog):
+    """Create snippet cog."""
+
+    def __init__(self, bot: Tux) -> None:
+        super().__init__(bot)
+        # Snippet utilities automatically available:
+        # - is_snippetbanned()
+        # - snippet_check()
+        # - _get_snippet_or_error()
+        # - send_snippet_error()
+        # - _create_snippets_list_embed()
+```
+
+✅ **GOOD:** Use specialized base classes for domain-specific functionality
+
 ## Best Practices
 
 1. **Always inherit from BaseCog** - Provides database, config, usage generation
-2. **Organize by domain** - Group related cogs in directories
-3. **One cog per file** - Keep cogs focused and maintainable
-4. **Use setup function** - Required for cog loading
-5. **Initialize in `__init__`** - Set up services and state
-6. **Handle lifecycle** - Implement cog_load/cog_unload if needed
-7. **Type hints** - Always type bot parameter and return types
+2. **Use specialized base classes** - Use `ModerationCogBase` or `SnippetsBaseCog` when applicable
+3. **Organize by domain** - Group related cogs in directories
+4. **One cog per file** - Keep cogs focused and maintainable
+5. **Use setup function** - Required for cog loading
+6. **Initialize in `__init__`** - Set up services and state
+7. **Handle lifecycle** - Implement `cog_load()`/`cog_unload()` if needed
+8. **Type hints** - Always type bot parameter and return types
+9. **Check config** - Use `unload_if_missing_config()` for optional features
+10. **Use self.db** - Access database through `self.db` property, not directly
+11. **Use self.get_config()** - Access CONFIG values through `self.get_config()` method
 
 ## Anti-Patterns
 
-1. ❌ **Direct commands.Cog** - Always use BaseCog
+1. ❌ **Direct commands.Cog** - Always use BaseCog (except special cases like Config cog)
 2. ❌ **Multiple cogs per file** - One cog per file
 3. ❌ **Missing setup function** - Required for loading
-4. ❌ **Direct database access** - Use self.db
-5. ❌ **Flat organization** - Organize by domain
-6. ❌ **No type hints** - Always type bot and methods
+4. ❌ **Direct database access** - Use `self.db` property, don't create DatabaseService instances
+5. ❌ **Using self.config** - Use `self.get_config()` method, not a non-existent property
+6. ❌ **Flat organization** - Organize by domain
+7. ❌ **No type hints** - Always type bot parameter and return types
+8. ❌ **Not checking config** - Use `unload_if_missing_config()` for optional features
+9. ❌ **Not using specialized bases** - Use `ModerationCogBase` or `SnippetsBaseCog` when applicable
+10. ❌ **Blocking in `__init__`** - Don't do async operations in `__init__`, use `cog_load()` instead
 
 ## See Also
 
