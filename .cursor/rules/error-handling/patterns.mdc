@@ -14,34 +14,85 @@ Tux uses a centralized error handling system with custom exceptions, proper erro
 
 ### Custom Exceptions
 
-Tux defines custom exceptions in `tux.shared.exceptions`:
+Tux defines custom exceptions in `tux.shared.exceptions` with a hierarchical structure:
 
 ```python
-from tux.shared.exceptions import TuxError, TuxPermissionDeniedError
+from tux.shared.exceptions import (
+    TuxError,
+    TuxPermissionDeniedError,
+    TuxDatabaseError,
+    TuxDatabaseConnectionError,
+    TuxAPIError,
+    TuxAPIConnectionError,
+)
 
-# ✅ GOOD: Use custom exceptions
+# ✅ GOOD: Use specific custom exceptions
 if not has_permission:
-    raise TuxPermissionDeniedError("User lacks required permission")
+    raise TuxPermissionDeniedError(
+        required_rank=5,
+        user_rank=2,
+        command_name="admin"
+    )
+
+# ✅ GOOD: Use database-specific exceptions
+try:
+    await db.connect()
+except ConnectionError as e:
+    raise TuxDatabaseConnectionError(
+        "Failed to connect to database",
+        original_error=e
+    ) from e
 ```
 
-✅ **GOOD:** Custom exceptions provide context
+✅ **GOOD:** Custom exceptions provide context and are handled by the global error handler
 
-### Base Exception
+### Exception Categories
 
-```python
-class TuxError(Exception):
-    """Base exception for all Tux-specific errors."""
-    pass
-```
+**Base Exception:**
 
-All Tux exceptions inherit from `TuxError`.
+- `TuxError` - Base for all Tux-specific errors
 
-## Error Handling Patterns
+**Database Exceptions:**
+
+- `TuxDatabaseError` - Base for database errors
+- `TuxDatabaseConnectionError` - Connection failures
+- `TuxDatabaseQueryError` - Query failures
+- `TuxDatabaseMigrationError` - Migration failures
+
+**Permission Exceptions:**
+
+- `TuxPermissionError` - Base for permission errors
+- `TuxPermissionDeniedError` - Dynamic permission system errors
+- `TuxPermissionLevelError` - Permission rank errors
+- `TuxAppCommandPermissionLevelError` - App command permission errors
+
+**API Exceptions:**
+
+- `TuxAPIError` - Base for API errors
+- `TuxAPIConnectionError` - Connection failures
+- `TuxAPIRequestError` - Request failures
+- `TuxAPIResourceNotFoundError` - 404 errors
+- `TuxAPIPermissionError` - 403 errors
+
+**Service Exceptions:**
+
+- `TuxServiceError` - Base for service errors
+- `TuxCogLoadError` - Cog loading failures
+- `TuxHotReloadError` - Hot reload failures
+
+**Other Exceptions:**
+
+- `TuxConfigurationError` - Configuration issues
+- `TuxRuntimeError` - Runtime issues
+- `TuxSetupError` - Setup failures
+- `TuxCodeExecutionError` - Code execution errors
+
+## Common Error Handling Patterns
 
 ### Try-Except Blocks
 
 ```python
-# ✅ GOOD: Handle errors with try-except
+# ✅ GOOD: Handle errors with try-except (use Exception, not bare except)
 try:
     result = await operation()
 except ValueError as e:
@@ -50,6 +101,22 @@ except ValueError as e:
 except Exception as e:
     logger.exception("Unexpected error")
     await ctx.send("An error occurred.")
+```
+
+**Important:** Always use `except Exception:` instead of bare `except:`. Bare `except:` catches `KeyboardInterrupt` and `SystemExit`, preventing proper shutdown.
+
+```python
+# ❌ BAD: Bare except catches KeyboardInterrupt
+try:
+    await operation()
+except:  # This catches Ctrl+C!
+    logger.error("Error occurred")
+
+# ✅ GOOD: except Exception allows KeyboardInterrupt to propagate
+try:
+    await operation()
+except Exception as e:  # KeyboardInterrupt will propagate
+    logger.error(f"Error occurred: {e}")
 ```
 
 ❌ **BAD:** Swallowing errors or not handling them
@@ -65,6 +132,23 @@ except Exception:
 result = await operation()  # No error handling!
 ```
 
+### Suppressing Exceptions
+
+```python
+# ✅ GOOD: Use contextlib.suppress for intentional exception suppression
+from contextlib import suppress
+
+# Suppress expected exceptions during cleanup
+with suppress(asyncio.CancelledError):
+    await task
+
+# Suppress multiple exception types
+with suppress(KeyError, AttributeError):
+    value = data["key"].attribute
+```
+
+**Note:** Only suppress exceptions when you're certain they're safe to ignore. Suppressing exceptions can hide bugs.
+
 ### Error Context
 
 ```python
@@ -77,6 +161,36 @@ except DatabaseError as e:
 ```
 
 ✅ **GOOD:** Preserve original exception with `from e`
+
+### Exception Chaining
+
+Always use `from e` when raising a new exception from a caught one:
+
+```python
+# ✅ GOOD: Chain exceptions with from e (preserves traceback)
+try:
+    await operation()
+except ValueError as e:
+    raise TuxError("Operation failed") from e  # Shows both exceptions
+
+# ❌ BAD: Raising without from (loses original context)
+try:
+    await operation()
+except ValueError as e:
+    raise TuxError("Operation failed")  # Original exception lost
+
+# ✅ GOOD: Use from None only when hiding sensitive info
+try:
+    user = login(email, password)
+except InvalidPasswordError:
+    raise AuthenticationError("Authentication failed") from None  # Hide password details
+```
+
+**Exception Chaining Patterns:**
+
+- `raise NewError from e` - **Recommended** - Preserves both exceptions
+- `raise` - Re-raise same exception (for logging)
+- `raise NewError from None` - Hide original exception (security/abstraction)
 
 ## Command Error Handling
 
@@ -103,13 +217,54 @@ async def command_error(
         raise
 ```
 
+**Note:** If a command has a local error handler, the global handler won't process that command's errors. Use local handlers only for command-specific error handling.
+
 ### Global Error Handler
 
-The global error handler in `ErrorHandler` cog handles all unhandled errors:
+The global error handler in `ErrorHandler` cog automatically handles all unhandled errors:
 
 ```python
 # ✅ GOOD: Global handler catches all unhandled errors
-# ErrorHandler cog automatically handles errors
+# ErrorHandler cog automatically:
+# - Formats errors into user-friendly embeds
+# - Logs errors with appropriate levels
+# - Sends errors to Sentry when configured
+# - Handles both prefix and slash commands
+# - Provides command suggestions for CommandNotFound
+```
+
+**Error Handler Features:**
+
+- Handles both `commands.CommandError` and `app_commands.AppCommandError`
+- Configurable error messages per exception type
+- Automatic Sentry integration
+- User-friendly error embeds
+- Command suggestion system for typos
+
+### Discord-Specific Error Handling
+
+```python
+# ✅ GOOD: Handle Discord rate limits with retry logic
+try:
+    await member.ban(reason="Spam")
+except discord.RateLimited as e:
+    logger.warning(f"Rate limited, retrying in {e.retry_after}s")
+    await asyncio.sleep(e.retry_after)
+    await member.ban(reason="Spam")  # Retry
+
+# ✅ GOOD: Handle Discord permission errors
+try:
+    await channel.send("Message")
+except discord.Forbidden:
+    logger.warning("Missing permissions to send message")
+    # Handle gracefully - don't crash
+
+# ✅ GOOD: Handle Discord not found errors
+try:
+    await guild.fetch_member(user_id)
+except discord.NotFound:
+    logger.info(f"Member {user_id} not found in guild")
+    return None  # Handle gracefully
 ```
 
 ## Error Propagation
@@ -117,12 +272,19 @@ The global error handler in `ErrorHandler` cog handles all unhandled errors:
 ### Re-raising Exceptions
 
 ```python
-# ✅ GOOD: Re-raise with context
+# ✅ GOOD: Re-raise same exception (for logging)
 try:
     await operation()
 except ValueError as e:
     logger.error(f"Operation failed: {e}")
-    raise TuxError("Operation failed") from e
+    raise  # Re-raise same exception
+
+# ✅ GOOD: Re-raise with new exception type
+try:
+    await operation()
+except ValueError as e:
+    logger.error(f"Operation failed: {e}")
+    raise TuxError("Operation failed") from e  # Chain exceptions
 ```
 
 ### Error Wrapping
@@ -135,24 +297,61 @@ except DatabaseError as e:
     raise TuxDatabaseError("Database operation failed") from e
 ```
 
+### Handling asyncio.gather Results
+
+```python
+# ✅ GOOD: Use utility functions for gather results
+from tux.shared.exceptions import handle_gather_result, handle_case_result
+
+# Handle gather results with return_exceptions=True
+results = await asyncio.gather(
+    operation1(),
+    operation2(),
+    return_exceptions=True
+)
+
+# Extract valid results
+for result in results:
+    if isinstance(result, Exception):
+        logger.error(f"Operation failed: {result}")
+    else:
+        process_result(result)
+
+# Or use utility function
+try:
+    valid_result = handle_gather_result(result, ExpectedType)
+except Exception as e:
+    logger.error(f"Invalid result: {e}")
+```
+
 ## Best Practices
 
-1. **Use custom exceptions** - Use Tux-specific exceptions
-2. **Handle errors appropriately** - Don't swallow errors
-3. **Provide context** - Include context in error messages
-4. **Log errors** - Always log errors with context
-5. **Preserve exceptions** - Use `from e` when re-raising
-6. **User-friendly messages** - Provide clear error messages to users
-7. **Let global handler work** - Don't handle everything locally
+1. **Use custom exceptions** - Use Tux-specific exceptions from `tux.shared.exceptions`
+2. **Use specific exceptions** - Catch specific exception types when possible
+3. **Use `except Exception:`** - Never use bare `except:` (catches KeyboardInterrupt)
+4. **Handle errors appropriately** - Don't swallow errors, always log or handle
+5. **Provide context** - Include context in error messages (IDs, operation names, etc.)
+6. **Log errors** - Always log errors with context using loguru
+7. **Preserve exceptions** - Use `from e` when re-raising to preserve traceback
+8. **User-friendly messages** - Let global handler format errors for users
+9. **Let global handler work** - Don't handle everything locally, use global handler
+10. **Handle Discord errors** - Handle rate limits, permissions, and not found errors gracefully
+11. **Use contextlib.suppress** - For intentional exception suppression (cleanup, optional ops)
+12. **Chain exceptions properly** - Use `raise NewError from e` for exception chaining
 
 ## Anti-Patterns
 
-1. ❌ **Swallowing errors** - Always handle or log errors
-2. ❌ **Generic exceptions** - Use specific exception types
-3. ❌ **No context** - Include context in error messages
-4. ❌ **Silent failures** - Log all errors
-5. ❌ **Exposing internals** - Use generic messages for users
-6. ❌ **Not preserving exceptions** - Use `from e` when re-raising
+1. ❌ **Bare except** - Use `except Exception:` not `except:`
+2. ❌ **Swallowing errors** - Always handle or log errors, never `pass` silently
+3. ❌ **Generic exceptions** - Use specific exception types (TuxDatabaseError, not Exception)
+4. ❌ **No context** - Include context in error messages (IDs, operation names, etc.)
+5. ❌ **Silent failures** - Log all errors with appropriate log levels
+6. ❌ **Exposing internals** - Let global handler format user messages
+7. ❌ **Not preserving exceptions** - Use `raise NewError from e` when re-raising
+8. ❌ **Handling everything locally** - Let global handler work, only handle command-specific errors locally
+9. ❌ **Not handling Discord errors** - Handle rate limits, permissions, and not found errors
+10. ❌ **Suppressing exceptions unnecessarily** - Only use `contextlib.suppress` when exceptions are expected
+11. ❌ **Raising without from** - Use `raise NewError from e` to preserve exception chain
 
 ## See Also
 
