@@ -1,6 +1,6 @@
 ---
 description: SQLModel database model patterns, BaseModel usage, relationships, and field definitions for Tux
-globs: src/tux/database/models/**/*.py, **/*model*.py
+globs: src/tux/database/models/**/*.py
 alwaysApply: false
 ---
 

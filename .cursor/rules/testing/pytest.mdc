@@ -1,6 +1,6 @@
 ---
 description: Pytest configuration, test structure, test organization, and pytest patterns for Tux
-globs: tests/**/*.py, **/test_*.py, **/*_test.py
+globs: tests/**/*.py
 alwaysApply: false
 ---
 

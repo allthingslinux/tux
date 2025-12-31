@@ -1,6 +1,6 @@
 ---
 description: Dependency security, dependency updates, vulnerability scanning, and dependency management for Tux
-globs: pyproject.toml, uv.lock, **/requirements*.txt
+globs: pyproject.toml, uv.lock
 alwaysApply: false
 ---
 

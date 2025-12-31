@@ -1,6 +1,6 @@
 ---
 description: DatabaseService patterns, connection management, session handling, and async database operations for Tux
-globs: src/tux/database/service.py, **/*database*service*.py
+globs: src/tux/database/service.py
 alwaysApply: false
 ---
 
