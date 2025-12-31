@@ -10,6 +10,8 @@ alwaysApply: false
 
 Tux uses loguru for structured logging with automatic formatting, log levels, and context. All logging should use loguru's logger with appropriate log levels.
 
+Logging is automatically configured at startup—just import and use the logger. Third-party library logs are automatically intercepted and routed through loguru for consistent formatting.
+
 ## Loguru Usage
 
 ### Basic Logging
@@ -60,16 +62,71 @@ logger.info(f"Processing guild {guild_id} with {member_count} members")
 logger.error(f"Failed to process command {command_name} for user {user_id}")
 ```
 
+### Using logger.bind() for Structured Context
+
+```python
+# ✅ GOOD: Use bind() for structured logging with extra context
+logger.bind(
+    guild_id=guild_id,
+    user_id=user_id,
+    command=command_name
+).info("Processing command")
+
+# ✅ GOOD: Bind context for multiple log statements
+bound_logger = logger.bind(guild_id=guild_id, operation="sync")
+bound_logger.info("Starting sync")
+bound_logger.debug("Processing members")
+bound_logger.success("Sync completed")
+```
+
+### Using StructuredLogger Helper
+
+```python
+# ✅ GOOD: Use StructuredLogger for consistent structured logging
+from tux.core.logging import StructuredLogger
+
+# Performance metrics
+StructuredLogger.performance(
+    "database_query",
+    duration=0.123,
+    query="SELECT * FROM users",
+    rows_returned=42
+)
+
+# Database operations
+StructuredLogger.database(
+    "INSERT INTO users",
+    duration=0.045,
+    rows_affected=1,
+    table="users"
+)
+
+# API calls
+StructuredLogger.api_call(
+    method="GET",
+    url="https://api.example.com/data",
+    status=200,
+    duration=0.234,
+    response_size=1024
+)
+```
+
 ### Exception Logging
 
 ```python
-# ✅ GOOD: Log exceptions with context
+# ✅ GOOD: Log exceptions with context and traceback
 try:
     await operation()
 except Exception as e:
-    logger.exception("Operation failed")  # Includes traceback
+    logger.exception("Operation failed")  # Includes traceback automatically
     # Or with custom message
     logger.opt(exception=True).error(f"Operation failed: {e}")
+
+# ✅ GOOD: Log exception with opt() for more control
+try:
+    await operation()
+except Exception as e:
+    logger.opt(exception=e).error(f"Operation failed: {e}")
 ```
 
 ❌ **BAD:** Logging without exception info
@@ -84,24 +141,50 @@ except Exception as e:
 
 ## Log Configuration
 
-### Log Levels
+### Automatic Configuration
 
-Log levels are configured in `CONFIG.LOG_LEVEL`:
+Logging is automatically configured at startup. You don't need to configure it manually:
 
 ```python
-# ✅ GOOD: Use configured log level
-# Logging is configured in core/logging.py
-# Respects CONFIG.LOG_LEVEL setting
+# ✅ GOOD: Just import and use - configuration happens automatically
+from loguru import logger
+
+logger.info("This works - logging is already configured!")
 ```
+
+**Configuration Priority (highest to lowest):**
+
+1. Explicit `level` parameter (for testing)
+2. `CONFIG.LOG_LEVEL` from `.env` file
+3. `CONFIG.DEBUG=1` sets DEBUG level
+4. Default "INFO"
 
 ### Testing Logging
 
 ```python
-# ✅ GOOD: Configure test logging
+# ✅ GOOD: Configure test logging explicitly
 from tux.core.logging import configure_testing_logging
 
-configure_testing_logging()
+configure_testing_logging()  # Sets DEBUG level for tests
 ```
+
+### Third-Party Library Interception
+
+Third-party library logs are automatically intercepted and routed through loguru:
+
+```python
+# ✅ GOOD: All third-party logs go through loguru automatically
+# Discord.py, SQLAlchemy, httpx, etc. logs are intercepted
+# No configuration needed - it happens automatically
+```
+
+**Intercepted Libraries:**
+
+- `discord.*` - Discord.py logs
+- `sqlalchemy.*` - Database logs
+- `httpx`, `aiohttp` - HTTP client logs
+- `pydantic`, `pydantic_settings` - Validation logs
+- And many more (see `src/tux/core/logging.py`)
 
 ## Log Formatting
 
@@ -109,42 +192,57 @@ configure_testing_logging()
 
 Loguru automatically formats logs with:
 
-- Timestamp
-- Log level
-- Module name
-- Line number
-- Message
+- **Timestamp** - `HH:mm:ss.SSS` format
+- **Log level** - Color-coded (TRACE=dim white, DEBUG=dim cyan, INFO=bold white, etc.)
+- **Location** - IDE-clickable file paths for `tux.*` modules (e.g., `src/tux/core/app.py:167`)
+- **Line number** - Exact line where log was called
+- **Message** - The log message
 
-✅ **GOOD:** Automatic formatting provides context
+✅ **GOOD:** Automatic formatting provides context and IDE-clickable paths
 
-### Custom Formatting
+**Format Example:**
+
+```text
+14:23:45.123 | INFO     | src/tux/core/app.py:167 | Bot started successfully
+```
+
+### Automatic Message Escaping
+
+Log messages are automatically escaped to prevent format string errors:
 
 ```python
-# ✅ GOOD: Custom formatting when needed
-logger.add(
-    sink,
-    format="{time} | {level} | {name}:{function}:{line} | {message}",
-)
+# ✅ GOOD: Curly braces are automatically escaped
+logger.info(f"Processing {{key: value}}")  # Safe - braces are escaped
+logger.info("JSON: {key: value}")  # Safe - braces are escaped automatically
 ```
+
+**Note:** The logging system automatically escapes curly braces `{}` and angle brackets `<>` in messages to prevent format string interpretation errors.
 
 ## Best Practices
 
-1. **Use loguru** - Always use loguru logger
-2. **Appropriate levels** - Use correct log level
-3. **Include context** - Add relevant context to logs
-4. **Log exceptions** - Use logger.exception() or logger.opt(exception=True)
-5. **Structured logs** - Include relevant data in logs
-6. **Don't log secrets** - Sanitize sensitive data
-7. **Respect log levels** - Don't log debug in production
+1. **Use loguru** - Always use loguru logger (import from loguru, not configure)
+2. **Appropriate levels** - Use correct log level (TRACE for very detailed, DEBUG for debugging, INFO for general, WARNING for handled errors, ERROR for failures, CRITICAL for system failures)
+3. **Include context** - Add relevant context to logs (guild_id, user_id, command names, etc.)
+4. **Log exceptions** - Use `logger.exception()` or `logger.opt(exception=True)` to include tracebacks
+5. **Structured logs** - Use `logger.bind()` or `StructuredLogger` for consistent structured logging
+6. **Don't log secrets** - Sanitize sensitive data (tokens, passwords, API keys)
+7. **Respect log levels** - Don't log debug/trace in production unless needed
+8. **Use StructuredLogger** - Use `StructuredLogger` for performance, database, and API logging
+9. **Let auto-config work** - Don't manually configure logging unless testing
+10. **Include operation context** - Bind operation names, IDs, and relevant data for better log analysis
 
 ## Anti-Patterns
 
-1. ❌ **Using print** - Always use logger
-2. ❌ **Wrong log level** - Use appropriate level
-3. ❌ **Missing context** - Include relevant context
-4. ❌ **No exception info** - Use exception logging
-5. ❌ **Logging secrets** - Sanitize sensitive data
-6. ❌ **Too verbose** - Don't log everything at debug
+1. ❌ **Using print** - Always use logger, never print()
+2. ❌ **Using standard logging** - Use loguru, not `logging` module
+3. ❌ **Wrong log level** - Use appropriate level (don't use ERROR for warnings)
+4. ❌ **Missing context** - Include relevant context (IDs, operation names, etc.)
+5. ❌ **No exception info** - Use `logger.exception()` or `logger.opt(exception=True)`
+6. ❌ **Logging secrets** - Sanitize sensitive data (tokens, passwords, API keys)
+7. ❌ **Too verbose** - Don't log everything at DEBUG/TRACE in production
+8. ❌ **Manual configuration** - Don't configure logging manually (it's automatic)
+9. ❌ **Missing structured data** - Use `logger.bind()` or `StructuredLogger` for queryable logs
+10. ❌ **Logging without context** - Always include operation context (what, who, where)
 
 ## See Also
 
