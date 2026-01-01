@@ -44,10 +44,22 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
       - name: Setup Cleanup Parameters
         id: params
-        run: ./.github/scripts/cleanup.sh setup-cleanup-params \ "${{ github.event.inputs.cleanup_type || 'standard' }}"
-          \ "${{ github.event.inputs.keep_versions || '' }}" \ "${{ github.event.inputs.dry_run || 'false' }}"
-          \ "${{ env.STANDARD_KEEP_VERSIONS }}" \ "${{ env.AGGRESSIVE_KEEP_VERSIONS }}"
-          \ "${{ env.BUILD_CACHE_ONLY_KEEP_VERSIONS }}"
+        run: |
+          CLEANUP_TYPE="${{ github.event.inputs.cleanup_type }}"
+          if [ -z "$CLEANUP_TYPE" ]; then
+            if [ "${{ github.event_name }}" = "schedule" ]; then
+              CLEANUP_TYPE="aggressive"
+            else
+              CLEANUP_TYPE="standard"
+            fi
+          fi
+          ./.github/scripts/cleanup.sh setup-cleanup-params \
+            "$CLEANUP_TYPE" \
+            "${{ github.event.inputs.keep_versions || '' }}" \
+            "${{ github.event.inputs.dry_run || 'false' }}" \
+            "${{ env.STANDARD_KEEP_VERSIONS }}" \
+            "${{ env.AGGRESSIVE_KEEP_VERSIONS }}" \
+            "${{ env.BUILD_CACHE_ONLY_KEEP_VERSIONS }}"
       - name: Registry Analysis
         id: analysis
         run: |

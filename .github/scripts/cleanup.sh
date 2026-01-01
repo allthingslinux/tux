@@ -9,9 +9,13 @@ SHARED="$SCRIPT_DIR/shared.sh"
 
 # Setup cleanup parameters based on cleanup type
 setup_cleanup_params() {
-  local cleanup_type="${1}"
-  local keep_versions_input="${2}"
-  local dry_run_input="${3}"
+  # Trim whitespace from arguments (handles empty strings correctly)
+  local cleanup_type
+  cleanup_type=$(echo -n "${1}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+  local keep_versions_input
+  keep_versions_input=$(echo -n "${2}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+  local dry_run_input
+  dry_run_input=$(echo -n "${3}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
   local standard_keep_versions="${4}"
   local aggressive_keep_versions="${5}"
   local build_cache_only_keep_versions="${6}"
