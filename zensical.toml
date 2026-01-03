@@ -29,6 +29,7 @@ nav = [
             "user/features/temp-vc.md",
         ] },
         { "Modules" = [
+            "user/modules/example_module_docs.md",
             "user/modules/index.md",
             "user/modules/fun.md",
             "user/modules/info.md",
