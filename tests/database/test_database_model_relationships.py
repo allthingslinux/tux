@@ -5,6 +5,7 @@ Tests for model relationships and database constraints.
 """
 
 import pytest
+from sqlalchemy import column
 from sqlmodel import delete as sql_delete
 
 from tests.fixtures import (
@@ -125,7 +126,9 @@ class TestModelRelationships:
             # Load the relationship first to ensure cascade works
             await session.refresh(guild, ["guild_config"])
             # Use delete statement to ensure cascade works at database level
-            await session.execute(sql_delete(Guild).where(Guild.id == TEST_GUILD_ID))
+            await session.execute(
+                sql_delete(Guild).where(column("id") == TEST_GUILD_ID),
+            )
             await session.commit()
 
         # Use a fresh session to verify deletion (previous session may have cached objects)
