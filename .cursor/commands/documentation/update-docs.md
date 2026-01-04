@@ -116,24 +116,28 @@ Comprehensively update documentation to reflect code changes, new features, conf
 ## Special Considerations
 
 ### Breaking Changes
+
 - Create migration guides for breaking changes
 - Add deprecation warnings with timelines
 - Provide before/after examples
 - Update version compatibility information
 
 ### New Features
+
 - Add comprehensive usage examples
 - Include common use cases and patterns
 - Provide troubleshooting information
 - Add to appropriate getting started guides
 
 ### API Changes
+
 - Update all affected API documentation
 - Add changelog entries for API changes
 - Update SDK or client library examples
 - Verify backward compatibility notes
 
 ### Configuration Changes
+
 - Update all configuration examples
 - Add validation information for new settings
 - Document default values and ranges
@@ -142,18 +146,21 @@ Comprehensively update documentation to reflect code changes, new features, conf
 ## Error Handling
 
 **Build Errors:**
+
 - Check Zensical syntax and formatting
 - Verify all referenced files exist
 - Fix broken internal links
 - Resolve missing images or assets
 
 **Content Issues:**
+
 - Verify all code examples work
 - Check for outdated information
 - Fix inconsistent terminology
 - Resolve conflicting instructions
 
 **Navigation Issues:**
+
 - Update table of contents structure
 - Fix broken cross-references
 - Verify sidebar navigation
@@ -216,7 +223,6 @@ Comprehensively update documentation to reflect code changes, new features, conf
 - Related rule: @docs/style.mdc - Writing style guidelines
 - Related command: `/generate-docs` - Generate API documentation
 - Related command: `/docs-serve` - Start local documentation server
-- Related guide: [Documentation Guide](../../../docs/content/developer/guides/documentation.md)
 
 ## Additional Notes
 
