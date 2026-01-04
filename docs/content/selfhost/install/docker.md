@@ -8,9 +8,6 @@ tags:
 
 # Docker Installation
 
-!!! tip "Tip"
-    You can use Podman instead of Docker.
-
 Deploy Tux using Docker Compose for easy setup and management. Docker Compose handles PostgreSQL, Tux, and optional Adminer (database management UI).
 
 Tux Docker images are optimized for production use with:
@@ -29,6 +26,9 @@ Before deploying with Docker, ensure you have:
 - **Docker Compose** 2.0+ installed (or `docker compose` plugin)
 - **Git** installed
 - **Discord bot token** from [Discord Developer Portal](https://discord.com/developers/applications)
+
+!!! tip "Tip"
+    You can use Podman instead of Docker.
 
 ### Install Docker Engine
 
@@ -57,17 +57,18 @@ uv --version
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/allthingslinux/tux.git /opt
+git clone https://github.com/allthingslinux/tux.git /opt/tux
 cd /opt/tux
 ```
 
 ### 2. Configure Environment
 
 ```bash
-# Generate configuration files
-uv run config generate
+# Copy example configuration file and edit it
+cp config/config.toml.example config/config.toml
+nano config/config.toml
 
-# Copy and edit .env file
+# Copy example .env file and edit it
 cp .env.example .env
 nano .env
 ```
