@@ -400,7 +400,7 @@ class DatabaseConfig(BaseModel):
     POSTGRES_PASSWORD: Annotated[
         str,
         Field(
-            default="tuxpass",
+            default="ChangeThisToAStrongPassword123!",
             description="PostgreSQL password",
             examples=["ChangeThisToAStrongPassword123!", "SecurePassword456!"],
         ),
