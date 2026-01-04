@@ -47,7 +47,7 @@ sudo systemctl enable --now postgresql
 
 ### Database and User Creation
 
-After installing PostgreSQL, you need to create a database and a user for Tux:
+After installing PostgreSQL, create a database and user for Tux:
 
 ```bash
 # Access PostgreSQL prompt
@@ -71,53 +71,40 @@ GRANT ALL PRIVILEGES ON DATABASE tuxdb TO tuxuser;
 !!! danger "Security Note"
     Always use a strong, unique password for your database user.
 
-## 2. Prepare System Environment
+## 2. Install uv
 
-### Create Dedicated User
-
-For security reasons, it's recommended to run Tux under a dedicated system user:
+Tux uses `uv` for dependency management. Install it system-wide:
 
 ```bash
-sudo useradd -m -d /home/tux -s /bin/bash tux
-```
-
-### Install uv
-
-Tux uses `uv` for dependency management. Install it as the `tux` user:
-
-```bash
-sudo -u tux bash -c "curl -LsSf https://astral.sh/uv/install.sh | sh"
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 !!! note "Update PATH"
-    Ensure `uv` is in the `tux` user's PATH. You may need to source the profile or use the full path to `uv`.
+    Ensure `uv` is in your PATH. You may need to source your shell profile or add it to your PATH manually.
 
 ## 3. Install Tux
 
 ### Clone Repository
 
-We recommend installing Tux in the `/opt/tux` directory:
+Install Tux to `/opt/tux`:
 
 ```bash
 # Clone repository
 sudo git clone https://github.com/allthingslinux/tux.git /opt/tux
-
-# Set ownership
-sudo chown -R tux:tux /opt/tux
 cd /opt/tux
 ```
 
 ### Install Dependencies
 
 ```bash
-# Switch to tux user and install dependencies
-sudo -u tux bash -c "cd /opt/tux && uv sync"
+# Install dependencies
+sudo uv sync
 
 # Generate configuration files
-sudo -u tux bash -c "cd /opt/tux && uv run config generate"
+sudo uv run config generate
 
 # Create .env file from example
-sudo -u tux cp /opt/tux/.env.example /opt/tux/.env
+sudo cp .env.example .env
 ```
 
 ## 4. Configuration
@@ -125,7 +112,7 @@ sudo -u tux cp /opt/tux/.env.example /opt/tux/.env
 Edit the `/opt/tux/.env` file to configure your bot token and database connection:
 
 ```bash
-sudo -u tux nano /opt/tux/.env
+sudo nano /opt/tux/.env
 ```
 
 **Required variables for bare metal setup:**
@@ -147,7 +134,8 @@ POSTGRES_PASSWORD=your_secure_password_here
 Before setting up the service, test the database connection:
 
 ```bash
-sudo -u tux bash -c "cd /opt/tux && uv run db health"
+cd /opt/tux
+sudo uv run db health
 ```
 
 ## 5. Systemd Service Setup
@@ -171,10 +159,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=tux
-Group=tux
 WorkingDirectory=/opt/tux
-ExecStart=/home/tux/.local/bin/uv run tux start
+ExecStart=/usr/local/bin/uv run tux start
 Restart=always
 RestartSec=10
 
@@ -188,7 +174,7 @@ WantedBy=multi-user.target
 ```
 
 !!! note "uv Path"
-    If `uv` was installed in a different location, update the `ExecStart` path accordingly. You can find it with `sudo -u tux which uv`.
+    If `uv` was installed in a different location, update the `ExecStart` path accordingly. You can find it with `which uv`.
 
 ### Start and Enable Service
 
@@ -215,8 +201,8 @@ sudo systemctl stop tux
 
 # Update code and dependencies
 cd /opt/tux
-sudo -u tux git pull origin main
-sudo -u tux uv sync
+sudo git pull origin main
+sudo uv sync
 
 # Restart service (migrations run automatically)
 sudo systemctl start tux
@@ -238,9 +224,9 @@ sudo journalctl -u tux -f
 
 ### Common Issues
 
-- **Database Connection Refused**: Ensure PostgreSQL is running (`systemctl status postgresql`) and the credentials in `.env` match what you created in Step 1.
-- **uv: command not found**: Ensure the full path to `uv` is used in the service file.
-- **Permission Denied**: Ensure the `tux` user owns the `/opt/tux` directory.
+- **Database Connection Refused**: Ensure PostgreSQL is running (`systemctl status postgresql`) and the database exists. Check PostgreSQL authentication settings in `pg_hba.conf`.
+- **uv: command not found**: Ensure the full path to `uv` is used in the service file. Check the path with `which uv`.
+- **Permission Denied**: Ensure the service has read access to `/opt/tux` and write access to any data directories.
 
 ---
 
