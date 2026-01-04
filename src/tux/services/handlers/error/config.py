@@ -202,6 +202,7 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         message_format="Invalid argument type: `{argument}`\nExpected: {expected_types}{usage}",
         detail_extractor=extract_bad_union_argument_details,
         send_to_sentry=False,
+        include_usage=False,  # Usage already included in message format via {usage}
     ),
     commands.BadLiteralArgument: ErrorHandlerConfig(
         message_format="{error}",
@@ -305,11 +306,13 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         message_format="Invalid flag `{flag_name}`: {original_cause}{usage}",
         detail_extractor=extract_bad_flag_argument_details,
         send_to_sentry=False,
+        include_usage=False,  # Usage already included in message format via {usage}
     ),
     commands.MissingRequiredFlag: ErrorHandlerConfig(
         message_format="Missing required flag: `{flag_name}`{usage}",
         detail_extractor=extract_missing_flag_details,
         send_to_sentry=False,
+        include_usage=False,  # Usage already included in message format via {usage}
     ),
     # === Extension Management Errors ===
     commands.ExtensionAlreadyLoaded: ErrorHandlerConfig(
