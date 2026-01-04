@@ -15,7 +15,6 @@ from sqlalchemy import (
     BigInteger,
     CheckConstraint,
     Column,
-    DateTime,
     Float,
     Index,
     Integer,
@@ -23,7 +22,7 @@ from sqlalchemy import (
 )
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.orm import Mapped, relationship
-from sqlmodel import Field, Relationship, SQLModel  # type: ignore[import]
+from sqlmodel import Field, Relationship, SQLModel
 
 from .base import BaseModel
 from .enums import CaseType, OnboardingStage
@@ -57,7 +56,6 @@ class Guild(BaseModel, table=True):
 
     guild_joined_at: datetime | None = Field(
         default_factory=lambda: datetime.now(UTC),
-        sa_type=DateTime(timezone=True),
         description="Timestamp when the bot joined this guild",
     )
 
@@ -652,7 +650,6 @@ class Case(BaseModel, table=True):
     )
     case_expires_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),
         description="Expiration timestamp for temporary actions (tempban, timeout, jail)",
     )
     case_metadata: dict[str, str] | None = Field(
@@ -858,7 +855,6 @@ class Reminder(SQLModel, table=True):
         description="Message content to send when reminder triggers",
     )
     reminder_expires_at: datetime = Field(
-        sa_type=DateTime(timezone=True),
         description="Timestamp when the reminder should trigger",
     )
     reminder_channel_id: int = Field(
@@ -961,12 +957,10 @@ class AFK(SQLModel, table=True):
     )
     since: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
-        sa_type=DateTime(timezone=True),
         description="Timestamp when user went AFK",
     )
     until: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),
         description="Optional expiration timestamp for scheduled AFK",
     )
     enforced: bool = Field(
@@ -1063,7 +1057,6 @@ class Levels(SQLModel, table=True):
     )
     last_message: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
-        sa_type=DateTime(timezone=True),
         description="Timestamp of last message for XP gain cooldown",
     )
 
@@ -1201,7 +1194,6 @@ class StarboardMessage(SQLModel, table=True):
         description="Text content of the original message",
     )
     message_expires_at: datetime = Field(
-        sa_type=DateTime(timezone=True),
         description="When this starboard entry should be removed",
     )
     message_channel_id: int = Field(
