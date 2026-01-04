@@ -1,86 +1,81 @@
-# Deslop Docs
+# Deslop Documentation
 
 ## Overview
 
-Produce high-quality documentation following strict Tux project standards, avoiding AI-generated pitfalls. This command guides you through writing consistent, maintainable documentation free of "slop" - unnecessary complexity, inconsistencies, and anti-patterns.
+Produce high-quality documentation following strict Tux project standards, avoiding AI-generated pitfalls. This command guides you through writing consistent, accurate, and maintainable documentation free of "slop" - unnecessary complexity, inconsistencies, inaccuracies, and anti-patterns.
 
 ## Steps
 
 1. **Research-First Protocol (MANDATORY)**
-   - Read relevant documentation rules - Review all documentation rules in `.cursor/rules/docs/` to understand standards
-   - **Check documentation templates** - Review templates in `docs/content/reference/docs/templates/` for the type of documentation you're creating:
-     - Use `command-template.md` for individual commands
-     - Use `command-group-template.md` for command groups with subcommands
-     - Use `module-template.md` for module overviews
-     - Use `feature-template.md` for automated features and systems
-   - Read existing documentation - Study similar pages in `docs/content/` to match style and structure
-   - Map documentation structure:
-     - Content Organization: Directory structure, navigation hierarchy, content types (tutorial/how-to/reference/explanation)
-     - Navigation Configuration: Review `zensical.toml` nav array, understand explicit navigation requirements
-     - Existing Patterns: Search for similar documentation - leverage or expand existing content instead of creating new
-     - Cross-References: Identify related pages, ensure proper linking
-   - Inspect existing docs - Study implementations before writing. If leveraging existing content, trace all references first
-   - Verify understanding - Explain documentation flow, structure, navigation, impact. Use structured thinking for complex topics
-   - Check for blockers - Ambiguous requirements? Missing context? Multiple valid organizational choices? Missing critical information?
+   - Read relevant code - Verify documentation matches actual implementation. Don't document what you think exists - verify it.
+   - Check existing documentation - Search for similar content, check for duplication, understand existing patterns
+   - Verify configuration - Compare documentation examples against actual config files (`config/*.example`, `compose.yaml`)
+   - Test code examples - Run all code snippets and commands to ensure they work
+   - Check API references - Verify CLI commands, environment variables, and API endpoints exist
+   - Map documentation structure - Understand where content belongs (user/admin/developer/selfhost/reference)
+   - Verify understanding - Explain what you're documenting, why it's needed, who the audience is
+   - Check for blockers - Ambiguous requirements? Missing information? Outdated codebase references?
 
 2. **Write Consistent Documentation**
-   - **Follow template structure** - When creating new documentation, use the appropriate template from `docs/content/reference/docs/templates/` as a starting point. Fill in all sections and remove optional sections that don't apply
-   - Match existing style - Use the same writing style, formatting, and structure as similar pages
-   - Follow established patterns - If commands are documented in a specific format, use that format. If configs use tabs, use tabs
-   - Reuse existing content - Don't duplicate - check if similar documentation exists that can be expanded or referenced
-   - Stay in scope - ONLY modify what's requested. Do NOT change unrelated documentation
-   - Preserve patterns - If you see a pattern (e.g., specific admonition types, code block styles), maintain it exactly
+   - Match existing style - Use the same formatting, tone, and structure as similar documentation
+   - Follow established patterns - Use existing command documentation patterns, configuration examples, feature documentation styles
+   - Reuse existing content - Don't duplicate - reference related documentation instead of repeating information
+   - Stay in scope - ONLY document what's requested. Do NOT add unrelated improvements or extra features
+   - Preserve patterns - If you see a pattern (e.g., command syntax format, admonition usage), maintain it exactly
    - Use existing examples - Check for existing code/config examples before creating new ones
 
 3. **Follow Documentation Standards**
-   - Writing style: ALWAYS use active voice, second person ("you"), present simple tense, imperative verbs
-   - Formatting: Use sentence case for headings, proper heading hierarchy (H1→H2→H3), complete sentences in lists
-   - Code blocks: ALWAYS include language specifier, introduce with brief description ending with colon
-   - Placeholders: Use `<PLACEHOLDER_NAME>` format, explain each placeholder
-   - Links: Use descriptive link text, NEVER "click here" or "see this page"
-   - Images: Include descriptive alt text without "Image of..." prefix
+   - Diátaxis framework: Choose the right type (tutorial/how-to/reference/explanation) - see @docs/principals.mdc
+   - Writing style: Active voice, second person ("you"), present simple tense, imperative verbs - see @docs/style.mdc
+   - Zensical syntax: Use appropriate features (admonitions, tabs, code blocks, diagrams) - see @docs/syntax.mdc
+   - Structure: Follow navigation patterns, use index pages, proper heading hierarchy - see @docs/structure.mdc
+   - Formatting: Sentence case titles, proper code formatting, consistent list styles - see @docs/style.mdc
+   - Patterns: Follow established documentation patterns for commands, features, configuration - see @docs/patterns.mdc
 
-4. **Zensical Syntax Standards**
-   - Admonitions: Use appropriate types (`note`, `warning`, `tip`, etc.), proper syntax with `!!!` or `???`
-   - Code blocks: Triple backticks with language specifier, introduce purpose before block
-   - Code blocks: Distinguish command from output, use appropriate language specifiers
-   - Tabs: Use content tabs for alternatives (e.g., different config formats)
-   - Diagrams: Use Mermaid.js for flowcharts, sequence diagrams, etc. when appropriate
-   - Annotations: Use sparingly for important clarifications, follow proper syntax
-   - Icons: Use appropriate icon shortcodes when helpful, don't overuse
+4. **Accuracy Standards**
+   - Code examples: ALL code snippets must work when copied directly
+   - CLI commands: Verify commands exist and syntax is correct (`uv run db health`, not `python db.py health`)
+   - Configuration: Match examples against actual config files and environment variables
+   - API references: Verify endpoints, parameters, and responses match implementation
+   - Default values: Check actual defaults in code, not assumed values
+   - Environment variables: Verify variable names match actual usage in codebase
+   - Database schema: Document actual models and relationships, not assumptions
+   - Permission levels: Verify actual permission requirements, not assumptions
 
-5. **Content Organization Standards**
-   - Content type: Determine if tutorial/how-to/reference/explanation per Diátaxis framework
-   - Location: Place in correct directory (`user/`, `admin/`, `developer/`, `reference/`, `selfhost/`, `community/`)
-   - Navigation: Update `zensical.toml` nav array if adding new pages or sections
-   - Structure: Follow article goals → prerequisites → content → next steps pattern
-   - Index pages: Use `index.md` files for section overviews and navigation
+5. **Cross-Reference Standards**
+   - Internal links: Use relative paths (`../manage/database.md`), verify links work
+   - Navigation: Update `zensical.toml` nav array if adding new pages
+   - Related content: Link to related documentation sections appropriately
+   - External links: Verify external URLs are valid and appropriate
+   - Code references: Link to actual source files when relevant
+   - Avoid broken links: Test all links before submitting
 
-6. **Technical Content Standards**
-   - Accuracy: Verify all commands, code examples, and configurations against actual implementation
-   - Examples: Include working examples, not just theory
-   - Configuration: Show actual config files with placeholders, explain each option
-   - Commands: Introduce purpose, distinguish command from output
-   - API documentation: Specify HTTP methods, use backticks for paths and parameters
-   - Path parameters: Use `{parameter}` format in URLs
+6. **Content Quality Standards**
+   - User-first: Address real user needs, not just system capabilities
+   - Practical: Include working examples and real-world configurations
+   - Comprehensive: Cover all likely user questions and edge cases
+   - Accessible: Use clear language, avoid jargon, provide context
+   - Scannable: Use proper headings, lists, and formatting for quick scanning
+   - Complete: Include prerequisites, step-by-step instructions, next steps
 
 7. **Review Before Submitting**
-   - Verify accuracy - Check that all commands, code, and configurations actually work
-   - Check consistency - Ensure your documentation matches the style and patterns of similar pages
-   - Review scope - Verify you only changed what was requested - no extra "improvements"
-   - Check for slop - Review your documentation against anti-patterns (see Error Handling section)
-   - Remove debug content - Ensure no placeholder text, incomplete sections, or test content remains
-   - Verify patterns - Ensure you didn't break established patterns or conventions
-   - Verify navigation - Check that navigation is updated if needed, links work correctly
-   - Adversarial verification - Actively try to falsify assumptions. Look for broken links, missing context, unclear instructions
+   - Verify accuracy - Test all code examples, verify all commands work, check all configuration examples
+   - Check consistency - Ensure documentation matches style and patterns of similar files
+   - Review scope - Verify you only documented what was requested - no extra "improvements"
+   - Check for slop - Review documentation against anti-patterns (see Error Handling section)
+   - Remove placeholder text - Ensure no `TODO`, `FIXME`, placeholder content, or incomplete sections
+   - Verify patterns - Ensure you didn't break established documentation patterns or conventions
+   - Verify examples - Run code examples, test commands, verify configuration works
+   - Check cross-references - Verify all links work, navigation is updated if needed
+   - Build verification - Ensure documentation builds without errors (`uv run docs build`)
 
 8. **Mandatory Self-Audit**
-   - Verify navigation - Check `zensical.toml` nav array is updated if needed
-   - Test links - Verify all internal and external links work
-   - Verify structure - Check heading hierarchy, formatting, code blocks render correctly
-   - Check for regressions - Ensure no broken cross-references or missing context
-   - Verify all changes match requested scope
-   - Provide evidence (link checks, structure verification, navigation review)
+   - Test all code examples and commands
+   - Verify documentation builds successfully
+   - Check cross-references and links
+   - Verify accuracy against codebase
+   - Compare with similar documentation for consistency
+   - Provide evidence (build output, code references, verification steps)
    - Use status markers: ✅ (completed), ⚠️ (recoverable issue fixed), 🚧 (blocked after exhausting research)
 
 ## Error Handling
@@ -89,76 +84,82 @@ Produce high-quality documentation following strict Tux project standards, avoid
 
 **Documentation Anti-Patterns:**
 
-- Passive voice - ALWAYS use active voice ("You can configure..." not "Configuration can be done...")
-- Vague language - Use specific, actionable instructions, NEVER generic phrases
-- Missing context - ALWAYS provide prerequisites and clear introductions
-- Broken links - Verify all links work, use descriptive link text
-- Inconsistent formatting - Match existing style exactly (sentence case, list style, code block format)
-- Missing examples - Include working code/config examples, not just descriptions
-- Generic admonitions - Use specific types (`warning`, `tip`, `note`) appropriately
-- Over-formatting - Don't use bold/italics excessively, follow existing patterns
-- Missing navigation - Update `zensical.toml` nav array when adding new pages
-- Incomplete instructions - Every step should be actionable and complete
+- Passive voice - ALWAYS use active voice ("You configure X" not "X is configured")
+- Present continuous tense - Use present simple ("You use X" not "You are using X")
+- Generic examples - Use specific, realistic examples that users can actually use
+- Outdated information - ALWAYS verify against current codebase, never assume
+- Missing context - Include prerequisites, next steps, and related resources
+- Broken links - Verify all internal and external links work
+- Inconsistent formatting - Match existing documentation style exactly
+- Wrong documentation type - Use appropriate Diátaxis type (tutorial/how-to/reference/explanation)
+- Missing code language - ALWAYS specify language in code fences (```bash,```python, ```env)
+- Placeholder text - Remove all `TODO`, `FIXME`, `PLACEHOLDER`, incomplete sections
+- Assumed defaults - Verify actual default values in code/config, don't assume
+- Wrong command syntax - Verify CLI commands exist and syntax matches actual implementation
+- Inconsistent terminology - Use established terminology from codebase and existing docs
+- Missing examples - Include practical, working examples for all features/configurations
+- Over-complex explanations - Keep explanations simple and direct, avoid unnecessary complexity
+- Missing prerequisites - List requirements and prerequisites before technical content
+- No next steps - End with suggested next steps and related resources
 
 **AI Documentation Slop Detection:**
 
-- Extra formatting inconsistent with file style
-- Over-explanatory content: unnecessary background, excessive context
-- Type system abuse: Using complex syntax when simple works
-- Content organization issues: Over-engineering structure, duplicating existing content, breaking existing patterns
-- Consistency violations: Inconsistent terminology, not following file structure, magic values in examples
-- Debug artifacts: Placeholder text, incomplete sections, test content in production docs
-- Pattern violations: Not following existing patterns, breaking conventions, adding features not requested
-- Generic & vague content: Empty AI-words ("robust", "seamless", "efficient"), generic descriptions without specifics
+- Extra admonitions inconsistent with file style (overuse of warnings/tips/notes)
+- Over-explanatory: Unnecessary background that doesn't help users
+- Pattern violations: Not following established documentation patterns, breaking conventions
+- Generic & vague content: Empty AI-words ("robust", "seamless", "efficient"), generic descriptions
+- Duplication: Repeating information that exists elsewhere instead of referencing
+- Inconsistent formatting: Not matching existing documentation style (heading levels, list styles, code formatting)
+- Debug artifacts: Placeholder text, incomplete sections, `TODO` comments
+- Scope creep: Adding documentation for features/options not requested
+- Inaccurate examples: Code/config examples that don't match actual implementation
+- Missing verification: Documentation that wasn't tested against actual codebase
 
 If you encounter any of these patterns:
 
 - Remove them immediately
-- Replace with proper patterns from the codebase
-- Verify the fix doesn't break existing functionality or navigation
+- Replace with proper patterns from existing documentation
+- Verify the fix doesn't introduce inaccuracies
+- Test all examples and verify against codebase
 
 ## Checklist
 
-- [ ] Read and understood all relevant documentation rules
-- [ ] Reviewed appropriate documentation template from `docs/content/reference/docs/templates/` (command, command-group, module, or feature)
-- [ ] Checked similar documentation pages to understand existing patterns
-- [ ] Searched for existing content - found similar documentation and leveraged/expanded it
-- [ ] Traced references - verified changes won't break cross-references
-- [ ] Matched existing writing style exactly (active voice, second person, present tense)
-- [ ] Followed existing formatting style and organization
-- [ ] Used existing examples/patterns instead of creating new ones
-- [ ] All links verified and working (internal and external)
-- [ ] Navigation updated in `zensical.toml` if adding new pages
-- [ ] No placeholder text or incomplete sections
-- [ ] All code examples tested and accurate
-- [ ] All commands verified against actual implementation
-- [ ] Proper heading hierarchy (H1→H2→H3)
-- [ ] Sentence case for headings
-- [ ] Descriptive link text (no "click here")
-- [ ] Alt text for images (without "Image of..." prefix)
-- [ ] Appropriate admonition types used correctly
-- [ ] Code blocks have language specifiers and introductions
-- [ ] Placeholders explained (`<PLACEHOLDER_NAME>` format)
-- [ ] Content type appropriate (tutorial/how-to/reference/explanation)
-- [ ] Location correct (`user/`, `admin/`, `developer/`, etc.)
-- [ ] Article structure follows pattern (goals → prerequisites → content → next steps)
+- [ ] Read and understood the entire file being edited
+- [ ] Checked similar documentation files to understand existing patterns
+- [ ] Searched for existing documentation - found similar content and referenced/expanded it
+- [ ] Verified accuracy - tested code examples, verified commands, checked configuration
+- [ ] Matched existing formatting and style exactly
+- [ ] Followed documentation structure patterns (headings, lists, code blocks)
+- [ ] Used appropriate Diátaxis type (tutorial/how-to/reference/explanation)
+- [ ] Applied writing standards (active voice, second person, present simple tense)
+- [ ] Used correct Zensical syntax (admonitions, code blocks, formatting)
+- [ ] Verified all code examples work when copied directly
+- [ ] Tested all CLI commands and verified syntax is correct
+- [ ] Compared configuration examples against actual config files
+- [ ] Verified environment variables match actual usage in codebase
+- [ ] Checked all cross-references and links work
+- [ ] Updated navigation in `zensical.toml` if adding new pages
+- [ ] No placeholder text, `TODO`, or incomplete sections
+- [ ] No broken links (internal or external)
+- [ ] Documentation builds successfully (`uv run docs build`)
 - [ ] Only requested changes were made (no scope creep)
 - [ ] No unrelated documentation was modified
 - [ ] Established patterns were preserved exactly
-- [ ] All technical content verified against actual codebase
-- [ ] Verified against usage - checked what users actually need
-- [ ] Adversarial verification - tested for broken links, missing context, unclear instructions
+- [ ] All examples verified against actual codebase/implementation
+- [ ] Included prerequisites and next steps where appropriate
+- [ ] Used consistent terminology from codebase and existing docs
+- [ ] Applied appropriate admonitions (tip/warning/note/danger)
+- [ ] Code blocks have language specifiers (```bash,```python, ```env)
+- [ ] Adversarial verification - tested edge cases, verified defaults, checked actual behavior
 
 ## See Also
 
-- Related command: `/update-docs`
-- Related command: `/generate-docs`
-- Related command: `/docs-serve`
-- Documentation templates: [Documentation Templates](../../docs/content/reference/docs/templates/index.md)
-- Related rule: @docs/docs.mdc
-- Related rule: @docs/style.mdc
-- Related rule: @docs/syntax.mdc
-- Related rule: @docs/structure.mdc
-- Related rule: @docs/patterns.mdc
-- Related rule: @docs/principals.mdc
-- Related rule: @docs/zensical.mdc
+- Related command: `/update-docs` - Update documentation for code changes
+- Related command: `/generate-docs` - Generate API documentation
+- Related command: `/docs-serve` - Start local documentation server
+- Related rule: @docs/docs.mdc - Documentation standards master guide
+- Related rule: @docs/style.mdc - Writing style and formatting
+- Related rule: @docs/patterns.mdc - Documentation patterns and examples
+- Related rule: @docs/principals.mdc - Diátaxis framework principles
+- Related rule: @docs/syntax.mdc - Zensical syntax reference
+- Related rule: @docs/structure.mdc - Documentation organization

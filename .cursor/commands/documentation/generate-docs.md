@@ -100,23 +100,27 @@ Generate comprehensive API documentation, update reference materials, and create
 ## Documentation Types
 
 ### API Documentation
+
 - **Classes**: Full class documentation with methods and properties
 - **Functions**: Parameter types, return values, exceptions, examples
 - **Services**: Service methods, dependencies, configuration
 - **Models**: Database models, relationships, validation rules
 
 ### CLI Documentation
+
 - **Commands**: Syntax, options, examples, output format
 - **Scripts**: Purpose, usage, configuration, troubleshooting
 - **Tools**: Installation, setup, common workflows
 
 ### Configuration Documentation
+
 - **Settings**: All configuration options with types and defaults
 - **Environment**: Environment variables and their mappings
 - **Files**: Configuration file formats and examples
 - **Validation**: Rules, constraints, and error messages
 
 ### Integration Documentation
+
 - **APIs**: Authentication, endpoints, request/response formats
 - **Services**: Setup, configuration, usage patterns
 - **Databases**: Connection, queries, migrations, performance
@@ -125,6 +129,7 @@ Generate comprehensive API documentation, update reference materials, and create
 ## Quality Standards
 
 ### Code Examples
+
 - **Working**: All examples must execute successfully
 - **Complete**: Include necessary imports and setup
 - **Realistic**: Use practical, real-world scenarios
@@ -132,6 +137,7 @@ Generate comprehensive API documentation, update reference materials, and create
 - **Tested**: Verify examples work with current codebase
 
 ### Documentation Structure
+
 - **Organized**: Logical hierarchy and navigation
 - **Searchable**: Proper headings and keywords
 - **Linked**: Cross-references and related content
@@ -139,6 +145,7 @@ Generate comprehensive API documentation, update reference materials, and create
 - **Mobile**: Responsive design for all devices
 
 ### Content Quality
+
 - **Clear**: Simple, direct language
 - **Accurate**: Matches current implementation
 - **Complete**: Covers all necessary information
@@ -148,24 +155,28 @@ Generate comprehensive API documentation, update reference materials, and create
 ## Error Handling
 
 **Missing Documentation:**
+
 - Identify undocumented public APIs
 - Add comprehensive docstrings
 - Create reference documentation
 - Add usage examples
 
 **Outdated Examples:**
+
 - Update code examples to current APIs
 - Fix deprecated method usage
 - Update import statements
 - Verify examples work
 
 **Build Failures:**
+
 - Fix syntax errors in documentation
 - Resolve missing references
 - Update broken links
 - Fix formatting issues
 
 **Incomplete Coverage:**
+
 - Add missing API documentation
 - Document all public methods
 - Include configuration options
@@ -228,7 +239,6 @@ Generate comprehensive API documentation, update reference materials, and create
 - Related rule: @docs/style.mdc - Writing style guidelines
 - Related command: `/update-docs` - Update existing documentation
 - Related command: `/docs-serve` - Start local documentation server
-- Related guide: [API Documentation Guide](../../../docs/content/developer/guides/api-documentation.md)
 
 ## Additional Notes
 
