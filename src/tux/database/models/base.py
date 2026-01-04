@@ -15,8 +15,8 @@ from uuid import UUID, uuid4
 
 import rich.repr
 from pydantic import field_serializer
-from sqlalchemy import DateTime, text
-from sqlmodel import Field, SQLModel  # type: ignore[import]
+from sqlalchemy import text
+from sqlmodel import Field, SQLModel
 
 
 class TimestampMixin:
@@ -32,14 +32,12 @@ class TimestampMixin:
     """
 
     created_at: datetime | None = Field(
-        sa_type=DateTime(timezone=True),
         sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
         nullable=True,
         description="Timestamp when the record was created",
     )
 
     updated_at: datetime | None = Field(
-        sa_type=DateTime(timezone=True),
         sa_column_kwargs={
             "server_default": text("CURRENT_TIMESTAMP"),
             "onupdate": text("CURRENT_TIMESTAMP"),
@@ -215,7 +213,7 @@ class SoftDeleteMixin(SQLModel):
     - is_deleted: Boolean flag for soft delete status
     """
 
-    deleted_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
+    deleted_at: datetime | None = Field(default=None)
 
     is_deleted: bool = Field(
         default=False,
