@@ -134,7 +134,7 @@ jobs:
       # It will fail gracefully in act, allowing manual testing of other release steps
       - name: Create Sentry Release
         if: needs.validate.outputs.is_prerelease != 'true'
-        uses: getsentry/action-release@128c5058bbbe93c8e02147fe0a9c713f166259a6  # v3
+        uses: getsentry/action-release@dab6548b3c03c4717878099e43782cf5be654289  # v3
         continue-on-error: true
         env:
           # Required: Sentry authentication token from Internal Integration

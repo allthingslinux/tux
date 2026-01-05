@@ -188,7 +188,7 @@ jobs:
       # For other events: Run quickview and recommendations for general analysis
       - name: Docker Scout Compare
         if: github.event_name == 'pull_request'
-        uses: docker/scout-action@v1
+        uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de # v1
         continue-on-error: true
         with:
           command: compare
@@ -199,7 +199,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Docker Scout Quickview
         if: github.event_name != 'pull_request'
-        uses: docker/scout-action@v1
+        uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de # v1
         continue-on-error: true
         with:
           command: quickview
@@ -208,7 +208,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Docker Scout Recommendations
         if: github.event_name != 'pull_request'
-        uses: docker/scout-action@v1
+        uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de # v1
         continue-on-error: true
         with:
           command: recommendations
@@ -390,7 +390,7 @@ jobs:
       # Run Docker Scout CVE scan to ensure image is safe before pushing to registry
       # Fails the workflow if critical or high-severity vulnerabilities are found
       - name: Docker Scout CVEs Before Push
-        uses: docker/scout-action@v1
+        uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de # v1
         with:
           command: cves
           image: ${{ steps.meta.outputs.tags }}
