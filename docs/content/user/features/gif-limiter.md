@@ -9,137 +9,78 @@ tags:
 
 # GIF Limiter
 
-!!! warning "Work in progress"
-    This section is a work in progress. Please help us by contributing to the documentation.
-
-The GIF Limiter feature automatically prevents GIF spam in Discord channels by rate limiting GIF messages. This helps maintain conversation quality and prevents channels from being flooded with animated images.
+Prevents GIF spam by rate limiting GIF messages in channels. Monitors messages and automatically deletes GIFs that exceed configured limits, with brief notifications explaining why messages were removed.
 
 ## How It Works
 
-The GIF Limiter monitors all messages in your server and automatically detects GIFs. When a GIF is detected, the system checks if it exceeds configured limits:
+- Monitors all messages for GIF content (word "gif" + embeds)
+- Tracks GIFs with timestamps for users and channels
+- Automatically deletes GIFs exceeding limits
+- Sends brief notification (auto-deletes after 3 seconds)
+- Cleans up old timestamps every 20 seconds
 
-- **Channel-wide limits**: Maximum number of GIFs allowed in a channel within a time window
-- **Per-user limits**: Maximum number of GIFs a single user can post in a channel within a time window
+## User Experience
 
-If a GIF exceeds either limit, the message is automatically deleted and a temporary notification is sent explaining why it was removed.
-
-## Detection
-
-The GIF Limiter detects GIFs by checking if:
-
-- The message contains the word "gif" (case-insensitive)
-- The message has embeds (Discord automatically embeds GIF links)
-
-!!! note "Detection Method"
-    The limiter checks message content for the word "gif" and requires embeds. This means it works with:
-
-    - Direct GIF links (e.g., `https://example.com/image.gif`)
-    - GIF attachments
-    - Messages mentioning GIFs that Discord embeds
-
-## Rate Limiting
-
-### Time Window
-
-GIFs are tracked within a configurable time window (default: 60 seconds). Only GIFs sent within this window count toward the limits. Older GIFs are automatically removed from tracking every 20 seconds.
-
-### Limit Types
-
-#### Channel-Wide Limits
-
-Prevents too many GIFs from being posted in a specific channel, regardless of who posts them. Useful for maintaining conversation quality in busy channels.
-
-**Example**: If a channel has a limit of 5 GIFs per 60 seconds, only the first 5 GIFs posted in that channel within any 60-second window will be allowed.
-
-#### Per-User Limits
-
-Prevents individual users from spamming GIFs in specific channels. Each user's GIF count is tracked separately.
-
-**Example**: If a channel has a per-user limit of 2 GIFs per 60 seconds, each user can only post 2 GIFs in that channel within any 60-second window.
-
-### Excluded Channels
-
-You can configure certain channels to be excluded from GIF limiting entirely. GIFs posted in excluded channels are not tracked or limited.
+- Post GIFs normally if within limits
+- Messages deleted with notification if limits exceeded
+- Wait for time window to reset before posting more GIFs
 
 ## Configuration
 
-The GIF Limiter is configured through your server's configuration file.
-
-### Configuration Options
+Configure through your server's configuration file.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `recent_gif_age` | `integer` | `60` | Time window in seconds for tracking GIFs |
 | `gif_limits_user` | `object` | `{}` | Channel ID → max GIFs per user mapping |
 | `gif_limits_channel` | `object` | `{}` | Channel ID → max GIFs per channel mapping |
-| `gif_limit_exclude` | `array` | `[]` | List of channel IDs to exclude from limits |
+| `gif_limit_exclude` | `array` | `[]` | Channel IDs to exclude from limits |
 
 ### Example Configuration
 
-    ```toml
-    [gif_limiter]
-    # Track GIFs for 60 seconds
-    recent_gif_age = 60
+```toml
+[gif_limiter]
+recent_gif_age = 60
+gif_limit_exclude = [123456789012345678]
 
-    # Exclude GIFs from moderation channels
-    gif_limit_exclude = [123456789012345678]
+[gif_limiter.gif_limits_user]
+987654321098765432 = 2  # 2 GIFs per user per 60 seconds
 
-    [gif_limiter.gif_limits_user]
-    # Allow 2 GIFs per user per 60 seconds in general chat
-    987654321098765432 = 2
+[gif_limiter.gif_limits_channel]
+987654321098765432 = 5  # 5 GIFs total per 60 seconds
+```
 
-    [gif_limiter.gif_limits_channel]
-    # Allow maximum 5 GIFs total per 60 seconds in general chat
-    987654321098765432 = 5
-    ```
+## Commands
 
-## Behavior
+No commands - works automatically based on configuration.
 
-### When Limits Are Exceeded
+## Permissions
 
-When a GIF exceeds a configured limit:
+**Bot Permissions:**
 
-1. The message is immediately deleted
-2. A temporary notification is sent: `-# GIF ratelimit exceeded for channel` or `-# GIF ratelimit exceeded for user`
-3. The notification automatically deletes after 3 seconds
+- Read Messages
+- Manage Messages
+- Send Messages
 
-### Automatic Cleanup
+**User Permissions:** None required
 
-The system automatically cleans up old GIF timestamps every 20 seconds. This ensures that:
+## Troubleshooting
 
-- Only recent GIFs count toward limits
-- Memory usage stays reasonable
-- Limits reset after the time window expires
+**GIFs not detected:**
 
-## Use Cases
+- Ensure message contains "gif" (case-insensitive)
+- Verify Discord is embedding the GIF link
+- Check if channel is in exclude list
 
-### Preventing Spam
+**Limits not working:**
 
-Configure per-user limits in busy channels to prevent individual users from flooding the channel with GIFs.
+- Verify Tux has "Manage Messages" permission
+- Check configuration has limits set for the channel
+- Restart Tux or reload configuration
 
-### Maintaining Conversation Quality
+## Limitations
 
-Set channel-wide limits to ensure GIFs don't dominate conversations in text channels.
-
-### Channel-Specific Rules
-
-Different channels can have different limits. For example:
-
-- General chat: 3 GIFs per user, 10 total per channel
-- Media channel: No limits (excluded)
-- Serious discussion: 1 GIF per user, 3 total per channel
-
-## Tips
-
-!!! tip "Start Conservative"
-    Begin with lower limits and adjust based on your server's needs. You can always increase limits if they're too restrictive.
-
-!!! tip "Exclude Media Channels"
-    Consider excluding dedicated media or meme channels from GIF limits, as these channels are designed for sharing images and GIFs.
-
-!!! tip "Monitor and Adjust"
-    Watch how the limits affect your community and adjust the time window and limits accordingly. Different communities have different GIF posting patterns.
-
-## For Administrators
-
-See the admin configuration documentation for detailed setup instructions and advanced configuration options.
+- Only detects GIFs by checking for "gif" in message content with embeds
+- Works with GIF links Discord embeds, may not catch all formats
+- Limits based on rolling time window
+- No per-server limits (only per-channel)
