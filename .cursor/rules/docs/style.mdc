@@ -34,6 +34,20 @@ This section covers the core writing principles, style guidelines, and formattin
 - **UI Elements**: Format as they appear: **Submit**, **User settings**
 - **Bold Keywords**: Use `**bold**` for emphasis, `_italics_` sparingly
 - **Lists**: Complete sentences, dashes for unordered, bold keywords with colons
+- **Nested Lists**: When a numbered list item with bold text is followed by a nested bullet list, include a blank line between the bold text and the nested list for proper rendering:
+
+  ```markdown
+  ✅ Correct:
+  1. **Item title**
+
+     - Nested bullet item
+     - Another nested item
+
+  ❌ Incorrect:
+  1. **Item title**
+     - Nested bullet item
+     - Another nested item
+  ```
 
 ### Code Documentation
 
