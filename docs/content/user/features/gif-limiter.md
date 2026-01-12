@@ -5,36 +5,68 @@ tags:
   - user-guide
   - features
   - moderation
+icon: lucide/scale
 ---
 
 # GIF Limiter
 
-Prevents GIF spam by rate limiting GIF messages in channels. Monitors messages and automatically deletes GIFs that exceed configured limits, with brief notifications explaining why messages were removed.
+The GIF Limiter is an automated moderation tool designed to maintain channel quality by preventing
+GIF spam. It monitors message content in real-time and automatically removes GIFs that exceed your
+server's configured limits, ensuring conversations remain readable and focused.
+
+This feature works silently in the background, only intervening when specific thresholds are met. It provides brief, self-cleaning notifications to users when their messages are removed, explaining the reason for the action without cluttering the channel.
 
 ## How It Works
 
-- Monitors all messages for GIF content (word "gif" + embeds)
-- Tracks GIFs with timestamps for users and channels
-- Automatically deletes GIFs exceeding limits
-- Sends brief notification (auto-deletes after 3 seconds)
-- Cleans up old timestamps every 20 seconds
+### Mechanics
+
+Tux inspects all incoming messages for GIF content by checking for the word "gif" in the message body and the presence of Discord embeds.
+
+- **Tracking:** Tux maintains a rolling timestamp of GIF messages for every user and channel.
+- **Cleanup:** A background task runs every 20 seconds to prune expired timestamps, keeping memory usage low.
+- **Detection:** The system identifies GIFs provided through links that Discord automatically embeds.
+
+### Automation
+
+This feature provides hands-off moderation:
+
+- **Instant Deletion:** If a user or channel exceeds the GIF limit, Tux immediately deletes the offending message.
+- **Self-Cleaning Alerts:** When a message is deleted, Tux sends a temporary notification that automatically deletes itself after 3 seconds.
+- **Pattern Matching:** Tux monitors both message content and embed metadata to accurately identify GIFs.
+
+### Triggers
+
+The feature activates when:
+
+- A message is sent that contains a GIF link or the word "gif".
+- The number of GIFs sent within the `recent_gif_age` window exceeds the user or channel limit.
 
 ## User Experience
 
-- Post GIFs normally if within limits
-- Messages deleted with notification if limits exceeded
-- Wait for time window to reset before posting more GIFs
+### What Users See
+
+Under normal circumstances, users post GIFs without any interruption. However, when limits are exceeded:
+
+- **Message Removal:** Their message containing the GIF is instantly removed.
+- **Moderation Alert:** A brief message appears: "You are posting GIFs too fast! Please wait a moment."
+- **Auto-Cleanup:** The alert message disappears after 3 seconds, leaving the channel clean.
+
+### Interaction
+
+Users do not need to interact with the bot to use this feature. They simply need to stay within the established limits for the channel.
 
 ## Configuration
 
-Configure through your server's configuration file.
+The GIF Limiter is configured through the server's `config.toml` file.
+
+### Configuration Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `recent_gif_age` | `integer` | `60` | Time window in seconds for tracking GIFs |
-| `gif_limits_user` | `object` | `{}` | Channel ID → max GIFs per user mapping |
-| `gif_limits_channel` | `object` | `{}` | Channel ID → max GIFs per channel mapping |
-| `gif_limit_exclude` | `array` | `[]` | Channel IDs to exclude from limits |
+| `recent_gif_age` | `integer` | `60` | The time window (in seconds) during which GIFs are tracked. |
+| `gif_limits_user` | `object` | `{}` | A mapping of channel IDs to the maximum GIFs allowed per user. |
+| `gif_limits_channel` | `object` | `{}` | A mapping of channel IDs to the maximum GIFs allowed total. |
+| `gif_limit_exclude` | `array` | `[]` | A list of channel IDs where the GIF Limiter will not run. |
 
 ### Example Configuration
 
@@ -44,43 +76,75 @@ recent_gif_age = 60
 gif_limit_exclude = [123456789012345678]
 
 [gif_limiter.gif_limits_user]
-987654321098765432 = 2  # 2 GIFs per user per 60 seconds
+987654321098765432 = 2  # Max 2 GIFs per user every 60 seconds
 
 [gif_limiter.gif_limits_channel]
-987654321098765432 = 5  # 5 GIFs total per 60 seconds
+987654321098765432 = 5  # Max 5 GIFs total every 60 seconds
 ```
 
-## Commands
-
-No commands - works automatically based on configuration.
+!!! info "Configuration Guide"
+    For detailed configuration instructions, see the [Admin Guide](../../admin/config/index.md).
 
 ## Permissions
 
-**Bot Permissions:**
+### Bot Permissions
 
-- Read Messages
-- Manage Messages
-- Send Messages
+Tux requires the following permissions for this feature:
 
-**User Permissions:** None required
+- **Read Messages** - Needed to monitor channel activity for GIFs.
+- **Manage Messages** - Needed to delete messages that exceed the limits.
+- **Send Messages** - Needed to post the temporary moderation notifications.
+
+### User Permissions
+
+None required. All users are subject to the limits unless the channel is excluded.
+
+!!! info "Permission System"
+    Configure command permissions via `/config commands` or see the [Permission Configuration](../../../admin/config/commands.md) guide.
 
 ## Troubleshooting
 
-**GIFs not detected:**
+### Issue: GIFs not being detected
 
-- Ensure message contains "gif" (case-insensitive)
-- Verify Discord is embedding the GIF link
-- Check if channel is in exclude list
+**Symptoms:**
 
-**Limits not working:**
+- Users are posting GIFs but they are not being counted against the limit.
 
-- Verify Tux has "Manage Messages" permission
-- Check configuration has limits set for the channel
-- Restart Tux or reload configuration
+**Causes:**
+
+- The message does not contain the word "gif".
+- Discord has not yet generated an embed for the GIF link.
+- The channel is included in the `gif_limit_exclude` list.
+
+**Solutions:**
+
+1. Check if the channel is in the exclude list in your configuration.
+2. Verify that Tux has permission to view the channel and its embeds.
+
+### Issue: Messages not being deleted
+
+**Symptoms:**
+
+- Tux sends a notification about the limit but the original message remains.
+
+**Causes:**
+
+- Tux is missing the "Manage Messages" permission in that channel.
+- Tux's role is below the user's role in the hierarchy (for some Discord settings).
+
+**Solutions:**
+
+1. Ensure Tux has the "Manage Messages" permission.
+2. Check that Tux's role is positioned correctly in the server's role settings.
 
 ## Limitations
 
-- Only detects GIFs by checking for "gif" in message content with embeds
-- Works with GIF links Discord embeds, may not catch all formats
-- Limits based on rolling time window
-- No per-server limits (only per-channel)
+- **Content-Based Detection:** Currently only detects GIFs by checking for "gif" in the message content along with embeds.
+- **Rolling Window:** The limit is based on a fixed rolling time window, not a calendar period.
+- **Per-Channel Logic:** Limits are applied per-channel; there is currently no global per-user limit across the entire server.
+
+## Related Documentation
+
+- [Moderation Module](../modules/moderation/index.md)
+- [Admin Configuration Guide](../../admin/config/index.md)
+- [Permission Configuration](../../../admin/config/commands.md)
