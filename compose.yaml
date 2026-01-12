@@ -150,7 +150,7 @@ services:
           target: /app/compose.yaml
   tux-adminer:
     # Database management UI - enabled by default in development
-    image: adminer:latest@sha256:ae1d4d7774c544d084e42887a318e6b0f47ad8c60fe1661d9278ef169c8b4eaa
+    image: adminer:latest@sha256:a20bcd3732c1c4660f46b07be2731f0739d541bba15b5486a9e6050916a2d3c2
     container_name: tux-adminer
     hostname: tux-adminer
     profiles: [dev]  # Enable with: docker compose --profile dev up -d
