@@ -152,3 +152,6 @@ Include links to:
 - [Related Feature or Module](path/to/doc.md)
 - [Configuration Guide](../../../admin/config/{RELATED_CONFIG}.md)
 - [Permission Configuration](../../../admin/config/commands.md)
+
+!!! info "Documentation Templates"
+    When documenting individual commands, command groups, or features related to this module, use the appropriate templates from [Documentation Templates](../index.md). These templates ensure consistency and completeness across all documentation.
