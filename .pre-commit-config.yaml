@@ -26,7 +26,7 @@ repos:
       - id: validate-pyproject
         additional_dependencies: ['validate-pyproject-schema-store[all]']
   - repo: https://github.com/lyz-code/yamlfix
-    rev: 1.19.0
+    rev: 1.19.1
     hooks:
       - id: yamlfix
         exclude: \.(commitlintrc|pre-commit-hooks)\.yaml$|docker-compose.*\.yml$
@@ -37,11 +37,11 @@ repos:
         exclude: compose.*\.yaml$
         args: [-c=.yamllint.yml]
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.9
+    rev: v1.7.10
     hooks:
       - id: actionlint
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.46.0
+    rev: v0.47.0
     hooks:
       - id: markdownlint-fix
   - repo: https://github.com/asottile/add-trailing-comma
@@ -49,12 +49,12 @@ repos:
     hooks:
       - id: add-trailing-comma
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.7
+    rev: v0.14.11
     hooks:
       - id: ruff-check
         args: [--fix]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.7
+    rev: v0.14.11
     hooks:
       - id: ruff-format
   - repo: https://github.com/jsh9/pydoclint
