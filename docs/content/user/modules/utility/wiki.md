@@ -101,5 +101,3 @@ The embed is formatted to make it easy to quickly identify relevant articles and
 ## Related Commands
 
 - [`/tldr`](../tools/tldr.md) - For quick command-line summaries
-- [`/wiki arch`](wiki.md) - Search the Arch Linux Wiki
-- [`/wiki atl`](wiki.md) - Search the All Things Linux Wiki
