@@ -45,7 +45,7 @@ $createsnippet hello Hello! Welcome to our server's community.
 
 ### Create a Code Snippet
 
-Save a block of code with markdown formatting.
+Save a block of code with Markdown formatting.
 
 ```text
 $createsnippet example ```python\nprint('Hello World')\n```

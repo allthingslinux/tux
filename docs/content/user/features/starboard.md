@@ -86,10 +86,10 @@ The Starboard is configured using the `/starboard setup` command.
 
 This feature provides the following management commands:
 
-| Command | Description | Documentation |
-|---------|-------------|---------------|
-| `/starboard setup` | Configure the starboard channel, emoji, and threshold. | [Details](path/to/command.md) |
-| `/starboard remove` | Remove the starboard configuration from the server. | [Details](path/to/command.md) |
+| Command | Description |
+|---------|-------------|
+| `/starboard setup` | Configure the starboard channel, emoji, and threshold. |
+| `/starboard remove` | Remove the starboard configuration from the server. |
 
 ## Permissions
 

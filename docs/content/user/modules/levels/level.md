@@ -83,4 +83,4 @@ If you have reached the maximum configured level, the XP display will indicate t
 ## Related Commands
 
 - [`/levels`](levels.md) - Administrative XP and level management
-- [XP & Leveling Feature](../../../features/leveling.md) - Complete guide to the leveling system
+- [XP & Leveling Feature](../../features/leveling.md) - Complete guide to the leveling system

@@ -44,7 +44,7 @@ When a user sets themselves as AFK using Tux, the bot:
 
 1. Records their original nickname.
 2. Updates their nickname to include "[AFK]" (depending on server config).
-3. Optionally timeouts the user (self-timeout) if enforced AFK is used.
+3. Optionally times out the user (self-timeout) if enforced AFK is used.
 
 The `clearafk` command reverses all these actions:
 

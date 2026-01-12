@@ -64,9 +64,8 @@ cd /opt/tux
 ### 2. Configure Environment
 
 ```bash
-# Copy example configuration file and edit it
-cp config/config.toml.example config/config.toml
-nano config/config.toml
+# Generate configuration files
+uv run config generate
 
 # Copy example .env file and edit it
 cp .env.example .env

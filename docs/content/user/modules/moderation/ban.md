@@ -94,7 +94,7 @@ Users need appropriate moderation permissions to use this command.
 
 ### Basic Usage
 
-Banning a user with no specified reason or message purge.
+Banning a user with a minimal reason.
 
 ```text
 /ban member:@user reason:"Unspecified violation"

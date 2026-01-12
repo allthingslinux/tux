@@ -42,7 +42,7 @@ Decide between two choices.
 /poll title:"Should we add a new channel?" options:"Yes, No"
 ```
 
-### Multiple Choice Poll
+### Multiple-Choice Poll
 
 Get feedback on several items.
 

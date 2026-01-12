@@ -54,7 +54,7 @@ Examples: `30m`, `2h`, `1d12h`, `500s`.
 
 ## Usage Examples
 
-### Short Term Reminder
+### Short-Term Reminder
 
 Set a reminder for a quick task.
 
@@ -62,7 +62,7 @@ Set a reminder for a quick task.
 /remindme time:10m reminder:"Take the laundry out"
 ```
 
-### Long Term Planning
+### Long-Term Planning
 
 Set a reminder for next week.
 

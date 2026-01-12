@@ -115,7 +115,7 @@ Tux requires the following permissions for this feature:
 None required. All members are eligible for status roles based on the server's configuration.
 
 !!! info "Permission System"
-    Configure command permissions via `/config commands` or see the [Permission Configuration](../../../admin/config/commands.md) guide.
+    Configure command permissions via `/config commands` or see the [Permission Configuration](../../admin/config/commands.md) guide.
 
 ## Troubleshooting
 
@@ -164,4 +164,4 @@ None required. All members are eligible for status roles based on the server's c
 ## Related Documentation
 
 - [Admin Configuration Guide](../../admin/config/index.md)
-- [Permission Configuration](../../../admin/config/commands.md)
+- [Permission Configuration](../../admin/config/commands.md)

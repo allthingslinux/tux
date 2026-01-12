@@ -150,5 +150,5 @@ Grant a user a specific level for their contributions.
 ## Related Documentation
 
 - [`/level`](level.md) - View user-facing rank cards
-- [XP & Leveling Feature](../../../features/leveling.md) - Complete guide to the leveling system
-- [Admin Configuration Guide](../../../admin/config/index.md)
+- [XP & Leveling Feature](../../features/leveling.md) - Complete guide to the leveling system
+- [Admin Configuration Guide](../../admin/config/index.md)
