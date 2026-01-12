@@ -55,7 +55,7 @@ class Guild(BaseModel, table=True):
     )
 
     guild_joined_at: datetime | None = Field(
-        default_factory=lambda: datetime.now(UTC),
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None),
         description="Timestamp when the bot joined this guild",
     )
 
@@ -956,7 +956,7 @@ class AFK(SQLModel, table=True):
         description="Reason provided for being AFK",
     )
     since: datetime = Field(
-        default_factory=lambda: datetime.now(UTC),
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None),
         description="Timestamp when user went AFK",
     )
     until: datetime | None = Field(
@@ -1056,7 +1056,7 @@ class Levels(SQLModel, table=True):
         description="Whether user is prevented from gaining XP",
     )
     last_message: datetime = Field(
-        default_factory=lambda: datetime.now(UTC),
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None),
         description="Timestamp of last message for XP gain cooldown",
     )
 
