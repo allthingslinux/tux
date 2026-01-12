@@ -61,23 +61,27 @@ $createsnippet h hello
 
 ## Constraints
 
-- **Names:** Must be alphanumeric (can include dashes) and follow the server's length limits.
-- **Uniqueness:** Snippet names must be unique within the server.
-- **Duplicates:** If the `content` matches an existing snippet's name, an alias is automatically created.
+- **Names:** Must be alphanumeric (can include dashes) and follow the server's length limits
+- **Uniqueness:** Snippet names must be unique within the server
+- **Alias creation:** If the `content` exactly matches an existing snippet's name, an alias pointing to that snippet is automatically created instead of a new snippet
+- **Permissions:** Your ability to create snippets may be restricted based on server configuration (check with `$snippetinfo` or ask a moderator)
 
 ## Error Handling
 
-### Error: Name Already Exists
+### Name Already Exists
 
 **When it occurs:** If you try to create a snippet with a name that is already in use.
 
-**Error message:**
+**What happens:** The bot sends an error message indicating the name is taken.
 
-```text
-Snippet with this name already exists.
-```
+**Solutions:**
+
+- Choose a different name for your snippet
+- Use `$snippets` to check existing snippet names
+- If you own the existing snippet, use `$editsnippet` to modify it instead
 
 ## Related Commands
 
-- [`$snippet`](snippet.md) - Retrieve and use your newly created snippet.
-- [`$editsnippet`](editsnippet.md) - Modify an existing snippet's content.
+- [`$snippet`](snippet.md) - Retrieve and use your newly created snippet
+- [`$editsnippet`](editsnippet.md) - Modify an existing snippet's content
+- [`$snippets`](snippets.md) - Browse all snippets to check for name conflicts

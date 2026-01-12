@@ -47,17 +47,19 @@ Launch the interactive timezone browser.
 
 When you run the command, Tux opens an interactive dashboard with the following features:
 
-- **Continent Selection:** A dropdown menu allows you to switch between North America, South America, Europe, Africa, Asia, and Australia/Oceania.
-- **Real-time Display:** Shows the current hour and minute in both 24-hour (`14:30`) and 12-hour (`02:30 PM`) formats.
-- **UTC Offsets:** Clearly displays the offset from Coordinated Universal Time (e.g., `UTC-05:00`).
-- **Visual Cues:** Uses flag emojis to identify countries and regions quickly.
+- **Continent selection** - A dropdown menu allows you to switch between North America, South America, Europe, Africa, Asia, and Australia/Oceania
+- **Real-time display** - Shows the current hour and minute in both 24-hour (`14:30`) and 12-hour (`02:30 PM`) formats
+- **UTC offsets** - Clearly displays the offset from Coordinated Universal Time (e.g., `UTC-05:00`)
+- **Visual cues** - Uses flag emojis to identify countries and regions quickly
+- **City listings** - Displays major cities within each continent with their current local times
 
 ## Navigation
 
-- **Select Continent:** Use the dropdown menu to jump to a specific global region.
-- **Paging:** If a continent has many entries, use the "Next" and "Back" buttons to browse through them.
-- **End Session:** Click the red "End Session" button to close the menu and clear the components.
+- **Select continent:** Use the dropdown menu to jump to a specific global region
+- **Paging:** If a continent has many entries, use the **Next** and **Back** buttons to browse through them
+- **End session:** Click the red **End Session** button to close the menu and clear the interactive components
+- **Session timeout:** The dashboard automatically closes after a period of inactivity
 
 ## Related Commands
 
-- [`/ping`](ping.md) - To see the bot's current uptime and system time status.
+- [`/ping`](ping.md) - To see the bot's current uptime and system time status

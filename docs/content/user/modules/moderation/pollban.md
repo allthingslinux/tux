@@ -91,33 +91,47 @@ Preventing a member from creating polls.
 $pollban @user Repeatedly creating joke polls in #serious-discussion
 ```
 
-## Response
+## Response Format
 
 When executed successfully, Tux will:
 
 1. Update its internal database to mark the user as poll-banned.
 2. Attempt to DM the user informing them they can no longer create polls (unless `-silent` is used).
 3. Create a new moderation case for the poll ban.
-4. Post a confirmation message in the current channel.
+4. Post a confirmation message in the current channel showing the poll ban details.
 5. Log the action in the designated moderation log channel.
+
+The confirmation message includes the poll-banned user's name, the reason, and a link to view the moderation case. The user will receive an error message if they attempt to use `/poll` while poll-banned.
 
 ## Error Handling
 
 ### Common Errors
 
-#### Error: Lacking Permission Rank
+#### Lacking Permission Rank
 
 **When it occurs:** Your internal Tux permission rank is lower than what's required to use this command.
 
-**Solution:** Contact a server administrator to check your rank.
+**What happens:** The bot sends an error message indicating you don't have permission to use this command.
 
-#### Error: User Already Poll Banned
+**Solutions:**
+
+- Contact a server administrator to check your rank
+- Adjust the command configurations via `/config commands` if you have admin access
+
+#### User Already Poll Banned
 
 **When it occurs:** The target user is already restricted from creating polls.
 
-**Solution:** No action needed, or use [`/pollunban`](pollunban.md) to restore their access.
+**What happens:** The bot sends an error message indicating the user is already poll-banned.
+
+**Solutions:**
+
+- No action needed - the user is already poll-banned
+- Use [`/pollunban`](pollunban.md) to restore their access if needed
+- Check the existing poll ban case using `/cases search user:@user`
 
 ## Related Commands
 
-- [`/pollunban`](pollunban.md) - Restore a member's ability to create polls.
-- [`/cases`](cases.md) - View the moderation history for poll bans.
+- [`/pollunban`](pollunban.md) - Restore a member's ability to create polls
+- [`/cases`](cases.md) - View the moderation history for poll bans
+- [`/poll`](../utility/poll.md) - The poll command that is restricted by this ban

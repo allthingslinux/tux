@@ -70,26 +70,34 @@ Set a reminder for next week.
 /remindme time:1w reminder:"Submit the project report"
 ```
 
-## Response
+## Response Format
 
-When you set a reminder, the bot confirms:
+When you set a reminder, the bot confirms with a message like:
 `✅ OK! I will remind you about "Take the laundry out" in 10 minutes.`
 
-When the time is up, Tux will send you a **Direct Message** with your reminder content.
+When the time expires, Tux sends you a **Direct Message** containing your reminder text. The DM includes the original reminder message and indicates when it was set.
 
 ## Error Handling
 
-### Error: Invalid Time
+### Invalid Time Format
 
-**When it occurs:** If the time format is not recognized or is set to zero.
+**When it occurs:** If the time format is not recognized, is set to zero, or contains invalid characters.
 
-**Solution:** Ensure you use the correct format like `10m` or `1h`.
+**What happens:** The bot sends an error message indicating the time format is invalid.
+
+**Solutions:**
+
+- Ensure you use the correct format with valid time units (e.g., `10m`, `1h`, `2d`)
+- Use shorthand for time units: `s` (seconds), `m` (minutes), `h` (hours), `d` (days), `w` (weeks)
+- Combine units if needed (e.g., `1d12h` for 1 day and 12 hours)
+- Make sure the duration is greater than zero
 
 ## Behavior Notes
 
-- **DMs Required:** Ensure you have Direct Messages enabled from server members, otherwise the bot will be unable to deliver your reminder.
-- **Bot Restarts:** Reminders are typically persistent and will be delivered even if the bot restarts.
+- **DMs required:** Ensure you have Direct Messages enabled from server members, otherwise the bot will be unable to deliver your reminder
+- **Persistence:** Reminders are stored in the database and will be delivered even if the bot restarts
+- **Time accuracy:** Reminders are delivered based on the time you set, accounting for the bot's system clock
 
 ## Related Commands
 
-- [`/afk`](afk.md) - For status management while away.
+- [`/afk`](afk.md) - For status management while away

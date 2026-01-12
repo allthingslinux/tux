@@ -62,8 +62,8 @@ Create shortcuts to existing snippets to make them easier to remember or faster 
 
 **Steps:**
 
-1. Use the `$createsnippet` command.
-2. Provide a new name and the name of the existing snippet as the content.
+1. Use the `$createsnippet` command with a new name.
+2. Provide the name of an existing snippet as the content (this automatically creates an alias).
 
 **Example:**
 
@@ -77,15 +77,17 @@ Organize, review, and protect your snippet library.
 
 **Steps:**
 
-1. List all snippets with `$snippets`.
-2. Check metadata (creator, date, lock status) with `$snippetinfo`.
-3. Protect important snippets using `$togglesnippetlock`.
+1. List all snippets with `$snippets` to browse the library.
+2. Check metadata (creator, date, lock status, usage count) with `$snippetinfo`.
+3. Edit snippets with `$editsnippet` when content needs updating.
+4. Protect important snippets using `$togglesnippetlock` to prevent unauthorized edits.
 
 **Example:**
 
 ```text
 $snippets
 $snippetinfo python-example
+$editsnippet python-example print('Hello, Updated World!')
 $togglesnippetlock python-example
 ```
 

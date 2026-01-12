@@ -128,37 +128,56 @@ Banning a user without sending a DM notification to them.
 $ban @user -silent Severe rule breakage
 ```
 
-## Response
+## Response Format
 
 When executed successfully, Tux will:
 
 1. Attempt to DM the user with the ban reason (unless `-silent` is used).
 2. Execute the ban on the Discord server.
 3. Create a new moderation case in the database.
-4. Post a confirmation message in the current channel.
+4. Post a confirmation message in the current channel showing the ban details.
 5. Log the action in the designated moderation log channel.
+
+The confirmation message includes the banned user's name, the reason, and a link to view the moderation case.
 
 ## Error Handling
 
 ### Common Errors
 
-#### Error: Missing Permissions / Higher Role
+#### Missing Permissions / Higher Role
 
 **When it occurs:** Tux lacks the "Ban Members" permission, or the target user's highest role is equal to or higher than Tux's highest role.
 
-**Solution:** Ensure Tux has the "Ban Members" permission in its role settings. Move the "Tux" role above the role of the person you are trying to ban in the server hierarchy.
+**What happens:** The bot sends an error message indicating insufficient permissions.
 
-#### Error: Lacking Permission Rank
+**Solutions:**
+
+- Ensure Tux has the "Ban Members" permission in its role settings
+- Move the "Tux" role above the role of the person you are trying to ban in the server hierarchy
+- Check that Tux's role has the necessary permissions in the server settings
+
+#### Lacking Permission Rank
 
 **When it occurs:** Your internal Tux permission rank is lower than the rank required to use the ban command in this server.
 
-**Solution:** Contact a server administrator to check your current rank or adjust the command configurations via `/config commands`.
+**What happens:** The bot sends an error message indicating you don't have permission to use this command.
 
-#### Error: User Not Found
+**Solutions:**
+
+- Contact a server administrator to check your current rank
+- Adjust the command configurations via `/config commands` if you have admin access
+
+#### User Not Found
 
 **When it occurs:** The provided mention or ID does not resolve to a valid Discord user.
 
-**Solution:** Double-check the ID (ensure it is a 17-19 digit Snowflake) or mention the user directly.
+**What happens:** The bot sends an error message indicating the user could not be found.
+
+**Solutions:**
+
+- Double-check the ID (ensure it is a 17-19 digit Snowflake)
+- Mention the user directly using `@username`
+- Verify the user is still in the server (for members) or exists (for users)
 
 ## Related Commands
 

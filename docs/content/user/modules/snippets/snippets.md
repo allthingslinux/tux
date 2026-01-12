@@ -50,20 +50,22 @@ Find snippets related to "python".
 $snippets python
 ```
 
-## Response
+## Response Format
 
 When executed, Tux returns a paginated embed showing:
 
-- **Snippet Name:** The unique identifier for the snippet.
-- **Usage Count:** How many times the snippet has been invoked.
-- **Status Indicators:**
-  - 🔒 - Indicates the snippet is locked.
-  - → - Indicates the snippet is an alias.
+- **Snippet name** - The unique identifier for the snippet
+- **Usage count** - How many times the snippet has been invoked
+- **Status indicators:**
+  - 🔒 - Indicates the snippet is locked (only moderators can edit)
+  - → - Indicates the snippet is an alias pointing to another snippet
 
 ## Behavior Notes
 
-- **Sorting:** Snippets are sorted by their usage count in descending order, showing the most popular snippets first.
-- **Pagination:** Use the interactive buttons to navigate through 30 snippets per page.
+- **Sorting:** Snippets are sorted by usage count in descending order, showing the most popular snippets first
+- **Pagination:** Use the interactive navigation buttons to browse through multiple pages (30 snippets per page)
+- **Search:** When you provide a search query, results are filtered by snippet name or content (case-insensitive)
+- **Empty results:** If no snippets match your search or none exist, you'll see an appropriate message
 
 ## Related Commands
 

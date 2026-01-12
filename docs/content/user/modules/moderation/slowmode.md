@@ -93,36 +93,56 @@ $slowmode #general 5m
 /slowmode seconds:0
 ```
 
-## Response
+## Response Format
 
 When executed successfully, Tux will:
 
 1. Update the channel's slowmode setting on Discord.
 2. Return a confirmation message (slash command) or send a temporary confirmation (prefix command) stating the new slowmode setting.
 
+The confirmation message shows the channel name and the new slowmode delay. If no delay is specified, it shows the current slowmode setting for that channel.
+
 ## Error Handling
 
 ### Common Errors
 
-#### Error: Invalid Delay Format
+#### Invalid Delay Format
 
 **When it occurs:** The provided delay string is not a simple number or doesn't use supported units (`s`, `m`, `h`).
 
-**Solution:** Use a number (seconds) or a number with a unit (e.g., `30s`, `10m`).
+**What happens:** The bot sends an error message indicating the delay format is invalid.
 
-#### Error: Amount Too High
+**Solutions:**
+
+- Use a number (seconds) or a number with a unit (e.g., `30s`, `10m`, `2h`)
+- Supported units: `s` (seconds), `m` (minutes), `h` (hours)
+- Examples: `10`, `30s`, `5m`, `1h`
+
+#### Amount Too High
 
 **When it occurs:** The requested delay exceeds 6 hours (21600 seconds).
 
-**Solution:** Use a delay within the 0 to 21600 second range.
+**What happens:** The bot sends an error message indicating the delay exceeds Discord's maximum.
 
-#### Error: Unsupported Channel Type
+**Solutions:**
+
+- Use a delay within the 0 to 21600 second range (0 to 6 hours)
+- Discord's maximum slowmode is 6 hours
+- Use `0` to disable slowmode completely
+
+#### Unsupported Channel Type
 
 **When it occurs:** You attempt to set slowmode in a channel type that doesn't support it (e.g., a Category).
 
-**Solution:** Use slowmode in Text Channels, Threads, or Voice Channels.
+**What happens:** The bot sends an error message indicating the channel type doesn't support slowmode.
+
+**Solutions:**
+
+- Use slowmode in Text Channels, Threads, or Voice Channels
+- Categories and other channel types don't support slowmode
+- Select a specific channel within the category instead
 
 ## Related Commands
 
-- [`/purge`](purge.md) - Clean up messages if spam has already occurred.
-- [`/timeout`](timeout.md) - Restrict a specific user instead of the entire channel.
+- [`/purge`](purge.md) - Clean up messages if spam has already occurred
+- [`/timeout`](timeout.md) - Restrict a specific user instead of the entire channel

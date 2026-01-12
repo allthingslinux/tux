@@ -43,14 +43,14 @@ Quickly verify if the bot is responding and how fast its connection to Discord i
 /ping
 ```
 
-## Response
+## Response Format
 
 When executed, the bot returns an informational embed containing:
 
-- **API Latency:** The round-trip time in milliseconds for a heartbeat to reach Discord's gateway.
-- **Uptime:** How long the bot has been running since its last restart.
-- **CPU Usage:** The percentage of CPU being utilized by the bot process.
-- **RAM Usage:** The amount of memory currently consumed by the bot (in MB or GB).
+- **API latency** - The round-trip time in milliseconds for a heartbeat to reach Discord's gateway
+- **Uptime** - How long the bot has been running since its last restart (formatted as human-readable duration)
+- **CPU usage** - The percentage of CPU being utilized by the bot process
+- **RAM usage** - The amount of memory currently consumed by the bot (formatted in MB or GB as appropriate)
 
 ## Permissions
 
@@ -66,4 +66,4 @@ This command is available to all users.
 
 ## Related Commands
 
-- [`/info`](../info/info.md) - For general server and member information.
+- [`/info`](../info/info.md) - For general server and member information

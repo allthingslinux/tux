@@ -50,18 +50,22 @@ Quickly access a snippet using the shorthand alias.
 $s guide
 ```
 
-## Response
+## Response Format
 
-When executed, Tux replies to your message with the snippet's content. If the snippet is an alias, Tux will resolve it and show the content of the target snippet, while noting the alias relationship.
+When executed, Tux replies to your message with the snippet's content. If the snippet is an alias, Tux automatically resolves it and shows the content of the target snippet, while indicating the alias relationship.
 
-If the content exceeds Discord's message limit, the bot will provide the content in a paginated interface or as multiple messages.
+If the content exceeds Discord's message limit, the bot provides the content in a paginated interface or splits it across multiple messages.
 
 ## Behavior Notes
 
-- **Replies:** The bot preserves the context by replying to the command user's message.
-- **Allowed Mentions:** Snippets are sent with restricted mentions to prevent accidental @everyone or role pings.
+- **Usage tracking:** Each time a snippet is used, its usage counter increments (visible in `$snippets` and `$snippetinfo`)
+- **Replies:** The bot preserves context by replying to your message
+- **Allowed mentions:** Snippets are sent with restricted mentions to prevent accidental @everyone or role pings
+- **Alias resolution:** If you use an alias, it resolves to the target snippet and increments the target's usage count
+- **Broken aliases:** If an alias points to a deleted snippet, the bot automatically cleans it up when you try to use it
 
 ## Related Commands
 
-- [`$snippets`](snippets.md) - List all available snippets in the server.
-- [`$createsnippet`](createsnippet.md) - Create a new snippet or alias.
+- [`$snippets`](snippets.md) - List all available snippets in the server
+- [`$createsnippet`](createsnippet.md) - Create a new snippet or alias
+- [`$snippetinfo`](snippetinfo.md) - View detailed information about a snippet

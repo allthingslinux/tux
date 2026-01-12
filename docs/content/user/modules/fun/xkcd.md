@@ -1,5 +1,5 @@
 ---
-title: Xkcd
+title: XKCD
 description: Fetch and view comics from xkcd.com
 icon: lucide/square-slash
 tags:
@@ -9,9 +9,9 @@ tags:
   - xkcd
 ---
 
-# Xkcd
+# XKCD
 
-The `xkcd` command group allows users to browse and share comics from the popular [xkcd](https://xkcd.com) webcomic. It provides easy access to the latest comics, random selections, or specific items from the xkcd library, complete with the comic's title text (hover text) and navigation buttons.
+The `xkcd` command group allows you to browse and share comics from the popular [xkcd](https://xkcd.com) webcomic. It provides easy access to the latest comics, random selections, or specific items from the xkcd library, complete with the comic's title text (hover text) and navigation buttons.
 
 ## Syntax
 
@@ -38,6 +38,8 @@ $xkcd specific <comic_id>
 **Aliases:**
 
 - `xk`
+
+When you use `/xkcd` with a comic ID directly (e.g., `/xkcd 1234`), it automatically fetches that specific comic, equivalent to using `/xkcd specific comic_id:1234`. Without any parameters, the command shows help information.
 
 ## Subcommands
 
@@ -87,27 +89,29 @@ If you know the comic number (e.g., comic 1024), you can view it directly.
 /xkcd specific comic_id:1024
 ```
 
-## Response
+## Response Format
 
 When executed successfully, the bot sends an embed containing:
 
-- The comic title and ID.
-- The comic image.
-- The "Alt Text" (description) of the comic.
-- Buttons to view the comic on xkcd.com or visit the "Explain xkcd" page for context.
+- **Comic title and ID** - The comic number and title
+- **Comic image** - The full comic image displayed in the embed
+- **Alt text** - The comic's description (hover text) shown as a quote
+- **Navigation buttons** - Interactive buttons to view the comic on xkcd.com or visit the "Explain xkcd" page for additional context
 
 ## Error Handling
 
-### Error: Not Found
+### Comic Not Found
 
-**When it occurs:** When a `comic_id` is provided that doesn't exist (e.g., too high or negative).
+**When it occurs:** When a `comic_id` is provided that doesn't exist (e.g., a number that's too high, negative, or zero).
 
-**Error message:**
+**What happens:** The bot sends an error embed with the message: "I couldn't find the xkcd comic. Please try again later."
 
-```text
-I couldn't find the xkcd comic. Please try again later.
-```
+**Solutions:**
+
+- Verify the comic ID exists (xkcd comics start at 1)
+- Try using `/xkcd latest` to see the current highest comic number
+- Use `/xkcd random` to get a valid comic instead
 
 ## Related Commands
 
-- [`/random`](random.md) - For other fun random tools.
+- [`/random`](random.md) - Generate random numbers, flip coins, roll dice, and ask the magic 8-ball

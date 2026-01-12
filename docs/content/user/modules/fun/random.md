@@ -108,15 +108,15 @@ Generate a number between 1 and 1000.
 /random number minimum:1 maximum:1000
 ```
 
-## Response
+## Response Format
 
-When executed, the command returns the result in an embed or a code block (for 8ball cowsay).
+When executed, each subcommand returns results in different formats:
 
-- **Coinflip:** Returns "You got heads!" or "You got tails!".
-- **Dice:** Returns an embed showing the roll result.
-- **8ball:** Returns the response wrapped in ASCII art (Penguin or Cow).
-- **Number:** Returns "Your random number is: X".
+- **Coinflip:** Returns a simple message: "You got heads!" or "You got tails!"
+- **Dice:** Returns an embed showing the roll result with the number rolled
+- **8ball:** Returns the response wrapped in ASCII art (penguin by default, or cow if `cow:true` is specified)
+- **Number:** Returns a message showing the generated random number within your specified range
 
 ## Related Commands
 
-- [`/xkcd`](xkcd.md) - View random comics.
+- [`/xkcd`](xkcd.md) - View and share XKCD comics

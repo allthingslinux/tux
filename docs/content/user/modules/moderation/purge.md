@@ -86,36 +86,55 @@ Deleting 100 messages from another channel.
 /purge limit:100 channel:#spam-channel
 ```
 
-## Response
+## Response Format
 
 When executed successfully, Tux will:
 
 1. Delete the requested number of messages (up to 500, and only those under 14 days old).
 2. Post an ephemeral confirmation (slash command) or a temporary message (prefix command) stating exactly how many messages were removed.
 
+The confirmation message shows the exact number of messages deleted. If fewer messages were deleted than requested, it may be because some messages were older than 14 days (Discord's bulk delete limit).
+
 ## Error Handling
 
 ### Common Errors
 
-#### Error: Invalid Amount
+#### Invalid Amount
 
 **When it occurs:** You provide a number less than 1 or greater than 500.
 
-**Solution:** Use a number within the allowed range (1-500).
+**What happens:** The bot sends an error message indicating the amount is outside the valid range.
 
-#### Error: Missing Permissions
+**Solutions:**
+
+- Use a number within the allowed range (1-500)
+- Check that you're entering a valid integer
+
+#### Missing Permissions
 
 **When it occurs:** Tux does not have the "Manage Messages" permission in the target channel.
 
-**Solution:** Ensure Tux's role has the necessary permissions in that specific channel or category.
+**What happens:** The bot sends an error message indicating insufficient permissions.
 
-#### Error: 14-Day Limit
+**Solutions:**
+
+- Ensure Tux's role has the "Manage Messages" permission in that specific channel or category
+- Check channel-specific permission overrides
+- Verify Tux has "Read Message History" permission as well
+
+#### 14-Day Limit
 
 **When it occurs:** You try to delete messages, but none are removed or fewer than requested are removed because they are too old.
 
-**Solution:** This is a Discord-side limitation; older messages must be deleted manually.
+**What happens:** The command succeeds but fewer messages are deleted than requested, or a warning is shown about the age limit.
+
+**Solutions:**
+
+- This is a Discord-side limitation - messages older than 14 days cannot be bulk-deleted
+- Older messages must be deleted manually one at a time
+- Check the confirmation message to see how many messages were actually deleted
 
 ## Related Commands
 
-- [`/slowmode`](slowmode.md) - Slow down a channel to prevent future spam.
-- [`/timeout`](timeout.md) - Temporarily restrict a specific user from messaging.
+- [`/slowmode`](slowmode.md) - Slow down a channel to prevent future spam
+- [`/timeout`](timeout.md) - Temporarily restrict a specific user from messaging

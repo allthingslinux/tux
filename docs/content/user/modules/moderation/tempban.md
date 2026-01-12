@@ -133,46 +133,72 @@ Banning a user for 1 hour without a DM notification.
 $tempban @user -duration 1h -silent
 ```
 
-## Response
+## Response Format
 
 When executed successfully, Tux will:
 
 1. Attempt to DM the user with the ban duration and reason (unless `-silent` is used).
 2. Execute the ban on the Discord server.
 3. Create a moderation case with a set expiration time.
-4. Log the action in the designated moderation log channel.
-5. Automatically unban the user when the time expires.
+4. Post a confirmation message in the current channel showing the tempban details.
+5. Log the action in the designated moderation log channel.
+6. Automatically unban the user when the time expires.
+
+The confirmation message includes the tempbanned user's name, the duration, the reason, expiration time, and a link to view the moderation case. The bot automatically unban the user when the duration expires.
 
 ## Error Handling
 
 ### Common Errors
 
-#### Error: Missing Permissions / Higher Role
+#### Missing Permissions / Higher Role
 
 **When it occurs:** Tux lacks the "Ban Members" permission, or the target user's highest role is equal to or higher than Tux's highest role.
 
-**Solution:** Ensure Tux has the "Ban Members" permission. Move the "Tux" role above the target's role in the server hierarchy.
+**What happens:** The bot sends an error message indicating insufficient permissions.
 
-#### Error: Lacking Permission Rank
+**Solutions:**
+
+- Ensure Tux has the "Ban Members" permission
+- Move the "Tux" role above the target's role in the server hierarchy
+- Check that Tux's role has the necessary permissions in the server settings
+
+#### Lacking Permission Rank
 
 **When it occurs:** Your internal Tux permission rank is lower than the rank required to use this command in this server.
 
-**Solution:** Contact a server administrator to check your current rank or adjust the configuration.
+**What happens:** The bot sends an error message indicating you don't have permission to use this command.
 
-#### Error: Invalid Duration
+**Solutions:**
+
+- Contact a server administrator to check your current rank
+- Adjust the command configurations via `/config commands` if you have admin access
+
+#### Invalid Duration
 
 **When it occurs:** The provided duration string doesn't match the expected format (e.g., `1 year` instead of `365d`).
 
-**Solution:** Use digits followed by s, m, h, or d (e.g., `1h30m`).
+**What happens:** The bot sends an error message indicating the duration format is invalid.
 
-#### Error: Member Not Found
+**Solutions:**
+
+- Use digits followed by s, m, h, or d (e.g., `1h30m`, `7d`, `2d12h`)
+- Supported units: `s` (seconds), `m` (minutes), `h` (hours), `d` (days)
+- Combine units if needed (e.g., `1d12h` for 1 day and 12 hours)
+
+#### Member Not Found
 
 **When it occurs:** The user is not in the server or the mention/ID is invalid.
 
-**Solution:** Ensure you are mentioning a valid member currently in the guild.
+**What happens:** The bot sends an error message indicating the member could not be found.
+
+**Solutions:**
+
+- Ensure you are mentioning a valid member currently in the guild
+- Double-check the user ID if using an ID instead of a mention
+- Note: You can tempban users who are not currently in the server using their user ID
 
 ## Related Commands
 
-- [`/ban`](ban.md) - Permanent ban without automatic expiration.
-- [`/unban`](unban.md) - Manually unban a user.
-- [`/timeout`](timeout.md) - Temporarily restrict a user's ability to communicate without removing them from the server.
+- [`/ban`](ban.md) - Permanent ban without automatic expiration
+- [`/unban`](unban.md) - Manually unban a user
+- [`/timeout`](timeout.md) - Temporarily restrict a user's ability to communicate without removing them from the server

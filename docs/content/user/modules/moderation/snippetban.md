@@ -91,33 +91,47 @@ Preventing a member from creating snippets.
 $snippetban @user Creation of multiple spam snippets
 ```
 
-## Response
+## Response Format
 
 When executed successfully, Tux will:
 
 1. Update its internal database to mark the user as snippet-banned.
 2. Attempt to DM the user informing them they can no longer create or manage snippets (unless `-silent` is used).
 3. Create a new moderation case for the snippet ban.
-4. Post a confirmation message in the current channel.
+4. Post a confirmation message in the current channel showing the snippet ban details.
 5. Log the action in the designated moderation log channel.
+
+The confirmation message includes the snippet-banned user's name, the reason, and a link to view the moderation case. The user will receive an error message if they attempt to use snippet commands while snippet-banned.
 
 ## Error Handling
 
 ### Common Errors
 
-#### Error: Lacking Permission Rank
+#### Lacking Permission Rank
 
 **When it occurs:** Your internal Tux permission rank is lower than what's required to use this command.
 
-**Solution:** Contact a server administrator to check your rank.
+**What happens:** The bot sends an error message indicating you don't have permission to use this command.
 
-#### Error: User Already Snippet Banned
+**Solutions:**
+
+- Contact a server administrator to check your rank
+- Adjust the command configurations via `/config commands` if you have admin access
+
+#### User Already Snippet Banned
 
 **When it occurs:** The target user is already restricted from creating snippets.
 
-**Solution:** No action needed, or use [`/snippetunban`](snippetunban.md) to restore their access.
+**What happens:** The bot sends an error message indicating the user is already snippet-banned.
+
+**Solutions:**
+
+- No action needed - the user is already snippet-banned
+- Use [`/snippetunban`](snippetunban.md) to restore their access if needed
+- Check the existing snippet ban case using `/cases search user:@user`
 
 ## Related Commands
 
-- [`/snippetunban`](snippetunban.md) - Restore a member's ability to create snippets.
-- [`/cases`](cases.md) - View the moderation history for snippet bans.
+- [`/snippetunban`](snippetunban.md) - Restore a member's ability to create snippets
+- [`/cases`](cases.md) - View the moderation history for snippet bans
+- [`$createsnippet`](../snippets/createsnippet.md) - The snippet command that is restricted by this ban

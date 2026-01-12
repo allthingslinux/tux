@@ -100,45 +100,69 @@ Removing a timeout from a member.
 $untimeout @user Early release after appeal
 ```
 
-## Response
+## Response Format
 
 When executed successfully, Tux will:
 
 1. Attempt to DM the user stating their timeout has been lifted (unless `-silent` is used).
 2. Remove the official Discord timeout restriction.
 3. Create a new moderation case in the database.
-4. Post a confirmation message in the current channel.
+4. Post a confirmation message in the current channel showing the untimeout details.
 5. Log the action in the designated moderation log channel.
+
+The confirmation message includes the untimed-out user's name, the reason (if provided), and a link to view the moderation case.
 
 ## Error Handling
 
 ### Common Errors
 
-#### Error: Missing Permissions / Higher Role
+#### Missing Permissions / Higher Role
 
 **When it occurs:** Tux lacks the "Moderate Members" permission, or the target user's role is higher than Tux's role.
 
-**Solution:** Ensure Tux has the "Moderate Members" permission. Move Tux's role higher in the hierarchy.
+**What happens:** The bot sends an error message indicating insufficient permissions.
 
-#### Error: Lacking Permission Rank
+**Solutions:**
+
+- Ensure Tux has the "Moderate Members" permission
+- Move Tux's role higher in the hierarchy
+- Check that Tux's role has the necessary permissions in the server settings
+
+#### Lacking Permission Rank
 
 **When it occurs:** Your internal Tux permission rank is lower than the rank required to use this command.
 
-**Solution:** Contact a server administrator to check your rank.
+**What happens:** The bot sends an error message indicating you don't have permission to use this command.
 
-#### Error: User Not Timed Out
+**Solutions:**
+
+- Contact a server administrator to check your rank
+- Adjust the command configurations via `/config commands` if you have admin access
+
+#### User Not Timed Out
 
 **When it occurs:** You attempt to untimeout a member who does not have an active timeout.
 
-**Solution:** No action needed.
+**What happens:** The bot sends an error message indicating the user is not currently timed out.
 
-#### Error: Member Not Found
+**Solutions:**
+
+- No action needed - the user is already not timed out
+- Verify the user's timeout status by checking their profile or using `/cases search user:@user type:timeout`
+
+#### Member Not Found
 
 **When it occurs:** The provided mention or ID is invalid.
 
-**Solution:** Ensure you are mentioning a valid member currently in the guild.
+**What happens:** The bot sends an error message indicating the member could not be found.
+
+**Solutions:**
+
+- Ensure you are mentioning a valid member currently in the guild
+- Double-check the user ID if using an ID instead of a mention
+- Verify the member hasn't already left the server
 
 ## Related Commands
 
-- [`/timeout`](timeout.md) - Apply a temporary restriction to a member.
-- [`/cases`](cases.md) - View moderation history.
+- [`/timeout`](timeout.md) - Apply a temporary restriction to a member
+- [`/cases`](cases.md) - View moderation history

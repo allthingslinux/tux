@@ -57,20 +57,25 @@ Set a status that persists even if you send messages. Useful for long-term unava
 /permafk reason:"Away for the weekend"
 ```
 
-## Response
+## Response Format
 
-When you set your status, the bot confirms with a message:
+When you set your AFK status, the bot confirms with a message like:
 `😴 || You are now afk! Reason: At the gym`
 
-When another user mentions you while you are AFK, the bot replies:
+When another user mentions you while you are AFK, the bot automatically replies to their message:
 `[User] is AFK: At the gym (X minutes ago)`
+
+The AFK notification shows your username, the reason you set, and how long ago you went AFK.
 
 ## Behavior Notes
 
-- **Auto-Clear:** Your AFK status is removed as soon as you send a message in any channel where the bot can see it.
-- **Mentions:** The bot only triggers the AFK notification when you are explicitly mentioned (pinged).
-- **Nicknames:** Depending on server settings, the bot may prepend `[AFK]` to your server nickname while you are away.
+- **Auto-clear:** Your AFK status is automatically removed as soon as you send a message in any channel where the bot can see it
+- **Permanent AFK:** Using `/permafk` sets a status that persists even when you send messages - useful for long-term unavailability
+- **Mentions:** The bot only triggers the AFK notification when you are explicitly mentioned (pinged) by another user
+- **Nicknames:** Depending on server settings, the bot may prepend `[AFK]` to your server nickname while you are away
+- **Server-specific:** AFK status is per-server, so you can have different AFK statuses in different servers
 
 ## Related Commands
 
-- [`/clearafk`](../moderation/clearafk.md) - Administrative tool to clear another user's AFK status.
+- [`/clearafk`](../moderation/clearafk.md) - Administrative tool to clear another user's AFK status
+- [`/remindme`](remindme.md) - Set personal reminders for future tasks

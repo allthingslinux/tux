@@ -53,13 +53,13 @@ The cases command group provides tools for viewing and managing moderation cases
 
 ## Common Use Cases
 
-### Use Case Name: Handling Rule Violations
+### Handling Rule Violations
 
 When a member violates server rules, moderators need a quick way to take action and maintain order.
 
 **Steps:**
 
-1. Issued a warning for first-time violations using `/warn`.
+1. Issue a warning for first-time violations using `/warn`.
 2. Use `/timeout` for repeat violations to temporarily restrict member interaction.
 3. Use `/ban` for severe violations to permanently remove the member.
 
@@ -71,7 +71,7 @@ When a member violates server rules, moderators need a quick way to take action 
 /ban member:@user reason:"Malicious behavior"
 ```
 
-### Use Case Name: Cleaning Up Channels
+### Cleaning Up Channels
 
 Moderators often need to clean up spam messages or slow down a fast-moving conversation.
 
@@ -87,7 +87,7 @@ Moderators often need to clean up spam messages or slow down a fast-moving conve
 /slowmode seconds:30s
 ```
 
-### Use Case Name: Case Management
+### Case Management
 
 Reviewing moderation history and managing cases ensures transparency and consistency in server management.
 

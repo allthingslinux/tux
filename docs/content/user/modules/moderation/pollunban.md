@@ -91,33 +91,46 @@ Restoring poll access for a member.
 $pollunban @user Behavior improved, restriction lifted
 ```
 
-## Response
+## Response Format
 
 When executed successfully, Tux will:
 
 1. Update its internal database to remove the poll ban for the user.
 2. Attempt to DM the user informing them they can once again create polls (unless `-silent` is used).
 3. Create a new moderation case for the poll unban.
-4. Post a confirmation message in the current channel.
+4. Post a confirmation message in the current channel showing the poll unban details.
 5. Log the action in the designated moderation log channel.
+
+The confirmation message includes the poll-unbanned user's name, the reason (if provided), and a link to view the moderation case.
 
 ## Error Handling
 
 ### Common Errors
 
-#### Error: Lacking Permission Rank
+#### Lacking Permission Rank
 
 **When it occurs:** Your internal Tux permission rank is lower than what's required to use this command.
 
-**Solution:** Contact a server administrator to check your rank.
+**What happens:** The bot sends an error message indicating you don't have permission to use this command.
 
-#### Error: User Not Poll Banned
+**Solutions:**
+
+- Contact a server administrator to check your rank
+- Adjust the command configurations via `/config commands` if you have admin access
+
+#### User Not Poll Banned
 
 **When it occurs:** You attempt to unban a user who does not have an active poll restriction.
 
-**Solution:** No action needed.
+**What happens:** The bot sends an error message indicating the user is not currently poll-banned.
+
+**Solutions:**
+
+- No action needed - the user is already not poll-banned
+- Verify the user's poll ban status using `/cases search user:@user`
 
 ## Related Commands
 
-- [`/pollban`](pollban.md) - Prevent a member from creating polls.
-- [`/cases`](cases.md) - View the moderation history for poll bans.
+- [`/pollban`](pollban.md) - Prevent a member from creating polls
+- [`/cases`](cases.md) - View the moderation history for poll bans
+- [`/poll`](../utility/poll.md) - The poll command that is restored by this unban

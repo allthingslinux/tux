@@ -17,16 +17,17 @@ Using a powerful dashboard-style interface and granular subcommands, administrat
 
 ## Command Groups
 
-This module includes the following command groups:
+This module includes the following command group:
 
 ### Config
 
-The main `/config` group provides access to the interactive configuration dashboard and specific setting managers.
+The `/config` command group provides access to the interactive configuration dashboard and specific setting managers. All configuration commands use an interactive dashboard interface for easy management.
 
 **Commands:**
 
 - `/config overview` - View the complete configuration status of the guild
 - `/config ranks` - Manage permission ranks (0-7) and their internal names
+- `/config ranks init` - Initialize default permission ranks (0-7)
 - `/config roles` - Assign Discord roles to permission ranks
 - `/config commands` - Manage which ranks are required for specific commands
 - `/config logs` - Configure channel assignments for various event logs
@@ -43,32 +44,33 @@ The main `/config` group provides access to the interactive configuration dashbo
 
 ## Common Use Cases
 
-### Use Case Name: Initial Bot Setup
+### Initial Bot Setup
 
 Quickly initialize the basic permission system after adding Tux to a new server.
 
 **Steps:**
 
 1. Run `/config ranks init` to create the default rank structure (0-7).
-2. Use `/config roles` to map your moderator and administrator roles to the appropriate ranks.
-3. Review your setup with `/config overview`.
+2. Use `/config roles` to open the interactive dashboard and map your moderator and administrator roles to the appropriate ranks.
+3. Review your setup with `/config overview` to see the complete configuration status.
 
 **Example:**
 
 ```text
 /config ranks init
-/config roles assign rank:5 role:@Moderator
+/config roles
+/config overview
 ```
 
-### Use Case Name: Configuring Command Access
+### Configuring Command Access
 
 Restrict specific commands to certain ranks to ensure only trusted users can access sensitive features.
 
 **Steps:**
 
-1. Navigate to `/config commands`.
-2. Select the command or module you wish to restrict.
-3. Set the minimum required rank for that command.
+1. Run `/config commands` to open the interactive command permission dashboard.
+2. Use the dashboard interface to select the command or module you wish to restrict.
+3. Set the minimum required rank for that command using the interactive controls.
 
 **Example:**
 

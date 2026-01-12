@@ -68,15 +68,19 @@ Translate a Base16 (Hex) string back to readable text.
 /decode encoding:base16 text:"48656c6c6f"
 ```
 
-## Response
+## Response Format
 
-The bot replies with the resulting string. If the output exceeds Discord's 2000-character limit, the bot will suggest using an external tool to prevent message truncation.
+The bot replies with the resulting encoded or decoded string. If the output exceeds Discord's 2000-character limit, the bot suggests using an external tool to prevent message truncation.
+
+For slash commands, the response is ephemeral (only visible to you) to keep encoded/decoded data private.
 
 ## Behavior Notes
 
-- **Ephemeral:** Slash command responses are only visible to the user who ran the command.
-- **Mentions:** The bot disables all mentions in its output to prevent accidental pings from decoded data.
+- **Ephemeral responses:** Slash command responses are only visible to you to keep encoded/decoded data private
+- **Mention protection:** The bot disables all mentions in its output to prevent accidental pings from decoded data
+- **Format validation:** The bot validates that the encoding format is supported before processing
+- **Character limits:** Very long strings may be truncated if they exceed Discord's message limits
 
 ## Related Commands
 
-- [`/run`](run.md) - For advanced code execution.
+- [`/run`](run.md) - For advanced code execution

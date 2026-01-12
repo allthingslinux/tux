@@ -12,7 +12,7 @@ tags:
 
 The `timeout` command (also available as `mute`) allows server moderators to temporarily restrict a member's ability to send messages, add reactions, and participate in voice channels.
 
-This is an official Discord feature that provides a seamless way to handle disruptive users without removing them from the server. Tux integrates this with its moderation system, ensuring every timeout is logged as a case with its duration and reason.
+This is an official Discord feature that temporarily restricts member interaction without removing them from the server. Tux integrates this with its moderation system, ensuring every timeout is logged as a case with its duration and reason.
 
 ## Syntax
 
@@ -115,46 +115,70 @@ Giving a user a 28-day timeout.
 /timeout member:@user reason:"Severe rule violation" duration:28d
 ```
 
-## Response
+## Response Format
 
 When executed successfully, Tux will:
 
 1. Attempt to DM the user with the timeout duration and reason (unless `-silent` is used).
 2. Execute the official Discord timeout action.
 3. Create a new moderation case in the database.
-4. Post a confirmation message in the current channel.
+4. Post a confirmation message in the current channel showing the timeout details.
 5. Log the action in the designated moderation log channel.
+
+The confirmation message includes the timed-out user's name, the duration, the reason, and a link to view the moderation case.
 
 ## Error Handling
 
 ### Common Errors
 
-#### Error: Missing Permissions / Higher Role
+#### Missing Permissions / Higher Role
 
 **When it occurs:** Tux lacks the "Moderate Members" permission, or the target user's role is higher than Tux's role.
 
-**Solution:** Ensure Tux has the "Moderate Members" permission. Move Tux's role higher in the hierarchy.
+**What happens:** The bot sends an error message indicating insufficient permissions.
 
-#### Error: Lacking Permission Rank
+**Solutions:**
+
+- Ensure Tux has the "Moderate Members" permission
+- Move Tux's role higher in the hierarchy
+- Check that Tux's role has the necessary permissions in the server settings
+
+#### Lacking Permission Rank
 
 **When it occurs:** Your internal Tux permission rank is lower than the rank required to use this command.
 
-**Solution:** Contact a server administrator to check your rank.
+**What happens:** The bot sends an error message indicating you don't have permission to use this command.
 
-#### Error: Invalid Duration
+**Solutions:**
+
+- Contact a server administrator to check your rank
+- Adjust the command configurations via `/config commands` if you have admin access
+
+#### Invalid Duration
 
 **When it occurs:** The provided duration string is invalid or exceeds 28 days.
 
-**Solution:** Use the `[number][unit]` format (e.g., `1h`, `7d`). Ensure the total duration is less than 28 days.
+**What happens:** The bot sends an error message indicating the duration format is invalid or too long.
 
-#### Error: Bots Cannot Be Timed Out
+**Solutions:**
+
+- Use the `[number][unit]` format (e.g., `1h`, `7d`, `30m`)
+- Ensure the total duration is less than or equal to 28 days (Discord's maximum)
+- Combine units if needed (e.g., `1d12h` for 1 day and 12 hours)
+
+#### Bots Cannot Be Timed Out
 
 **When it occurs:** You attempt to timeout another bot.
 
-**Solution:** Bots are immune to the timeout feature; use roles or a ban if necessary.
+**What happens:** The bot sends an error message indicating bots cannot be timed out.
+
+**Solutions:**
+
+- Bots are immune to the timeout feature - use roles or a ban if necessary
+- Consider using `/kick` or `/ban` for bot moderation instead
 
 ## Related Commands
 
-- [`/untimeout`](untimeout.md) - Remove a timeout early.
-- [`/jail`](jail.md) - Restriction to a specific channel (alternative to timeout).
-- [`/cases`](cases.md) - View moderation history.
+- [`/untimeout`](untimeout.md) - Remove a timeout early
+- [`/jail`](jail.md) - Restriction to a specific channel (alternative to timeout)
+- [`/cases`](cases.md) - View moderation history

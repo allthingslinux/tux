@@ -76,33 +76,51 @@ Users need appropriate moderation permissions to use this command.
 /clearafk member:@user
 ```
 
-## Response
+## Response Format
 
 Upon successful execution, Tux will return an ephemeral confirmation message:
 > "AFK status for @user has been cleared."
+
+The command removes the AFK entry from the database, restores the member's original nickname (if it was modified), and removes any self-timeout resulting from enforced AFK.
 
 ## Error Handling
 
 ### Common Errors
 
-#### Error: Lacking Permission Rank
+#### Lacking Permission Rank
 
 **When it occurs:** Your internal Tux permission rank is lower than what's required to use this command.
 
-**Solution:** Contact a server administrator to check your rank.
+**What happens:** The bot sends an error message indicating you don't have permission to use this command.
 
-#### Error: User Not AFK
+**Solutions:**
+
+- Contact a server administrator to check your rank
+- Adjust the command configurations via `/config commands` if you have admin access
+
+#### User Not AFK
 
 **When it occurs:** You attempt to clear the AFK status of a user who is not currently marked as AFK in the bot's system.
 
-**Solution:** No action needed.
+**What happens:** The bot sends an error message indicating the user is not currently AFK.
 
-#### Error: Missing Permissions / Higher Role
+**Solutions:**
+
+- No action needed - the user is already not AFK
+- Verify the user's AFK status by checking their profile or nickname
+
+#### Missing Permissions / Higher Role
 
 **When it occurs:** Tux lacks the "Manage Nicknames" or "Moderate Members" permission, or the target user has a higher role than the bot.
 
-**Solution:** The status is cleared in the database, but nickname/timeout restoration may fail. Ensure Tux has the correct permissions and its role is high in the hierarchy.
+**What happens:** The status is cleared in the database, but nickname/timeout restoration may fail.
+
+**Solutions:**
+
+- Ensure Tux has the "Manage Nicknames" and "Moderate Members" permissions
+- Move Tux's role higher in the server hierarchy
+- Check that Tux's role has the necessary permissions in the server settings
 
 ## Related Commands
 
-- [`/afk`](../utility/afk.md) - Set your own AFK status.
+- [`/afk`](../utility/afk.md) - Set your own AFK status

@@ -42,18 +42,20 @@ Get the statistics for the `guide` snippet.
 $snippetinfo guide
 ```
 
-## Response
+## Response Format
 
 When executed, Tux returns a rich info embed containing:
 
-- **Title:** The snippet name.
-- **Creator:** The user who first created the snippet.
-- **Created At:** The date and time the snippet was added.
-- **Uses:** Total number of times this snippet (or an alias pointing to it) has been called.
-- **Lock Status:** Whether the snippet is locked (Restricts edits to moderators).
-- **Alias Status:** If it's an alias, it shows which target snippet it points to.
+- **Snippet name** - The unique identifier displayed in the title
+- **Creator** - The user who first created the snippet (shown as a mention, or ID if user not found)
+- **Created at** - The date and time the snippet was added (formatted as Discord timestamp)
+- **Uses** - Total number of times this snippet has been called (includes uses through aliases)
+- **Lock status** - Whether the snippet is locked (restricts edits to moderators only)
+- **Content/Alias** - Shows the snippet content (truncated if long) or indicates if it's an alias pointing to another snippet
+- **Aliases** - Lists any aliases that point to this snippet (if viewing a target snippet, not an alias)
 
 ## Related Commands
 
-- [`$snippet`](snippet.md) - View the content described in the info embed.
-- [`$snippets`](snippets.md) - See a summary of all snippets.
+- [`$snippet`](snippet.md) - View the full content of the snippet
+- [`$snippets`](snippets.md) - See a summary of all snippets
+- [`$editsnippet`](editsnippet.md) - Modify the snippet if you have permission

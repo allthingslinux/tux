@@ -45,7 +45,7 @@ When invoked without a subcommand, this command displays the help menu for the l
 
 #### set
 
-Manually update a member's level. This will also adjust their XP to the minimum required for that level and automatically update their roles based on the new level.
+Manually update a member's level. This automatically calculates and sets the XP required for that level and updates their roles based on the new level.
 
 **Syntax:**
 
@@ -59,9 +59,7 @@ $levels set <member> <new_level>
 - `member` - The member to set the level for.
 - `new_level` - The target level to assign.
 
-#### setxp
-
-Set a member's XP to a specific value. This will recalculate their level and update their roles accordingly.
+Set a member's XP to a specific value. This automatically recalculates their level based on the new XP amount and updates their roles accordingly.
 
 **Syntax:**
 
@@ -90,9 +88,7 @@ $levels reset <member>
 
 - `member` - The member whose progress will be wiped.
 
-#### blacklist
-
-Toggles a member's capability to gain experience points. If blacklisted, a user will not receive XP from message activity. Use the command again to unblacklist.
+Toggle a member's ability to gain experience points. If blacklisted, the user will not receive XP from message activity. Use the command again to remove them from the blacklist.
 
 **Syntax:**
 
@@ -153,5 +149,6 @@ Grant a user a specific level for their contributions.
 
 ## Related Documentation
 
-- [`/level`](level.md) - For viewing user-facing rank cards.
+- [`/level`](level.md) - View user-facing rank cards
+- [XP & Leveling Feature](../../../features/leveling.md) - Complete guide to the leveling system
 - [Admin Configuration Guide](../../../admin/config/index.md)

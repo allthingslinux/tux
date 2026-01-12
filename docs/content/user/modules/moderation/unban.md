@@ -91,46 +91,71 @@ If "JaneDoe" is the only banned user with "Jane" in their name:
 /unban user:Jane reason:"Partial name match"
 ```
 
-## Response
+## Response Format
 
 When executed successfully, Tux will:
 
 1. Resolve the user from the guild's ban list.
 2. Remove the ban on the Discord server.
 3. Create a new moderation case in the database.
-4. Post a confirmation message in the current channel.
+4. Post a confirmation message in the current channel showing the unban details.
 5. Log the action in the designated moderation log channel.
+
+The confirmation message includes the unbanned user's name, the reason (if provided), and a link to view the moderation case. Unlike ban commands, Tux does not attempt to DM the user when they are unbanned.
 
 ## Error Handling
 
 ### Common Errors
 
-#### Error: User Not Found
+#### User Not Found
 
 **When it occurs:** The provided ID or name does not match any entry in the guild's ban list.
 
-**Solution:** Double-check the ID or use the exact username. You can view the ban list in Server Settings > Bans.
+**What happens:** The bot sends an error message indicating the user is not in the ban list.
 
-#### Error: Already Unbanned
+**Solutions:**
+
+- Double-check the ID or use the exact username
+- You can view the ban list in Server Settings > Bans
+- Try using the user's Discord ID (17-19 digit number) for the most reliable match
+- Use partial username matching if only one banned user matches
+
+#### Already Unbanned
 
 **When it occurs:** The user is not currently in the server's ban list.
 
-**Solution:** No action needed.
+**What happens:** The bot sends an error message indicating the user is not banned.
 
-#### Error: Lacking Permission Rank
+**Solutions:**
+
+- No action needed - the user is already unbanned
+- Verify the user is actually banned by checking Server Settings > Bans
+
+#### Lacking Permission Rank
 
 **When it occurs:** Your internal Tux permission rank is lower than the rank required to use this command.
 
-**Solution:** Contact a server administrator to check your rank.
+**What happens:** The bot sends an error message indicating you don't have permission to use this command.
 
-#### Error: Bot Missing Permissions
+**Solutions:**
+
+- Contact a server administrator to check your rank
+- Adjust the command configurations via `/config commands` if you have admin access
+
+#### Bot Missing Permissions
 
 **When it occurs:** Tux lacks the "Ban Members" permission required to remove bans.
 
-**Solution:** Grant Tux the "Ban Members" permission in the server settings.
+**What happens:** The bot sends an error message indicating insufficient permissions.
+
+**Solutions:**
+
+- Grant Tux the "Ban Members" permission in the server settings
+- Check that Tux's role has the necessary permissions
+- Verify permissions are not overridden at the channel level
 
 ## Related Commands
 
-- [`/ban`](ban.md) - Permanently ban a member.
-- [`/tempban`](tempban.md) - Ban a member for a set duration.
-- [`/cases`](cases.md) - View moderation history and previous ban reasons.
+- [`/ban`](ban.md) - Permanently ban a member
+- [`/tempban`](tempban.md) - Ban a member for a set duration
+- [`/cases`](cases.md) - View moderation history and previous ban reasons

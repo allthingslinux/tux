@@ -48,35 +48,41 @@ The `/xkcd` command group allows you to view and share XKCD webcomics with inter
 
 ## Common Use Cases
 
-### Random Selection
+### Making Random Decisions
 
-Make decisions or select random items from a list using various randomization methods.
+Use random commands to make decisions or add an element of chance to your server interactions.
 
 **Steps:**
 
-1. Use the `/random dice` command for a simple dice roll.
-2. Review the result provided by the bot.
+1. Use `/random coinflip` to quickly decide between two options.
+2. Use `/random dice` with custom sides for games or activities.
+3. Use `/random 8ball` to get a fun response to a question.
 
 **Example:**
 
 ```text
-/random dice sides:6
+/random coinflip
+/random dice sides:20
+/random 8ball question:"Should we order pizza?"
 ```
 
-### Viewing Comics
+### Viewing and Sharing Comics
 
-Share and enjoy XKCD comics with your community, with easy access to explanations and original links.
+Share XKCD comics with your community, with easy access to explanations and original links.
 
 **Steps:**
 
-1. Use the `/xkcd` command to fetch the latest comic or a specific one by ID.
-2. Use the provided buttons to view the comic's explanation or the original xkcd page.
+1. Use `/xkcd latest` to view the most recent comic.
+2. Use `/xkcd random` to discover a random comic from the archive.
+3. Use `/xkcd specific comic_id:1234` to view a specific comic by its number.
+4. Use the provided buttons to view the comic's explanation or visit the original xkcd page.
 
 **Example:**
 
 ```text
 /xkcd latest
-/xkcd comic_id:1234
+/xkcd random
+/xkcd specific comic_id:1024
 ```
 
 ## Permissions

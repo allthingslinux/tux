@@ -108,40 +108,59 @@ Kicking a user without sending a DM notification.
 /kick member:@user reason:"Automated cleanup" silent:true
 ```
 
-## Response
+## Response Format
 
 When executed successfully, Tux will:
 
 1. Attempt to DM the user with the kick reason (unless `-silent` is used).
 2. Execute the kick on the Discord server.
 3. Create a new moderation case in the database.
-4. Post a confirmation message in the current channel.
+4. Post a confirmation message in the current channel showing the kick details.
 5. Log the action in the designated moderation log channel.
+
+The confirmation message includes the kicked user's name, the reason, and a link to view the moderation case.
 
 ## Error Handling
 
 ### Common Errors
 
-#### Error: Missing Permissions / Higher Role
+#### Missing Permissions / Higher Role
 
 **When it occurs:** Tux lacks the "Kick Members" permission, or the target user's highest role is equal to or higher than Tux's highest role.
 
-**Solution:** Ensure Tux has the "Kick Members" permission. Move the "Tux" role above the target's role in the server hierarchy.
+**What happens:** The bot sends an error message indicating insufficient permissions.
 
-#### Error: Lacking Permission Rank
+**Solutions:**
+
+- Ensure Tux has the "Kick Members" permission
+- Move the "Tux" role above the target's role in the server hierarchy
+- Check that Tux's role has the necessary permissions in the server settings
+
+#### Lacking Permission Rank
 
 **When it occurs:** Your internal Tux permission rank is lower than the rank required to use this command in this server.
 
-**Solution:** Contact a server administrator to check your current rank.
+**What happens:** The bot sends an error message indicating you don't have permission to use this command.
 
-#### Error: Member Not Found
+**Solutions:**
 
-**When it occurs:** The provided mention or ID is invalid or they already left.
+- Contact a server administrator to check your current rank
+- Adjust the command configurations via `/config commands` if you have admin access
 
-**Solution:** Ensure you are mentioning a valid member currently in the guild.
+#### Member Not Found
+
+**When it occurs:** The provided mention or ID is invalid or they already left the server.
+
+**What happens:** The bot sends an error message indicating the member could not be found.
+
+**Solutions:**
+
+- Ensure you are mentioning a valid member currently in the guild
+- Double-check the user ID if using an ID instead of a mention
+- Verify the member hasn't already left the server
 
 ## Related Commands
 
-- [`/ban`](ban.md) - Permanently remove a member from the server.
-- [`/warn`](warn.md) - Issue a formal warning without removing the user.
-- [`/timeout`](timeout.md) - Temporarily restrict communication.
+- [`/ban`](ban.md) - Permanently remove a member from the server
+- [`/warn`](warn.md) - Issue a formal warning without removing the user
+- [`/timeout`](timeout.md) - Temporarily restrict communication

@@ -47,19 +47,26 @@ $editsnippet hello Welcome back to the updated community!
 
 ### User Permissions
 
-- **Snippet Owner:** Can edit their own snippets by default.
-- **Moderators:** Can edit any snippet.
-- **Locked Snippets:** Only moderators (rank 3+) can edit snippets that have been locked.
+- **Snippet owner:** Can edit their own snippets by default
+- **Moderators:** Can edit any snippet regardless of ownership
+- **Locked snippets:** Only moderators (rank 3+) can edit snippets that have been locked
 
 ## Error Handling
 
-### Error: Snippet is Locked
+### Snippet is Locked
 
-**When it occurs:** When a non-moderator attempts to edit a snippet that has the lock enabled.
+**When it occurs:** When a non-moderator attempts to edit a snippet that has been locked.
 
-**Solution:** Contact a moderator to unlock the snippet if you believe it needs an update.
+**What happens:** The bot sends an error message indicating the snippet is locked.
+
+**Solutions:**
+
+- Contact a moderator to unlock the snippet if you believe it needs an update
+- Use `$snippetinfo` to check the lock status before attempting to edit
+- If you're a moderator, use `$togglesnippetlock` to unlock it first
 
 ## Related Commands
 
-- [`$createsnippet`](createsnippet.md) - Create the initial snippet.
-- [`$togglesnippetlock`](togglesnippetlock.md) - Lock or unlock a snippet to prevent edits.
+- [`$createsnippet`](createsnippet.md) - Create the initial snippet
+- [`$togglesnippetlock`](togglesnippetlock.md) - Lock or unlock a snippet to prevent edits
+- [`$snippetinfo`](snippetinfo.md) - Check snippet details and lock status before editing

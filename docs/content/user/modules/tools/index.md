@@ -29,14 +29,16 @@ Quickly find documentation for programming languages, Linux commands, and develo
 
 **Steps:**
 
-1. Use the `/tldr` command with a command name (e.g., `git commit`).
-2. Tux will fetch the most relevant documentation and display it in an easy-to-read format.
+1. Use the `/tldr` command with a command name (use hyphens for multi-word commands like `git-commit`).
+2. Optionally specify a platform (e.g., `linux`, `osx`, `windows`) for platform-specific examples.
+3. Tux fetches the most relevant documentation and displays it in an easy-to-read format with interactive pagination.
 
 **Example:**
 
 ```text
 /tldr command:git-commit
-/tldr command:python-list
+/tldr command:tar platform:linux
+/tldr command:ls language:es
 ```
 
 ### Computational Queries
@@ -45,14 +47,16 @@ Get answers to complex computational questions, unit conversions, and mathematic
 
 **Steps:**
 
-1. Use the `/wolfram` command followed by your query.
-2. Review the detailed results and data visualizations provided.
+1. Use the `/wolfram` command followed by your query in natural language.
+2. Wait for the bot to process your query (may take a few seconds).
+3. Review the detailed results and data visualizations provided as an image.
 
 **Example:**
 
 ```text
 /wolfram query:"What is 2+2?"
 /wolfram query:"plot sin(x)"
+/wolfram query:"100 USD to EUR"
 ```
 
 ## Permissions

@@ -46,16 +46,18 @@ $deletesnippet old-guide
 
 ### User Permissions
 
-- **Snippet Owner:** Can delete their own snippets.
-- **Moderators:** Can delete any snippet.
-- **Locked Snippets:** Only moderators (rank 3+) can delete snippets that are currently locked.
+- **Snippet owner:** Can delete their own snippets
+- **Moderators:** Can delete any snippet regardless of ownership
+- **Locked snippets:** Only moderators (rank 3+) can delete snippets that are currently locked
 
 ## Behavior Notes
 
-- **Alias Safety:** Deleting an alias will **not** delete the target snippet it points to.
-- **Broken Aliases:** If you delete a target snippet, any aliases pointing to it will become "broken." The bot automatically cleans these up when a user attempts to use them.
+- **Alias safety:** Deleting an alias will **not** delete the target snippet it points to
+- **Broken aliases:** If you delete a target snippet, any aliases pointing to it become "broken" - the bot automatically cleans these up when someone attempts to use them
+- **Permanent action:** Deletion is permanent and cannot be undone - make sure you want to remove the snippet before deleting
 
 ## Related Commands
 
-- [`$createsnippet`](createsnippet.md) - Create a new replacement snippet.
-- [`$snippets`](snippets.md) - Check the list to verify deletion.
+- [`$createsnippet`](createsnippet.md) - Create a new replacement snippet
+- [`$snippets`](snippets.md) - Check the list to verify deletion
+- [`$snippetinfo`](snippetinfo.md) - View snippet details before deleting

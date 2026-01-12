@@ -139,32 +139,47 @@ Users need Moderator rank or higher to use commands in this group.
 !!! info "Permission System"
     Configure command permissions via `/config commands` or see the [Permission Configuration](../../../admin/config/commands.md) guide.
 
-## Response
+## Response Format
 
 Subcommands generally result in:
 
-- **`view`:** A detailed embed showing the incident details.
-- **`search`/`list`:** An interactive paginated menu with buttons to navigate through case history.
-- **`modify`:** A confirmation embed showing the updated case details and a real-time update to the original moderation log entry.
+- **`view`** - A detailed embed showing the incident details, including case number, target user, moderator, reason, timestamp, and case type
+- **`search`/base command** - An interactive paginated menu with buttons to navigate through case history, showing multiple cases per page
+- **`modify`** - A confirmation embed showing the updated case details and a real-time update to the original moderation log entry
+
+The base command (without subcommand) opens an interactive dashboard showing all cases in descending order (newest first) with pagination controls.
 
 ## Error Handling
 
 ### Common Errors
 
-#### Error: Case Not Found
+#### Case Not Found
 
 **When it occurs:** You provide a case number that does not exist in the database.
 
-**Solution:** Check the case number and try again. You can find case numbers in the `/cases search` list or in the moderation logs.
+**What happens:** The bot sends an error message indicating the case number is invalid.
 
-#### Error: Lacking Permission Rank
+**Solutions:**
+
+- Check the case number and try again
+- Use `/cases search` to find valid case numbers
+- Check the moderation logs for the correct case number
+- Verify you're searching in the correct server (cases are server-specific)
+
+#### Lacking Permission Rank
 
 **When it occurs:** Your internal Tux permission rank is lower than required to view or modify cases.
 
-**Solution:** Contact a server administrator to check your current rank.
+**What happens:** The bot sends an error message indicating you don't have permission to use this command.
+
+**Solutions:**
+
+- Contact a server administrator to check your current rank
+- Adjust the command configurations via `/config commands` if you have admin access
 
 ## Related Documentation
 
 - [Moderation Module](index.md)
 - [Ban Command](ban.md)
 - [Warn Command](warn.md)
+- [Timeout Command](timeout.md)

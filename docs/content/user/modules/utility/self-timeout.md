@@ -66,10 +66,12 @@ Take a longer break from the community.
 
 To prevent accidental timeouts, the bot follows a strict confirmation flow:
 
-1. You run the command.
-2. Tux replies with a **Confirmation Message** explaining the consequences.
-3. You must click the **Confirm** button within the response.
-4. Once clicked, the timeout is immediately applied.
+1. You run the command with your desired duration and optional reason.
+2. Tux replies with a **confirmation message** explaining the consequences and showing your selected duration.
+3. You must click the **Confirm** button within the response to proceed.
+4. Once confirmed, the timeout is immediately applied and cannot be reversed early.
+
+The confirmation message clearly states that the timeout cannot be removed early, even by administrators.
 
 ## Behavior Notes
 
@@ -79,13 +81,20 @@ To prevent accidental timeouts, the bot follows a strict confirmation flow:
 
 ## Error Handling
 
-### Error: Invalid Duration
+### Invalid Duration
 
 **When it occurs:** If the duration is less than 5 minutes or longer than 7 days.
 
-**Solution:** Choose a duration within the supported range (5m to 1w).
+**What happens:** The bot sends an error message indicating the duration is outside the allowed range.
+
+**Solutions:**
+
+- Choose a duration within the supported range (minimum: 5 minutes, maximum: 7 days)
+- Use valid time units: `m` (minutes), `h` (hours), `d` (days), `w` (weeks)
+- Examples of valid durations: `5m`, `1h`, `2d`, `1w`
+- Combine units if needed (e.g., `1d12h` for 1 day and 12 hours)
 
 ## Related Commands
 
-- [`/afk`](afk.md) - For a non-restrictive away status.
-- [`/timeout`](../moderation/timeout.md) - Administrative timeout command.
+- [`/afk`](afk.md) - For a non-restrictive away status
+- [`/timeout`](../moderation/timeout.md) - Administrative timeout command

@@ -50,23 +50,29 @@ Get feedback on several items.
 /poll title:"Favorite Linux Distro?" options:"Arch, Fedora, Debian, Ubuntu"
 ```
 
-## Response
+## Response Format
 
-When executed, the bot creates a rich embed highlighting the poll title and listing the options next to number emojis (1️⃣, 2️⃣, etc.). The bot then automatically adds these number emojis as reactions to the message, allowing users to click them to vote.
+When executed, the bot creates a rich embed containing:
+
+- **Poll title** - Your question or subject displayed prominently
+- **Options list** - Each option numbered with emoji indicators (1️⃣, 2️⃣, 3️⃣, etc.)
+- **Interactive reactions** - The bot automatically adds number emoji reactions to the message, allowing users to vote by clicking them
+
+Users can vote by clicking the emoji reactions, and the vote count is visible in real-time.
 
 ## Error Handling
 
-### Error: Invalid Options Count
+### Invalid Options Count
 
 **When it occurs:** If you provide fewer than 2 or more than 9 options.
 
-**Error message:**
+**What happens:** The bot sends an error message indicating the options count is invalid.
 
-```text
-Poll options count needs to be between 2-9, you provided X options.
-```
+**Solutions:**
 
-**Solution:** Ensure your `options` string contains between 1 and 8 commas to separate 2-9 items.
+- Ensure your `options` string contains between 1 and 8 commas to separate 2-9 items
+- Check that options are properly comma-separated (e.g., `"Option 1, Option 2, Option 3"`)
+- Verify you haven't accidentally included extra commas or empty options
 
 ## Behavior Notes
 
@@ -75,4 +81,4 @@ Poll options count needs to be between 2-9, you provided X options.
 
 ## Related Commands
 
-- [`/pollban`](../moderation/pollban.md) - Restrict a user from using the poll system.
+- [`/pollban`](../moderation/pollban.md) - Restrict a user from using the poll system

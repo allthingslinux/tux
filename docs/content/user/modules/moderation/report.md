@@ -66,28 +66,43 @@ This command is typically available to **all server members** by default.
 
 *This will immediately open the report interface on your screen.*
 
-## Response
+## Response Format
 
 Upon successful submission, you will receive an ephemeral message:
 > "Thank you for the report! It has been sent to the moderation team."
 
 Your name is included in the report sent to moderators, but it is **not** visible to the user you are reporting or anyone else in the public channels.
 
+The report is formatted as an embed in the designated moderation log channel, containing all the information you provided in the modal (subject, users involved, details, and evidence).
+
 ## Error Handling
 
 ### Common Errors
 
-#### Error: Modal Failed to Open
+#### Modal Failed to Open
 
 **When it occurs:** You run the command but nothing happens, or an error says the interaction failed.
 
-**Solution:** Ensure you are using a modern Discord client that supports modals. Try restarting your Discord app or running the command again.
+**What happens:** The modal interface doesn't appear, or an error message is shown.
 
-#### Error: Report Channel Not Found
+**Solutions:**
 
-**When it occurs:** The bot attempt to post the report but the server's designated report/log channel has not been configured.
+- Ensure you are using a modern Discord client that supports modals
+- Try restarting your Discord app or running the command again
+- Check your internet connection and Discord's service status
+- Verify you have permission to use the report command
 
-**Solution:** Contact a server administrator to ensure the moderation log channel is set correctly in Tux's configuration.
+#### Report Channel Not Found
+
+**When it occurs:** The bot attempts to post the report but the server's designated report/log channel has not been configured.
+
+**What happens:** The bot sends an error message indicating the report channel is not configured.
+
+**Solutions:**
+
+- Contact a server administrator to ensure the moderation log channel is set correctly in Tux's configuration
+- The report is still saved, but moderators won't receive it until the channel is configured
+- See the [Configuration Guide](../../../admin/config/index.md) for setup instructions
 
 ## Related Documentation
 

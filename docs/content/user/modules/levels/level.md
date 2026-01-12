@@ -61,23 +61,26 @@ See the level and XP of another member.
 /level member:@User
 ```
 
-## Response
+## Response Format
 
 The bot returns a rank card (as an embed) containing:
 
-- **Total XP:** Your lifetime experience points in this server.
-- **Current Level:** Your current level milestone.
-- **Progress Bar:** A visual indicator (`▰▰▰▱▱`) showing progress to the next level.
-- **XP Required:** The specific amount of XP needed for the next level up.
+- **Member name and avatar** - Displayed in the embed author
+- **Current level** - Your current level milestone shown in the title
+- **Progress bar** - A visual indicator (e.g., `▰▰▰▱▱`) showing progress to the next level (if progress display is enabled)
+- **Total XP** - Your lifetime experience points in this server, shown in the footer
 
-If you have reached the maximum configured level, the progress bar will indicate that the limit has been reached.
+If you have reached the maximum configured level, the XP display will indicate that the limit has been reached. The embed format may vary slightly depending on server configuration (progress bars can be enabled or disabled).
 
-## Behavior Notes
+## How XP Works
 
-- **XP Generation:** XP is earned by sending messages in non-blacklisted channels.
-- **Cooldowns:** There is a short cooldown between messages that grant XP to prevent spamming.
-- **Role Rewards:** Reaching certain levels may automatically grant you specific roles configured by the server administrators.
+- **XP generation:** XP is earned by sending messages in non-blacklisted channels
+- **Cooldowns:** There is a configurable cooldown between messages that grant XP to prevent spamming
+- **Role multipliers:** Some roles may provide XP multipliers, increasing the amount of XP you earn per message
+- **Role rewards:** Reaching certain levels automatically grants you specific roles configured by server administrators
+- **XP cap:** If configured, there may be a maximum level cap that limits how high you can progress
 
 ## Related Commands
 
-- [`/levels`](levels.md) - Administrative XP and level management.
+- [`/levels`](levels.md) - Administrative XP and level management
+- [XP & Leveling Feature](../../../features/leveling.md) - Complete guide to the leveling system

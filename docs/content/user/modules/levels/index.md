@@ -39,7 +39,7 @@ The `/levels` command group provides administrative tools for managing member XP
 
 ## Common Use Cases
 
-### Use Case Name: Checking Ranking Progress
+### Checking Ranking Progress
 
 Members can check their standing in the server and see how much XP is needed for the next level.
 
@@ -55,14 +55,15 @@ Members can check their standing in the server and see how much XP is needed for
 /level member:@user
 ```
 
-### Use Case Name: Manual Level Adjustments
+### Manual Level Adjustments
 
 Administrators can manually adjust a user's level or XP to correct errors or provide rewards.
 
 **Steps:**
 
-1. Use `/levels set` to skip levels or `/levels setxp` for precise adjustments.
-2. The bot will automatically update the user's roles to match their new level.
+1. Use `/levels set` to set a specific level (which automatically calculates and sets the required XP).
+2. Use `/levels setxp` for precise XP adjustments (which automatically recalculates the level).
+3. The bot automatically updates the user's roles to match their new level.
 
 **Example:**
 
@@ -101,5 +102,6 @@ The `/level` command is available to all users. Administrative commands under `/
 
 ## Related Documentation
 
+- [XP & Leveling Feature](../../../features/leveling.md) - Complete guide to the leveling system
 - [Permission Configuration](../../../admin/config/commands.md)
 - [Admin Configuration Guide](../../../admin/config/index.md)

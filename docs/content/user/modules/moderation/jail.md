@@ -105,7 +105,7 @@ Jailing a member for a rule violation.
 $jail @user Inappropriate behavior in voice chat
 ```
 
-## Response
+## Response Format
 
 When executed successfully, Tux will:
 
@@ -114,24 +114,37 @@ When executed successfully, Tux will:
 3. Remove all other manageable roles from the member.
 4. Attempt to DM the user with the jail reason (unless `-silent` is used).
 5. Create a new moderation case (storing role IDs for unjailing).
-6. Post a confirmation message in the current channel.
+6. Post a confirmation message in the current channel showing the jail details.
 7. Log the action in the designated moderation log channel.
+
+The confirmation message includes the jailed user's name, the reason, and a link to view the moderation case. The stored roles are automatically restored when using `/unjail`.
 
 ## Error Handling
 
 ### Common Errors
 
-#### Error: Missing Permissions / Higher Role
+#### Missing Permissions / Higher Role
 
 **When it occurs:** Tux lacks the "Manage Roles" permission, or the target user's highest role is equal to or higher than Tux's highest role.
 
-**Solution:** Ensure Tux has the "Manage Roles" permission. Move the "Tux" role above the target's role in the server hierarchy.
+**What happens:** The bot sends an error message indicating insufficient permissions.
 
-#### Error: Lacking Permission Rank
+**Solutions:**
+
+- Ensure Tux has the "Manage Roles" permission
+- Move the "Tux" role above the target's role in the server hierarchy
+- Check that Tux's role has the necessary permissions in the server settings
+
+#### Lacking Permission Rank
 
 **When it occurs:** Your internal Tux permission rank is lower than the rank required to use this command.
 
-**Solution:** Contact a server administrator to check your rank.
+**What happens:** The bot sends an error message indicating you don't have permission to use this command.
+
+**Solutions:**
+
+- Contact a server administrator to check your rank
+- Adjust the command configurations via `/config commands` if you have admin access
 
 #### Error: No Jail Role/Channel Found
 
@@ -139,14 +152,19 @@ When executed successfully, Tux will:
 
 **Solution:** Ask a server administrator to configure these settings via Tux's configuration module.
 
-#### Error: Member Already Jailed
+#### Member Already Jailed
 
 **When it occurs:** The target user already has the jail role or an active jail case.
 
-**Solution:** Use [`/unjail`](unjail.md) if you wish to release them.
+**What happens:** The bot sends an error message indicating the member is already jailed.
+
+**Solutions:**
+
+- Use [`/unjail`](unjail.md) if you wish to release them
+- Check the existing jail case using `/cases search user:@user type:jail`
 
 ## Related Commands
 
-- [`/unjail`](unjail.md) - Restore a jailed member's roles and remove the jail restriction.
-- [`/timeout`](timeout.md) - A lighter alternative that doesn't involve role removal.
-- [`/cases`](cases.md) - View the details of a jail case.
+- [`/unjail`](unjail.md) - Restore a jailed member's roles and remove the jail restriction
+- [`/timeout`](timeout.md) - A lighter alternative that doesn't involve role removal
+- [`/cases`](cases.md) - View the details of a jail case

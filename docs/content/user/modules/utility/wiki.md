@@ -69,26 +69,33 @@ Look up a community guide or policy on the ATL wiki.
 /wiki atl query:"Rules"
 ```
 
-## Response
+## Response Format
 
 When a match is found, the bot returns a rich embed containing:
 
-- The title of the wiki article.
-- A brief snippet or description.
-- A direct link to the full article.
+- **Article title** - The title of the matching wiki article
+- **Description** - A brief snippet or description from the article
+- **Direct link** - A clickable link to view the full article on the wiki website
+
+The embed is formatted to make it easy to quickly identify relevant articles and access the full documentation.
 
 ## Error Handling
 
-### Error: No Results Found
+### No Results Found
 
 **When it occurs:** When the search query does not match any existing articles.
 
-**Error message:**
+**What happens:** The bot sends an error message indicating no results were found.
 
-```text
-No search results found.
-```
+**Solutions:**
+
+- Try different search terms or keywords
+- Check spelling and try variations of your query
+- Use more general terms if specific searches don't work
+- Consider using `/tldr` for command-line documentation instead
 
 ## Related Commands
 
-- [`/tldr`](../tools/tldr.md) - For quick command-line summaries.
+- [`/tldr`](../tools/tldr.md) - For quick command-line summaries
+- [`/wiki arch`](wiki.md) - Search the Arch Linux Wiki
+- [`/wiki atl`](wiki.md) - Search the All Things Linux Wiki
