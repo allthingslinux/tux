@@ -111,6 +111,7 @@ Complete catalog of all rules and commands in the Tux project.
 
 - `documentation/generate-docs.md` - Generate API documentation
 - `documentation/update-docs.md` - Update documentation for changes
+- `documentation/validate-docs.md` - Audit documentation for validity and accuracy
 - `documentation/docs-serve.md` - Serve documentation locally
 
 ### Development Commands

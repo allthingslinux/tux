@@ -238,6 +238,7 @@ Generate comprehensive API documentation, update reference materials, and create
 - Related rule: @docs/zensical.mdc - Zensical syntax and features
 - Related rule: @docs/style.mdc - Writing style guidelines
 - Related command: `/update-docs` - Update existing documentation
+- Related command: `/validate-docs` - Audit documentation for validity and accuracy
 - Related command: `/docs-serve` - Start local documentation server
 
 ## Additional Notes

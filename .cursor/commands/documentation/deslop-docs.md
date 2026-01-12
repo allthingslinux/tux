@@ -156,6 +156,7 @@ If you encounter any of these patterns:
 
 - Related command: `/update-docs` - Update documentation for code changes
 - Related command: `/generate-docs` - Generate API documentation
+- Related command: `/validate-docs` - Audit documentation for validity and accuracy
 - Related command: `/docs-serve` - Start local documentation server
 - Related rule: @docs/docs.mdc - Documentation standards master guide
 - Related rule: @docs/style.mdc - Writing style and formatting
