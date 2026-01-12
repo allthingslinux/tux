@@ -34,13 +34,13 @@ The `/config` command group provides access to the interactive configuration das
 
 ## Commands
 
-| Command | Description | Documentation |
-|---------|-------------|---------------|
-| `/config overview` | Interactive guild setup dashboard | [Details](../../../admin/config/index.md) |
-| `/config ranks` | Permission rank management | [Details](../../../admin/config/ranks.md) |
-| `/config roles` | Role-to-rank assignments | [Details](../../../admin/config/roles.md) |
-| `/config commands` | Command permission configuration | [Details](../../../admin/config/commands.md) |
-| `/config logs` | Log channel configuration | [Details](../../../admin/config/logs.md) |
+| Command | Aliases | Description | Documentation |
+|---------|---------|-------------|---------------|
+| `/config overview` | — | Interactive guild setup dashboard | [Details](../../../admin/config/index.md) |
+| `/config ranks` | — | Permission rank management | [Details](../../../admin/config/ranks.md) |
+| `/config roles` | — | Role-to-rank assignments | [Details](../../../admin/config/roles.md) |
+| `/config commands` | — | Command permission configuration | [Details](../../../admin/config/commands.md) |
+| `/config logs` | — | Log channel configuration | [Details](../../../admin/config/logs.md) |
 
 ## Common Use Cases
 

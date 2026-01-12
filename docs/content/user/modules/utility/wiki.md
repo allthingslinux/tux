@@ -29,9 +29,13 @@ The `wiki` command can be used in two ways:
 ```text
 $wiki arch <query>
 $wiki atl <query>
+$wk arch <query>
+$wk atl <query>
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `wiki`:
 
 - `wk`
 

@@ -26,9 +26,12 @@ The `snippetban` command can be used in two ways:
 
 ```text
 $snippetban @user [reason] [-silent|-s|-quiet]
+$sb @user [reason] [-silent|-s|-quiet]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `snippetban`:
 
 - `sb`
 

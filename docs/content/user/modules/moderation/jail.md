@@ -28,9 +28,12 @@ The `jail` command can be used in two ways:
 
 ```text
 $jail @user [reason] [-silent]
+$j @user [reason] [-silent]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `jail`:
 
 - `j`
 

@@ -33,9 +33,15 @@ $xkcd [comic_id]
 $xkcd latest
 $xkcd random
 $xkcd specific <comic_id>
+$xk [comic_id]
+$xk latest
+$xk random
+$xk specific <comic_id>
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `xkcd`:
 
 - `xk`
 
@@ -47,21 +53,58 @@ When you use `/xkcd` with a comic ID directly (e.g., `/xkcd 1234`), it automatic
 
 Fetches the most recently published xkcd comic.
 
-- **Aliases:** `l`, `new`, `n`
+**Syntax:**
+
+```text
+/xkcd latest
+$xkcd latest
+$xkcd l
+$xkcd new
+$xkcd n
+```
+
+**Aliases:**
+
+- `l`, `new`, `n`
 
 ### random
 
 Fetches a random xkcd comic from the entire archive.
 
-- **Aliases:** `rand`, `r`
+**Syntax:**
+
+```text
+/xkcd random
+$xkcd random
+$xkcd rand
+$xkcd r
+```
+
+**Aliases:**
+
+- `rand`, `r`
 
 ### specific
 
 Fetches an xkcd comic by its specific number/ID.
 
-- **Parameters:**
-  - `comic_id` (Type: `INTEGER`, Required): The ID of the comic you want to view.
-- **Aliases:** `s`, `id`, `num`
+**Syntax:**
+
+```text
+/xkcd specific comic_id:INTEGER
+$xkcd specific <comic_id>
+$xkcd s <comic_id>
+$xkcd id <comic_id>
+$xkcd num <comic_id>
+```
+
+**Parameters:**
+
+- `comic_id` (Type: `INTEGER`, Required): The ID of the comic you want to view.
+
+**Aliases:**
+
+- `s`, `id`, `num`
 
 ## Usage Examples
 

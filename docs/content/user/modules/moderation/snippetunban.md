@@ -26,9 +26,12 @@ The `snippetunban` command can be used in two ways:
 
 ```text
 $snippetunban @user [reason] [-silent]
+$sub @user [reason] [-silent]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `snippetunban`:
 
 - `sub`
 

@@ -28,9 +28,12 @@ The `tempban` command can be used in two ways:
 
 ```text
 $tempban @user -duration TIME [reason] [-purge X] [-silent]
+$tb @user -duration TIME [reason] [-purge X] [-silent]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `tempban`:
 
 - `tb`
 

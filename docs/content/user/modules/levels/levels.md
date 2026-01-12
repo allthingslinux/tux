@@ -24,9 +24,12 @@ The base `/levels` command serves as the entry point for administrative XP manag
 ```text
 /levels
 $levels
+$lvls
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `levels`:
 
 - `lvls`
 

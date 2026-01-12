@@ -20,9 +20,12 @@ The `deletesnippet` command is available as a prefix command:
 
 ```text
 $deletesnippet <name>
+$ds <name>
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `deletesnippet`:
 
 - `ds`
 

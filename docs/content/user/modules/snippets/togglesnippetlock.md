@@ -23,9 +23,12 @@ The `togglesnippetlock` command is available as a prefix command:
 
 ```text
 $togglesnippetlock <name>
+$tsl <name>
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `togglesnippetlock`:
 
 - `tsl`
 

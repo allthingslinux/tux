@@ -26,9 +26,12 @@ The `unjail` command can be used in two ways:
 
 ```text
 $unjail @user [reason] [-silent]
+$uj @user [reason] [-silent]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `unjail`:
 
 - `uj`
 

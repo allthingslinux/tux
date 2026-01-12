@@ -18,25 +18,15 @@ Snippets are server-specific and can be locked by moderators to prevent unauthor
 
 ## Commands
 
-| Command | Description | Documentation |
-|---------|-------------|---------------|
-| `$createsnippet` | Create a new snippet or alias | [Details](createsnippet.md) |
-| `$snippet` | View and use a snippet | [Details](snippet.md) |
-| `$snippets` | List all available snippets | [Details](snippets.md) |
-| `$snippetinfo` | Get detailed information about a snippet | [Details](snippetinfo.md) |
-| `$editsnippet` | Edit an existing snippet | [Details](editsnippet.md) |
-| `$deletesnippet` | Delete a snippet | [Details](deletesnippet.md) |
-| `$togglesnippetlock` | Lock or unlock a snippet | [Details](togglesnippetlock.md) |
-
-**Aliases:**
-
-- `$createsnippet` → `$cs`
-- `$snippet` → `$s`
-- `$snippets` → `$ls`
-- `$snippetinfo` → `$si`
-- `$editsnippet` → `$es`
-- `$deletesnippet` → `$ds`
-- `$togglesnippetlock` → `$tsl`
+| Command | Aliases | Description | Documentation |
+|---------|---------|-------------|---------------|
+| `$createsnippet` | `cs` | Create a new snippet or alias | [Details](createsnippet.md) |
+| `$snippet` | `s` | View and use a snippet | [Details](snippet.md) |
+| `$snippets` | `ls` | List all available snippets | [Details](snippets.md) |
+| `$snippetinfo` | `si` | Get detailed information about a snippet | [Details](snippetinfo.md) |
+| `$editsnippet` | `es` | Edit an existing snippet | [Details](editsnippet.md) |
+| `$deletesnippet` | `ds` | Delete a snippet | [Details](deletesnippet.md) |
+| `$togglesnippetlock` | `tsl` | Lock or unlock a snippet | [Details](togglesnippetlock.md) |
 
 ## Common Use Cases
 

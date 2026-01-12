@@ -5,7 +5,6 @@ tags:
   - user-guide
   - modules
   - commands
-icon: lucide/command
 ---
 
 # Modules

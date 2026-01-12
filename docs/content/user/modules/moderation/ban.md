@@ -28,9 +28,12 @@ The `ban` command can be used in two ways:
 
 ```text
 $ban @user [reason] [-purge X] [-silent]
+$b @user [reason] [-purge X] [-silent]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `ban`:
 
 - `b`
 

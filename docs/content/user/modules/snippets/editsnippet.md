@@ -20,9 +20,12 @@ The `editsnippet` command is available as a prefix command:
 
 ```text
 $editsnippet <name> <new_content>
+$es <name> <new_content>
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `editsnippet`:
 
 - `es`
 

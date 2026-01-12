@@ -26,9 +26,12 @@ The `pollban` command can be used in two ways:
 
 ```text
 $pollban @user [reason] [-silent]
+$pb @user [reason] [-silent]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `pollban`:
 
 - `pb`
 

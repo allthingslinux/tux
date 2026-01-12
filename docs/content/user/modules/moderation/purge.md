@@ -26,9 +26,12 @@ The `purge` command can be used in two ways:
 
 ```text
 $purge NUMBER [channel]
+$p NUMBER [channel]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `purge`:
 
 - `p`
 

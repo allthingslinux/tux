@@ -27,9 +27,13 @@ The `membercount` command can be used in two ways:
 
 ```text
 $membercount
+$mc
+$members
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `membercount`:
 
 - `mc`
 - `members`

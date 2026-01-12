@@ -28,9 +28,12 @@ The `slowmode` command can be used in two ways:
 
 ```text
 $slowmode [seconds] [channel]
+$sm [seconds] [channel]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `slowmode`:
 
 - `sm`
 

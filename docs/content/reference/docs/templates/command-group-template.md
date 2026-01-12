@@ -38,14 +38,19 @@ The base `{COMMAND_GROUP_NAME}` command {describes base functionality}.
 ```text
 /{COMMAND_GROUP_NAME}
 ${COMMAND_GROUP_NAME}
+<!-- If aliases exist, add them here -->
+${ALIAS1}
+${ALIAS2}
 ```
 
 **Aliases:**
 
 <!-- Remove aliases section if none exist -->
 
-- `{ALIAS1}`
-- `{ALIAS2}`
+You can also use these aliases instead of `{COMMAND_GROUP_NAME}`:
+
+- `{ALIAS1}` - {Brief description if helpful, otherwise remove this line}
+- `{ALIAS2}` - {Brief description if helpful, otherwise remove this line}
 
 When invoked without a subcommand, this command {what happens}.
 
@@ -54,15 +59,15 @@ When invoked without a subcommand, this command {what happens}.
 <!--
 SUBCOMMANDS TABLE
 Create a table listing all subcommands in this command group.
-The table format is: Subcommand name, Brief description, Usage example.
+The table format is: Subcommand name, Aliases (or — if none), Brief description, Usage example.
 
-Use the format: | `subcommand` | {Brief description} | `/GROUP_NAME subcommand` |
+Use the format: | `subcommand` | `alias1`, `alias2` (or —) | {Brief description} | `/GROUP_NAME subcommand` |
 -->
 
-| Subcommand | Description | Usage |
-|------------|-------------|-------|
-| `{SUBCOMMAND_NAME}` | {Brief description} | `/{GROUP_NAME} {SUBCOMMAND_NAME} [params]` |
-| `{SUBCOMMAND_NAME}` | {Brief description} | `/{GROUP_NAME} {SUBCOMMAND_NAME} [params]` |
+| Subcommand | Aliases | Description | Usage |
+|------------|--------|-------------|-------|
+| `{SUBCOMMAND_NAME}` | `{ALIAS1}`, `{ALIAS2}` | {Brief description} | `/{GROUP_NAME} {SUBCOMMAND_NAME} [params]` |
+| `{SUBCOMMAND_NAME}` | — | {Brief description} | `/{GROUP_NAME} {SUBCOMMAND_NAME} [params]` |
 
 <!--
 SUBCOMMAND CATEGORIES
@@ -84,7 +89,17 @@ Use level 3 headings for categories, level 4 headings for individual subcommands
 ```text
 /{GROUP_NAME} {SUBCOMMAND_NAME} [parameters]
 ${GROUP_NAME} {SUBCOMMAND_NAME} [parameters]
+<!-- If subcommand has aliases, add them here -->
+${GROUP_NAME} {ALIAS1} [parameters]
+${GROUP_NAME} {ALIAS2} [parameters]
 ```
+
+**Aliases:**
+
+<!-- Remove aliases section if none exist -->
+
+- `{ALIAS1}` - {Brief description if helpful, otherwise remove this line}
+- `{ALIAS2}` - {Brief description if helpful, otherwise remove this line}
 
 **Parameters:**
 

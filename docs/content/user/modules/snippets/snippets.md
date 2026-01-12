@@ -20,9 +20,12 @@ The `snippets` command is available as a prefix command:
 
 ```text
 $snippets [search_query:STRING]
+$ls [search_query:STRING]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `snippets`:
 
 - `ls`
 

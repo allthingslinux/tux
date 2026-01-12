@@ -28,9 +28,13 @@ The `timeout` command can be used in two ways:
 
 ```text
 $timeout @user -duration TIME [reason] [-silent]
+$to @user -duration TIME [reason] [-silent]
+$mute @user -duration TIME [reason] [-silent]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `timeout`:
 
 - `to`
 - `mute`

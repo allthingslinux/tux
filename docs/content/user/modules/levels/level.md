@@ -29,9 +29,13 @@ The `level` command can be used in two ways:
 
 ```text
 $level [member]
+$lvl [member]
+$rank [member]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `level`:
 
 - `lvl`
 - `rank`

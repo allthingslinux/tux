@@ -26,9 +26,12 @@ The `info` command can be used in two ways:
 
 ```text
 $info <entity>
+$i <entity>
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `info`:
 
 - `i`
 

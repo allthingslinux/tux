@@ -22,9 +22,13 @@ The `run` command is available as a prefix command:
 
 ```text
 $run <code_block>
+$compile <code_block>
+$exec <code_block>
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `run`:
 
 - `compile`
 - `exec`

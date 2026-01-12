@@ -29,17 +29,17 @@ The `/wiki` command group provides quick access to specialized documentation wik
 
 ## Commands
 
-| Command | Description | Documentation |
-|---------|-------------|---------------|
-| `/ping` | Check bot latency and status | [Details](ping.md) |
-| `/poll` | Create a poll with multiple options (Slash only) | [Details](poll.md) |
-| `/remindme` | Set a reminder for yourself | [Details](remindme.md) |
-| `/afk` | Set or clear your AFK status | [Details](afk.md) |
-| `/wiki` | Search Wikipedia | [Details](wiki.md) |
-| `/encode` `/decode` | Encode or decode text | [Details](encode-decode.md) |
-| `/timezones` | View current times across the globe | [Details](timezones.md) |
-| `/self_timeout` | Time yourself out | [Details](self-timeout.md) |
-| `$run` | Run code snippets (Prefix only) | [Details](run.md) |
+| Command | Aliases | Description | Documentation |
+|---------|---------|-------------|---------------|
+| `/ping` | `status` | Check bot latency and status | [Details](ping.md) |
+| `/poll` | — | Create a poll with multiple options (Slash only) | [Details](poll.md) |
+| `/remindme` | `remind` | Set a reminder for yourself | [Details](remindme.md) |
+| `/afk` | — | Set or clear your AFK status | [Details](afk.md) |
+| `/wiki` | `wk` | Search Wikipedia | [Details](wiki.md) |
+| `/encode` `/decode` | `ec`, `dc` | Encode or decode text | [Details](encode-decode.md) |
+| `/timezones` | `tz` | View current times across the globe | [Details](timezones.md) |
+| `/self_timeout` | `sto`, `stimeout` | Time yourself out | [Details](self-timeout.md) |
+| `$run` | `compile`, `exec` | Run code snippets (Prefix only) | [Details](run.md) |
 
 ## Common Use Cases
 

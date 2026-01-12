@@ -32,10 +32,10 @@ The `/levels` command group provides administrative tools for managing member XP
 
 ## Commands
 
-| Command | Description | Documentation |
-|---------|-------------|---------------|
-| `/level` | View your current level and XP progress | [Details](level.md) |
-| `/levels` | Administrative XP and level management | [Details](levels.md) |
+| Command | Aliases | Description | Documentation |
+|---------|---------|-------------|---------------|
+| `/level` | `lvl`, `rank` | View your current level and XP progress | [Details](level.md) |
+| `/levels` | `lvls` | Administrative XP and level management | [Details](levels.md) |
 
 ## Common Use Cases
 

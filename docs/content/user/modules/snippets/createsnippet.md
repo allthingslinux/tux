@@ -20,9 +20,12 @@ The `createsnippet` command is available as a prefix command:
 
 ```text
 $createsnippet <name> <content>
+$cs <name> <content>
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `createsnippet`:
 
 - `cs`
 

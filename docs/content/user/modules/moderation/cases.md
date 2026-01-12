@@ -26,9 +26,13 @@ The base `cases` command provides a paginated overview of all moderation cases i
 ```text
 /cases [case_number]
 $cases [case_number]
+$case [case_number]
+$c [case_number]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `cases`:
 
 - `case`
 - `c`
@@ -37,11 +41,11 @@ When invoked without a subcommand or case number, Tux opens an interactive menu 
 
 ## Subcommands
 
-| Subcommand | Description | Usage |
-|------------|-------------|-------|
-| `view` | View a specific case by number | `/cases view case_number:123` |
-| `search` | Filter cases by user, moderator, or type | `/cases search user:@user` |
-| `modify` | Update a case's reason or status | `/cases modify case_number:123 reason:"New reason"` |
+| Subcommand | Aliases | Description | Usage |
+|------------|--------|-------------|-------|
+| `view` | `v`, `show`, `get`, `list` | View a specific case by number | `/cases view case_number:123` |
+| `search` | `filter`, `find` | Filter cases by user, moderator, or type | `/cases search user:@user` |
+| `modify` | `m`, `edit`, `update` | Update a case's reason or status | `/cases modify case_number:123 reason:"New reason"` |
 
 ### Category: Case Management
 
@@ -54,7 +58,15 @@ Detailed display of a single moderation incident, including the target, the mode
 ```text
 /cases view case_number:NUMBER
 $cases view NUMBER
+$cases v NUMBER
+$cases show NUMBER
+$cases get NUMBER
+$cases list NUMBER
 ```
+
+**Aliases:**
+
+- `v`, `show`, `get`, `list`
 
 **Parameters:**
 
@@ -75,7 +87,13 @@ Find specific cases based on filtering criteria. You can combine multiple flags 
 ```text
 /cases search [user:@user] [mod:@moderator] [type:TYPE]
 $cases search [-user @user] [-mod @moderator] [-type TYPE]
+$cases filter [-user @user] [-mod @moderator] [-type TYPE]
+$cases find [-user @user] [-mod @moderator] [-type TYPE]
 ```
+
+**Aliases:**
+
+- `filter`, `find`
 
 **Parameters (Flags):**
 
@@ -98,7 +116,14 @@ Allows moderators to update existing cases. This is commonly used to add more de
 ```text
 /cases modify case_number:NUMBER reason:STRING [status:active/inactive]
 $cases modify NUMBER [-reason "New reason"] [-status active/inactive]
+$cases m NUMBER [-reason "New reason"] [-status active/inactive]
+$cases edit NUMBER [-reason "New reason"] [-status active/inactive]
+$cases update NUMBER [-reason "New reason"] [-status active/inactive]
 ```
+
+**Aliases:**
+
+- `m`, `edit`, `update`
 
 **Parameters (Flags):**
 

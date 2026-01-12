@@ -26,9 +26,12 @@ The `warn` command can be used in two ways:
 
 ```text
 $warn @user [reason] [-silent]
+$w @user [reason] [-silent]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `warn`:
 
 - `w`
 

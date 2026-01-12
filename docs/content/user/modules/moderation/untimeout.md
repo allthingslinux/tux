@@ -26,9 +26,13 @@ The `untimeout` command can be used in two ways:
 
 ```text
 $untimeout @user [reason] [-silent]
+$uto @user [reason] [-silent]
+$unmute @user [reason] [-silent]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `untimeout`:
 
 - `uto`
 - `unmute`

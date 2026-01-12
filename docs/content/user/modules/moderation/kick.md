@@ -26,9 +26,12 @@ The `kick` command can be used in two ways:
 
 ```text
 $kick @user [reason] [-silent]
+$k @user [reason] [-silent]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `kick`:
 
 - `k`
 

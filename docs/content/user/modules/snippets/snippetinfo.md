@@ -20,9 +20,12 @@ The `snippetinfo` command is available as a prefix command:
 
 ```text
 $snippetinfo <name>
+$si <name>
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `snippetinfo`:
 
 - `si`
 

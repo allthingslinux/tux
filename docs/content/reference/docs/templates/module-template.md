@@ -32,7 +32,7 @@ If the module has no command groups, remove this entire section.
 For each command group:
 - Use a level 3 heading with the command group name (e.g., ### Cases)
 - Write a brief description of what the command group does
-- List the subcommands with brief descriptions
+- List the subcommands with brief descriptions and aliases (if any)
 -->
 
 This module includes the following command groups:
@@ -43,7 +43,7 @@ This module includes the following command groups:
 
 **Commands:**
 
-- `{COMMAND_NAME}` - {Brief description}
+- `{COMMAND_NAME}` (aliases: `{ALIAS1}`, `{ALIAS2}`) - {Brief description}
 - `{COMMAND_NAME}` - {Brief description}
 
 ## Commands
@@ -51,15 +51,15 @@ This module includes the following command groups:
 <!--
 COMMANDS TABLE
 Create a table listing all commands in this module. Each command should link to its individual documentation page.
-The table format is: Command name, Brief one-line description, Link to detailed documentation.
+The table format is: Command name, Aliases (or — if none), Brief one-line description, Link to detailed documentation.
 
-Use the format: | `/command` | {Brief description} | [Details](command.md) |
+Use the format: | `/command` | `alias1`, `alias2` (or —) | {Brief description} | [Details](command.md) |
 -->
 
-| Command | Description | Documentation |
-|---------|-------------|---------------|
-| `/command` | {Brief one-line description} | [Details](command.md) |
-| `/command` | {Brief one-line description} | [Details](command.md) |
+| Command | Aliases | Description | Documentation |
+|---------|--------|-------------|---------------|
+| `/command` | `{ALIAS1}`, `{ALIAS2}` | {Brief one-line description} | [Details](command.md) |
+| `/command` | — | {Brief one-line description} | [Details](command.md) |
 
 ## Common Use Cases
 

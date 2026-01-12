@@ -27,9 +27,12 @@ The `timezones` command is available as a hybrid command:
 
 ```text
 $timezones
+$tz
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `timezones`:
 
 - `tz`
 

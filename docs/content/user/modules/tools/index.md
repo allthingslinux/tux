@@ -16,10 +16,10 @@ By offering powerful integrations, this module enhances your server's capabiliti
 
 ## Commands
 
-| Command | Description | Documentation |
-|---------|-------------|---------------|
-| `/tldr` | Quick documentation lookup | [Details](tldr.md) |
-| `/wolfram` | Query Wolfram Alpha | [Details](wolfram.md) |
+| Command | Aliases | Description | Documentation |
+|---------|---------|-------------|---------------|
+| `/tldr` | `man` | Quick documentation lookup | [Details](tldr.md) |
+| `/wolfram` | — | Query Wolfram Alpha | [Details](wolfram.md) |
 
 ## Common Use Cases
 

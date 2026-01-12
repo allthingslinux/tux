@@ -29,9 +29,13 @@ The `self_timeout` command is available as a hybrid command:
 
 ```text
 $self_timeout <duration> [reason]
+$sto <duration> [reason]
+$stimeout <duration> [reason]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `self_timeout`:
 
 - `sto`
 - `stimeout`

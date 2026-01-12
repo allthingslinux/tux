@@ -26,9 +26,12 @@ The `clearafk` command can be used in two ways:
 
 ```text
 $clearafk @user
+$unafk @user
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `clearafk`:
 
 - `unafk`
 

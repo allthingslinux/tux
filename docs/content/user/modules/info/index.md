@@ -35,11 +35,11 @@ The `/info` command group provides a unified interface for viewing detailed info
 
 ## Commands
 
-| Command | Description | Documentation |
-|---------|-------------|---------------|
-| `/info` | Get information about Discord objects (command group) | [Details](info.md) |
-| `/avatar` | View user avatars | [Details](avatar.md) |
-| `/membercount` | View server member statistics | [Details](membercount.md) |
+| Command | Aliases | Description | Documentation |
+|---------|---------|-------------|---------------|
+| `/info` | `i` | Get information about Discord objects (command group) | [Details](info.md) |
+| `/avatar` | — | View user avatars | [Details](avatar.md) |
+| `/membercount` | `mc`, `members` | View server member statistics | [Details](membercount.md) |
 
 ## Common Use Cases
 

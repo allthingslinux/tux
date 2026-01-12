@@ -33,9 +33,15 @@ $random coinflip
 $random dice [sides]
 $random 8ball <question> [-cow]
 $random number [minimum] [maximum]
+$rand coinflip
+$rand dice [sides]
+$rand 8ball <question> [-cow]
+$rand number [minimum] [maximum]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `random`:
 
 - `rand`
 
@@ -45,33 +51,80 @@ $random number [minimum] [maximum]
 
 Flip a virtual coin to get either "Heads" or "Tails".
 
-- **Aliases:** `cf`
+**Syntax:**
+
+```text
+/random coinflip
+$random coinflip
+$random cf
+```
+
+**Aliases:**
+
+- `cf`
 
 ### dice
 
 Roll a dice with a specified number of sides.
 
-- **Parameters:**
-  - `sides` (Type: `INTEGER`, Default: `6`): The number of sides on the dice. (Min: 2)
-- **Aliases:** `d`
+**Syntax:**
+
+```text
+/random dice [sides:INTEGER]
+$random dice [sides]
+$random d [sides]
+```
+
+**Parameters:**
+
+- `sides` (Type: `INTEGER`, Default: `6`): The number of sides on the dice. (Min: 2)
+
+**Aliases:**
+
+- `d`
 
 ### 8ball
 
 Ask the magic 8-ball a question and receive a random response.
 
-- **Parameters:**
-  - `question` (Type: `STRING`, Required): The question you want to ask.
-  - `cow` (Type: `BOOLEAN`, Default: `false`): Whether to display the response in a cowsay format.
-- **Aliases:** `eightball`, `8b`
+**Syntax:**
+
+```text
+/random 8ball question:STRING [cow:true/false]
+$random 8ball <question> [-cow]
+$random eightball <question> [-cow]
+$random 8b <question> [-cow]
+```
+
+**Parameters:**
+
+- `question` (Type: `STRING`, Required): The question you want to ask.
+- `cow` (Type: `BOOLEAN`, Default: `false`): Whether to display the response in a cowsay format.
+
+**Aliases:**
+
+- `eightball`, `8b`
 
 ### number
 
 Generate a random integer between a minimum and maximum value.
 
-- **Parameters:**
-  - `minimum` (Type: `INTEGER`, Default: `0`): The lower bound.
-  - `maximum` (Type: `INTEGER`, Default: `100`): The upper bound.
-- **Aliases:** `n`
+**Syntax:**
+
+```text
+/random number [minimum:INTEGER] [maximum:INTEGER]
+$random number [minimum] [maximum]
+$random n [minimum] [maximum]
+```
+
+**Parameters:**
+
+- `minimum` (Type: `INTEGER`, Default: `0`): The lower bound.
+- `maximum` (Type: `INTEGER`, Default: `100`): The upper bound.
+
+**Aliases:**
+
+- `n`
 
 ## Usage Examples
 

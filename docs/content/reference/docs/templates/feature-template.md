@@ -135,15 +135,16 @@ Only include this section if the feature has associated commands.
 If no commands exist, remove this entire section.
 
 List commands that are related to or used with this feature.
+The table format is: Command name, Aliases (or — if none), Brief description, Link to detailed documentation.
 Link to detailed command documentation if available.
 -->
 
 This feature provides the following commands:
 
-| Command | Description | Documentation |
-|---------|-------------|---------------|
-| `/{COMMAND_NAME}` | {Brief description} | [Details](path/to/command.md) |
-| `/{COMMAND_NAME}` | {Brief description} | [Details](path/to/command.md) |
+| Command | Aliases | Description | Documentation |
+|---------|--------|-------------|---------------|
+| `/{COMMAND_NAME}` | `{ALIAS1}`, `{ALIAS2}` | {Brief description} | [Details](path/to/command.md) |
+| `/{COMMAND_NAME}` | — | {Brief description} | [Details](path/to/command.md) |
 
 ## Use Cases
 

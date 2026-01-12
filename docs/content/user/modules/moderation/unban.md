@@ -28,9 +28,12 @@ The `unban` command can be used in two ways:
 
 ```text
 $unban IDENTIFIER [reason]
+$ub IDENTIFIER [reason]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `unban`:
 
 - `ub`
 

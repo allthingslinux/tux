@@ -29,12 +29,16 @@ The commands are available in both slash and prefix formats:
 ```text
 $encode <encoding> <text>
 $decode <encoding> <text>
+$ec <encoding> <text>
+$dc <encoding> <text>
 ```
 
 **Aliases:**
 
-- `ec` (encode)
-- `dc` (decode)
+You can also use these aliases:
+
+- `ec` (for `encode`)
+- `dc` (for `decode`)
 
 ## Parameters
 

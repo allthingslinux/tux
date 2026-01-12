@@ -41,10 +41,10 @@ The `/xkcd` command group allows you to view and share XKCD webcomics with inter
 
 ## Commands
 
-| Command | Description | Documentation |
-|---------|-------------|---------------|
-| `/random` | Get random numbers, choices, or other random content | [Details](random.md) |
-| `/xkcd` | View XKCD comics | [Details](xkcd.md) |
+| Command | Aliases | Description | Documentation |
+|---------|---------|-------------|---------------|
+| `/random` | `rand` | Get random numbers, choices, or other random content | [Details](random.md) |
+| `/xkcd` | `xk` | View XKCD comics | [Details](xkcd.md) |
 
 ## Common Use Cases
 

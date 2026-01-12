@@ -20,9 +20,12 @@ The `snippet` command is available as a prefix command:
 
 ```text
 $snippet <name>
+$s <name>
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `snippet`:
 
 - `s`
 

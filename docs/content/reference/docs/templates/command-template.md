@@ -27,7 +27,7 @@ Keep it concise but informative - users should understand what this command offe
 <!--
 SYNTAX SECTION
 Show both slash command and prefix command formats.
-Include aliases if applicable.
+Include aliases inline with syntax examples for better visibility.
 -->
 
 The `{COMMAND_NAME}` command can be used in two ways:
@@ -42,14 +42,19 @@ The `{COMMAND_NAME}` command can be used in two ways:
 
 ```text
 ${COMMAND_NAME} [parameters]
+<!-- If aliases exist, add them here -->
+${ALIAS1} [parameters]
+${ALIAS2} [parameters]
 ```
 
 **Aliases:**
 
 <!-- Remove aliases section if none exist -->
 
-- `{ALIAS1}`
-- `{ALIAS2}`
+You can also use these aliases instead of `{COMMAND_NAME}`:
+
+- `{ALIAS1}` - {Brief description if helpful, otherwise remove this line}
+- `{ALIAS2}` - {Brief description if helpful, otherwise remove this line}
 
 ## Parameters
 

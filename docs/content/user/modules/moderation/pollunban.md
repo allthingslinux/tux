@@ -26,9 +26,12 @@ The `pollunban` command can be used in two ways:
 
 ```text
 $pollunban @user [reason] [-silent]
+$pub @user [reason] [-silent]
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `pollunban`:
 
 - `pub`
 

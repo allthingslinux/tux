@@ -27,9 +27,12 @@ The `ping` command can be used in two ways:
 
 ```text
 $ping
+$status
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `ping`:
 
 - `status`
 

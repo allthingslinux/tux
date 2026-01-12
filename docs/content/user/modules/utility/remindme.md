@@ -27,9 +27,12 @@ The `remindme` command can be used in two ways:
 
 ```text
 $remindme <time> <reminder>
+$remind <time> <reminder>
 ```
 
 **Aliases:**
+
+You can also use these aliases instead of `remindme`:
 
 - `remind`
 

@@ -30,26 +30,26 @@ The cases command group provides tools for viewing and managing moderation cases
 
 ## Commands
 
-| Command | Description | Documentation |
-|---------|-------------|---------------|
-| `/ban` | Ban a member from the server | [Details](ban.md) |
-| `/unban` | Unban a previously banned member | [Details](unban.md) |
-| `/kick` | Remove a member from the server | [Details](kick.md) |
-| `/warn` | Issue a warning to a member | [Details](warn.md) |
-| `/timeout` | Timeout a member for a specified duration | [Details](timeout.md) |
-| `/untimeout` | Remove a timeout from a member | [Details](untimeout.md) |
-| `/jail` | Move a member to a jail channel | [Details](jail.md) |
-| `/unjail` | Release a member from jail | [Details](unjail.md) |
-| `/purge` | Delete multiple messages from a channel | [Details](purge.md) |
-| `/slowmode` | Set slowmode for a channel | [Details](slowmode.md) |
-| `/cases` | View and manage moderation cases | [Details](cases.md) |
-| `/tempban` | Temporarily ban a member | [Details](tempban.md) |
-| `/clearafk` | Clear AFK status from members | [Details](clearafk.md) |
-| `/report` | Report a user or message | [Details](report.md) |
-| `/pollban` | Ban a member from creating polls | [Details](pollban.md) |
-| `/pollunban` | Unban a member from creating polls | [Details](pollunban.md) |
-| `/snippetban` | Ban a member from creating snippets | [Details](snippetban.md) |
-| `/snippetunban` | Unban a member from creating snippets | [Details](snippetunban.md) |
+| Command | Aliases | Description | Documentation |
+|---------|---------|-------------|---------------|
+| `/ban` | `b` | Ban a member from the server | [Details](ban.md) |
+| `/unban` | `ub` | Unban a previously banned member | [Details](unban.md) |
+| `/kick` | `k` | Remove a member from the server | [Details](kick.md) |
+| `/warn` | `w` | Issue a warning to a member | [Details](warn.md) |
+| `/timeout` | `to`, `mute` | Timeout a member for a specified duration | [Details](timeout.md) |
+| `/untimeout` | `uto`, `unmute` | Remove a timeout from a member | [Details](untimeout.md) |
+| `/jail` | `j` | Move a member to a jail channel | [Details](jail.md) |
+| `/unjail` | `uj` | Release a member from jail | [Details](unjail.md) |
+| `/purge` | `p` | Delete multiple messages from a channel | [Details](purge.md) |
+| `/slowmode` | `sm` | Set slowmode for a channel | [Details](slowmode.md) |
+| `/cases` | `case`, `c` | View and manage moderation cases | [Details](cases.md) |
+| `/tempban` | `tb` | Temporarily ban a member | [Details](tempban.md) |
+| `/clearafk` | `unafk` | Clear AFK status from members | [Details](clearafk.md) |
+| `/report` | — | Report a user or message | [Details](report.md) |
+| `/pollban` | `pb` | Ban a member from creating polls | [Details](pollban.md) |
+| `/pollunban` | `pub` | Unban a member from creating polls | [Details](pollunban.md) |
+| `/snippetban` | `sb` | Ban a member from creating snippets | [Details](snippetban.md) |
+| `/snippetunban` | `sub` | Unban a member from creating snippets | [Details](snippetunban.md) |
 
 ## Common Use Cases
 
