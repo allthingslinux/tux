@@ -46,9 +46,9 @@ You can also use these aliases instead of `snippetunban`:
 
 This command supports the following flags:
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `-silent` | Boolean | False | If true, Tux will not attempt to DM the user. |
+| Flag | Aliases | Type | Default | Description |
+|------|---------|------|---------|-------------|
+| `-silent` | `-s`, `-quiet` | Boolean | False | If true, Tux will not attempt to DM the user. |
 
 ### -silent
 

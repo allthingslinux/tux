@@ -50,10 +50,10 @@ You can also use these aliases instead of `timeout`:
 
 This command supports the following flags:
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `-duration` | Time | **Required** | Length of the timeout (max 28 days). |
-| `-silent` | Boolean | False | If true, Tux will not attempt to DM the user. |
+| Flag | Aliases | Type | Default | Description |
+|------|---------|------|---------|-------------|
+| `-duration` | `-t`, `-d`, `-e` | Time | **Required** | Length of the timeout (max 28 days). |
+| `-silent` | `-s`, `-quiet` | Boolean | False | If true, Tux will not attempt to DM the user. |
 
 ### -duration
 

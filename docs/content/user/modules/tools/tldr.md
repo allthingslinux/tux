@@ -29,7 +29,9 @@ The `tldr` command can be used in two ways:
 
 ```text
 $tldr <command> [-platform PLATFORM] [-language LANG] [-short] [-long] [-both]
+$tldr <command> [-p PLATFORM] [-lang LANG] [-l LANG] [-short] [-long] [-both]
 $man <command> [-platform PLATFORM] [-language LANG] [-short] [-long] [-both]
+$man <command> [-p PLATFORM] [-lang LANG] [-l LANG] [-short] [-long] [-both]
 ```
 
 **Aliases:**
@@ -51,13 +53,15 @@ You can also use these aliases instead of `tldr`:
 
 ## Flags (Prefix Command)
 
-This command supports flags for choosing display modes:
+This command supports the following flags:
 
-- `-platform`: Specify a preferred OS platform (e.g., `linux`, `osx`, `windows`, `common`)
-- `-language`: Choose a specific language code (e.g., `en`, `es`, `fr`)
-- `-short`: Display short-form options only
-- `-long`: Display long-form options only (default)
-- `-both`: Show both short and long options
+| Flag | Aliases | Type | Default | Description |
+|------|---------|------|---------|-------------|
+| `-platform` | `-p` | String | None | Specify a preferred OS platform (e.g., `linux`, `osx`, `windows`, `common`). |
+| `-language` | `-lang`, `-l` | String | None | Choose a specific language code (e.g., `en`, `es`, `fr`). |
+| `-show_short` | `-short` | Boolean | False | Display short-form options only. |
+| `-show_long` | `-long` | Boolean | True | Display long-form options only (default). |
+| `-show_both` | `-both` | Boolean | False | Show both short and long options. |
 
 ## Usage Examples
 

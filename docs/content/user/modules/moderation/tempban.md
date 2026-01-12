@@ -48,11 +48,11 @@ You can also use these aliases instead of `tempban`:
 
 This command supports the following flags:
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `-duration` | Time | **Required** | Length of the ban (e.g., `1d`, `12h`). |
-| `-purge` | Integer (0-7) | 0 | Number of days of message history to delete. |
-| `-silent` | Boolean | False | If true, Tux will not attempt to DM the user. |
+| Flag | Aliases | Type | Default | Description |
+|------|---------|------|---------|-------------|
+| `-duration` | `-t`, `-d`, `-e` | Time | **Required** | Length of the ban (e.g., `1d`, `12h`). |
+| `-purge` | `-p` | Integer (0-7) | 0 | Number of days of message history to delete. |
+| `-silent` | `-s`, `-quiet` | Boolean | False | If true, Tux will not attempt to DM the user. |
 
 ### -duration
 

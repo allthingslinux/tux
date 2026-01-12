@@ -106,15 +106,16 @@ IMPORTANT: Flags are optional named options that modify command behavior.
 They are NOT core parameters like `member` or `reason` - those belong in Parameters.
 Flags use flag syntax: `-silent`, `-purge`, `-duration`, etc.
 
-Create a table listing all flags, then provide detailed descriptions for each.
+Create a table listing all flags with aliases, then provide detailed descriptions for each.
+The table format is: Flag name, Aliases (or — if none), Type, Default, Description.
 -->
 
 This command supports the following flags:
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `-{FLAG_NAME}` | {TYPE} | {DEFAULT} | {Description} |
-| `-silent` | Boolean | False | If true, Tux will not attempt to DM the user. |
+| Flag | Aliases | Type | Default | Description |
+|------|---------|------|---------|-------------|
+| `-{FLAG_NAME}` | `-{ALIAS1}`, `-{ALIAS2}` | {TYPE} | {DEFAULT} | {Description} |
+| `-silent` | `-s`, `-quiet` | Boolean | False | If true, Tux will not attempt to DM the user. |
 
 ### --{FLAG_NAME}
 

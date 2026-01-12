@@ -87,6 +87,7 @@ Find specific cases based on filtering criteria. You can combine multiple flags 
 ```text
 /cases search [user:@user] [mod:@moderator] [type:TYPE]
 $cases search [-user @user] [-mod @moderator] [-type TYPE]
+$cases search [-u @user] [-m @moderator] [-t TYPE]
 $cases filter [-user @user] [-mod @moderator] [-type TYPE]
 $cases find [-user @user] [-mod @moderator] [-type TYPE]
 ```
@@ -95,11 +96,13 @@ $cases find [-user @user] [-mod @moderator] [-type TYPE]
 
 - `filter`, `find`
 
-**Parameters (Flags):**
+**Flags:**
 
-- `-user` - Filter by the user who received the action.
-- `-mod` - Filter by the moderator who took the action.
-- `-type` - Filter by the action type (e.g., `ban`, `warn`).
+| Flag | Aliases | Description |
+|------|---------|-------------|
+| `-user` | `-u` | Filter by the user who received the action. |
+| `-mod` | `-m` | Filter by the moderator who took the action. |
+| `-type` | `-t` | Filter by the action type (e.g., `ban`, `warn`). |
 
 **Example:**
 
@@ -116,6 +119,7 @@ Allows moderators to update existing cases. This is commonly used to add more de
 ```text
 /cases modify case_number:NUMBER reason:STRING [status:active/inactive]
 $cases modify NUMBER [-reason "New reason"] [-status active/inactive]
+$cases modify NUMBER [-r "New reason"] [-s active/inactive]
 $cases m NUMBER [-reason "New reason"] [-status active/inactive]
 $cases edit NUMBER [-reason "New reason"] [-status active/inactive]
 $cases update NUMBER [-reason "New reason"] [-status active/inactive]
@@ -125,10 +129,12 @@ $cases update NUMBER [-reason "New reason"] [-status active/inactive]
 
 - `m`, `edit`, `update`
 
-**Parameters (Flags):**
+**Flags:**
 
-- `-reason` - Update the reason text.
-- `-status` - Manually set the status (active/inactive).
+| Flag | Aliases | Description |
+|------|---------|-------------|
+| `-reason` | `-r` | Update the reason text. |
+| `-status` | `-s` | Manually set the status (active/inactive). |
 
 **Example:**
 
