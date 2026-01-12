@@ -5,58 +5,71 @@ tags:
   - user-guide
   - features
   - roles
+icon: lucide/badge
 ---
 
 # Status Roles
 
-!!! warning "Work in progress"
-    This section is a work in progress. Please help us by contributing to the documentation.
+Status Roles is an automated role management system that rewards or categorizes users based on
+their Discord custom status. By using regular expression (regex) pattern matching, Tux can monitor
+what users have set as their status and automatically assign or remove roles accordingly. This is
+commonly used to reward users who support the community in their status or to indicate a user's
+current activity (e.g., "Working", "Streaming").
 
-The Status Roles feature automatically assigns roles to users based on their Discord custom status messages. When a user's status matches a configured pattern, they receive the corresponding role. When their status changes and no longer matches, the role is automatically removed.
+The system is fully dynamic and responds instantly to status changes. It also performs a full server sweep upon bot startup to ensure all users have the correct roles based on their current status, providing a reliable and hands-off experience for administrators.
 
 ## How It Works
 
-Status Roles monitors Discord custom status messages and matches them against configured regex patterns:
+### Mechanics
 
-1. **User sets a custom status** in Discord (e.g., "Working on Tux bot")
-2. **Tux checks the status** against all configured patterns
-3. **If a pattern matches**, the user receives the corresponding role
-4. **If status changes** and no longer matches, the role is removed
-5. **All users are checked** when the bot starts up
+Tux utilizes Discord's gateway events to monitor when a user's presence (specifically their custom status) changes.
 
-## Key Features
+- **Regex Matching:** The bot compares the text of a user's custom status against a list of pre-configured regex patterns.
+- **Role Assignment:** If a match is found, Tux checks if the user already has the corresponding role. If not, it assigns it.
+- **Role Removal:** If a user's status changes and no longer matches any configured pattern for a specific role they hold, Tux automatically removes that role.
+- **Startup Sync:** On startup, Tux iterates through all members of configured servers to reconcile status roles.
 
-### Automatic Role Management
+### Automation
 
-- **Adds roles** when status matches a pattern
-- **Removes roles** when status no longer matches
-- **Updates in real-time** as users change their status
-- **Checks all users** on bot startup
+This feature provides seamless role automation:
 
-### Regex Pattern Matching
+- **Instant Response:** Roles are updated as soon as Discord notifies the bot of a presence change.
+- **No Manual Cleanup:** Admins don't need to manually remove roles when users change their status.
+- **Bot Protection:** To prevent issues, Tux automatically ignores other bot accounts for status role assignment.
 
-- **Case-insensitive** matching by default
-- **Flexible patterns** using regex syntax
-- **Empty status** treated as empty string for matching
-- **Multiple patterns** can be configured per server
+### Triggers
 
-### Server-Specific Configuration
+The feature activates when:
 
-- Each mapping is tied to a specific server
-- Different servers can have different rules
-- Roles are only assigned in the configured server
+- A user updates their Discord custom status.
+- Tux starts up and performs its initial member sweep.
+
+## User Experience
+
+### What Users See
+
+Status roles are completely transparent to the user:
+
+- **Automatic Updates:** Users set their status in Discord as they normally would.
+- **Visual Recognition:** If their status matches a pattern (e.g., containing ".atl.dev"), they will see the new role appear on their profile.
+- **Role Loss:** If they remove or change the status, the role disappears just as quickly.
+
+### Interaction
+
+Users do not need to interact with Tux directly. They interact with the feature through their own Discord status settings.
 
 ## Configuration
 
-Status Roles is configured through your server's configuration file.
+Status Roles are configured through the server's `config.toml` file.
 
-### Configuration Format
+### Configuration Options
 
-Each mapping requires three fields:
-
-- **`server_id`**: The Discord server (guild) ID
-- **`role_id`**: The Discord role ID to assign
-- **`status_regex`**: The regex pattern to match against custom status
+| Option | Type | Description |
+|--------|------|-------------|
+| `mappings` | `array` | A list of objects defining the role-to-status relationships. |
+| `server_id` | `integer` | The ID of the Discord server where the mapping applies. |
+| `role_id` | `integer` | The ID of the role to be managed. |
+| `status_regex` | `string` | The regex pattern to match against the user's status. |
 
 ### Example Configuration
 
@@ -66,250 +79,89 @@ mappings = [
     {
         server_id = 123456789012345678,
         role_id = 987654321098765432,
-        status_regex = ".*working.*"
+        status_regex = ".*tux.*"  # Matches any status containing "tux"
     },
     {
         server_id = 123456789012345678,
         role_id = 111222333444555666,
-        status_regex = "^Looking for"
+        status_regex = "^Working$"  # Matches only if status is exactly "Working"
     }
 ]
 ```
 
 ### Regex Pattern Examples
 
-**Simple Text Match:**
-
 ```toml
-status_regex = ".*linux.*"  # Matches any status containing "linux"
+status_regex = ".*linux.*"              # Contains "linux"
+status_regex = "^Working$"              # Exactly "Working"
+status_regex = ".*(working|busy).*"     # Contains "working" OR "busy"
+status_regex = "^$"                     # Empty status
 ```
 
-**Exact Match:**
+!!! info "Configuration Guide"
+    For detailed configuration instructions, see the [Admin Guide](../../admin/config/index.md).
 
-```toml
-status_regex = "^Working$"  # Matches only "Working" exactly
-```
+## Permissions
 
-**Multiple Keywords:**
+### Bot Permissions
 
-```toml
-status_regex = ".*(working|busy|away).*"  # Matches any of these words
-```
+Tux requires the following permissions for this feature:
 
-**Case-Insensitive:**
+- **Manage Roles** - Needed to assign and remove roles from users.
+- **View Server Members** - Needed to sweep the member list on startup.
 
-```toml
-status_regex = ".*DEVELOPER.*"  # Case-insensitive by default
-```
+### User Permissions
 
-**Empty Status:**
+None required. All members are eligible for status roles based on the server's configuration.
 
-```toml
-status_regex = "^$"  # Matches users with no custom status
-```
-
-## How Status Matching Works
-
-### Custom Status Detection
-
-Tux checks for Discord custom status messages:
-
-- **Custom Activity** status is extracted
-- **Other activity types** (games, streaming) are ignored
-- **No custom status** is treated as an empty string
-
-### Pattern Matching Process
-
-1. **Extract custom status** from user's activities
-2. **Convert to lowercase** for case-insensitive matching
-3. **Test against each configured pattern** for the server
-4. **Add role** if pattern matches and user doesn't have it
-5. **Remove role** if pattern doesn't match and user has it
-
-### Real-Time Updates
-
-Status changes are detected automatically:
-
-- **On presence update** - When user changes their status
-- **On bot startup** - All users are checked
-- **Immediate application** - Roles added/removed instantly
-
-## Use Cases
-
-### Work Status Indicators
-
-Assign roles based on work status:
-
-```toml
-status_regex = ".*working.*"     # "Working on project"
-status_regex = ".*busy.*"        # "Busy right now"
-status_regex = ".*available.*"   # "Available for help"
-```
-
-### Technology Stack
-
-Identify users by their tech stack:
-
-```toml
-status_regex = ".*python.*"      # Python developers
-status_regex = ".*rust.*"        # Rust developers
-status_regex = ".*linux.*"       # Linux users
-```
-
-### Project Involvement
-
-Track project involvement:
-
-```toml
-status_regex = ".*tux.*"         # Working on Tux
-status_regex = ".*contributing.*" # Contributing to projects
-```
-
-### Availability Status
-
-Show availability:
-
-```toml
-status_regex = ".*afk.*"         # Away from keyboard
-status_regex = ".*back.*"        # Back online
-status_regex = "^$"             # No status (available)
-```
-
-## Behavior Details
-
-### Bot Users
-
-Bot accounts are automatically excluded:
-
-- Bots never receive status roles
-- Only human users are processed
-- Prevents accidental role assignment to bots
-
-### Role Hierarchy
-
-Important considerations:
-
-- **Tux must have permission** to assign the role
-- **Role must be below Tux's highest role** in hierarchy
-- **Users must be in the server** for roles to be assigned
-
-### Multiple Patterns
-
-If multiple patterns match:
-
-- **All matching roles** are assigned
-- **Each pattern** is evaluated independently
-- **Roles are removed** when patterns no longer match
-
-### Status Changes
-
-When a user changes their status:
-
-- **Old status** is checked against patterns
-- **New status** is checked against patterns
-- **Roles are updated** based on matches
-- **Changes are logged** for debugging
-
-## Tips
-
-!!! tip "Start Simple"
-    Begin with simple patterns like `.*keyword.*` to match any status containing a keyword. You can refine patterns later.
-
-!!! tip "Test Patterns"
-    Test your regex patterns using online regex testers before adding them to configuration. Make sure they match what you expect.
-
-!!! tip "Use Specific Patterns"
-    More specific patterns reduce false matches. For example, `^Working on` is more specific than `.*working.*`.
-
-!!! tip "Monitor Logs"
-    Check Tux's logs to see when roles are added or removed. This helps verify your patterns are working correctly.
-
-!!! tip "Consider Role Hierarchy"
-    Make sure the roles you're assigning are positioned correctly in your server's role hierarchy. Tux can only assign roles below its own highest role.
-
-!!! warning "Regex Complexity"
-    Complex regex patterns can be hard to maintain. Keep patterns simple and well-documented. Invalid regex patterns will cause errors in logs.
-
-!!! warning "Permission Requirements"
-    Tux needs the "Manage Roles" permission and the role must be below Tux's highest role in the hierarchy. Without proper permissions, role assignment will fail silently.
+!!! info "Permission System"
+    Configure command permissions via `/config commands` or see the [Permission Configuration](../../admin/config/commands.md) guide.
 
 ## Troubleshooting
 
-### Roles Not Being Assigned
+### Issue: Roles are not being assigned to users
 
-If roles aren't being assigned:
+**Symptoms:**
 
-1. **Check permissions** - Tux needs "Manage Roles" permission
-2. **Verify role hierarchy** - Role must be below Tux's highest role
-3. **Check server ID** - Ensure `server_id` matches your server
-4. **Verify role ID** - Ensure `role_id` is correct
-5. **Test regex pattern** - Use a regex tester to verify the pattern
-6. **Check logs** - Look for error messages in Tux's logs
+- A user has a matching status but has not received the role.
 
-### Roles Not Being Removed
+**Causes:**
 
-If roles aren't being removed:
+- Tux is missing the "Manage Roles" permission.
+- Tux's role is lower in the hierarchy than the role it is trying to assign.
+- The `server_id` or `role_id` in the configuration is incorrect.
+- The regex pattern is invalid or does not match as expected.
 
-1. **Check pattern** - Pattern might still be matching
-2. **Verify status change** - User's status might not have actually changed
-3. **Check logs** - Look for permission errors
+**Solutions:**
 
-### Invalid Regex Patterns
+1. Ensure Tux has "Manage Roles" permission.
+2. Move Tux's role above the status roles in the server hierarchy.
+3. Test your regex pattern using an online tool to ensure it matches the user's exact status.
 
-If you see regex errors in logs:
+### Issue: Roles are not being removed
 
-1. **Validate pattern** - Use a regex tester to find the issue
-2. **Check syntax** - Ensure proper regex syntax
-3. **Escape special characters** - Some characters need escaping
-4. **Test incrementally** - Start with simple patterns and add complexity
+**Symptoms:**
 
-### Multiple Roles Assigned
+- A user changed their status but still has the status-related role.
 
-If users are getting multiple roles:
+**Causes:**
 
-- **Check mappings** - Multiple patterns might be matching
-- **Review patterns** - Patterns might be too broad
-- **Consider exclusivity** - Use more specific patterns to avoid overlaps
+- The new status still matches the regex pattern (e.g., using `.*` too broadly).
+- Tux did not receive the presence update event from Discord.
 
-## For Administrators
+**Solutions:**
 
-### Configuration Best Practices
+1. Refine your regex pattern to be more specific if necessary.
+2. Check the bot's logs for any errors related to presence updates or permissions.
 
-1. **Document patterns** - Add comments explaining what each pattern matches
-2. **Test thoroughly** - Test patterns with various status messages
-3. **Monitor logs** - Watch for errors or unexpected behavior
-4. **Start conservative** - Begin with simple patterns and expand
+## Limitations
 
-### Role Setup
+- **Custom Status Only:** Only the text in the "Custom Status" field is checked; "Playing", "Streaming", or "Listening" activities are ignored.
+- **Bot Exemption:** Bots cannot receive status roles to avoid potential loops or unintended behavior.
+- **Case Sensitivity:** By default, regex matching is case-insensitive unless the pattern explicitly handles it (e.g., `(?i)`).
+- **One Server Scope:** Each mapping is tied to a specific `server_id`.
 
-Before configuring status roles:
+## Related Documentation
 
-1. **Create the roles** you want to assign
-2. **Position roles** below Tux's highest role
-3. **Set permissions** appropriately for each role
-4. **Note role IDs** for configuration
-
-### Server ID and Role ID
-
-To find IDs:
-
-- **Server ID**: Right-click server → Copy Server ID (Developer Mode must be enabled)
-- **Role ID**: Right-click role → Copy Role ID (Developer Mode must be enabled)
-
-### Pattern Design
-
-Effective pattern design:
-
-- **Be specific** - Avoid overly broad patterns
-- **Use anchors** - `^` and `$` for exact matches
-- **Group alternatives** - Use `(option1|option2)` for multiple options
-- **Test edge cases** - Test with empty status, long status, special characters
-
-### Monitoring
-
-Regular monitoring tasks:
-
-- **Review logs** for role assignment activity
-- **Check role counts** to see how many users have each role
-- **Gather feedback** from users about role assignments
-- **Adjust patterns** based on usage and feedback
+- [Admin Configuration Guide](../../admin/config/index.md)
+- [Permission Configuration](../../admin/config/commands.md)

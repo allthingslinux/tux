@@ -115,7 +115,7 @@
     "tag:yaml.org,2002:python/object/apply:pymdownx.slugs.slugify mapping",
     "tag:yaml.org,2002:python/name:material.plugins.tags.tag_name_casefold"
   ],
-  "markdown.validate.enabled": true,
+  "markdown.validate.enabled": false,
   "editor.wordWrap": "off",
   "editor.tabSize": 4,
   "editor.detectIndentation": false,

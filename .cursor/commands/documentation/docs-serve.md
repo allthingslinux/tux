@@ -113,6 +113,7 @@ Start and manage a local documentation server to preview documentation changes, 
 ## Server Configuration
 
 ### Default Settings
+
 - **Port**: 8000 (configurable)
 - **Host**: localhost (127.0.0.1)
 - **Auto-reload**: Enabled
@@ -120,20 +121,15 @@ Start and manage a local documentation server to preview documentation changes, 
 - **Watch**: All documentation source files
 
 ### Custom Configuration
-- **Port**: Use `--port` flag to specify different port
-- **Host**: Use `--host` flag for different host binding
-- **No-reload**: Use `--no-reload` to disable auto-reload
-- **Verbose**: Use `--verbose` for detailed logging
 
-### Environment Variables
-- `DOCS_PORT`: Override default port
-- `DOCS_HOST`: Override default host
-- `DOCS_RELOAD`: Enable/disable auto-reload
-- `DOCS_OPEN`: Auto-open browser on start
+- **Dev Address**: Use `--dev-addr` (or `-a`) flag to specify IP address and port (format: `host:port`, default: `localhost:8000`)
+- **Open Browser**: Use `--open` (or `-o`) flag to automatically open browser on start
+- **Strict Mode**: Use `--strict` (or `-s`) flag for strict mode (not yet supported by zensical)
 
 ## Testing Scenarios
 
 ### New Content Testing
+
 1. Add new documentation page
 2. Verify it appears in navigation
 3. Test all links to and from the page
@@ -141,6 +137,7 @@ Start and manage a local documentation server to preview documentation changes, 
 5. Verify search includes new content
 
 ### Content Updates Testing
+
 1. Modify existing documentation
 2. Verify changes appear immediately
 3. Check that formatting is preserved
@@ -148,6 +145,7 @@ Start and manage a local documentation server to preview documentation changes, 
 5. Verify cross-references still work
 
 ### Asset Testing
+
 1. Add new images or media files
 2. Verify they display correctly
 3. Check different image formats
@@ -155,6 +153,7 @@ Start and manage a local documentation server to preview documentation changes, 
 5. Verify alt text and accessibility
 
 ### Configuration Testing
+
 1. Modify site configuration
 2. Restart server to apply changes
 3. Verify configuration takes effect
@@ -164,13 +163,15 @@ Start and manage a local documentation server to preview documentation changes, 
 ## Troubleshooting
 
 ### Server Won't Start
+
 - Check if port is already in use
 - Verify documentation builds successfully
 - Check for missing dependencies
-- Try different port with `--port` flag
+- Try different port with `--dev-addr` flag (e.g., `--dev-addr localhost:3000`)
 - Check file permissions
 
 ### Pages Don't Load
+
 - Verify build completed successfully
 - Check for broken internal links
 - Verify file paths are correct
@@ -178,6 +179,7 @@ Start and manage a local documentation server to preview documentation changes, 
 - Clear browser cache
 
 ### Auto-Reload Not Working
+
 - Check file system permissions
 - Verify watch functionality is enabled
 - Try restarting the server
@@ -185,6 +187,7 @@ Start and manage a local documentation server to preview documentation changes, 
 - Use manual refresh as fallback
 
 ### Styling Issues
+
 - Clear browser cache and reload
 - Check for CSS build errors
 - Verify static assets are loading
@@ -192,6 +195,7 @@ Start and manage a local documentation server to preview documentation changes, 
 - Try different browser
 
 ### Search Not Working
+
 - Verify search index is built
 - Check for JavaScript errors
 - Clear browser cache
@@ -219,6 +223,7 @@ Start and manage a local documentation server to preview documentation changes, 
 ## Examples
 
 ### Basic Server Start
+
 ```bash
 uv run docs serve
 # Server starts on http://localhost:8000
@@ -227,21 +232,24 @@ uv run docs serve
 ```
 
 ### Custom Port and Host
+
 ```bash
-uv run docs serve --port 3000 --host 0.0.0.0
+uv run docs serve --dev-addr 0.0.0.0:3000
 # Server accessible on all network interfaces
 # Custom port for avoiding conflicts
 ```
 
-### Development Mode
+### Development Mode with Auto-Open
+
 ```bash
-uv run docs serve --verbose --no-cache
-# Detailed logging enabled
-# Cache disabled for development
+uv run docs serve --open
+# Automatically opens browser on start
+# Live reload enabled by default
 # Immediate reflection of changes
 ```
 
 ### Testing Workflow
+
 1. Start server: `uv run docs serve`
 2. Open browser to `http://localhost:8000`
 3. Navigate through documentation
@@ -256,13 +264,12 @@ uv run docs serve --verbose --no-cache
 - Related rule: @docs/docs.mdc - Documentation standards and patterns
 - Related command: `/update-docs` - Update existing documentation
 - Related command: `/generate-docs` - Generate new documentation
-- Related guide: [Documentation Development Guide](../../../docs/content/developer/guides/documentation-development.md)
 
 ## Additional Notes
 
 - **Development**: Use serve command during active documentation development
 - **Testing**: Always test documentation locally before committing changes
 - **Performance**: Monitor server performance with large documentation sites
-- **Collaboration**: Share local server URL for team review (use `--host 0.0.0.0`)
+- **Collaboration**: Share local server URL for team review (use `--dev-addr 0.0.0.0:8000`)
 - **Automation**: Consider integrating serve command into development workflows
-- **Debugging**: Use verbose mode and browser developer tools for troubleshooting
+- **Debugging**: Use browser developer tools and server console output for troubleshooting

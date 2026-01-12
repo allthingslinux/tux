@@ -1,226 +1,140 @@
 ---
 title: Bookmarks
+description: Save important Discord messages for later reference by reacting with the bookmark emoji.
 tags:
   - user-guide
   - features
   - bookmarks
+icon: lucide/bookmark
 ---
 
 # Bookmarks
 
-!!! warning "Work in progress"
-    This section is a work in progress. Please help us by contributing to the documentation.
+Save important Discord messages by reacting with 🔖. Tux automatically sends a formatted copy to your
+DMs with all attachments, images, and context, allowing you to build a personal library of valuable
+information without cluttering server channels.
 
-The Bookmarks feature allows you to save important Discord messages for later reference. Simply react to any message with the bookmark emoji, and Tux will send a copy of that message directly to your DMs, complete with all attachments, images, and context.
+This feature works entirely in the background, monitoring message reactions and instantly providing you with a private, permanent record of the content you find most important.
 
 ## How It Works
 
-Bookmarking a message is as simple as adding a reaction:
+### Mechanics
 
-1. **React with 🔖** on any message you want to save
-2. **Tux sends you a DM** with a formatted copy of the message
-3. **Access your bookmarks** anytime in your DMs
-4. **Remove bookmarks** by reacting with 🗑️ on the bookmark message in your DMs
+Tux monitors reaction events across all servers where it is present. When it detects a 🔖 reaction from a user, it triggers the bookmarking process.
 
-## Using Bookmarks
+- **Content Extraction:** Tux parses the original message to extract text, embeds, and metadata.
+- **Attachment Handling:** The bot collects up to 10 images and other attachments to include in the DM.
+- **Context Preservation:** Every bookmark includes a jump link to the original message, author information, and the original timestamp.
 
-### Bookmarking a Message
+### Automation
 
-To bookmark a message:
+This feature works automatically in the background:
 
-1. Find a message you want to save
-2. React to it with the 🔖 emoji
-3. Check your DMs - Tux will send you the bookmarked message
+- **Message Monitoring:** Tux listens for specific emoji reactions on all visible messages.
+- **DM Delivery:** Once a bookmark is triggered, Tux instantly formats and sends the message to your DMs.
+- **Cleanup Management:** Tux monitors reactions on the bookmark messages themselves to allow for easy removal.
 
-The bookmark includes:
+### Triggers
 
-- Full message content
-- Author information
-- All attachments (up to 10 images)
-- Stickers
-- Jump link to the original message
-- Channel and server context
-- Timestamp
+The feature activates when:
 
-### Removing a Bookmark
+- You react to any message in a server with the 🔖 emoji.
+- You react with 🗑️ on a bookmark message in your DMs to delete it.
 
-To remove a bookmark from your DMs:
+## User Experience
 
-1. Open the bookmark message in your DMs
-2. React with the 🗑️ emoji
-3. The bookmark message will be deleted
+### What Users See
 
-!!! note "Removal Location"
-    You can only remove bookmarks by reacting in your DMs. Reacting with 🗑️ on messages in servers won't remove bookmarks - this prevents accidental deletions.
+When you bookmark a message, you receive a formatted DM from Tux containing:
 
-## What Gets Bookmarked
+- **Author Info:** The name and avatar of the person who sent the original message.
+- **Message Content:** The full text of the original message.
+- **Attachments:** Images and files from the original message (up to Discord's limit).
+- **Metadata:** The server and channel name where the message was found.
+- **Navigation:** A "Jump to Message" link to view the original context.
 
-### Message Content
+### Interaction
 
-The full text content of the message is included in the bookmark. If the message is too long, it will be truncated to fit Discord's embed limits.
+Users interact with this feature by:
 
-### Attachments
+1. Reacting to a message with 🔖 to save it.
+2. Checking their DMs for the formatted bookmark from Tux.
+3. Reacting to the bookmark in their DMs with 🗑️ to remove it from their history.
 
-All image attachments from the original message are included in the bookmark (up to 10 images). Non-image attachments are listed as links in the embed.
+## Configuration
 
-### Stickers
+No configuration is required for individual users. The feature works automatically for anyone in a server where Tux is present.
 
-Stickers are included as images in the bookmark when possible. PNG and APNG format stickers are converted to image files.
+### User Requirements
 
-### Embeds
+1. **DMs Enabled:** You must allow direct messages from server members for Tux to send your bookmarks.
+2. **Access:** You must have permission to see the message you are trying to bookmark.
 
-If the original message contains embeds, the bookmark will note this. Embedded images are extracted and included as attachments when possible.
+!!! info "Configuration Guide"
+    For detailed configuration instructions, see the [Admin Guide](../../admin/config/index.md).
 
-### Context Information
+## Permissions
 
-Each bookmark includes:
+### Bot Permissions
 
-- **Author**: Who posted the original message
-- **Jump Link**: Direct link to view the original message in context
-- **Reply Reference**: If the message was a reply, a link to the original message
-- **Location**: Channel name and server name
-- **Timestamp**: When the message was originally posted
+Tux requires the following permissions for this feature:
 
-## Example Bookmark
+- **Read Message History** - Needed to access the content of the message being bookmarked.
+- **Read Messages** - Needed to monitor for the bookmark reaction.
+- **Send Messages** - Needed to send the bookmark to your DMs.
+- **Embed Links** - Needed to create the formatted bookmark card.
+- **Attach Files** - Needed to forward original attachments to your DMs.
 
-When you bookmark a message, you'll receive a DM that looks like this:
+### User Permissions
 
-```text
-📌 Message Bookmarked
+None required. Users can bookmark messages in any channel they can view.
 
-[Message content here]
-
-Author: @username
-Jump to Message: [Click Here]
-Attachments: [filename.png]
-In #general on Server Name
-[Timestamp]
-```
-
-## Privacy & Permissions
-
-### Direct Messages
-
-Bookmarks are sent to your DMs, so you need to have DMs enabled with Tux. If you have DMs disabled:
-
-- Tux will attempt to send the bookmark
-- If it fails, you'll see a notification in the channel (deleted after 30 seconds)
-- Enable DMs in your Discord privacy settings to receive bookmarks
-
-### Server Permissions
-
-You can bookmark messages in any channel you have access to, regardless of your server permissions. The bookmark feature works in:
-
-- Text channels
-- Threads
-- Forum channels
-- Any messageable channel
-
-## Limitations
-
-### File Limits
-
-Discord limits messages to 10 attachments. If a message has more than 10 images:
-
-- The first 10 images will be included
-- Additional images will be listed as links in the embed
-
-### Embed Content
-
-Some embed content may not be fully preserved:
-
-- Complex embeds are noted but not fully recreated
-- Embedded images are extracted when possible
-- Interactive embed elements (buttons, select menus) are not included
-
-### Message Length
-
-Very long messages may be truncated to fit Discord's embed description limits. The full content is preserved up to the limit, with a truncation indicator (`...`) if needed.
-
-## Use Cases
-
-### Saving Important Information
-
-Bookmark messages containing:
-
-- Important announcements
-- Useful links and resources
-- Code snippets or commands
-- Server rules or guidelines
-- Meeting notes or summaries
-
-### Reference Material
-
-Keep track of:
-
-- Helpful explanations or tutorials
-- Configuration examples
-- Documentation links
-- Community resources
-
-### Personal Notes
-
-Save messages you want to revisit:
-
-- Interesting discussions
-- Useful tips or tricks
-- Personal reminders
-- Favorite memes or images
-
-## Tips
-
-!!! tip "Quick Access"
-    Keep your DMs organized by creating a folder or using Discord's search feature to find bookmarked messages quickly.
-
-!!! tip "Jump to Context"
-    Use the "Jump to Message" link in bookmarks to return to the original conversation and see replies or follow-up messages.
-
-!!! tip "Bookmark Replies"
-    If a message is a reply, the bookmark includes a link to the original message it was replying to, giving you full context.
-
-!!! tip "Organize Your Bookmarks"
-    Since bookmarks are in your DMs, you can organize them by:
-    - Reacting with different emojis for categorization
-    - Pinning important bookmarks
-    - Using Discord's search to find specific bookmarks
-
-!!! warning "DM Privacy"
-    Make sure you're comfortable with Tux sending you DMs. If you prefer not to receive DMs, you'll need to enable them temporarily to use bookmarks, or use Discord's built-in save message feature instead.
+!!! info "Permission System"
+    Configure command permissions via `/config commands` or see the [Permission Configuration](../../../admin/config/commands.md) guide.
 
 ## Troubleshooting
 
-### Not Receiving Bookmarks
+### Issue: Not receiving bookmarks
 
-If you're not receiving bookmarks in your DMs:
+**Symptoms:**
 
-1. **Check Privacy Settings**: Ensure you allow DMs from server members
-2. **Check Server Settings**: Some servers restrict who can DM members
-3. **Check Bot Status**: Make sure Tux is online and functioning
-4. **Check Error Messages**: Look for notifications in the channel where you bookmarked
+- Reacting with 🔖 does nothing.
+- No DM is received from Tux.
 
-### Can't Remove Bookmarks
+**Causes:**
 
-If you can't remove a bookmark:
+- Discord privacy settings are blocking DMs from server members.
+- Tux does not have "Read Message History" permission in the channel.
 
-- Make sure you're reacting in your DMs, not in a server channel
-- Ensure you're reacting to the bookmark message itself (sent by Tux)
-- Check that you're using the 🗑️ emoji
+**Solutions:**
 
-### Missing Attachments
+1. Check your Discord privacy settings and enable DMs for the server.
+2. Verify Tux is online and has access to the channel.
 
-If attachments aren't included:
+### Issue: Missing attachments
 
-- The original attachment may have been deleted
-- The file may be too large
-- Non-image attachments are listed as links, not included as files
-- Discord's 10-file limit may have been reached
+**Symptoms:**
 
-## For Administrators
+- The bookmark arrives but is missing some or all images/files.
 
-The Bookmarks feature requires no configuration and works automatically once Tux is added to your server. All users can bookmark messages in channels they have access to.
+**Causes:**
 
-If you want to restrict bookmarking:
+- The original attachment was deleted from Discord.
+- The message had more than 10 attachments (Discord's limit).
 
-- Use Discord's permission system to control who can react in channels
-- Consider using reaction roles or moderation bots to manage reactions
-- The feature respects Discord's channel permissions
+**Solutions:**
+
+1. Verify the original message still has its attachments.
+2. Check for links in the embed content which may contain non-image attachments.
+
+## Limitations
+
+- **DMs Required:** You must have DMs enabled to receive bookmarks.
+- **Attachment Limit:** Discord limits messages to 10 attachments.
+- **Truncation:** Very long messages may be truncated due to Discord embed character limits.
+- **Interactive Elements:** Buttons, select menus, and other interactive components from the original message are not preserved.
+
+## Related Documentation
+
+- [Admin Configuration Guide](../../admin/config/index.md)
+- [Permission Configuration](../../../admin/config/commands.md)

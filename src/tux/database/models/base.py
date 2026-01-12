@@ -236,7 +236,7 @@ class SoftDeleteMixin(SQLModel):
     def soft_delete(self) -> None:
         """Mark record as soft-deleted."""
         self.is_deleted = True
-        self.deleted_at = datetime.now(UTC)
+        self.deleted_at = datetime.now(UTC).replace(tzinfo=None)
 
     def restore(self) -> None:
         """Restore a soft-deleted record."""

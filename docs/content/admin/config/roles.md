@@ -56,13 +56,13 @@ You can also manage role assignments with text commands:
 **Assign a role to a rank:**
 
 ```text
-/config role assign 3 @Moderator
+/config role assign rank:3 role:@Moderator
 ```
 
 **Remove a role assignment:**
 
 ```text
-/config role unassign @Moderator
+/config role unassign role:@Moderator
 ```
 
 **List all assignments:**
@@ -120,7 +120,7 @@ Member (Rank 0) → @Member (everyone starts here)
 **Command Method:**
 
 ```text
-/config role assign <rank_number> @RoleName
+/config role assign rank:<rank_number> role:@RoleName
 ```
 
 ### Removing Assignments
@@ -134,7 +134,7 @@ Member (Rank 0) → @Member (everyone starts here)
 **Command Method:**
 
 ```text
-/config role unassign @RoleName
+/config role unassign role:@RoleName
 ```
 
 ### Viewing Assignments
