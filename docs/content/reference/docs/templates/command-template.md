@@ -59,12 +59,21 @@ Create a table listing all parameters/arguments for the command.
 Then provide detailed descriptions for each parameter if needed.
 
 Use the format: | `PARAMETER_NAME` | {TYPE} | {Yes/No} | {Description} |
+
+IMPORTANT: Parameters vs Flags
+- Parameters: Core arguments like `member`, `reason`, `duration` that are part of the command's primary function
+  - In prefix commands: Can be positional (e.g., `$ban @user reason`) or named flags (e.g., `$ban @user -duration 1d`)
+  - In slash commands: Always named parameters (e.g., `/ban member:@user reason:"..."`)
+  - For optional parameters like `reason`, note: "In prefix commands, this is a positional argument. In slash commands, it is a named parameter."
+- Flags: Optional named options that modify behavior (e.g., `-silent`, `-purge`, `-quiet`)
+  - Always use flag syntax with dashes (e.g., `-silent`, `--flag-name`)
+  - Document aliases if they exist (e.g., `-s`, `-quiet` for `-silent`)
 -->
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `{PARAMETER_NAME}` | {TYPE} | {Yes/No} | {Description} |
-| `{PARAMETER_NAME}` | {TYPE} | {Yes/No} | {Description} |
+| `reason` | String | No | The reason for the action. In prefix commands, this is a positional argument. In slash commands, it is a named parameter. Defaults to "No reason provided". |
 
 <!--
 DETAILED PARAMETER DESCRIPTIONS
@@ -88,6 +97,10 @@ FLAGS SECTION
 Only include this section if the command uses flags (flag converter).
 If no flags exist, remove this entire section.
 
+IMPORTANT: Flags are optional named options that modify command behavior.
+They are NOT core parameters like `member` or `reason` - those belong in Parameters.
+Flags use flag syntax: `-silent`, `-purge`, `-duration`, etc.
+
 Create a table listing all flags, then provide detailed descriptions for each.
 -->
 
@@ -95,8 +108,8 @@ This command supports the following flags:
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--{FLAG_NAME}` | {TYPE} | {DEFAULT} | {Description} |
-| `--{FLAG_NAME}` | {TYPE} | {DEFAULT} | {Description} |
+| `-{FLAG_NAME}` | {TYPE} | {DEFAULT} | {Description} |
+| `-silent` | Boolean | False | If true, Tux will not attempt to DM the user. |
 
 ### --{FLAG_NAME}
 

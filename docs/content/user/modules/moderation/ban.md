@@ -39,6 +39,7 @@ $ban @user [reason] [-purge X] [-silent]
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `member` | Member/User | Yes | The member or user ID to ban from the server. |
+| `reason` | String | No | The reason for the ban. In prefix commands, this is a positional argument. In slash commands, it is a named parameter. Defaults to "No reason provided". Examples: `Spamming`, `Violation of Rule 1` |
 
 ## Flags
 
@@ -46,17 +47,8 @@ This command supports the following flags:
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `reason` | String | No reason provided | The reason for the ban (positional). |
 | `-purge` | Integer (0-7) | 0 | Number of days of message history to delete. |
 | `-silent` | Boolean | False | If true, Tux will not attempt to DM the user. |
-
-### reason
-
-The reason for the ban. In the prefix command, this is a positional flag, meaning you can type it after the member mention without a flag name. In slash commands, it is a standard argument.
-
-- **Type:** String
-- **Default:** "No reason provided"
-- **Examples:** `Spamming`, `Violation of Rule 1`
 
 ### -purge
 

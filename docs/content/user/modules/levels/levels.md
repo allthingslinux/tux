@@ -59,6 +59,8 @@ $levels set <member> <new_level>
 - `member` - The member to set the level for.
 - `new_level` - The target level to assign.
 
+#### setxp
+
 Set a member's XP to a specific value. This automatically recalculates their level based on the new XP amount and updates their roles accordingly.
 
 **Syntax:**
@@ -87,6 +89,8 @@ $levels reset <member>
 **Parameters:**
 
 - `member` - The member whose progress will be wiped.
+
+#### blacklist
 
 Toggle a member's ability to gain experience points. If blacklisted, the user will not receive XP from message activity. Use the command again to remove them from the blacklist.
 
@@ -151,4 +155,4 @@ Grant a user a specific level for their contributions.
 
 - [`/level`](level.md) - View user-facing rank cards
 - [XP & Leveling Feature](../../features/leveling.md) - Complete guide to the leveling system
-- [Admin Configuration Guide](../../admin/config/index.md)
+- [Admin Configuration Guide](../../../admin/config/index.md)

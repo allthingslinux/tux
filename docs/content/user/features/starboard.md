@@ -108,7 +108,7 @@ Tux requires the following permissions for this feature:
 None required for starring messages. Only administrators can use the setup commands.
 
 !!! info "Permission System"
-    Configure command permissions via `/config commands` or see the [Permission Configuration](../../../admin/config/commands.md) guide.
+    Configure command permissions via `/config commands` or see the [Permission Configuration](../../admin/config/commands.md) guide.
 
 ## Troubleshooting
 
@@ -155,4 +155,4 @@ None required for starring messages. Only administrators can use the setup comma
 ## Related Documentation
 
 - [Admin Configuration Guide](../../admin/config/index.md)
-- [Permission Configuration](../../../admin/config/commands.md)
+- [Permission Configuration](../../admin/config/commands.md)

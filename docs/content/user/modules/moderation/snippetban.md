@@ -25,7 +25,7 @@ The `snippetban` command can be used in two ways:
 **Prefix Command:**
 
 ```text
-$snippetban @user [reason] [-silent]
+$snippetban @user [reason] [-silent|-s|-quiet]
 ```
 
 **Aliases:**
@@ -37,6 +37,7 @@ $snippetban @user [reason] [-silent]
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `member` | Member | Yes | The member to restrict from using snippets. |
+| `reason` | String | No | The reason for the snippet restriction, logged in the moderation case and included in the DM notification. In prefix commands, this is a positional argument. In slash commands, it is a named parameter. Defaults to "No reason provided". |
 
 ## Flags
 
@@ -44,15 +45,7 @@ This command supports the following flags:
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `reason` | String | No reason provided | The reason for the snippet ban (positional). |
 | `-silent` | Boolean | False | If true, Tux will not attempt to DM the user. |
-
-### reason
-
-The reason for the snippet restriction, logged in the moderation case and included in the DM notification. In the prefix command, this is a positional flag. In slash commands, it is a standard argument.
-
-- **Type:** String
-- **Default:** "No reason provided"
 
 ### -silent
 

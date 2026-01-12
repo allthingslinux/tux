@@ -37,6 +37,7 @@ $pollban @user [reason] [-silent]
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `member` | Member | Yes | The member to restrict from using polls. |
+| `reason` | String | No | The reason for the poll restriction, logged in the moderation case and included in the DM notification. In prefix commands, this is a positional argument. In slash commands, it is a named parameter. Defaults to "No reason provided". |
 
 ## Flags
 
@@ -44,15 +45,7 @@ This command supports the following flags:
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `reason` | String | No reason provided | The reason for the poll ban (positional). |
 | `-silent` | Boolean | False | If true, Tux will not attempt to DM the user. |
-
-### reason
-
-The reason for the poll restriction, logged in the moderation case and included in the DM notification. In the prefix command, this is a positional flag.
-
-- **Type:** String
-- **Default:** "No reason provided"
 
 ### -silent
 

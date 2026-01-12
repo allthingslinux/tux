@@ -147,4 +147,4 @@ None required. All users are subject to the limits unless the channel is exclude
 
 - [Moderation Module](../modules/moderation/index.md)
 - [Admin Configuration Guide](../../admin/config/index.md)
-- [Permission Configuration](../../../admin/config/commands.md)
+- [Permission Configuration](../../admin/config/commands.md)

@@ -39,6 +39,7 @@ $tempban @user -duration TIME [reason] [-purge X] [-silent]
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `member` | Member | Yes | The member to temporarily ban from the server. |
+| `reason` | String | No | The reason for the temporary ban. In prefix commands, this is a positional argument. In slash commands, it is a named parameter. Defaults to "No reason provided". Examples: `Repeated spamming after warns`, `Temporary suspension for investigation` |
 
 ## Flags
 
@@ -46,18 +47,9 @@ This command supports the following flags:
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `reason` | String | No reason provided | The reason for the ban (positional). |
 | `-duration` | Time | **Required** | Length of the ban (e.g., `1d`, `12h`). |
 | `-purge` | Integer (0-7) | 0 | Number of days of message history to delete. |
 | `-silent` | Boolean | False | If true, Tux will not attempt to DM the user. |
-
-### reason
-
-The reason for the temporary ban. In the prefix command, this is a positional flag. In slash commands, it is a standard argument.
-
-- **Type:** String
-- **Default:** "No reason provided"
-- **Examples:** `Repeated spamming after warns`, `Temporary suspension for investigation`
 
 ### -duration
 

@@ -40,6 +40,7 @@ $timeout @user -duration TIME [reason] [-silent]
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `member` | Member | Yes | The member to timeout. |
+| `reason` | String | No | The reason for the timeout, logged in the moderation case and included in the DM notification. In prefix commands, this is a positional argument. In slash commands, it is a named parameter. Defaults to "No reason provided". |
 
 ## Flags
 
@@ -47,16 +48,8 @@ This command supports the following flags:
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `reason` | String | No reason provided | The reason for the timeout (positional). |
 | `-duration` | Time | **Required** | Length of the timeout (max 28 days). |
 | `-silent` | Boolean | False | If true, Tux will not attempt to DM the user. |
-
-### reason
-
-The reason for the timeout, logged in the moderation case and included in the DM notification.
-
-- **Type:** String
-- **Default:** "No reason provided"
 
 ### -duration
 

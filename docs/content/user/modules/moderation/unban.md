@@ -38,8 +38,8 @@ $unban IDENTIFIER [reason]
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `reason` | String | No | The reason for the unban (positional). |
 | `user` | String / User | Yes | The username, ID, or mention of the user to unban. |
+| `reason` | String | No | The reason for the unban. In prefix commands, this is a positional argument. In slash commands, it is a named parameter. Defaults to "No reason provided". |
 
 ## User Resolution
 

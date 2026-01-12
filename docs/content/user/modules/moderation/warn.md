@@ -37,6 +37,7 @@ $warn @user [reason] [-silent]
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `member` | Member | Yes | The member to issue a warning to. |
+| `reason` | String | No | The reason for the warning. In prefix commands, this is a positional argument. In slash commands, it is a named parameter. Defaults to "No reason provided". Examples: `Minor spamming`, `Inappropriate language in #general` |
 
 ## Flags
 
@@ -44,16 +45,7 @@ This command supports the following flags:
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `reason` | String | No reason provided | The reason for the warning (positional). |
 | `-silent` | Boolean | False | If true, Tux will not attempt to DM the user. |
-
-### reason
-
-The reason for the warning. In the prefix command, this is a positional flag. In slash commands, it is a standard argument.
-
-- **Type:** String
-- **Default:** "No reason provided"
-- **Examples:** `Minor spamming`, `Inappropriate language in #general`
 
 ### -silent
 
