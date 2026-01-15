@@ -23,6 +23,11 @@ ACTIVITY_TYPE_MAP = {
     "streaming": discord.ActivityType.streaming,
     "listening": discord.ActivityType.listening,
     "watching": discord.ActivityType.watching,
+    # Backward compatibility: numeric types (deprecated)
+    "0": discord.ActivityType.playing,
+    "1": discord.ActivityType.streaming,
+    "2": discord.ActivityType.listening,
+    "3": discord.ActivityType.watching,
 }
 
 
@@ -56,7 +61,7 @@ class ActivityHandler(commands.Cog):
         list[discord.Activity | discord.Streaming | discord.Game]
             List of activities for bot status rotation.
         """
-        activities_config = getattr(CONFIG, "ACTIVITIES", None)
+        activities_config = CONFIG.BOT_INFO.ACTIVITIES
 
         if not activities_config or not str(activities_config).strip():
             return [discord.Game(name="with Linux commands")]
@@ -69,10 +74,23 @@ class ActivityHandler(commands.Cog):
 
         activities: list[discord.Activity | discord.Streaming | discord.Game] = []
         for data in activity_data:
-            activity_type_str = data.get("type", "").lower()
-            if activity_type_str == "streaming":
+            activity_type_raw = data.get("type", "")
+            # Convert to string and normalize (handles both string and numeric types)
+            activity_type_str = str(activity_type_raw).lower().strip()
+            activity_name = str(data.get("name", "")).strip()
+            if not activity_name:
+                logger.warning(f"Skipping activity with missing name: {data!r}")
+                continue
+            # Check for streaming (both string "streaming" and numeric "1" or "2")
+            if activity_type_str in {"streaming", "1", "2"}:
+                activity_url = str(data.get("url", "")).strip()
+                if not activity_url:
+                    logger.warning(
+                        f"Streaming activity missing URL, skipping: {activity_name!r}",
+                    )
+                    continue
                 activities.append(
-                    discord.Streaming(name=str(data["name"]), url=str(data["url"])),
+                    discord.Streaming(name=activity_name, url=activity_url),
                 )
             else:
                 activity_type = ACTIVITY_TYPE_MAP.get(
@@ -80,7 +98,7 @@ class ActivityHandler(commands.Cog):
                     discord.ActivityType.playing,
                 )
                 activities.append(
-                    discord.Activity(type=activity_type, name=data["name"]),
+                    discord.Activity(type=activity_type, name=activity_name),
                 )
 
         return activities or [discord.Game(name="with Linux commands")]

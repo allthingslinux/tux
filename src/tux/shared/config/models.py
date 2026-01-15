@@ -4,9 +4,10 @@ This module contains all the Pydantic models for configuration,
 extracted from the existing config.py file for better organization.
 """
 
+import json
 from typing import Annotated, Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class BotInfo(BaseModel):
@@ -26,11 +27,63 @@ class BotInfo(BaseModel):
             default="[]",
             description="Bot activities",
             examples=[
-                '[{"type": 0, "name": "with Linux"}]',
-                '[{"type": 2, "name": "to commands", "url": "https://twitch.tv/example"}]',
+                '[{"type":"playing","name":"with Linux"}]',
+                '[{"type":"streaming","name":"to commands","url":"https://twitch.tv/example"}]',
             ],
         ),
     ]
+
+    @field_validator("ACTIVITIES", mode="before")
+    @classmethod
+    def validate_activities(cls, v: Any) -> str:
+        """Validate and normalize ACTIVITIES to JSON string format.
+
+        Handles both JSON strings and native Python lists/dicts from config files,
+        ensuring the value is always a valid JSON string.
+
+        Parameters
+        ----------
+        v : Any
+            Input value (string, list, or dict)
+
+        Returns
+        -------
+        str
+            JSON string representation of activities
+
+        Raises
+        ------
+        ValueError
+            If value cannot be converted to valid JSON
+        """
+        if isinstance(v, str):
+            # Already a string - validate it's valid JSON
+            if not v.strip():
+                return "[]"
+            try:
+                # Validate it's parseable JSON
+                json.loads(v)
+            except json.JSONDecodeError as e:
+                error_msg = f"ACTIVITIES must be valid JSON: {e}"
+                raise ValueError(error_msg) from e
+            return v
+        if isinstance(v, (list, dict)):
+            # Convert native Python list/dict to JSON string
+            return json.dumps(v)
+        if v is None:
+            return "[]"
+        # Try to convert to string, then validate JSON
+        str_val = str(v)
+        try:
+            json.loads(str_val)
+        except json.JSONDecodeError:
+            type_name = type(v).__name__
+            error_msg = (
+                f"ACTIVITIES must be a JSON string or list/dict, got {type_name}: {v!r}"
+            )
+            raise ValueError(error_msg) from None
+        return str_val
+
     HIDE_BOT_OWNER: Annotated[
         bool,
         Field(
