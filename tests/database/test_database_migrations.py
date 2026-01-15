@@ -307,9 +307,18 @@ class TestSchemaErrorHandlingThroughService:
         guild_controller = GuildController(disconnected_async_db_service)
 
         # Operations should fail gracefully when not connected
-        # SQLAlchemy raises OperationalError when trying to use a disconnected service
-        with suppress(RuntimeError, ConnectionError, sqlalchemy.exc.OperationalError):
-            await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
+        # Note: DatabaseService.session() auto-connects if disconnected, so operations
+        # may succeed but could raise IntegrityError if constraints are violated
+        # (e.g., duplicate key from previous test runs)
+        with suppress(
+            RuntimeError,
+            ConnectionError,
+            sqlalchemy.exc.OperationalError,
+            sqlalchemy.exc.IntegrityError,
+        ):
+            # Use a unique guild ID to avoid conflicts with other tests
+            unique_guild_id = TEST_GUILD_ID + 999999
+            await guild_controller.create_guild(guild_id=unique_guild_id)
             # If we get here, the service should handle disconnection gracefully
 
 

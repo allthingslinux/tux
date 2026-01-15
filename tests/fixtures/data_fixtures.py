@@ -5,11 +5,13 @@ from typing import Any
 
 from tux.database.controllers import GuildConfigController, GuildController
 
-# Test constants
-TEST_GUILD_ID = 123456789012345678
-TEST_USER_ID = 987654321098765432
-TEST_CHANNEL_ID = 876543210987654321
-TEST_MODERATOR_ID = 555666777888999000
+# Import constants from separate module to avoid assertion rewriting issues
+from tests.constants import (
+    TEST_CHANNEL_ID,
+    TEST_GUILD_ID,
+    TEST_MODERATOR_ID,
+    TEST_USER_ID,
+)
 
 
 @pytest.fixture(scope="function")

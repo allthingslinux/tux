@@ -294,11 +294,11 @@ class TestPerformanceComparison:
     """⚡ Compare performance between unit tests (py-pglite) and integration tests."""
 
     @pytest.mark.unit
-    async def test_unit_test_performance(self, db_session, benchmark) -> None:
-        """Benchmark unit test performance with py-pglite."""
+    async def test_unit_test_performance(self, db_session) -> None:
+        """Test unit test performance with py-pglite."""
 
         async def create_guild():
-            # Use random guild ID to avoid duplicate key conflicts during benchmarking
+            # Use random guild ID to avoid duplicate key conflicts
             guild_id = random.randint(100000000000, 999999999999)
             guild = Guild(id=guild_id, case_count=0)
             db_session.add(guild)
@@ -316,9 +316,8 @@ class TestPerformanceComparison:
     async def test_integration_test_performance(
         self,
         db_service: DatabaseService,
-        benchmark,
     ) -> None:
-        """Benchmark integration test performance with PostgreSQL."""
+        """Test integration test performance with PostgreSQL."""
 
         async def create_guild_async():
             async with db_service.session() as session:
@@ -328,7 +327,6 @@ class TestPerformanceComparison:
                 await session.refresh(guild)
                 return guild
 
-        # Note: async benchmarking requires special handling
         result = await create_guild_async()
         assert result.id == 123456789
 

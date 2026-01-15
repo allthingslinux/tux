@@ -9,8 +9,8 @@ This package contains all test fixtures organized by category:
 Fixtures are automatically discovered by pytest when imported in conftest.py.
 """
 
-# Export test constants and utility functions
-from .data_fixtures import (
+# Export test constants from constants module (not from data_fixtures to avoid assertion rewriting)
+from tests.constants import (
     TEST_CHANNEL_ID,
     TEST_GUILD_ID,
     TEST_MODERATOR_ID,
