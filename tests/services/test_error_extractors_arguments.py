@@ -6,10 +6,14 @@ Tests for argument-related error extractors.
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from tux.services.handlers.error.extractors import (
     extract_bad_union_argument_details,
     extract_missing_argument_details,
 )
+
+pytestmark = pytest.mark.unit
 
 
 class TestArgumentExtractors:

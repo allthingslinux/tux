@@ -15,7 +15,7 @@ Test Coverage:
 """
 
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import discord
@@ -32,12 +32,21 @@ from tux.services.moderation.communication_service import CommunicationService
 from tux.services.moderation.execution_service import ExecutionService
 from tux.services.moderation.moderation_coordinator import ModerationCoordinator
 
+pytestmark = pytest.mark.asyncio
+
+
+def require_guild(ctx: commands.Context[Tux]) -> discord.Guild:
+    """Return the guild for a context used in guild-only tests."""
+    guild = ctx.guild
+    assert guild is not None
+    return guild
+
 
 class TestModerationCoordinatorIntegration:
     """🔗 Test ModerationCoordinator integration with all components."""
 
     @pytest.fixture
-    def mock_db_service(self):
+    def mock_db_service(self) -> MagicMock:
         """Create a mock database service."""
         db = MagicMock()
         db.case = MagicMock()
@@ -46,35 +55,35 @@ class TestModerationCoordinatorIntegration:
         return db
 
     @pytest.fixture
-    def mock_bot(self):
+    def mock_bot(self) -> Tux:
         """Create a mock Discord bot."""
-        bot = MagicMock(spec=Tux)
+        bot = cast(Tux, MagicMock(spec=Tux))
         bot.emoji_manager = MagicMock()
         bot.emoji_manager.get = lambda x: f":{x}:"
         return bot
 
     @pytest.fixture
-    def case_service(self, mock_db_service: Any):
+    def case_service(self, mock_db_service: MagicMock) -> CaseService:
         """Create a CaseService instance."""
         return CaseService(mock_db_service.case)
 
     @pytest.fixture
-    def communication_service(self, mock_bot: Any):
+    def communication_service(self, mock_bot: Tux) -> CommunicationService:
         """Create a CommunicationService instance."""
         return CommunicationService(mock_bot)
 
     @pytest.fixture
-    def execution_service(self):
+    def execution_service(self) -> ExecutionService:
         """Create an ExecutionService instance."""
         return ExecutionService()
 
     @pytest.fixture
     def moderation_coordinator(
         self,
-        case_service,
-        communication_service,
-        execution_service,
-    ):
+        case_service: CaseService,
+        communication_service: CommunicationService,
+        execution_service: ExecutionService,
+    ) -> ModerationCoordinator:
         """Create a ModerationCoordinator instance."""
         return ModerationCoordinator(
             case_service=case_service,
@@ -83,11 +92,12 @@ class TestModerationCoordinatorIntegration:
         )
 
     @pytest.fixture
-    def mock_ctx(self):
+    def mock_ctx(self) -> commands.Context[Tux]:
         """Create a mock command context."""
-        ctx = MagicMock(spec=commands.Context)
-        ctx.guild = MagicMock(spec=discord.Guild)
-        ctx.guild.id = 123456789
+        ctx = cast(commands.Context[Tux], MagicMock(spec=commands.Context))
+        guild = cast(discord.Guild, MagicMock(spec=discord.Guild))
+        guild.id = 123456789
+        ctx.guild = guild
         ctx.author = MagicMock(spec=discord.Member)
         ctx.author.id = 987654321
         ctx.author.name = "Moderator"
@@ -95,9 +105,9 @@ class TestModerationCoordinatorIntegration:
         return ctx
 
     @pytest.fixture
-    def mock_member(self):
+    def mock_member(self) -> discord.Member:
         """Create a mock Discord member."""
-        member = MagicMock(spec=discord.Member)
+        member = cast(discord.Member, MagicMock(spec=discord.Member))
         member.id = 555666777
         member.name = "TargetUser"
         member.top_role = MagicMock(spec=discord.Role)
@@ -108,12 +118,15 @@ class TestModerationCoordinatorIntegration:
     async def test_complete_ban_workflow_success(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
     ) -> None:
         """Test complete ban workflow from start to finish."""
         # Setup mocks for successful execution
-        mock_ctx.guild.get_member.return_value = MagicMock()  # Bot is in guild
+        cast(
+            discord.Guild,
+            mock_ctx.guild,
+        ).get_member.return_value = MagicMock()  # Bot is in guild
 
         # Mock successful DM
         with patch.object(
@@ -160,11 +173,11 @@ class TestModerationCoordinatorIntegration:
     async def test_ban_workflow_with_dm_failure(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
     ) -> None:
         """Test ban workflow when DM fails but action still succeeds."""
-        mock_ctx.guild.get_member.return_value = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_member.return_value = MagicMock()
 
         # Mock DM failure (timeout)
         with patch.object(
@@ -206,11 +219,11 @@ class TestModerationCoordinatorIntegration:
     async def test_ban_workflow_with_condition_failure(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
     ) -> None:
         """Test ban workflow failure due to condition validation."""
-        mock_ctx.guild.get_member.return_value = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_member.return_value = MagicMock()
 
         # In the new architecture, permission checking is done via decorators
         # and condition checking is handled by the ConditionChecker service
@@ -221,11 +234,11 @@ class TestModerationCoordinatorIntegration:
     async def test_non_removal_action_workflow(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
     ) -> None:
         """Test workflow for non-removal actions (like warn)."""
-        mock_ctx.guild.get_member.return_value = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_member.return_value = MagicMock()
 
         # Mock successful DM (should be sent after action for non-removal)
         with patch.object(
@@ -269,11 +282,11 @@ class TestModerationCoordinatorIntegration:
     async def test_silent_mode_workflow(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
     ) -> None:
         """Test workflow in silent mode (no DMs)."""
-        mock_ctx.guild.get_member.return_value = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_member.return_value = MagicMock()
 
         # Mock send_dm to return False when silent=True (as per the actual implementation)
         with patch.object(
@@ -315,11 +328,11 @@ class TestModerationCoordinatorIntegration:
     async def test_database_failure_after_successful_action(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
     ) -> None:
         """Test handling of database failure after successful Discord action."""
-        mock_ctx.guild.get_member.return_value = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_member.return_value = MagicMock()
 
         with patch.object(
             moderation_coordinator._communication,
@@ -360,11 +373,11 @@ class TestModerationCoordinatorIntegration:
     async def test_action_execution_failure(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
     ) -> None:
         """Test handling of Discord API action failure."""
-        mock_ctx.guild.get_member.return_value = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_member.return_value = MagicMock()
 
         # Action fails with Discord error
         mock_ban_action = AsyncMock(
@@ -388,11 +401,11 @@ class TestModerationCoordinatorIntegration:
     async def test_multiple_actions_execution(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
     ) -> None:
         """Test execution of multiple actions in sequence."""
-        mock_ctx.guild.get_member.return_value = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_member.return_value = MagicMock()
 
         # Multiple actions
         action1 = AsyncMock(return_value="result1")
@@ -445,11 +458,11 @@ class TestModerationCoordinatorIntegration:
     async def test_workflow_with_duration_and_expires_at(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
     ) -> None:
         """Test workflow with duration and expiration parameters."""
-        mock_ctx.guild.get_member.return_value = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_member.return_value = MagicMock()
 
         expires_at = datetime.now(UTC) + timedelta(hours=24)
 
@@ -518,9 +531,9 @@ class TestModerationCoordinatorIntegration:
     async def test_complete_workflow_with_mod_logging_success(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
-        mock_bot,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
+        mock_bot: Tux,
     ) -> None:
         """Test complete workflow with successful mod logging."""
         # Setup bot with database mock
@@ -528,14 +541,14 @@ class TestModerationCoordinatorIntegration:
         mock_bot.db.guild_config = MagicMock()
         mock_bot.db.guild_config.get_mod_log_id = AsyncMock(return_value=123456789)
 
-        mock_ctx.guild.get_channel = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_channel = MagicMock()
         mod_channel = MagicMock(spec=discord.TextChannel)
         mod_channel.name = "mod-log"
         mod_channel.id = 123456789
         mod_channel.send = AsyncMock(return_value=MagicMock())
-        mock_ctx.guild.get_channel.return_value = mod_channel
+        cast(discord.Guild, mock_ctx.guild).get_channel.return_value = mod_channel
 
-        mock_ctx.guild.get_member.return_value = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_member.return_value = MagicMock()
 
         # Mock successful DM
         with patch.object(
@@ -607,9 +620,9 @@ class TestModerationCoordinatorIntegration:
     async def test_mod_log_channel_not_configured(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
-        mock_bot,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
+        mock_bot: Tux,
     ) -> None:
         """Test workflow when mod log channel is not configured."""
         # Setup bot with database mock
@@ -619,7 +632,7 @@ class TestModerationCoordinatorIntegration:
             return_value=None,
         )  # No mod log configured
 
-        mock_ctx.guild.get_member.return_value = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_member.return_value = MagicMock()
 
         # Mock successful DM and action
         with patch.object(
@@ -659,9 +672,9 @@ class TestModerationCoordinatorIntegration:
     async def test_mod_log_channel_not_found(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
-        mock_bot,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
+        mock_bot: Tux,
     ) -> None:
         """Test workflow when mod log channel exists in config but not in guild."""
         # Setup bot with database mock
@@ -670,9 +683,9 @@ class TestModerationCoordinatorIntegration:
         mock_bot.db.guild_config.get_mod_log_id = AsyncMock(return_value=123456789)
 
         # Channel not found in guild
-        mock_ctx.guild.get_channel.return_value = None
+        cast(discord.Guild, mock_ctx.guild).get_channel.return_value = None
 
-        mock_ctx.guild.get_member.return_value = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_member.return_value = MagicMock()
 
         # Mock successful workflow
         with patch.object(
@@ -712,9 +725,9 @@ class TestModerationCoordinatorIntegration:
     async def test_mod_log_channel_wrong_type(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
-        mock_bot,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
+        mock_bot: Tux,
     ) -> None:
         """Test workflow when mod log channel is not a text channel."""
         # Setup bot with database mock
@@ -723,11 +736,11 @@ class TestModerationCoordinatorIntegration:
         mock_bot.db.guild_config.get_mod_log_id = AsyncMock(return_value=123456789)
 
         # Channel exists but is not a text channel (e.g., voice channel)
-        mock_ctx.guild.get_channel = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_channel = MagicMock()
         voice_channel = MagicMock(spec=discord.VoiceChannel)  # Not a TextChannel
-        mock_ctx.guild.get_channel.return_value = voice_channel
+        cast(discord.Guild, mock_ctx.guild).get_channel.return_value = voice_channel
 
-        mock_ctx.guild.get_member.return_value = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_member.return_value = MagicMock()
 
         # Mock successful workflow
         with patch.object(
@@ -767,9 +780,9 @@ class TestModerationCoordinatorIntegration:
     async def test_mod_log_send_failure_permissions(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
-        mock_bot,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
+        mock_bot: Tux,
     ) -> None:
         """Test workflow when mod log send fails due to permissions."""
         # Setup bot with database mock
@@ -777,7 +790,7 @@ class TestModerationCoordinatorIntegration:
         mock_bot.db.guild_config = MagicMock()
         mock_bot.db.guild_config.get_mod_log_id = AsyncMock(return_value=123456789)
 
-        mock_ctx.guild.get_channel = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_channel = MagicMock()
         mod_channel = MagicMock(spec=discord.TextChannel)
         mod_channel.name = "mod-log"
         mod_channel.id = 123456789
@@ -785,9 +798,9 @@ class TestModerationCoordinatorIntegration:
         mod_channel.send = AsyncMock(
             side_effect=discord.Forbidden(MagicMock(), "Missing permissions"),
         )
-        mock_ctx.guild.get_channel.return_value = mod_channel
+        cast(discord.Guild, mock_ctx.guild).get_channel.return_value = mod_channel
 
-        mock_ctx.guild.get_member.return_value = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_member.return_value = MagicMock()
 
         # Mock successful workflow
         with patch.object(
@@ -830,9 +843,9 @@ class TestModerationCoordinatorIntegration:
     async def test_mod_log_case_update_failure(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
-        mock_bot,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
+        mock_bot: Tux,
     ) -> None:
         """Test workflow when mod log succeeds but case update fails."""
         # Setup bot with database mock
@@ -840,16 +853,16 @@ class TestModerationCoordinatorIntegration:
         mock_bot.db.guild_config = MagicMock()
         mock_bot.db.guild_config.get_mod_log_id = AsyncMock(return_value=123456789)
 
-        mock_ctx.guild.get_channel = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_channel = MagicMock()
         mod_channel = MagicMock(spec=discord.TextChannel)
         mod_channel.name = "mod-log"
         mod_channel.id = 123456789
         mod_message = MagicMock()
         mod_message.id = 987654321
         mod_channel.send = AsyncMock(return_value=mod_message)
-        mock_ctx.guild.get_channel.return_value = mod_channel
+        cast(discord.Guild, mock_ctx.guild).get_channel.return_value = mod_channel
 
-        mock_ctx.guild.get_member.return_value = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_member.return_value = MagicMock()
 
         # Mock successful workflow
         with patch.object(
@@ -904,9 +917,9 @@ class TestModerationCoordinatorIntegration:
     async def test_case_creation_failure_skips_mod_log(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        mock_member,
-        mock_bot,
+        mock_ctx: commands.Context[Tux],
+        mock_member: discord.Member,
+        mock_bot: Tux,
     ) -> None:
         """Test that mod logging is skipped when case creation fails."""
         # Setup bot with database mock
@@ -914,12 +927,12 @@ class TestModerationCoordinatorIntegration:
         mock_bot.db.guild_config = MagicMock()
         mock_bot.db.guild_config.get_mod_log_id = AsyncMock(return_value=123456789)
 
-        mock_ctx.guild.get_channel = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_channel = MagicMock()
         mod_channel = MagicMock(spec=discord.TextChannel)
         mod_channel.send = AsyncMock(return_value=MagicMock())
-        mock_ctx.guild.get_channel.return_value = mod_channel
+        cast(discord.Guild, mock_ctx.guild).get_channel.return_value = mod_channel
 
-        mock_ctx.guild.get_member.return_value = MagicMock()
+        cast(discord.Guild, mock_ctx.guild).get_member.return_value = MagicMock()
 
         # Mock successful DM and action
         with patch.object(
@@ -962,9 +975,9 @@ class TestCaseModificationAuditLogging:
     """Test mod log updates when cases are modified."""
 
     @pytest.fixture
-    def mock_bot_with_db(self):
+    def mock_bot_with_db(self) -> Tux:
         """Create a mock bot with database mock."""
-        bot = MagicMock(spec=Tux)
+        bot = cast(Tux, MagicMock(spec=Tux))
         bot.emoji_manager = MagicMock()
         bot.emoji_manager.get = lambda x: f":{x}:"
         bot.db = MagicMock()
@@ -973,9 +986,9 @@ class TestCaseModificationAuditLogging:
         return bot
 
     @pytest.fixture
-    def mock_ctx_with_guild(self):
+    def mock_ctx_with_guild(self) -> commands.Context[Tux]:
         """Create a mock context with guild."""
-        ctx = MagicMock(spec=commands.Context)
+        ctx = cast(commands.Context[Tux], MagicMock(spec=commands.Context))
         ctx.guild = MagicMock(spec=discord.Guild)
         ctx.guild.id = 123456789
         ctx.author = MagicMock(spec=discord.Member)
@@ -990,8 +1003,8 @@ class TestCaseModificationAuditLogging:
     @pytest.mark.integration
     async def test_case_modify_updates_mod_log(  # noqa: PLR0915
         self,
-        mock_bot_with_db,
-        mock_ctx_with_guild,
+        mock_bot_with_db: Tux,
+        mock_ctx_with_guild: commands.Context[Tux],
     ) -> None:
         """Test that modifying a case updates the mod log embed."""
         # Create Cases cog instance
@@ -1038,7 +1051,8 @@ class TestCaseModificationAuditLogging:
         mod_channel.fetch_message = AsyncMock(return_value=mod_message)
         mod_message.edit = AsyncMock()
 
-        mock_ctx_with_guild.guild.get_channel = MagicMock(return_value=mod_channel)
+        guild = require_guild(mock_ctx_with_guild)
+        guild.get_channel = MagicMock(return_value=mod_channel)
 
         # Setup user resolution mocks
         mock_user = MagicMock(spec=discord.User)
@@ -1112,8 +1126,8 @@ class TestCaseModificationAuditLogging:
     @pytest.mark.integration
     async def test_case_modify_no_mod_log_message_id(
         self,
-        mock_bot_with_db,
-        mock_ctx_with_guild,
+        mock_bot_with_db: Tux,
+        mock_ctx_with_guild: commands.Context[Tux],
     ) -> None:
         """Test that modifying a case without mod log message ID doesn't attempt update."""
         # Create Cases cog instance

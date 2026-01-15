@@ -1,31 +1,38 @@
 """End-to-end integration tests for error handling flow."""
 
-import pytest
-from unittest.mock import MagicMock, AsyncMock
+from typing import cast
+from unittest.mock import AsyncMock, MagicMock
+
 import discord
+import pytest
 from discord import app_commands
 from discord.ext import commands
 
 from tux.services.handlers.error.cog import ErrorHandler
 from tux.shared.exceptions import TuxError, TuxPermissionDeniedError
 
+pytestmark = pytest.mark.integration
+
 
 class TestErrorHandlingEndToEnd:
     """Test complete error handling flow from command to user response."""
 
     @pytest.fixture
-    def mock_bot(self):
+    def mock_bot(self) -> MagicMock:
         """Create mock bot."""
         bot = MagicMock()
         return bot
 
     @pytest.fixture
-    def error_handler(self, mock_bot):
+    def error_handler(self, mock_bot: MagicMock) -> ErrorHandler:
         """Create ErrorHandler cog."""
         return ErrorHandler(mock_bot)
 
     @pytest.mark.asyncio
-    async def test_command_error_sends_user_response(self, error_handler):
+    async def test_command_error_sends_user_response(
+        self,
+        error_handler: ErrorHandler,
+    ) -> None:
         """Test that CommandError results in user response."""
         # Setup mock context
         mock_ctx = MagicMock()
@@ -46,7 +53,10 @@ class TestErrorHandlingEndToEnd:
         assert "embed" in call_args.kwargs
 
     @pytest.mark.asyncio
-    async def test_tux_error_shows_custom_message(self, error_handler):
+    async def test_tux_error_shows_custom_message(
+        self,
+        error_handler: ErrorHandler,
+    ) -> None:
         """Test that TuxError shows default message (not custom)."""
         mock_ctx = MagicMock()
         mock_ctx.reply = AsyncMock()
@@ -55,7 +65,7 @@ class TestErrorHandlingEndToEnd:
         mock_ctx.command.has_error_handler.return_value = False
         mock_ctx.cog = None
 
-        error = TuxError("Custom error message")
+        error = cast(commands.CommandError, TuxError("Custom error message"))
 
         await error_handler.on_command_error(mock_ctx, error)
 
@@ -66,7 +76,10 @@ class TestErrorHandlingEndToEnd:
         assert "An unexpected error occurred" in str(embed.description)
 
     @pytest.mark.asyncio
-    async def test_app_command_error_sends_response(self, error_handler):
+    async def test_app_command_error_sends_response(
+        self,
+        error_handler: ErrorHandler,
+    ) -> None:
         """Test that app command errors send responses."""
         mock_interaction = MagicMock(spec=discord.Interaction)
         mock_interaction.response.send_message = AsyncMock()
@@ -85,7 +98,10 @@ class TestErrorHandlingEndToEnd:
         assert "embed" in call_args.kwargs
 
     @pytest.mark.asyncio
-    async def test_permission_denied_unconfigured_command(self, error_handler):
+    async def test_permission_denied_unconfigured_command(
+        self,
+        error_handler: ErrorHandler,
+    ) -> None:
         """Test that unconfigured command shows helpful setup message."""
         mock_ctx = MagicMock()
         mock_ctx.reply = AsyncMock()
@@ -106,10 +122,13 @@ class TestErrorHandlingEndToEnd:
         mock_ctx.guild = mock_guild
 
         # Simulate unconfigured command (both ranks are 0)
-        error = TuxPermissionDeniedError(
+        error = cast(
+            commands.CommandError,
+            TuxPermissionDeniedError(
             required_rank=0,
             user_rank=0,
             command_name="dev clear_tree",
+            ),
         )
 
         await error_handler.on_command_error(mock_ctx, error)
@@ -127,7 +146,10 @@ class TestErrorHandlingEndToEnd:
         assert "dev clear_tree" in description
 
     @pytest.mark.asyncio
-    async def test_permission_denied_insufficient_rank(self, error_handler):
+    async def test_permission_denied_insufficient_rank(
+        self,
+        error_handler: ErrorHandler,
+    ) -> None:
         """Test that insufficient rank shows clear rank requirement."""
         mock_ctx = MagicMock()
         mock_ctx.reply = AsyncMock()
@@ -137,10 +159,13 @@ class TestErrorHandlingEndToEnd:
         mock_ctx.cog = None
 
         # Simulate insufficient rank
-        error = TuxPermissionDeniedError(
+        error = cast(
+            commands.CommandError,
+            TuxPermissionDeniedError(
             required_rank=5,
             user_rank=2,
             command_name="ban",
+            ),
         )
 
         await error_handler.on_command_error(mock_ctx, error)
@@ -158,7 +183,10 @@ class TestErrorHandlingEndToEnd:
         assert "ban" in description
 
     @pytest.mark.asyncio
-    async def test_permission_denied_app_command(self, error_handler):
+    async def test_permission_denied_app_command(
+        self,
+        error_handler: ErrorHandler,
+    ) -> None:
         """Test that permission denied works with app commands."""
         mock_interaction = MagicMock(spec=discord.Interaction)
         mock_interaction.response.send_message = AsyncMock()
@@ -168,10 +196,13 @@ class TestErrorHandlingEndToEnd:
         mock_interaction.command.qualified_name = "config"
 
         # Simulate permission denied for slash command
-        error = TuxPermissionDeniedError(
+        error = cast(
+            app_commands.AppCommandError,
+            TuxPermissionDeniedError(
             required_rank=3,
             user_rank=1,
             command_name="config",
+            ),
         )
 
         await error_handler.on_app_command_error(mock_interaction, error)

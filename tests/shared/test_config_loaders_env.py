@@ -10,6 +10,8 @@ import pytest
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def temp_dotenv_file(tmp_path: Path) -> Path:

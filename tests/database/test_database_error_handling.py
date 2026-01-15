@@ -7,6 +7,8 @@ import sqlalchemy.exc
 
 from tux.database.service import DatabaseService
 
+pytestmark = pytest.mark.integration
+
 
 class TestDatabaseErrorHandling:
     """Test database error handling with Sentry integration."""
@@ -14,8 +16,8 @@ class TestDatabaseErrorHandling:
     @pytest.mark.asyncio
     async def test_database_connection_error_captured(
         self,
-        disconnected_async_db_service,
-    ):
+        disconnected_async_db_service: DatabaseService,
+    ) -> None:
         """Test that database connection errors are handled properly."""
         db_service = disconnected_async_db_service
 
@@ -26,7 +28,10 @@ class TestDatabaseErrorHandling:
             await db_service.connect("invalid://connection/string")
 
     @pytest.mark.asyncio
-    async def test_database_query_error_captured(self, db_service):
+    async def test_database_query_error_captured(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test that database query errors are handled properly."""
 
         async def failing_operation(session):
@@ -38,7 +43,10 @@ class TestDatabaseErrorHandling:
             await db_service.execute_query(failing_operation, "test_query")
 
     @pytest.mark.asyncio
-    async def test_database_health_check_error_not_captured(self, db_service):
+    async def test_database_health_check_error_not_captured(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test that health check errors are handled gracefully."""
         # Mock the session to raise an exception
         original_session = db_service.session
@@ -60,7 +68,10 @@ class TestDatabaseErrorHandling:
             db_service.session = original_session
 
     @pytest.mark.asyncio
-    async def test_database_transaction_rollback_captured(self, db_service):
+    async def test_database_transaction_rollback_captured(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test that transaction rollback works properly."""
 
         async def failing_transaction_operation(session):
@@ -73,7 +84,10 @@ class TestDatabaseErrorHandling:
                 await failing_transaction_operation(session)
 
     @pytest.mark.asyncio
-    async def test_database_retry_logic_with_sentry(self, db_service):
+    async def test_database_retry_logic_with_sentry(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test database retry logic works properly."""
         call_count = 0
 
@@ -95,7 +109,10 @@ class TestDatabaseErrorHandling:
         assert call_count == 3
 
     @pytest.mark.asyncio
-    async def test_database_retry_exhaustion_captured(self, db_service):
+    async def test_database_retry_exhaustion_captured(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test that retry exhaustion is handled properly."""
 
         async def always_failing_operation(session):
@@ -110,7 +127,7 @@ class TestDatabaseServiceErrorIntegration:
     """Test DatabaseService error handling integration."""
 
     @pytest.mark.asyncio
-    async def test_connection_error_with_context(self):
+    async def test_connection_error_with_context(self) -> None:
         """Test connection error is handled properly."""
         # Create a service with invalid connection string
 
@@ -120,7 +137,10 @@ class TestDatabaseServiceErrorIntegration:
             await service.connect("invalid://connection/string")
 
     @pytest.mark.asyncio
-    async def test_query_error_with_span_context(self, db_service):
+    async def test_query_error_with_span_context(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test query error includes Sentry span context."""
 
         async def failing_query(session):
@@ -139,7 +159,7 @@ class TestDatabaseServiceErrorIntegration:
             mock_sentry_sdk.start_span.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_database_service_creation(self):
+    async def test_database_service_creation(self) -> None:
         """Test DatabaseService can be created with default settings."""
         # Test service creation
         service = DatabaseService()

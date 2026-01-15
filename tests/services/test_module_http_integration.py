@@ -5,16 +5,19 @@ from unittest.mock import MagicMock
 
 import httpx
 import pytest
+from pytest_httpx import HTTPXMock
 
 from tux.modules.utility.wiki import Wiki
 from tux.services.http_client import http_client
+
+pytestmark = pytest.mark.integration
 
 
 class TestAvatarModuleHTTP:
     """Test avatar module HTTP functionality."""
 
     @pytest.mark.asyncio
-    async def test_avatar_image_fetch(self, httpx_mock) -> None:
+    async def test_avatar_image_fetch(self, httpx_mock: HTTPXMock) -> None:
         """Test fetching avatar image data."""
         # Mock image data
         fake_image = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01"
@@ -29,10 +32,11 @@ class TestAvatarModuleHTTP:
         assert response.headers["Content-Type"] == "image/png"
 
         request = httpx_mock.get_request()
+        assert request is not None
         assert "discord.com" in str(request.url)
 
     @pytest.mark.asyncio
-    async def test_avatar_different_formats(self, httpx_mock) -> None:
+    async def test_avatar_different_formats(self, httpx_mock: HTTPXMock) -> None:
         """Test different image format handling."""
         formats = [
             ("image/jpeg", b"\xff\xd8\xff"),
@@ -58,7 +62,7 @@ class TestWikiModuleHTTP:
     """Test wiki module HTTP functionality."""
 
     @pytest.mark.asyncio
-    async def test_arch_wiki_api_call(self, httpx_mock) -> None:
+    async def test_arch_wiki_api_call(self, httpx_mock: HTTPXMock) -> None:
         """Test Arch Wiki API integration."""
         mock_response = {
             "query": {
@@ -81,11 +85,12 @@ class TestWikiModuleHTTP:
         assert "wiki.archlinux.org" in result[1]
 
         request = httpx_mock.get_request()
+        assert request is not None
         assert "wiki.archlinux.org" in str(request.url)
         assert "Installation" in str(request.url)
 
     @pytest.mark.asyncio
-    async def test_atl_wiki_api_call(self, httpx_mock) -> None:
+    async def test_atl_wiki_api_call(self, httpx_mock: HTTPXMock) -> None:
         """Test ATL Wiki API integration."""
         mock_response = {
             "query": {
@@ -108,7 +113,7 @@ class TestWikiModuleHTTP:
         assert "atl.wiki" in result[1]
 
     @pytest.mark.asyncio
-    async def test_wiki_no_results(self, httpx_mock) -> None:
+    async def test_wiki_no_results(self, httpx_mock: HTTPXMock) -> None:
         """Test wiki API with no search results."""
         mock_response = {"query": {"search": []}}
         httpx_mock.add_response(json=mock_response)
@@ -125,7 +130,7 @@ class TestImageEffectModuleHTTP:
     """Test image effect module HTTP functionality."""
 
     @pytest.mark.asyncio
-    async def test_fetch_image_for_processing(self, httpx_mock) -> None:
+    async def test_fetch_image_for_processing(self, httpx_mock: HTTPXMock) -> None:
         """Test fetching images for effect processing."""
         # Create a minimal valid PNG
         fake_png = (
@@ -143,7 +148,7 @@ class TestImageEffectModuleHTTP:
         assert len(response.content) > 0
 
     @pytest.mark.asyncio
-    async def test_image_fetch_error_handling(self, httpx_mock) -> None:
+    async def test_image_fetch_error_handling(self, httpx_mock: HTTPXMock) -> None:
         """Test error handling when fetching images."""
         httpx_mock.add_response(status_code=404)
 
@@ -157,7 +162,7 @@ class TestMailModuleHTTP:
     """Test mail module HTTP functionality."""
 
     @pytest.mark.asyncio
-    async def test_mailcow_api_call(self, httpx_mock) -> None:
+    async def test_mailcow_api_call(self, httpx_mock: HTTPXMock) -> None:
         """Test Mailcow API integration."""
         mock_response = [{"type": "success", "msg": "Mailbox created"}]
         httpx_mock.add_response(json=mock_response)
@@ -180,11 +185,12 @@ class TestMailModuleHTTP:
         assert response.json() == mock_response
 
         request = httpx_mock.get_request()
+        assert request is not None
         assert request.headers["X-API-Key"] == "test-key"
         assert request.headers["Authorization"] == "Bearer test-key"
 
     @pytest.mark.asyncio
-    async def test_mailcow_api_error(self, httpx_mock) -> None:
+    async def test_mailcow_api_error(self, httpx_mock: HTTPXMock) -> None:
         """Test Mailcow API error handling."""
         httpx_mock.add_response(
             status_code=400,
@@ -206,7 +212,7 @@ class TestHTTPClientPerformance:
     """Test HTTP client performance characteristics."""
 
     @pytest.mark.asyncio
-    async def test_concurrent_requests(self, httpx_mock) -> None:
+    async def test_concurrent_requests(self, httpx_mock: HTTPXMock) -> None:
         """Test handling multiple concurrent requests."""
         # Add multiple responses
         for i in range(10):
@@ -224,7 +230,7 @@ class TestHTTPClientPerformance:
             assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_connection_reuse(self, httpx_mock) -> None:
+    async def test_connection_reuse(self, httpx_mock: HTTPXMock) -> None:
         """Test that connections are reused (indirectly)."""
         # Add multiple responses for the same host
         for _ in range(5):

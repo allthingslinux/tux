@@ -170,7 +170,7 @@ class TestDatabaseCLICommands:
         return process.returncode, process.stdout, process.stderr
 
     @pytest.mark.integration
-    def test_cli_help_shows_all_commands(self):
+    def test_cli_help_shows_all_commands(self) -> None:
         """Test that CLI help displays all expected commands."""
         exit_code, stdout, _stderr = self.run_cli_command("--help")
 
@@ -201,7 +201,7 @@ class TestDatabaseCLICommands:
 
     @pytest.mark.integration
     @pytest.mark.slow
-    def test_readonly_commands_work(self):
+    def test_readonly_commands_work(self) -> None:
         """Test that readonly commands (status, tables, health, version) work correctly.
 
         This test spawns multiple subprocess calls and typically takes 4-6 seconds,
@@ -226,7 +226,7 @@ class TestDatabaseCLICommands:
                 )
 
     @pytest.mark.integration
-    def test_init_command_fails_on_existing_db(self):
+    def test_init_command_fails_on_existing_db(self) -> None:
         """Test that init command properly detects existing database."""
         exit_code, stdout, _stderr = self.run_cli_command("init")
 
@@ -237,7 +237,7 @@ class TestDatabaseCLICommands:
         )
 
     @pytest.mark.integration
-    def test_command_help_works(self):
+    def test_command_help_works(self) -> None:
         """Test that command help displays properly for multiple commands."""
         # Test multiple help commands in one test to reduce subprocess overhead
         help_commands = [
@@ -264,7 +264,7 @@ class TestMigrationLifecycle(TestDatabaseCLICommands):
 
     @pytest.mark.integration
     @pytest.mark.slow
-    def test_migration_generation_and_status(self):
+    def test_migration_generation_and_status(self) -> None:
         """Test generating a migration and checking status."""
         # Reset database to ensure clean state for this specific test
         self.run_cli_command("reset")
@@ -302,7 +302,7 @@ class TestMigrationLifecycle(TestDatabaseCLICommands):
 
     @pytest.mark.integration
     @pytest.mark.slow
-    def test_dev_workflow_simulation(self):
+    def test_dev_workflow_simulation(self) -> None:
         """Test the dev workflow (generate + apply)."""
         # Reset database to ensure clean state for this specific test
         self.run_cli_command("reset")
@@ -336,7 +336,7 @@ class TestMigrationLifecycle(TestDatabaseCLICommands):
 
     @pytest.mark.integration
     @pytest.mark.slow
-    def test_push_applies_migrations(self):
+    def test_push_applies_migrations(self) -> None:
         """Test that push command applies pending migrations."""
         exit_code, stdout, _stderr = self.run_cli_command("push")
         # Push may fail if there are multiple migration heads (requires manual merge)
@@ -359,7 +359,7 @@ class TestMigrationLifecycle(TestDatabaseCLICommands):
             )
 
     @pytest.mark.integration
-    def test_readonly_migration_commands_work(self):
+    def test_readonly_migration_commands_work(self) -> None:
         """Test readonly migration commands (history, check, reset help)."""
         # Combine multiple fast readonly commands into one test
         commands = [
@@ -418,7 +418,10 @@ class TestDatabaseStateValidation(TestDatabaseCLICommands):
     @pytest.mark.integration
     @pytest.mark.asyncio
     @pytest.mark.slow
-    async def test_database_has_expected_tables(self, db_service: DatabaseService):
+    async def test_database_has_expected_tables(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test that database has all expected tables after operations."""
         async with db_service.session() as session:
             # Query for our main tables
@@ -467,7 +470,10 @@ class TestDatabaseStateValidation(TestDatabaseCLICommands):
     @pytest.mark.integration
     @pytest.mark.asyncio
     @pytest.mark.slow
-    async def test_alembic_version_table_exists(self, db_service: DatabaseService):
+    async def test_alembic_version_table_exists(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test that alembic version tracking is working."""
         async with db_service.session() as session:
             try:
@@ -503,7 +509,7 @@ class TestErrorHandling(TestDatabaseCLICommands):
     """🚨 Test error handling and edge cases."""
 
     @pytest.mark.integration
-    def test_error_handling_for_invalid_commands(self):
+    def test_error_handling_for_invalid_commands(self) -> None:
         """Test error handling for invalid commands and missing arguments."""
         # Combine multiple error case tests to reduce subprocess overhead
         error_cases = [
@@ -547,7 +553,7 @@ class TestRecoveryScenarios(TestDatabaseCLICommands):
 
     @pytest.mark.integration
     @pytest.mark.slow
-    def test_status_works_after_operations(self):
+    def test_status_works_after_operations(self) -> None:
         """Test that status command works after various operations."""
         # Run a series of operations then check status
         operations = [
@@ -585,7 +591,7 @@ class TestCLIPerformance(TestDatabaseCLICommands):
     @pytest.mark.integration
     @pytest.mark.performance
     @pytest.mark.slow
-    def test_commands_execute_quickly(self):
+    def test_commands_execute_quickly(self) -> None:
         """Test that CLI commands execute within reasonable time limits.
 
         Despite the name, this test spawns multiple subprocess calls and typically

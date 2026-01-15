@@ -27,6 +27,8 @@ from tux.shared.exceptions import (
     TuxError,
 )
 
+pytestmark = pytest.mark.unit
+
 
 class TestSentryCaptureFunctions:
     """Test Sentry capture functions."""
@@ -35,8 +37,8 @@ class TestSentryCaptureFunctions:
     @patch("tux.services.sentry.utils.sentry_sdk")
     def test_capture_exception_safe_with_generic_exception(
         self,
-        mock_sentry_sdk,
-        mock_is_initialized,
+        mock_sentry_sdk: MagicMock,
+        mock_is_initialized: MagicMock,
     ) -> None:
         """Test capture_exception_safe with generic exception."""
         mock_is_initialized.return_value = True
@@ -50,8 +52,8 @@ class TestSentryCaptureFunctions:
     @patch("tux.services.sentry.utils.sentry_sdk")
     def test_capture_exception_safe_when_not_initialized(
         self,
-        mock_sentry_sdk,
-        mock_is_initialized,
+        mock_sentry_sdk: MagicMock,
+        mock_is_initialized: MagicMock,
     ) -> None:
         """Test capture_exception_safe when Sentry not initialized."""
         mock_is_initialized.return_value = False
@@ -63,7 +65,11 @@ class TestSentryCaptureFunctions:
 
     @patch("tux.services.sentry.utils.is_initialized")
     @patch("tux.services.sentry.utils.sentry_sdk")
-    def test_capture_tux_exception(self, mock_sentry_sdk, mock_is_initialized) -> None:
+    def test_capture_tux_exception(
+        self,
+        mock_sentry_sdk: MagicMock,
+        mock_is_initialized: MagicMock,
+    ) -> None:
         """Test capture_tux_exception with TuxError."""
         mock_is_initialized.return_value = True
         error = TuxError("Test Tux error")
@@ -74,7 +80,11 @@ class TestSentryCaptureFunctions:
 
     @patch("tux.services.sentry.utils.is_initialized")
     @patch("tux.services.sentry.utils.sentry_sdk")
-    def test_capture_database_error(self, mock_sentry_sdk, mock_is_initialized) -> None:
+    def test_capture_database_error(
+        self,
+        mock_sentry_sdk: MagicMock,
+        mock_is_initialized: MagicMock,
+    ) -> None:
         """Test capture_database_error with context."""
         mock_is_initialized.return_value = True
         mock_sentry_sdk.push_scope.return_value.__enter__ = MagicMock()
@@ -94,8 +104,8 @@ class TestSentryCaptureFunctions:
     @patch("tux.services.sentry.utils.capture_api_error")
     def test_convert_httpx_error_404(
         self,
-        mock_capture_api_error,
-        mock_is_initialized,
+        mock_capture_api_error: MagicMock,
+        mock_is_initialized: MagicMock,
     ) -> None:
         """Test convert_httpx_error with 404 error."""
         mock_is_initialized.return_value = True
@@ -126,8 +136,8 @@ class TestSentryCaptureFunctions:
     @patch("tux.services.sentry.utils.capture_api_error")
     def test_convert_httpx_error_403(
         self,
-        mock_capture_api_error,
-        mock_is_initialized,
+        mock_capture_api_error: MagicMock,
+        mock_is_initialized: MagicMock,
     ) -> None:
         """Test convert_httpx_error with 403 error."""
         mock_is_initialized.return_value = True
@@ -156,8 +166,8 @@ class TestSentryCaptureFunctions:
     @patch("tux.services.sentry.utils.capture_api_error")
     def test_convert_httpx_error_500(
         self,
-        mock_capture_api_error,
-        mock_is_initialized,
+        mock_capture_api_error: MagicMock,
+        mock_is_initialized: MagicMock,
     ) -> None:
         """Test convert_httpx_error with 500 error."""
         mock_is_initialized.return_value = True
@@ -192,8 +202,8 @@ class TestSentryCaptureFunctions:
     @patch("tux.services.sentry.utils.capture_api_error")
     def test_convert_httpx_error_connection_error(
         self,
-        mock_capture_api_error,
-        mock_is_initialized,
+        mock_capture_api_error: MagicMock,
+        mock_is_initialized: MagicMock,
     ) -> None:
         """Test convert_httpx_error with connection error."""
         mock_is_initialized.return_value = True
@@ -218,7 +228,11 @@ class TestSentryContextFunctions:
 
     @patch("tux.services.sentry.context.is_initialized")
     @patch("tux.services.sentry.context.sentry_sdk")
-    def test_set_context(self, mock_sentry_sdk, mock_is_initialized) -> None:
+    def test_set_context(
+        self,
+        mock_sentry_sdk: MagicMock,
+        mock_is_initialized: MagicMock,
+    ) -> None:
         """Test set_context function."""
         mock_is_initialized.return_value = True
 
@@ -232,7 +246,11 @@ class TestSentryContextFunctions:
 
     @patch("tux.services.sentry.context.is_initialized")
     @patch("tux.services.sentry.context.sentry_sdk")
-    def test_set_tag(self, mock_sentry_sdk, mock_is_initialized) -> None:
+    def test_set_tag(
+        self,
+        mock_sentry_sdk: MagicMock,
+        mock_is_initialized: MagicMock,
+    ) -> None:
         """Test set_tag function."""
         mock_is_initialized.return_value = True
 
@@ -244,8 +262,8 @@ class TestSentryContextFunctions:
     @patch("tux.services.sentry.context.sentry_sdk")
     def test_set_command_context_with_interaction(
         self,
-        mock_sentry_sdk,
-        mock_is_initialized,
+        mock_sentry_sdk: MagicMock,
+        mock_is_initialized: MagicMock,
     ) -> None:
         """Test set_command_context with Discord interaction."""
         mock_is_initialized.return_value = True
@@ -268,7 +286,11 @@ class TestSentryContextFunctions:
 
     @patch("tux.services.sentry.context.is_initialized")
     @patch("tux.services.sentry.context.sentry_sdk")
-    def test_set_user_context(self, mock_sentry_sdk, mock_is_initialized) -> None:
+    def test_set_user_context(
+        self,
+        mock_sentry_sdk: MagicMock,
+        mock_is_initialized: MagicMock,
+    ) -> None:
         """Test set_user_context with Discord user."""
         mock_is_initialized.return_value = True
 
@@ -301,8 +323,8 @@ class TestSentryPerformanceTracking:
     @patch("tux.services.sentry.context.sentry_sdk")
     def test_track_command_end_success(
         self,
-        mock_sentry_sdk,
-        mock_is_initialized,
+        mock_sentry_sdk: MagicMock,
+        mock_is_initialized: MagicMock,
     ) -> None:
         """Test track_command_end with successful command."""
         mock_is_initialized.return_value = True
@@ -318,8 +340,8 @@ class TestSentryPerformanceTracking:
     @patch("tux.services.sentry.context.sentry_sdk")
     def test_track_command_end_failure(
         self,
-        mock_sentry_sdk,
-        mock_is_initialized,
+        mock_sentry_sdk: MagicMock,
+        mock_is_initialized: MagicMock,
     ) -> None:
         """Test track_command_end with failed command."""
         mock_is_initialized.return_value = True

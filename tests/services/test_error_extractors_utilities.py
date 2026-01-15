@@ -6,11 +6,15 @@ Tests for utility functions used by error extractors.
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from tux.services.handlers.error.extractors import (
     fallback_format_message,
     format_list,
     unwrap_error,
 )
+
+pytestmark = pytest.mark.unit
 
 
 class TestUtilityFunctions:

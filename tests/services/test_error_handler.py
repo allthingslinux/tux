@@ -1,6 +1,5 @@
 """Error handler cog unit tests."""
 
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import discord
@@ -11,27 +10,29 @@ from tux.services.handlers.error.cog import ErrorHandler
 from tux.services.handlers.error.config import ErrorHandlerConfig
 from tux.shared.exceptions import TuxPermissionError
 
+pytestmark = pytest.mark.unit
+
 
 class TestErrorHandler:
     """Test ErrorHandler cog."""
 
     @pytest.fixture
-    def mock_bot(self):
+    def mock_bot(self) -> MagicMock:
         """Create mock bot."""
         bot = MagicMock()
         bot.tree = MagicMock()
         return bot
 
     @pytest.fixture
-    def error_handler(self, mock_bot: Any):
+    def error_handler(self, mock_bot: MagicMock) -> ErrorHandler:
         """Create ErrorHandler instance."""
         return ErrorHandler(mock_bot)
 
     @pytest.mark.asyncio
     async def test_cog_load_sets_tree_error_handler(
         self,
-        error_handler,
-        mock_bot,
+        error_handler: ErrorHandler,
+        mock_bot: MagicMock,
     ) -> None:
         """Test that cog_load sets the tree error handler."""
         original_handler = MagicMock()
@@ -45,8 +46,8 @@ class TestErrorHandler:
     @pytest.mark.asyncio
     async def test_cog_unload_restores_tree_error_handler(
         self,
-        error_handler,
-        mock_bot,
+        error_handler: ErrorHandler,
+        mock_bot: MagicMock,
     ) -> None:
         """Test that cog_unload restores the original tree error handler."""
         original_handler = MagicMock()
@@ -56,21 +57,24 @@ class TestErrorHandler:
 
         assert mock_bot.tree.on_error == original_handler
 
-    def test_get_error_config_exact_match(self, error_handler) -> None:
+    def test_get_error_config_exact_match(self, error_handler: ErrorHandler) -> None:
         """Test _get_error_config with exact error type match."""
         error = commands.CommandNotFound()
         config = error_handler._get_error_config(error)
 
         assert isinstance(config, ErrorHandlerConfig)
 
-    def test_get_error_config_parent_class_match(self, error_handler) -> None:
+    def test_get_error_config_parent_class_match(
+        self,
+        error_handler: ErrorHandler,
+    ) -> None:
         """Test _get_error_config with parent class match."""
         error = TuxPermissionError("test")
         config = error_handler._get_error_config(error)
 
         assert isinstance(config, ErrorHandlerConfig)
 
-    def test_get_error_config_default(self, error_handler) -> None:
+    def test_get_error_config_default(self, error_handler: ErrorHandler) -> None:
         """Test _get_error_config returns default for unknown error."""
         error = RuntimeError("Unknown error")
         config = error_handler._get_error_config(error)
@@ -79,7 +83,11 @@ class TestErrorHandler:
         assert config.send_to_sentry is True
 
     @patch("tux.services.handlers.error.cog.logger")
-    def test_log_error_with_sentry(self, mock_logger, error_handler) -> None:
+    def test_log_error_with_sentry(
+        self,
+        mock_logger: MagicMock,
+        error_handler: ErrorHandler,
+    ) -> None:
         """Test _log_error with Sentry enabled."""
         error = ValueError("Test error")
         config = ErrorHandlerConfig(send_to_sentry=True, log_level="ERROR")
@@ -89,7 +97,11 @@ class TestErrorHandler:
         mock_logger.error.assert_called_once()
 
     @patch("tux.services.handlers.error.cog.logger")
-    def test_log_error_without_sentry(self, mock_logger, error_handler) -> None:
+    def test_log_error_without_sentry(
+        self,
+        mock_logger: MagicMock,
+        error_handler: ErrorHandler,
+    ) -> None:
         """Test _log_error with Sentry disabled."""
         error = ValueError("Test error")
         config = ErrorHandlerConfig(send_to_sentry=False, log_level="INFO")
@@ -103,10 +115,10 @@ class TestErrorHandler:
     @patch("tux.services.handlers.error.cog.track_command_end")
     def test_set_sentry_context_with_interaction(
         self,
-        mock_track_end,
-        mock_set_user,
-        mock_set_command,
-        error_handler,
+        mock_track_end: MagicMock,
+        mock_set_user: MagicMock,
+        mock_set_command: MagicMock,
+        error_handler: ErrorHandler,
     ) -> None:
         """Test _set_sentry_context with Discord interaction."""
         mock_interaction = MagicMock(spec=discord.Interaction)
@@ -129,10 +141,10 @@ class TestErrorHandler:
     @patch("tux.services.handlers.error.cog.track_command_end")
     def test_set_sentry_context_with_context(
         self,
-        mock_track_end,
-        mock_set_user,
-        mock_set_command,
-        error_handler,
+        mock_track_end: MagicMock,
+        mock_set_user: MagicMock,
+        mock_set_command: MagicMock,
+        error_handler: ErrorHandler,
     ) -> None:
         """Test _set_sentry_context with command context."""
         mock_ctx = MagicMock()
@@ -154,7 +166,7 @@ class TestErrorHandler:
     @pytest.mark.asyncio
     async def test_send_error_response_interaction_not_responded(
         self,
-        error_handler,
+        error_handler: ErrorHandler,
     ) -> None:
         """Test _send_error_response with interaction that hasn't responded."""
         mock_interaction = MagicMock(spec=discord.Interaction)
@@ -173,7 +185,7 @@ class TestErrorHandler:
     @pytest.mark.asyncio
     async def test_send_error_response_interaction_already_responded(
         self,
-        error_handler,
+        error_handler: ErrorHandler,
     ) -> None:
         """Test _send_error_response with interaction that already responded."""
         mock_interaction = MagicMock(spec=discord.Interaction)
@@ -192,7 +204,7 @@ class TestErrorHandler:
     @pytest.mark.asyncio
     async def test_send_error_response_context_with_deletion(
         self,
-        error_handler,
+        error_handler: ErrorHandler,
     ) -> None:
         """Test _send_error_response with context."""
         mock_ctx = MagicMock()
@@ -208,7 +220,10 @@ class TestErrorHandler:
         )
 
     @pytest.mark.asyncio
-    async def test_on_command_error_command_not_found(self, error_handler) -> None:
+    async def test_on_command_error_command_not_found(
+        self,
+        error_handler: ErrorHandler,
+    ) -> None:
         """Test on_command_error with CommandNotFound."""
         mock_ctx = MagicMock()
         error = commands.CommandNotFound()
@@ -223,7 +238,7 @@ class TestErrorHandler:
     @pytest.mark.asyncio
     async def test_on_command_error_skips_if_command_has_handler(
         self,
-        error_handler,
+        error_handler: ErrorHandler,
     ) -> None:
         """Test on_command_error skips if command has local error handler."""
         mock_ctx = MagicMock()
@@ -238,7 +253,7 @@ class TestErrorHandler:
     @pytest.mark.asyncio
     async def test_on_command_error_skips_if_cog_has_handler(
         self,
-        error_handler,
+        error_handler: ErrorHandler,
     ) -> None:
         """Test on_command_error skips if cog has local error handler."""
         mock_ctx = MagicMock()
@@ -253,7 +268,7 @@ class TestErrorHandler:
             mock_handle.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_on_app_command_error(self, error_handler) -> None:
+    async def test_on_app_command_error(self, error_handler: ErrorHandler) -> None:
         """Test on_app_command_error calls _handle_error."""
         mock_interaction = MagicMock(spec=discord.Interaction)
         error = discord.app_commands.AppCommandError()

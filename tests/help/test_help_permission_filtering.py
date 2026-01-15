@@ -5,7 +5,7 @@ Tests for the help command filtering based on user permissions.
 Commands should be hidden from users who don't have permission to use them.
 """
 
-from typing import Any
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import discord
@@ -16,6 +16,12 @@ from tux.core.permission_system import RESTRICTED_COMMANDS
 from tux.help.data import HelpData
 from tux.shared.config import CONFIG
 
+BOT_OWNER_ID = 111111111
+SYSADMIN_ID = 222222222
+REGULAR_USER_ID = 999999999
+GUILD_OWNER_ID = 222222222
+TEST_GUILD_ID = 123456789
+
 
 class TestHelpPermissionFiltering:
     """📚 Test help command permission filtering."""
@@ -24,7 +30,7 @@ class TestHelpPermissionFiltering:
     def mock_bot(self) -> MagicMock:
         """Create a mock bot instance."""
         bot = MagicMock()
-        bot.owner_ids = {111111111}  # Bot owner ID
+        bot.owner_ids = {BOT_OWNER_ID}  # Bot owner ID
         return bot
 
     @pytest.fixture
@@ -32,13 +38,13 @@ class TestHelpPermissionFiltering:
         """Create a mock command context."""
         ctx = MagicMock(spec=commands.Context)
         ctx.guild = MagicMock(spec=discord.Guild)
-        ctx.guild.id = 123456789
-        ctx.guild.owner_id = 222222222
+        ctx.guild.id = TEST_GUILD_ID
+        ctx.guild.owner_id = GUILD_OWNER_ID
         ctx.author = MagicMock(spec=discord.Member)
-        ctx.author.id = 999999999  # Regular user
+        ctx.author.id = REGULAR_USER_ID  # Regular user
         ctx.author.roles = []
         ctx.bot = MagicMock()
-        ctx.bot.owner_ids = {111111111}
+        ctx.bot.owner_ids = {BOT_OWNER_ID}
         return ctx
 
     @pytest.fixture
@@ -141,12 +147,12 @@ class TestHelpPermissionFiltering:
         mock_command: commands.Command[Any, Any, Any],
     ) -> None:
         """Test that restricted commands are visible to bot owner."""
-        mock_ctx.author.id = 111111111  # Bot owner
-        mock_ctx.bot.owner_ids = {111111111}
+        mock_ctx.author.id = BOT_OWNER_ID  # Bot owner
+        mock_ctx.bot.owner_ids = {BOT_OWNER_ID}
 
         help_data = HelpData(mock_bot, mock_ctx)
 
-        with patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", 111111111):
+        with patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", BOT_OWNER_ID):
             for cmd_name in RESTRICTED_COMMANDS:
                 mock_command.name = cmd_name
                 assert await help_data.can_run_command(mock_command)
@@ -160,14 +166,14 @@ class TestHelpPermissionFiltering:
         mock_command: commands.Command[Any, Any, Any],
     ) -> None:
         """Test that restricted commands are visible to sysadmin."""
-        mock_ctx.author.id = 222222222  # Sysadmin
-        mock_ctx.bot.owner_ids = {111111111, 222222222}
+        mock_ctx.author.id = SYSADMIN_ID  # Sysadmin
+        mock_ctx.bot.owner_ids = {BOT_OWNER_ID, SYSADMIN_ID}
 
         help_data = HelpData(mock_bot, mock_ctx)
 
         with (
-            patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", 111111111),
-            patch.object(CONFIG.USER_IDS, "SYSADMINS", [222222222]),
+            patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", BOT_OWNER_ID),
+            patch.object(CONFIG.USER_IDS, "SYSADMINS", [SYSADMIN_ID]),
         ):
             for cmd_name in RESTRICTED_COMMANDS:
                 mock_command.name = cmd_name
@@ -185,7 +191,7 @@ class TestHelpPermissionFiltering:
         help_data = HelpData(mock_bot, mock_ctx)
 
         # Mock command to use permission system
-        mock_command.callback.__uses_dynamic_permissions__ = True  # type: ignore[attr-defined]
+        cast(Any, mock_command.callback).__uses_dynamic_permissions__ = True
 
         # Mock permission system
         mock_perm_system = MagicMock()
@@ -196,7 +202,7 @@ class TestHelpPermissionFiltering:
 
         with (
             patch("tux.help.data.get_permission_system", return_value=mock_perm_system),
-            patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", 111111111),
+            patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", BOT_OWNER_ID),
             patch.object(CONFIG.USER_IDS, "SYSADMINS", []),
         ):
             # Unconfigured command should be hidden
@@ -214,7 +220,7 @@ class TestHelpPermissionFiltering:
         help_data = HelpData(mock_bot, mock_ctx)
 
         # Mock command to use permission system
-        mock_command.callback.__uses_dynamic_permissions__ = True  # type: ignore[attr-defined]
+        cast(Any, mock_command.callback).__uses_dynamic_permissions__ = True
 
         # Mock permission config - requires rank 3
         mock_cmd_perm = MagicMock()
@@ -226,7 +232,7 @@ class TestHelpPermissionFiltering:
 
         with (
             patch("tux.help.data.get_permission_system", return_value=mock_perm_system),
-            patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", 111111111),
+            patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", BOT_OWNER_ID),
             patch.object(CONFIG.USER_IDS, "SYSADMINS", []),
         ):
             # User with rank 2 should not see command requiring rank 3
@@ -253,12 +259,12 @@ class TestHelpPermissionFiltering:
         help_data = HelpData(mock_bot, mock_ctx)
 
         # Set user as guild owner
-        mock_ctx.author.id = 222222222
+        mock_ctx.author.id = GUILD_OWNER_ID
         if mock_ctx.guild is not None:
-            mock_ctx.guild.owner_id = 222222222
+            mock_ctx.guild.owner_id = GUILD_OWNER_ID
 
         # Mock command to use permission system
-        mock_command.callback.__uses_dynamic_permissions__ = True  # type: ignore[attr-defined]
+        cast(Any, mock_command.callback).__uses_dynamic_permissions__ = True
 
         # Mock permission config requiring rank 5
         mock_cmd_perm = MagicMock()
@@ -269,7 +275,7 @@ class TestHelpPermissionFiltering:
 
         with (
             patch("tux.help.data.get_permission_system", return_value=mock_perm_system),
-            patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", 111111111),
+            patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", BOT_OWNER_ID),
             patch.object(CONFIG.USER_IDS, "SYSADMINS", []),
         ):
             # Guild owner should see command even without rank
@@ -310,7 +316,7 @@ class TestHelpPermissionFiltering:
         help_data = HelpData(mock_bot, mock_ctx)
 
         with (
-            patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", 111111111),
+            patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", BOT_OWNER_ID),
             patch.object(CONFIG.USER_IDS, "SYSADMINS", []),
         ):
             categories = await help_data.get_command_categories()

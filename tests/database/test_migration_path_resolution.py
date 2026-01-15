@@ -21,11 +21,13 @@ from alembic.util.exc import CommandError
 from tux.core.setup.database_setup import DatabaseSetupService
 from tux.database.service import DatabaseService
 
+pytestmark = pytest.mark.integration
+
 
 class TestMigrationPathResolution:
     """Test that migration paths are resolved correctly."""
 
-    def test_alembic_can_find_migration_directory(self):
+    def test_alembic_can_find_migration_directory(self) -> None:
         """Test that Alembic can discover the migration directory."""
         # Get project root
         project_root = Path(__file__).parent.parent.parent
@@ -44,7 +46,7 @@ class TestMigrationPathResolution:
         assert script_path.exists(), f"Migration directory not found: {script_path}"
         assert script_path.is_dir()
 
-    def test_alembic_can_load_script_directory(self):
+    def test_alembic_can_load_script_directory(self) -> None:
         """Test that Alembic can load the ScriptDirectory."""
         project_root = Path(__file__).parent.parent.parent
         alembic_ini = project_root / "alembic.ini"
@@ -56,7 +58,7 @@ class TestMigrationPathResolution:
         assert script_dir is not None
         assert script_dir.versions is not None
 
-    def test_migration_versions_directory_exists(self):
+    def test_migration_versions_directory_exists(self) -> None:
         """Test that the versions directory exists and contains migrations."""
         project_root = Path(__file__).parent.parent.parent
         versions_dir = (
@@ -75,7 +77,7 @@ class TestMigrationPathResolution:
             "No migration files found in versions directory"
         )
 
-    def test_database_setup_finds_project_root(self):
+    def test_database_setup_finds_project_root(self) -> None:
         """Test that DatabaseSetupService can find the project root."""
         db_service = DatabaseService()
         setup_service = DatabaseSetupService(db_service)
@@ -86,7 +88,7 @@ class TestMigrationPathResolution:
         assert (project_root / "alembic.ini").exists()
         assert (project_root / "src" / "tux" / "database" / "migrations").exists()
 
-    def test_alembic_config_builds_correctly(self):
+    def test_alembic_config_builds_correctly(self) -> None:
         """Test that Alembic config is built with correct paths."""
         db_service = DatabaseService()
         setup_service = DatabaseSetupService(db_service)
@@ -106,7 +108,7 @@ class TestMigrationPathResolution:
 class TestMigrationFileDiscovery:
     """Test migration file discovery and loading."""
 
-    def test_can_list_migration_revisions(self):
+    def test_can_list_migration_revisions(self) -> None:
         """Test that we can list all migration revisions."""
         project_root = Path(__file__).parent.parent.parent
         alembic_ini = project_root / "alembic.ini"
@@ -125,7 +127,7 @@ class TestMigrationFileDiscovery:
             assert rev.revision is not None
             assert rev.doc is not None or rev.doc == ""
 
-    def test_can_get_head_revision(self):
+    def test_can_get_head_revision(self) -> None:
         """Test that we can get the head revision."""
         project_root = Path(__file__).parent.parent.parent
         alembic_ini = project_root / "alembic.ini"
@@ -139,7 +141,7 @@ class TestMigrationFileDiscovery:
         # Should have at least one head
         assert len(heads) > 0, "No head revision found"
 
-    def test_migration_files_are_valid_python(self):
+    def test_migration_files_are_valid_python(self) -> None:
         """Test that migration files are valid Python modules."""
         project_root = Path(__file__).parent.parent.parent
         versions_dir = (
@@ -167,7 +169,10 @@ class TestMigrationFileDiscovery:
 class TestMigrationErrorHandling:
     """Test error handling when migrations are missing or paths are wrong."""
 
-    def test_missing_migration_directory_raises_error(self, tmp_path: Path):
+    def test_missing_migration_directory_raises_error(
+        self,
+        tmp_path: Path,
+    ) -> None:
         """Test that missing migration directory raises appropriate error."""
         # Create a temporary alembic.ini with invalid path
         alembic_ini = tmp_path / "alembic.ini"
@@ -184,7 +189,10 @@ class TestMigrationErrorHandling:
         with pytest.raises((FileNotFoundError, ValueError, CommandError)):
             ScriptDirectory.from_config(cfg)
 
-    def test_invalid_migration_file_handled_gracefully(self, tmp_path: Path):
+    def test_invalid_migration_file_handled_gracefully(
+        self,
+        tmp_path: Path,
+    ) -> None:
         """Test that invalid migration files are handled gracefully."""
         # This test would require creating a malformed migration file
         # For now, we just verify that the system can handle errors
@@ -205,7 +213,7 @@ class TestMigrationErrorHandling:
 class TestAlembicConfiguration:
     """Test Alembic configuration matches expected values."""
 
-    def test_alembic_ini_has_correct_paths(self):
+    def test_alembic_ini_has_correct_paths(self) -> None:
         """Test that alembic.ini has correct path configuration."""
         project_root = Path(__file__).parent.parent.parent
         alembic_ini = project_root / "alembic.ini"
@@ -224,7 +232,7 @@ class TestAlembicConfiguration:
         version_locations = cfg.get_main_option("version_locations")
         assert version_locations == "src/tux/database/migrations/versions"
 
-    def test_prepend_sys_path_enables_imports(self):
+    def test_prepend_sys_path_enables_imports(self) -> None:
         """Test that prepend_sys_path allows importing models."""
         project_root = Path(__file__).parent.parent.parent
         alembic_ini = project_root / "alembic.ini"

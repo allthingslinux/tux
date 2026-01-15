@@ -4,6 +4,8 @@
 Tests for module-level convenience functions in the version system.
 """
 
+import pytest
+
 from tux.shared.version import (
     bump_version,
     compare_versions,
@@ -14,6 +16,8 @@ from tux.shared.version import (
     is_semantic_version,
     satisfies_constraint,
 )
+
+pytestmark = pytest.mark.unit
 
 
 class TestModuleLevelFunctions:

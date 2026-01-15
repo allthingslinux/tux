@@ -19,7 +19,8 @@ Run modes:
 import random
 
 import pytest
-from sqlalchemy import text
+from sqlalchemy import asc, text
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from tux.database.controllers import GuildConfigController, GuildController
@@ -55,7 +56,10 @@ class TestDatabaseModelsUnit:
             assert result.id == 123456789
 
     @pytest.mark.unit
-    async def test_guild_config_model_creation(self, db_session) -> None:
+    async def test_guild_config_model_creation(
+        self,
+        db_session: AsyncSession,
+    ) -> None:
         """Test GuildConfig model creation and relationships."""
         # Create guild first
         guild = Guild(id=123456789, case_count=0)
@@ -84,7 +88,7 @@ class TestDatabaseModelsUnit:
         assert guild_from_config.id == guild.id
 
     @pytest.mark.unit
-    async def test_model_serialization(self, db_session) -> None:
+    async def test_model_serialization(self, db_session: AsyncSession) -> None:
         """Test model to_dict serialization."""
         guild = Guild(id=123456789, case_count=5)
         db_session.add(guild)
@@ -98,7 +102,7 @@ class TestDatabaseModelsUnit:
         assert guild_dict["case_count"] == 5
 
     @pytest.mark.unit
-    async def test_multiple_guilds_query(self, db_session) -> None:
+    async def test_multiple_guilds_query(self, db_session: AsyncSession) -> None:
         """Test querying multiple guilds."""
         # Create multiple guilds
         guilds_data = [
@@ -117,13 +121,13 @@ class TestDatabaseModelsUnit:
         assert len(results) == 3
 
         # Test ordering
-        statement = select(Guild).order_by(Guild.case_count)  # type: ignore[arg-type]
+        statement = select(Guild).order_by(asc(Guild.__table__.c.case_count))
         results = (await db_session.execute(statement)).scalars().unique().all()
         assert results[0].case_count == 1
         assert results[2].case_count == 3
 
     @pytest.mark.unit
-    async def test_database_constraints(self, db_session) -> None:
+    async def test_database_constraints(self, db_session: AsyncSession) -> None:
         """Test database constraints and validation."""
         # Test unique guild_id constraint
         guild1 = Guild(id=123456789, case_count=0)
@@ -144,7 +148,7 @@ class TestDatabaseModelsUnit:
         await db_session.rollback()
 
     @pytest.mark.unit
-    async def test_raw_sql_execution(self, db_session) -> None:
+    async def test_raw_sql_execution(self, db_session: AsyncSession) -> None:
         """Test raw SQL execution with py-pglite."""
         # Test basic query
         result = await db_session.execute(text("SELECT 1 as test_value"))
@@ -154,7 +158,8 @@ class TestDatabaseModelsUnit:
         # Test PostgreSQL-specific features work with py-pglite
         result = await db_session.execute(text("SELECT version()"))
         version = result.scalar()
-        assert "PostgreSQL" in version
+        assert version is not None
+        assert "PostgreSQL" in str(version)
 
 
 # =============================================================================
@@ -294,7 +299,7 @@ class TestPerformanceComparison:
     """⚡ Compare performance between unit tests (py-pglite) and integration tests."""
 
     @pytest.mark.unit
-    async def test_unit_test_performance(self, db_session) -> None:
+    async def test_unit_test_performance(self, db_session: AsyncSession) -> None:
         """Test unit test performance with py-pglite."""
 
         async def create_guild():
@@ -340,7 +345,7 @@ class TestMixedScenarios:
     """🔄 Tests that demonstrate the hybrid approach benefits."""
 
     @pytest.mark.unit
-    async def test_complex_query_unit(self, db_session) -> None:
+    async def test_complex_query_unit(self, db_session: AsyncSession) -> None:
         """Complex query test using fast unit testing."""
         # Create test data quickly with py-pglite
         guilds = [Guild(id=100000 + i, case_count=i) for i in range(10)]

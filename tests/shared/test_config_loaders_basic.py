@@ -17,6 +17,8 @@ from tux.shared.config.loaders import (
     YamlConfigSource,
 )
 
+pytestmark = pytest.mark.unit
+
 
 class SimpleSettings(BaseSettings):
     """Simple settings for testing."""

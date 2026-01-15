@@ -15,10 +15,17 @@ import pytest
 
 from tux.database.controllers import CaseController
 from tux.database.models import CaseType
+from tux.database.service import DatabaseService
 from tux.modules.moderation.jail import Jail
 
+TEST_GUILD_ID = 123456
+ALT_GUILD_ID = 987654
+TEST_USER_ID = 789012
+TEST_MODERATOR_ID = 111111
+SECOND_MODERATOR_ID = 222222
 
-def create_mock_role(role_id: int, name: str, **kwargs) -> MagicMock:
+
+def create_mock_role(role_id: int, name: str, **kwargs: bool) -> MagicMock:
     """Create a properly mocked Discord role."""
     role = MagicMock(spec=discord.Role)
     role.id = role_id
@@ -38,7 +45,7 @@ class TestRoleManagementLogic:
     """Test the jail role management logic."""
 
     @pytest.mark.integration
-    def test_get_manageable_roles_filters_normal_roles(self):
+    def test_get_manageable_roles_filters_normal_roles(self) -> None:
         """Test that _get_manageable_roles returns only manageable roles."""
         member = MagicMock(spec=discord.Member)
         jail_role = create_mock_role(999, "Jailed")
@@ -86,7 +93,7 @@ class TestRoleManagementLogic:
         assert unassignable_role not in manageable
 
     @pytest.mark.integration
-    def test_get_manageable_roles_empty_when_no_roles(self):
+    def test_get_manageable_roles_empty_when_no_roles(self) -> None:
         """Test that _get_manageable_roles returns empty list when member has no manageable roles."""
         member = MagicMock(spec=discord.Member)
         jail_role = create_mock_role(999, "Jailed")
@@ -102,7 +109,7 @@ class TestRoleManagementLogic:
         assert len(manageable) == 0
 
     @pytest.mark.integration
-    def test_get_manageable_roles_excludes_jail_role(self):
+    def test_get_manageable_roles_excludes_jail_role(self) -> None:
         """Test that the jail role itself is excluded from manageable roles."""
         member = MagicMock(spec=discord.Member)
         jail_role = create_mock_role(999, "Jailed")
@@ -124,16 +131,19 @@ class TestJailDatabaseOperations:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_jail_case_creation_with_roles(self, db_service):
+    async def test_jail_case_creation_with_roles(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test creating a jail case with stored role metadata."""
         case_controller = CaseController(db_service)
 
         # Create a jail case with stored roles
         jail_case = await case_controller.create_case(
             case_type=CaseType.JAIL,
-            case_user_id=123456,
-            case_moderator_id=789012,
-            guild_id=987654,
+            case_user_id=TEST_USER_ID,
+            case_moderator_id=TEST_MODERATOR_ID,
+            guild_id=ALT_GUILD_ID,
             case_reason="Testing role storage",
             case_user_roles=[1001, 1002, 1003, 1004],
         )
@@ -145,18 +155,21 @@ class TestJailDatabaseOperations:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_jail_case_retrieval_by_user(self, db_service):
+    async def test_jail_case_retrieval_by_user(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test retrieving the latest jail case for a user."""
         case_controller = CaseController(db_service)
 
-        guild_id = 123456
-        user_id = 789012
+        guild_id = TEST_GUILD_ID
+        user_id = TEST_USER_ID
 
         # Create multiple cases for the same user
         await case_controller.create_case(
             case_type=CaseType.WARN,
             case_user_id=user_id,
-            case_moderator_id=111111,
+            case_moderator_id=TEST_MODERATOR_ID,
             guild_id=guild_id,
             case_reason="First warning",
         )
@@ -166,7 +179,7 @@ class TestJailDatabaseOperations:
         jail_case = await case_controller.create_case(
             case_type=CaseType.JAIL,
             case_user_id=user_id,
-            case_moderator_id=222222,
+            case_moderator_id=SECOND_MODERATOR_ID,
             guild_id=guild_id,
             case_reason="Jailed for violations",
             case_user_roles=[5001, 5002, 5003],
@@ -185,16 +198,19 @@ class TestJailDatabaseOperations:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_jail_case_with_empty_roles(self, db_service):
+    async def test_jail_case_with_empty_roles(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test creating a jail case when user has no roles to store."""
         case_controller = CaseController(db_service)
 
         # Create jail case with empty role list
         jail_case = await case_controller.create_case(
             case_type=CaseType.JAIL,
-            case_user_id=123456,
-            case_moderator_id=789012,
-            guild_id=987654,
+            case_user_id=TEST_USER_ID,
+            case_moderator_id=TEST_MODERATOR_ID,
+            guild_id=ALT_GUILD_ID,
             case_reason="User had no roles",
             case_user_roles=[],
         )
@@ -209,7 +225,10 @@ class TestJailDatabaseOperations:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_jail_case_with_many_roles(self, db_service):
+    async def test_jail_case_with_many_roles(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test storing a large number of roles (stress test)."""
         case_controller = CaseController(db_service)
 
@@ -218,9 +237,9 @@ class TestJailDatabaseOperations:
 
         jail_case = await case_controller.create_case(
             case_type=CaseType.JAIL,
-            case_user_id=123456,
-            case_moderator_id=789012,
-            guild_id=987654,
+            case_user_id=TEST_USER_ID,
+            case_moderator_id=TEST_MODERATOR_ID,
+            guild_id=ALT_GUILD_ID,
             case_reason="Power user with many roles",
             case_user_roles=many_roles,
         )
@@ -235,18 +254,21 @@ class TestJailDatabaseOperations:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_multiple_jail_unjail_cycles(self, db_service):
+    async def test_multiple_jail_unjail_cycles(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test multiple jail/unjail cycles for the same user."""
         case_controller = CaseController(db_service)
 
-        guild_id = 123456
-        user_id = 789012
+        guild_id = TEST_GUILD_ID
+        user_id = TEST_USER_ID
 
         # First jail
         await case_controller.create_case(
             case_type=CaseType.JAIL,
             case_user_id=user_id,
-            case_moderator_id=111111,
+            case_moderator_id=TEST_MODERATOR_ID,
             guild_id=guild_id,
             case_reason="First jail",
             case_user_roles=[100, 101],
@@ -258,7 +280,7 @@ class TestJailDatabaseOperations:
         await case_controller.create_case(
             case_type=CaseType.UNJAIL,
             case_user_id=user_id,
-            case_moderator_id=111111,
+            case_moderator_id=TEST_MODERATOR_ID,
             guild_id=guild_id,
             case_reason="Time served",
         )
@@ -269,7 +291,7 @@ class TestJailDatabaseOperations:
         jail2 = await case_controller.create_case(
             case_type=CaseType.JAIL,
             case_user_id=user_id,
-            case_moderator_id=222222,
+            case_moderator_id=SECOND_MODERATOR_ID,
             guild_id=guild_id,
             case_reason="Second jail",
             case_user_roles=[100, 101, 102, 103],  # User gained more roles
@@ -298,19 +320,22 @@ class TestUnjailRoleRestoration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_unjail_retrieves_correct_roles(self, db_service):
+    async def test_unjail_retrieves_correct_roles(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test that unjail retrieves the correct stored roles."""
         case_controller = CaseController(db_service)
 
-        guild_id = 123456
-        user_id = 789012
+        guild_id = TEST_GUILD_ID
+        user_id = TEST_USER_ID
         stored_roles = [1001, 1002, 1003]
 
         # Create jail case
         await case_controller.create_case(
             case_type=CaseType.JAIL,
             case_user_id=user_id,
-            case_moderator_id=111111,
+            case_moderator_id=TEST_MODERATOR_ID,
             guild_id=guild_id,
             case_reason="Test jail",
             case_user_roles=stored_roles,
@@ -331,19 +356,22 @@ class TestUnjailRoleRestoration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_unjail_after_role_changes(self, db_service):
+    async def test_unjail_after_role_changes(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test that stored roles remain consistent even if user's roles changed after jailing."""
         case_controller = CaseController(db_service)
 
-        guild_id = 123456
-        user_id = 789012
+        guild_id = TEST_GUILD_ID
+        user_id = TEST_USER_ID
         original_roles = [1001, 1002, 1003]
 
         # User gets jailed with these roles
         await case_controller.create_case(
             case_type=CaseType.JAIL,
             case_user_id=user_id,
-            case_moderator_id=111111,
+            case_moderator_id=TEST_MODERATOR_ID,
             guild_id=guild_id,
             case_reason="Jailed",
             case_user_roles=original_roles,
@@ -368,16 +396,19 @@ class TestJailSystemEdgeCases:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_case_without_role_metadata(self, db_service):
+    async def test_case_without_role_metadata(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test handling cases where role metadata is None or missing."""
         case_controller = CaseController(db_service)
 
         # Create a case without explicit roles (defaults to empty list)
         jail_case = await case_controller.create_case(
             case_type=CaseType.JAIL,
-            case_user_id=123456,
-            case_moderator_id=789012,
-            guild_id=987654,
+            case_user_id=TEST_USER_ID,
+            case_moderator_id=TEST_MODERATOR_ID,
+            guild_id=ALT_GUILD_ID,
             case_reason="Test",
             # case_user_roles not provided
         )
@@ -390,7 +421,10 @@ class TestJailSystemEdgeCases:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_user_with_no_prior_cases(self, db_service):
+    async def test_user_with_no_prior_cases(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
         """Test querying for a user with no jail history."""
         case_controller = CaseController(db_service)
 
@@ -403,7 +437,7 @@ class TestJailSystemEdgeCases:
         assert latest_case is None
 
     @pytest.mark.integration
-    def test_role_filtering_with_none_values(self):
+    def test_role_filtering_with_none_values(self) -> None:
         """Test role filtering handles None/missing attributes gracefully."""
         member = MagicMock(spec=discord.Member)
         jail_role = create_mock_role(999, "Jailed")

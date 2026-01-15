@@ -12,11 +12,13 @@ established, which isn't available during test collection.
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 class TestURLConversion:
     """Test async to sync URL conversion for Alembic."""
 
-    def test_async_url_conversion_pattern(self):
+    def test_async_url_conversion_pattern(self) -> None:
         """Test that async URL pattern is correctly identified."""
         async_url = "postgresql+psycopg_async://user:pass@host:5432/db"
         sync_url = "postgresql+psycopg://user:pass@host:5432/db"
@@ -29,7 +31,7 @@ class TestURLConversion:
         )
         assert converted == sync_url
 
-    def test_sync_url_unchanged(self):
+    def test_sync_url_unchanged(self) -> None:
         """Test that sync URLs are not modified."""
         sync_url = "postgresql+psycopg://user:pass@host:5432/db"
 
@@ -41,7 +43,7 @@ class TestURLConversion:
         )
         assert converted == sync_url
 
-    def test_other_driver_urls_unchanged(self):
+    def test_other_driver_urls_unchanged(self) -> None:
         """Test that URLs with other drivers are not modified."""
         other_urls = [
             "postgresql://user:pass@host:5432/db",
@@ -58,13 +60,13 @@ class TestURLConversion:
             assert converted == url, f"URL should not be modified: {url}"
 
     @pytest.mark.skip(reason="Requires mocking CONFIG.database_url")
-    def test_offline_mode_converts_url(self):
+    def test_offline_mode_converts_url(self) -> None:
         """Test that offline mode converts async URLs."""
         # This would require mocking CONFIG.database_url
         # For now, we test the conversion logic directly
 
     @pytest.mark.skip(reason="Requires mocking CONFIG.database_url")
-    def test_online_mode_converts_url(self):
+    def test_online_mode_converts_url(self) -> None:
         """Test that online mode converts async URLs."""
         # This would require mocking CONFIG.database_url and database connection
         # For now, we test the conversion logic directly

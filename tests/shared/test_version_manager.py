@@ -13,6 +13,8 @@ import pytest
 
 from tux.shared.version import VersionManager
 
+pytestmark = pytest.mark.unit
+
 
 class TestVersionManager:
     """Test the VersionManager class."""

@@ -21,6 +21,8 @@ from tux.shared.config.generators import (
     YamlGeneratorSettings,
 )
 
+pytestmark = pytest.mark.unit
+
 
 def test_generate_toml_format() -> None:
     """Test TOML configuration file generation."""

@@ -16,7 +16,7 @@ Test Coverage:
 
 import asyncio
 from datetime import UTC, datetime
-from typing import Any
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import discord
@@ -28,38 +28,48 @@ from tux.core.bot import Tux
 from tux.database.controllers import DatabaseCoordinator
 from tux.database.models import Case, Guild
 from tux.database.models import CaseType as DBCaseType
+from tux.database.service import DatabaseService
 from tux.services.moderation.case_service import CaseService
 from tux.services.moderation.communication_service import CommunicationService
 from tux.services.moderation.execution_service import ExecutionService
 from tux.services.moderation.moderation_coordinator import ModerationCoordinator
+
+pytestmark = pytest.mark.asyncio
+
+
+def require_guild(ctx: commands.Context[Tux]) -> discord.Guild:
+    """Return the guild for a context used in guild-only tests."""
+    guild = ctx.guild
+    assert guild is not None
+    return guild
 
 
 class TestCriticalIssuesIntegration:
     """🚨 Test critical issues from moderation analysis."""
 
     @pytest.fixture
-    async def case_service(self, db_service):
+    async def case_service(self, db_service: DatabaseService) -> CaseService:
         """Create a CaseService instance."""
         coordinator = DatabaseCoordinator(db_service)
         return CaseService(coordinator.case)
 
     @pytest.fixture
-    def communication_service(self, mock_bot: Any):
+    def communication_service(self, mock_bot: Tux) -> CommunicationService:
         """Create a CommunicationService instance."""
         return CommunicationService(mock_bot)
 
     @pytest.fixture
-    def execution_service(self):
+    def execution_service(self) -> ExecutionService:
         """Create an ExecutionService instance."""
         return ExecutionService()
 
     @pytest.fixture
     async def moderation_coordinator(
         self,
-        case_service,
-        communication_service,
-        execution_service,
-    ):
+        case_service: CaseService,
+        communication_service: CommunicationService,
+        execution_service: ExecutionService,
+    ) -> ModerationCoordinator:
         """Create a ModerationCoordinator instance."""
         return ModerationCoordinator(
             case_service=case_service,
@@ -68,20 +78,22 @@ class TestCriticalIssuesIntegration:
         )
 
     @pytest.fixture
-    def mock_bot(self):
+    def mock_bot(self) -> Tux:
         """Create a mock Discord bot."""
-        bot = MagicMock(spec=Tux)
-        bot.user = MagicMock()
-        bot.user.id = 123456789  # Mock bot user ID
+        bot = cast(Tux, MagicMock(spec=Tux))
+        bot_user = cast(discord.ClientUser, MagicMock(spec=discord.ClientUser))
+        bot_user.id = 123456789  # Mock bot user ID
+        bot.user = bot_user
         return bot
 
     @pytest.fixture
-    def mock_ctx(self, mock_bot: Any):
+    def mock_ctx(self, mock_bot: Tux) -> commands.Context[Tux]:
         """Create a mock command context."""
-        ctx = MagicMock(spec=commands.Context)
-        ctx.guild = MagicMock(spec=discord.Guild)
-        ctx.guild.id = 123456789
-        ctx.guild.owner_id = 999999999
+        ctx = cast(commands.Context[Tux], MagicMock(spec=commands.Context))
+        guild = cast(discord.Guild, MagicMock(spec=discord.Guild))
+        guild.id = 123456789
+        guild.owner_id = 999999999
+        ctx.guild = guild
         ctx.author = MagicMock(spec=discord.Member)
         ctx.author.id = 987654321
         ctx.author.top_role = MagicMock()
@@ -91,7 +103,8 @@ class TestCriticalIssuesIntegration:
 
         # Mock bot member in guild with permissions
         mock_bot_member = MagicMock(spec=discord.Member)
-        mock_bot_member.id = mock_bot.user.id
+        bot_user = cast(discord.ClientUser, mock_bot.user)
+        mock_bot_member.id = bot_user.id
         mock_bot_member.guild_permissions = MagicMock(spec=discord.Permissions)
         mock_bot_member.guild_permissions.ban_members = (
             False  # Test will fail without permission
@@ -99,15 +112,15 @@ class TestCriticalIssuesIntegration:
         mock_bot_member.top_role = MagicMock()
         mock_bot_member.top_role.position = 20
 
-        ctx.guild.get_member.return_value = mock_bot_member
+        guild.get_member.return_value = mock_bot_member
         return ctx
 
     @pytest.mark.integration
     async def test_specification_dm_failure_must_not_prevent_action(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        db_service,
+        mock_ctx: commands.Context[Tux],
+        db_service: DatabaseService,
     ) -> None:
         """
         🔴 SPECIFICATION TEST: DM failure MUST NOT prevent moderation action.
@@ -122,13 +135,15 @@ class TestCriticalIssuesIntegration:
 
         CRITICAL: This test should FAIL on current buggy implementation and PASS after fix.
         """
+        guild = require_guild(mock_ctx)
+
         # Create the guild record first (required for case creation)
         async with db_service.session() as session:
-            guild = Guild(id=mock_ctx.guild.id, case_count=0)
-            session.add(guild)
+            guild_record = Guild(id=guild.id, case_count=0)
+            session.add(guild_record)
             await session.commit()
         mock_member = MockMember()
-        mock_ctx.guild.get_member.return_value = MockBotMember()
+        guild.get_member.return_value = MockBotMember()
 
         # Mock DM failure (Forbidden - user has DMs disabled)
         with patch.object(
@@ -157,7 +172,7 @@ class TestCriticalIssuesIntegration:
                 await moderation_coordinator.execute_moderation_action(
                     ctx=mock_ctx,
                     case_type=DBCaseType.BAN,  # Removal action requiring DM attempt
-                    user=mock_member,  # type: ignore[arg-type]
+                    user=cast(discord.Member, mock_member),
                     reason="DM failure test",
                     silent=False,  # Explicitly try to send DM
                     dm_action="banned",
@@ -180,7 +195,7 @@ class TestCriticalIssuesIntegration:
                     assert case.case_user_id == mock_member.id
                     assert case.case_moderator_id == mock_ctx.author.id
                     assert case.case_reason == "DM failure test"
-                    assert case.guild_id == mock_ctx.guild.id
+                    assert case.guild_id == guild.id
                     assert case.case_number == 1  # Should be the first case
 
                 # This test will FAIL if current implementation blocks actions on DM failure
@@ -190,12 +205,13 @@ class TestCriticalIssuesIntegration:
     async def test_issue_2_dm_timeout_does_not_prevent_action(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        db_service,
+        mock_ctx: commands.Context[Tux],
+        db_service: DatabaseService,
     ) -> None:
         """Test Issue #2 variant: DM timeout should NOT prevent the moderation action."""
         mock_member = MockMember()
-        mock_ctx.guild.get_member.return_value = MockBotMember()
+        guild = require_guild(mock_ctx)
+        guild.get_member.return_value = MockBotMember()
 
         # Mock DM timeout
         with patch.object(
@@ -209,8 +225,8 @@ class TestCriticalIssuesIntegration:
 
             # Create the guild record first (required for case creation)
             async with db_service.session() as session:
-                guild = Guild(id=mock_ctx.guild.id, case_count=0)
-                session.add(guild)
+                guild_record = Guild(id=guild.id, case_count=0)
+                session.add(guild_record)
                 await session.commit()
 
             with patch.object(
@@ -223,7 +239,7 @@ class TestCriticalIssuesIntegration:
                 await moderation_coordinator.execute_moderation_action(
                     ctx=mock_ctx,
                     case_type=DBCaseType.KICK,
-                    user=mock_member,  # type: ignore[arg-type]
+                    user=cast(discord.Member, mock_member),
                     reason="DM timeout test",
                     silent=False,
                     dm_action="kicked",
@@ -245,7 +261,7 @@ class TestCriticalIssuesIntegration:
     async def test_specification_bot_must_validate_own_permissions(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
+        mock_ctx: commands.Context[Tux],
     ) -> None:
         """
         🔴 SPECIFICATION TEST: Bot MUST validate its own permissions before action.
@@ -262,11 +278,12 @@ class TestCriticalIssuesIntegration:
         This test verifies that when the bot has proper permissions, the coordinator executes successfully.
         """
         mock_member = MockMember()
+        guild = require_guild(mock_ctx)
 
         # Test bot has ban permission (valid scenario)
         mock_bot_member = MockBotMember()
         mock_bot_member.guild_permissions.ban_members = True
-        mock_ctx.guild.get_member.return_value = mock_bot_member
+        guild.get_member.return_value = mock_bot_member
 
         with (
             patch.object(
@@ -295,7 +312,7 @@ class TestCriticalIssuesIntegration:
             await moderation_coordinator.execute_moderation_action(
                 ctx=mock_ctx,
                 case_type=DBCaseType.BAN,
-                user=mock_member,  # type: ignore[arg-type]
+                user=cast(discord.Member, mock_member),
                 reason="Permission check test",
                 actions=[],
             )
@@ -311,14 +328,15 @@ class TestCriticalIssuesIntegration:
     async def test_issue_3_bot_has_required_permissions(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        db_service,
+        mock_ctx: commands.Context[Tux],
+        db_service: DatabaseService,
     ) -> None:
         """Test that bot permission checks pass when bot has required permissions."""
         mock_member = MockMember()
         mock_bot_member = MockBotMember()
         mock_bot_member.guild_permissions.ban_members = True
-        mock_ctx.guild.get_member.return_value = mock_bot_member
+        guild = require_guild(mock_ctx)
+        guild.get_member.return_value = mock_bot_member
 
         with patch.object(
             moderation_coordinator._communication,
@@ -331,8 +349,8 @@ class TestCriticalIssuesIntegration:
 
             # Create the guild record first (required for case creation)
             async with db_service.session() as session:
-                guild = Guild(id=mock_ctx.guild.id, case_count=0)
-                session.add(guild)
+                guild_record = Guild(id=guild.id, case_count=0)
+                session.add(guild_record)
                 await session.commit()
 
             with patch.object(
@@ -346,7 +364,7 @@ class TestCriticalIssuesIntegration:
                 await moderation_coordinator.execute_moderation_action(
                     ctx=mock_ctx,
                     case_type=DBCaseType.BAN,
-                    user=mock_member,  # type: ignore[arg-type]
+                    user=cast(discord.Member, mock_member),
                     reason="Permission success test",
                     silent=True,
                     dm_action="banned",
@@ -368,8 +386,8 @@ class TestCriticalIssuesIntegration:
     async def test_specification_database_failure_must_not_crash_system(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        db_service,
+        mock_ctx: commands.Context[Tux],
+        db_service: DatabaseService,
     ) -> None:
         """
         🔴 SPECIFICATION TEST: Database failure MUST NOT crash the entire system.
@@ -386,7 +404,8 @@ class TestCriticalIssuesIntegration:
         CRITICAL: This test should FAIL on current buggy implementation and PASS after fix.
         """
         mock_member = MockMember()
-        mock_ctx.guild.get_member.return_value = MockBotMember()
+        guild = require_guild(mock_ctx)
+        guild.get_member.return_value = MockBotMember()
 
         with patch.object(
             moderation_coordinator._communication,
@@ -414,7 +433,7 @@ class TestCriticalIssuesIntegration:
                 await moderation_coordinator.execute_moderation_action(
                     ctx=mock_ctx,
                     case_type=DBCaseType.BAN,
-                    user=mock_member,  # type: ignore[arg-type]
+                    user=cast(discord.Member, mock_member),
                     reason="Database failure test",
                     silent=False,
                     dm_action="banned",
@@ -437,8 +456,8 @@ class TestCriticalIssuesIntegration:
     async def test_specification_user_state_changes_must_be_handled_gracefully(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        db_service,
+        mock_ctx: commands.Context[Tux],
+        db_service: DatabaseService,
     ) -> None:
         """
         🔴 SPECIFICATION TEST: User state changes during execution MUST be handled gracefully.
@@ -467,7 +486,8 @@ class TestCriticalIssuesIntegration:
             side_effect=discord.NotFound(MagicMock(), "Member not found"),
         )
 
-        mock_ctx.guild.get_member.return_value = MockBotMember()
+        guild = require_guild(mock_ctx)
+        guild.get_member.return_value = MockBotMember()
 
         # Error handling is now handled by the communication service
         # Permission and condition checks are handled at command level
@@ -475,7 +495,7 @@ class TestCriticalIssuesIntegration:
         await moderation_coordinator.execute_moderation_action(
             ctx=mock_ctx,
             case_type=DBCaseType.BAN,
-            user=mock_member,  # type: ignore[arg-type]
+            user=cast(discord.Member, mock_member),
             reason="User state change test",
             actions=[(mock_ban_action, type(None))],
         )
@@ -494,8 +514,8 @@ class TestCriticalIssuesIntegration:
     async def test_specification_lock_manager_race_condition_prevention(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        db_service,
+        mock_ctx: commands.Context[Tux],
+        db_service: DatabaseService,
     ) -> None:
         """
         🔴 SPECIFICATION TEST: Lock manager MUST prevent race conditions.
@@ -517,7 +537,8 @@ class TestCriticalIssuesIntegration:
         CRITICAL: This test should FAIL on current buggy implementation and PASS after fix.
         """
         mock_member = MockMember()
-        mock_ctx.guild.get_member.return_value = MockBotMember()
+        guild = require_guild(mock_ctx)
+        guild.get_member.return_value = MockBotMember()
 
         # Simulate successful actions
         mock_ban_action1 = AsyncMock(return_value=None)
@@ -525,8 +546,8 @@ class TestCriticalIssuesIntegration:
 
         # Create the guild record first (required for case creation)
         async with db_service.session() as session:
-            guild = Guild(id=mock_ctx.guild.id, case_count=0)
-            session.add(guild)
+            guild_record = Guild(id=guild.id, case_count=0)
+            session.add(guild_record)
             await session.commit()
 
         with patch.object(
@@ -550,7 +571,7 @@ class TestCriticalIssuesIntegration:
                     moderation_coordinator.execute_moderation_action(
                         ctx=mock_ctx,
                         case_type=DBCaseType.BAN,
-                        user=mock_member,  # type: ignore[arg-type]
+                        user=cast(discord.Member, mock_member),
                         reason="Concurrent operation 1",
                         silent=True,
                         dm_action="banned",
@@ -562,7 +583,7 @@ class TestCriticalIssuesIntegration:
                     moderation_coordinator.execute_moderation_action(
                         ctx=mock_ctx,
                         case_type=DBCaseType.BAN,
-                        user=mock_member,  # type: ignore[arg-type]
+                        user=cast(discord.Member, mock_member),
                         reason="Concurrent operation 2",
                         silent=True,
                         dm_action="banned",
@@ -610,7 +631,7 @@ class TestCriticalIssuesIntegration:
     async def test_privilege_escalation_prevention(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
+        mock_ctx: commands.Context[Tux],
     ) -> None:
         """
         Test prevention of privilege escalation attacks.
@@ -631,7 +652,8 @@ class TestCriticalIssuesIntegration:
         mock_member.top_role = MockRole(position=5)  # Lower role
 
         mock_ctx.author = mock_moderator
-        mock_ctx.guild.get_member.return_value = MockBotMember()
+        guild = require_guild(mock_ctx)
+        guild.get_member.return_value = MockBotMember()
 
         with (
             patch.object(
@@ -660,7 +682,7 @@ class TestCriticalIssuesIntegration:
             await moderation_coordinator.execute_moderation_action(
                 ctx=mock_ctx,
                 case_type=DBCaseType.BAN,
-                user=mock_member,  # type: ignore[arg-type]
+                user=cast(discord.Member, mock_member),
                 reason="Privilege escalation test",
                 actions=[],
             )
@@ -673,7 +695,7 @@ class TestCriticalIssuesIntegration:
     async def test_guild_owner_protection(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
+        mock_ctx: commands.Context[Tux],
     ) -> None:
         """
         Test that guild owners are properly protected from moderation actions.
@@ -685,7 +707,8 @@ class TestCriticalIssuesIntegration:
         mock_member = MockMember()
         mock_member.id = 999999999  # Target is guild owner
 
-        mock_ctx.guild.get_member.return_value = MockBotMember()
+        guild = require_guild(mock_ctx)
+        guild.get_member.return_value = MockBotMember()
 
         with (
             patch.object(
@@ -724,7 +747,7 @@ class TestCriticalIssuesIntegration:
             await moderation_coordinator.execute_moderation_action(
                 ctx=mock_ctx,
                 case_type=DBCaseType.BAN,
-                user=mock_member,  # type: ignore[arg-type]
+                user=cast(discord.Member, mock_member),
                 reason="Owner protection test",
                 actions=[],
             )
@@ -737,7 +760,7 @@ class TestCriticalIssuesIntegration:
     async def test_self_moderation_prevention(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
+        mock_ctx: commands.Context[Tux],
     ) -> None:
         """
         Test that users cannot moderate themselves.
@@ -750,7 +773,8 @@ class TestCriticalIssuesIntegration:
         mock_member = MockMember()
         mock_member.id = 555666777  # Different from moderator
 
-        mock_ctx.guild.get_member.return_value = MockBotMember()
+        guild = require_guild(mock_ctx)
+        guild.get_member.return_value = MockBotMember()
 
         with (
             patch.object(
@@ -779,7 +803,7 @@ class TestCriticalIssuesIntegration:
             await moderation_coordinator.execute_moderation_action(
                 ctx=mock_ctx,
                 case_type=DBCaseType.BAN,
-                user=mock_member,  # type: ignore[arg-type]
+                user=cast(discord.Member, mock_member),
                 reason="Self-moderation test",
                 actions=[],
             )
@@ -792,12 +816,13 @@ class TestCriticalIssuesIntegration:
     async def test_audit_trail_data_integrity(
         self,
         moderation_coordinator: ModerationCoordinator,
-        mock_ctx,
-        db_service,
+        mock_ctx: commands.Context[Tux],
+        db_service: DatabaseService,
     ) -> None:
         """Test that audit trails maintain data integrity even during failures."""
         mock_member = MockMember()
-        mock_ctx.guild.get_member.return_value = MockBotMember()
+        guild = require_guild(mock_ctx)
+        guild.get_member.return_value = MockBotMember()
 
         with patch.object(
             moderation_coordinator._communication,
@@ -810,8 +835,8 @@ class TestCriticalIssuesIntegration:
 
             # Create the guild record first (required for case creation)
             async with db_service.session() as session:
-                guild = Guild(id=mock_ctx.guild.id, case_count=0)
-                session.add(guild)
+                guild_record = Guild(id=guild.id, case_count=0)
+                session.add(guild_record)
                 await session.commit()
 
             with patch.object(
@@ -824,7 +849,7 @@ class TestCriticalIssuesIntegration:
                 await moderation_coordinator.execute_moderation_action(
                     ctx=mock_ctx,
                     case_type=DBCaseType.BAN,
-                    user=mock_member,  # type: ignore[arg-type]
+                    user=cast(discord.Member, mock_member),
                     reason="Audit trail integrity test",
                     silent=False,
                     dm_action="banned",
@@ -836,7 +861,7 @@ class TestCriticalIssuesIntegration:
                     cases = (await session.execute(select(Case))).scalars().all()
                     assert len(cases) == 1
                     case = cases[0]
-                    assert case.guild_id == mock_ctx.guild.id
+                    assert case.guild_id == guild.id
                     assert case.case_user_id == mock_member.id
                     assert case.case_moderator_id == mock_ctx.author.id
                     assert case.case_type == DBCaseType.BAN

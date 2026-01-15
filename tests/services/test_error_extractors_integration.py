@@ -5,8 +5,11 @@ Tests for extractors with actual Discord.py/httpx error objects.
 """
 
 import httpx
+import pytest
 
 from tux.services.handlers.error.extractors import extract_httpx_status_details
+
+pytestmark = pytest.mark.unit
 
 
 class TestExtractorsWithRealErrors:

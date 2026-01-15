@@ -6,10 +6,14 @@ Tests for permission-related error extractors.
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from tux.services.handlers.error.extractors import (
     extract_permission_denied_details,
     extract_permissions_details,
 )
+
+pytestmark = pytest.mark.unit
 
 
 class TestPermissionExtractors:

@@ -6,10 +6,14 @@ Tests for flag-related error extractors.
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from tux.services.handlers.error.extractors import (
     extract_bad_flag_argument_details,
     extract_missing_flag_details,
 )
+
+pytestmark = pytest.mark.unit
 
 
 class TestFlagExtractors:

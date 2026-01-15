@@ -15,13 +15,15 @@ from tux.core.setup.database_setup import DatabaseSetupService
 from tux.database.service import DatabaseService
 from tux.shared.exceptions import TuxDatabaseConnectionError, TuxDatabaseMigrationError
 
+pytestmark = pytest.mark.integration
+
 
 class TestMigrationErrorHandling:
     """Test error handling in migration system."""
 
     @pytest.mark.asyncio
     @pytest.mark.slow
-    async def test_migration_timeout_raises_error(self):
+    async def test_migration_timeout_raises_error(self) -> None:
         """Test that migration timeout raises TuxDatabaseMigrationError.
 
         This test intentionally sleeps for 35 seconds to verify timeout behavior,
@@ -52,7 +54,7 @@ class TestMigrationErrorHandling:
                 assert "30" in str(exc_info.value)  # Check for "30 seconds" or "30s"
 
     @pytest.mark.asyncio
-    async def test_migration_failure_raises_error(self):
+    async def test_migration_failure_raises_error(self) -> None:
         """Test that migration failures raise TuxDatabaseMigrationError."""
         db_service = DatabaseService()
         setup_service = DatabaseSetupService(db_service)
@@ -74,7 +76,7 @@ class TestMigrationErrorHandling:
                 assert "migration" in str(exc_info.value).lower()
 
     @pytest.mark.asyncio
-    async def test_database_connection_error_handled(self):
+    async def test_database_connection_error_handled(self) -> None:
         """Test that database connection errors are handled properly."""
         db_service = DatabaseService()
         setup_service = DatabaseSetupService(db_service)
@@ -87,7 +89,7 @@ class TestMigrationErrorHandling:
             await setup_service.setup()
 
     @pytest.mark.asyncio
-    async def test_migration_error_message_helpful(self):
+    async def test_migration_error_message_helpful(self) -> None:
         """Test that migration error messages provide helpful guidance."""
         db_service = DatabaseService()
         setup_service = DatabaseSetupService(db_service)

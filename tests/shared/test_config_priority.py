@@ -21,6 +21,8 @@ from tux.shared.config.loaders import (
     YamlConfigSource,
 )
 
+pytestmark = pytest.mark.unit
+
 
 class PriorityTestConfig(BaseSettings):
     """Configuration model for testing priority order."""

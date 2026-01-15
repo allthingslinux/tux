@@ -24,6 +24,9 @@ from tux.core.permission_system import PermissionSystem
 from tux.database.controllers import DatabaseCoordinator
 from tux.shared.exceptions import TuxPermissionDeniedError
 
+TEST_GUILD_ID = 123456789
+TEST_USER_ID = 987654321
+
 
 class TestPermissionSystem:
     """🛡️ Test PermissionSystem core functionality."""
@@ -54,9 +57,9 @@ class TestPermissionSystem:
         """Create a mock command context."""
         ctx = MagicMock(spec=commands.Context)
         ctx.guild = MagicMock(spec=discord.Guild)
-        ctx.guild.id = 123456789
+        ctx.guild.id = TEST_GUILD_ID
         ctx.author = MagicMock(spec=discord.Member)
-        ctx.author.id = 987654321
+        ctx.author.id = TEST_USER_ID
         ctx.author.roles = []
         ctx.bot = MagicMock(spec=Tux)
         return ctx
