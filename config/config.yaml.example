@@ -21,8 +21,8 @@
 # bot_info:
 # Name of the bot
 #   bot_name: Tux
-# Bot activities
-#   activities: []
+# Bot activities (JSON string)
+#   activities: "[]"
 # Hide bot owner info
 #   hide_bot_owner: false
 # Command prefix
@@ -37,9 +37,9 @@
 #   mappings: []
 # temp_vc:
 # Temporary VC channel ID
-#   tempvc_channel_id: 'null'
+#   tempvc_channel_id: null
 # Temporary VC category ID
-#   tempvc_category_id: 'null'
+#   tempvc_category_id: null
 # gif_limiter:
 # Recent GIF age limit
 #   recent_gif_age: 60

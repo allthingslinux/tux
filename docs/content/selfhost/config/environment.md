@@ -37,8 +37,8 @@ Set your Discord bot token and basic bot settings:
     # Bot owner user ID
     USER_IDS__BOT_OWNER_ID=123456789012345678
 
-    # System admin user IDs (comma-separated)
-    USER_IDS__SYSADMINS=123456789012345678,987654321098765432
+    # System admin user IDs (JSON array)
+    USER_IDS__SYSADMINS=[123456789012345678,987654321098765432]
     ```
 
 ### Database Configuration
@@ -88,7 +88,7 @@ Configure bot display settings:
     BOT_INFO__BOT_NAME=Tux
 
     # Bot activities (JSON array)
-    BOT_INFO__ACTIVITIES=[{"type": 0, "name": "with Linux"}]
+    BOT_INFO__ACTIVITIES=[{"type":"playing","name":"with Linux"}]
 
     # Hide bot owner information
     BOT_INFO__HIDE_BOT_OWNER=false
@@ -104,8 +104,8 @@ Configure the experience point system:
     # XP cooldown in seconds
     XP_CONFIG__XP_COOLDOWN=1
 
-    # XP blacklist channels (comma-separated channel IDs)
-    XP_CONFIG__XP_BLACKLIST_CHANNELS=123456789012345678,987654321098765432
+    # XP blacklist channels (JSON array)
+    XP_CONFIG__XP_BLACKLIST_CHANNELS=[123456789012345678,987654321098765432]
 
     # Show XP progress
     XP_CONFIG__SHOW_XP_PROGRESS=true
@@ -122,8 +122,8 @@ Configure snippet access:
     # Limit snippets to specific roles
     SNIPPETS__LIMIT_TO_ROLE_IDS=false
 
-    # Snippet access role IDs (comma-separated)
-    SNIPPETS__ACCESS_ROLE_IDS=123456789012345678
+    # Snippet access role IDs (JSON array)
+    SNIPPETS__ACCESS_ROLE_IDS=[123456789012345678]
     ```
 
 ### Temporary Voice Channels
@@ -146,8 +146,8 @@ Configure GIF rate limiting:
     # Recent GIF age limit (seconds)
     GIF_LIMITER__RECENT_GIF_AGE=60
 
-    # Excluded channels from GIF limits (comma-separated)
-    GIF_LIMITER__GIF_LIMIT_EXCLUDE=123456789012345678
+    # Excluded channels from GIF limits (JSON array)
+    GIF_LIMITER__GIF_LIMIT_EXCLUDE=[123456789012345678]
     ```
 
 ## External Services
@@ -238,8 +238,8 @@ Configure status-based role assignments:
 Configure IRC bridge webhooks:
 
     ```env
-    # IRC bridge webhook IDs (comma-separated)
-    IRC_CONFIG__BRIDGE_WEBHOOK_IDS=123456789012345678,987654321098765432
+    # IRC bridge webhook IDs (JSON array)
+    IRC_CONFIG__BRIDGE_WEBHOOK_IDS=[123456789012345678,987654321098765432]
     ```
 
 ## Docker Configuration

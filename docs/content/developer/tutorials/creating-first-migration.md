@@ -56,8 +56,18 @@ sudo systemctl status postgresql
 If using Docker Compose for development:
 
 ```bash
-# Copy override example to enable migration mount
-cp compose.override.yaml.example compose.override.yaml
+# Create compose.override.yaml to enable migration mount
+```
+
+Create `compose.override.yaml`:
+
+```yaml
+services:
+  tux:
+    volumes:
+      # Mount migrations for faster development/customization iteration
+      # Without this, migrations come from the Docker image (production behavior)
+      - ./src/tux/database/migrations:/app/src/tux/database/migrations:ro
 ```
 
 This allows you to test migrations without rebuilding the Docker image.

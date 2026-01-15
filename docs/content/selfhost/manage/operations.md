@@ -105,18 +105,6 @@ effective_cache_size = 1GB          # 50% of RAM
 work_mem = 16MB
 ```
 
-#### Connection Pooling
-
-Configure pool size based on load:
-
-```bash
-# For small servers
-POSTGRES_MAX_CONNECTIONS=20
-
-# For large servers
-POSTGRES_MAX_CONNECTIONS=50
-```
-
 ### Bot Optimization
 
 #### Resource Limits
@@ -186,11 +174,12 @@ sudo journalctl -u tux | grep ERROR
 
 ### Log Levels
 
-Configure via `DEBUG` environment variable:
+Configure via `LOG_LEVEL` or `DEBUG`:
 
 ```bash
-DEBUG=false                         # INFO level (production)
-DEBUG=true                          # DEBUG level (development)
+LOG_LEVEL=INFO                       # Explicit log level
+DEBUG=false                          # Debug toggle (fallback)
+DEBUG=true                           # Debug toggle (development)
 ```
 
 **Levels:**
@@ -229,8 +218,8 @@ Keep your Tux installation up to date with the latest features and security patc
 git pull origin main
 
 # Rebuild and restart
-docker-compose down
-docker-compose up -d --build
+docker compose down
+docker compose up -d --build
 ```
 
 ##### Using Docker Images
@@ -265,11 +254,10 @@ cd /opt/tux
 git pull origin main
 
 # Update dependencies
-source venv/bin/activate
-pip install -e .
+uv sync
 
 # Run database migrations
-tux db migrate
+uv run db push
 
 # Start the bot
 sudo systemctl start tux
@@ -294,10 +282,10 @@ cd /opt/tux
 sudo -u tux git pull origin main
 
 echo "Updating dependencies..."
-sudo -u tux bash -c "source venv/bin/activate && pip install -e ."
+sudo -u tux uv sync
 
 echo "Running database migrations..."
-sudo -u tux bash -c "source venv/bin/activate && tux db migrate"
+sudo -u tux uv run db push
 
 echo "Starting Tux..."
 sudo systemctl start tux
@@ -354,22 +342,19 @@ echo "Update complete!"
 
 #### Automatic Migrations
 
-```bash
-# Run migrations automatically
-tux db migrate
-```
+Migrations run automatically when the bot starts. Check logs if startup fails.
 
 #### Manual Migrations
 
 ```bash
 # Check migration status
-tux db status
+uv run db status
 
-# Apply specific migration
-tux db migrate --version 20231201_001
+# Apply pending migrations
+uv run db push
 
 # Rollback migration
-tux db rollback --version 20231201_001
+uv run db downgrade 20231201_001
 ```
 
 ### Rollback Procedures
@@ -378,13 +363,13 @@ tux db rollback --version 20231201_001
 
 ```bash
 # Stop current container
-docker-compose down
+docker compose down
 
 # Restore previous image
 docker tag tux:previous tux:latest
 
 # Start with previous version
-docker-compose up -d
+docker compose up -d
 ```
 
 #### Bare Metal Rollback
@@ -410,13 +395,13 @@ sudo systemctl start tux
 
 ```bash
 # Check bot status
-tux status
+docker compose ps tux
 
 # Check logs
-tux logs --tail 100
+docker compose logs --tail=100 tux
 
 # Test commands
-tux test-commands
+/ping
 ```
 
 #### Monitoring Commands
@@ -428,8 +413,6 @@ htop
 # Check disk space
 df -h
 
-# Monitor logs
-tail -f /var/log/tux/tux.log
 ```
 
 ### Troubleshooting Updates

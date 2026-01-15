@@ -135,10 +135,18 @@ Migrations run automatically on container startup. By default, migrations come f
 
 Enable migration mount for local development:
 
-```bash
-# Copy override example
-cp compose.override.yaml.example compose.override.yaml
+Create `compose.override.yaml`:
 
+```yaml
+services:
+  tux:
+    volumes:
+      # Mount migrations for faster development/customization iteration
+      # Without this, migrations come from the Docker image (production behavior)
+      - ./src/tux/database/migrations:/app/src/tux/database/migrations:ro
+```
+
+```bash
 # Migrations now come from local mount
 docker compose restart tux
 ```
@@ -179,7 +187,13 @@ Web-based database administration interface.
 
 **Docker Compose users:**
 
-Adminer is included and runs on port 8080:
+Adminer is available when enabled with the dev profile:
+
+```bash
+docker compose --profile dev up -d tux-adminer
+```
+
+Then access it at:
 
 ```text
 http://localhost:8080
@@ -265,7 +279,7 @@ Then access at `http://localhost:9090`
 
 #### Disable Adminer
 
-Comment out in `compose.yaml` or:
+Stop the service or omit the dev profile:
 
 ```bash
 docker compose stop tux-adminer

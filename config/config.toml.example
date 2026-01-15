@@ -77,7 +77,7 @@
 # ACTIVITIES: string
 # Bot activities
 # Default: "[]"
-# Examples: "[{\"type\": 0, \"name\": \"with Linux\"}]", "[{\"type\": 2, \"name\": \"to commands\", \"url\": \"https://twitch.tv/example\"}]"
+# Examples: "[{\"type\":\"playing\",\"name\":\"with Linux\"}]", "[{\"type\":\"streaming\",\"name\":\"to commands\",\"url\":\"https://twitch.tv/example\"}]"
 # ACTIVITIES = "[]"
 
 # HIDE_BOT_OWNER: boolean

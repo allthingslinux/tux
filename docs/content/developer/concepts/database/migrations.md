@@ -332,7 +332,7 @@ Tux uses the **Docker Compose override pattern** - a standard approach used by D
 
 **Development/Customization (Optional):**
 
-- Copy `compose.override.yaml.example` to `compose.override.yaml`
+- Create `compose.override.yaml` with a migration mount
 - Enables migration mount for faster iteration
 - Docker Compose automatically merges override files
 - Override file is gitignored (won't be committed)
@@ -369,10 +369,20 @@ docker compose up -d
 # Clone repository
 git clone https://github.com/allthingslinux/tux.git
 cd tux
+```
 
-# Copy override example
-cp compose.override.yaml.example compose.override.yaml
+Create `compose.override.yaml`:
 
+```yaml
+services:
+  tux:
+    volumes:
+      # Mount migrations for faster development/customization iteration
+      # Without this, migrations come from the Docker image (production behavior)
+      - ./src/tux/database/migrations:/app/src/tux/database/migrations:ro
+```
+
+```bash
 # Start services - migrations come from local mount
 docker compose up -d
 ```
@@ -396,7 +406,7 @@ cd tux
 uv run db dev --name "add custom features"
 
 # Enable override for iteration
-cp compose.override.yaml.example compose.override.yaml
+# Ensure compose.override.yaml exists with the migration mount (see above)
 
 # Build and run
 docker compose build
@@ -436,14 +446,14 @@ When migration files exist in multiple locations:
 - ✅ **Customizer-friendly**: Easy to enable for forks/patches
 - ✅ **Standard pattern**: Familiar to Docker users
 - ✅ **No confusion**: Clear separation between prod and dev
-- ✅ **Git-safe**: Override file is gitignored, example is committed
+- ✅ **Git-safe**: Override file is gitignored and stays local
 
 **Standard Practice:**
 
 This pattern is used by:
 
 - Django (django-compose pattern)
-- Rails (docker-compose override)
+- Rails (docker compose override)
 - Node.js projects (compose.override.yaml)
 - Most Docker-based projects
 
@@ -482,8 +492,7 @@ docker compose restart tux
 **Ensure override file exists:**
 
 ```bash
-# Copy override example if missing
-cp compose.override.yaml.example compose.override.yaml
+# Create compose.override.yaml if missing (see override file contents above)
 
 # Restart services
 docker compose restart tux
@@ -609,7 +618,7 @@ The system **automatically prevents** empty migrations:
 2. **Backup before updates**: Always!
 3. **Monitor logs**: Check migration success on startup
 4. **Production-ready by default**: No migration mount needed
-5. **Use override for customization**: Copy `compose.override.yaml.example` if customizing
+5. **Use override for customization**: Create `compose.override.yaml` if customizing
 
 ### Migration Philosophy
 

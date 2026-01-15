@@ -49,28 +49,6 @@ The user gets **Rank 3** permissions (the highest).
 4. Select the desired rank from the dropdown
 5. The assignment appears in the dashboard
 
-### Using Commands
-
-You can also manage role assignments with text commands:
-
-**Assign a role to a rank:**
-
-```text
-/config role assign rank:3 role:@Moderator
-```
-
-**Remove a role assignment:**
-
-```text
-/config role unassign role:@Moderator
-```
-
-**List all assignments:**
-
-```text
-/config role list
-```
-
 ## Default Rank Setup
 
 Before assigning roles, ensure you have permission ranks set up:
@@ -111,43 +89,19 @@ Member (Rank 0) → @Member (everyone starts here)
 
 ### Adding Assignments
 
-**Dashboard Method:**
-
 - Open `/config roles`
 - Find the Discord role in the unassigned section
 - Click the role and select a rank
 
-**Command Method:**
-
-```text
-/config role assign rank:<rank_number> role:@RoleName
-```
-
 ### Removing Assignments
-
-**Dashboard Method:**
 
 - Open `/config roles`
 - Find the assigned role
 - Click the role and select "Unassign" or choose a different rank
 
-**Command Method:**
-
-```text
-/config role unassign role:@RoleName
-```
-
 ### Viewing Assignments
 
-**Dashboard Method:**
-
 - Run `/config roles` to see all current assignments
-
-**Command Method:**
-
-```text
-/config role list
-```
 
 ## Troubleshooting
 
@@ -155,7 +109,7 @@ Member (Rank 0) → @Member (everyone starts here)
 
 If users can't access commands they should have:
 
-1. **Check role assignments**: Use `/config role list` to verify roles are assigned correctly
+1. **Check role assignments**: Open `/config roles` to verify roles are assigned correctly
 2. **Verify user roles**: Ensure users actually have the Discord roles assigned to ranks
 3. **Check rank hierarchy**: Users get the highest rank from all their roles
 4. **Command permissions**: Ensure commands have rank requirements set (`/config overview` → Command Permissions)
@@ -211,7 +165,7 @@ Role assignments work with command permissions:
 
 Regularly review your role assignments:
 
-- Use `/config role list` to see all assignments
+- Use `/config roles` to review all assignments
 - Check for orphaned assignments (roles that no longer exist)
 - Audit permission changes in server logs
 - Document your role hierarchy for other admins

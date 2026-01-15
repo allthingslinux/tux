@@ -89,9 +89,6 @@ TUX_IMAGE_TAG=latest
 # Enable debug mode
 DEBUG=true
 LOG_LEVEL=DEBUG
-
-# Use local migrations
-USE_LOCAL_MIGRATIONS=true
 ```
 
 ### Startup Configuration

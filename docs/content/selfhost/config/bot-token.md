@@ -84,7 +84,7 @@ Tux uses all Discord intents for full functionality:
 
 ```bash
 # Start the bot
-tux run
+uv run tux start
 
 # Test basic commands
 /ping
@@ -96,7 +96,7 @@ tux run
 
 - Check `BOT_TOKEN` is correct in `.env`
 - Verify bot is invited to your server
-- Check bot status: `tux status`
+- Check bot status: `systemctl status tux` (systemd) or `docker compose ps tux`
 
 **Commands not working?**
 

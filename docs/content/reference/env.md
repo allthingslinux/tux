@@ -49,7 +49,7 @@ Bot information configuration.
 | Name                       | Type      | Default | Description         | Example                                                                                                                               |
 |----------------------------|-----------|---------|---------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | `BOT_INFO__BOT_NAME`       | `string`  | `"Tux"` | Name of the bot     | `"Tux"`, `"MyBot"`                                                                                                                    |
-| `BOT_INFO__ACTIVITIES`     | `string`  | `"[]"`  | Bot activities      | `"[{\"type\": 0, \"name\": \"with Linux\"}]"`, `"[{\"type\": 2, \"name\": \"to commands\", \"url\": \"https://twitch.tv/example\"}]"` |
+| `BOT_INFO__ACTIVITIES`     | `string`  | `"[]"`  | Bot activities      | `"[{\"type\":\"playing\",\"name\":\"with Linux\"}]"`, `"[{\"type\":\"streaming\",\"name\":\"to commands\",\"url\":\"https://twitch.tv/example\"}]"` |
 | `BOT_INFO__HIDE_BOT_OWNER` | `boolean` | `false` | Hide bot owner info | `false`, `true`                                                                                                                       |
 | `BOT_INFO__PREFIX`         | `string`  | `"$"`   | Command prefix      | `"$"`, `"!"`, `"tux."`, `"?"`                                                                                                         |
 
@@ -94,8 +94,8 @@ GIF limiter configuration.
 | Name                              | Type      | Default | Description          | Example                      |
 |-----------------------------------|-----------|---------|----------------------|------------------------------|
 | `GIF_LIMITER__RECENT_GIF_AGE`     | `integer` | `60`    | Recent GIF age limit | `60`, `120`, `300`           |
-| `GIF_LIMITER__GIF_LIMITS_USER`    | `object`  | `{}`    | User GIF limits      | `{'123456789012345678': 5}`  |
-| `GIF_LIMITER__GIF_LIMITS_CHANNEL` | `object`  | `{}`    | Channel GIF limits   | `{'123456789012345678': 10}` |
+| `GIF_LIMITER__GIF_LIMITS_USER`    | `object`  | `{}`    | User GIF limits      | `{"123456789012345678": 5}`  |
+| `GIF_LIMITER__GIF_LIMITS_CHANNEL` | `object`  | `{}`    | Channel GIF limits   | `{"123456789012345678": 10}` |
 | `GIF_LIMITER__GIF_LIMIT_EXCLUDE`  | `array`   | `[]`    | Excluded channels    | `[123456789012345678]`       |
 
 ### XP

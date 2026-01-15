@@ -250,7 +250,11 @@ See [Database Management](../manage/database.md) for detailed troubleshooting.
 
 ## Adminer Web UI
 
-Access your database through Adminer, which is included with Docker Compose.
+Access your database through Adminer when enabled with the dev profile:
+
+```bash
+docker compose --profile dev up -d tux-adminer
+```
 
 **Access:** `http://localhost:8080`
 

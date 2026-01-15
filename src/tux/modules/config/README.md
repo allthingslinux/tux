@@ -84,12 +84,12 @@ All commands use hybrid slash + prefix syntax with interactive Components V2 UIs
 ### Unified Dashboard
 
 ```bash
-$config overview                    # Main configuration dashboard
-$config wizard                      # Interactive setup wizard
+$config overview                    # Main configuration dashboard (alias: /config dashboard)
+$config ranks                       # Permission rank management
+$config ranks init                  # Initialize default permission ranks (0-7)
+$config roles                       # Role-to-rank assignments (alias: /config role)
+$config commands                    # Command permission configuration
 $config logs                        # Log channel configuration
-$config rank list                   # Rank management
-$config role list                   # Role assignments
-$config command list                # Command permissions
 ```
 
 ## File Structure
@@ -102,7 +102,6 @@ src/tux/modules/config/           # Command layer
 ├── roles.py                       # Role assignment commands
 ├── commands.py                    # Command permission commands
 ├── overview.py                    # Dashboard commands
-└── wizard.py                      # Setup wizard commands
 
 src/tux/ui/views/config/           # UI layer
 ├── core.py                        # Foundation classes & utilities

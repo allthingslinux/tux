@@ -145,14 +145,18 @@ PostgreSQL container provides:
 
 ### Adminer Service (Optional)
 
-Adminer provides a web-based database management interface:
+Adminer provides a web-based database management interface when enabled with the dev profile:
+
+```bash
+docker compose --profile dev up -d tux-adminer
+```
 
 - Accessible at `http://localhost:8080` (default)
 - Pre-configured to connect to PostgreSQL
 - Auto-login enabled by default
 - Useful for database inspection and management
 
-To disable Adminer, comment out the `tux-adminer` service in `compose.yaml` or set `ADMINER_PORT` to empty.
+To disable Adminer, stop the service (`docker compose stop tux-adminer`) or omit the dev profile.
 
 ## Configuration
 
@@ -267,10 +271,18 @@ Migrations run automatically on container startup. Migrations come from the Dock
 
 If you're developing or have custom migrations, enable the migration mount:
 
-```bash
-# Copy override example
-cp compose.override.yaml.example compose.override.yaml
+Create `compose.override.yaml`:
 
+```yaml
+services:
+  tux:
+    volumes:
+      # Mount migrations for faster development/customization iteration
+      # Without this, migrations come from the Docker image (production behavior)
+      - ./src/tux/database/migrations:/app/src/tux/database/migrations:ro
+```
+
+```bash
 # Restart services
 docker compose restart tux
 ```

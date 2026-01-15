@@ -110,7 +110,7 @@ ADMINER_PORT=9000
 
 To disable Adminer:
 
-- Development: Comment out the service in `compose.yaml` or set `ADMINER_PORT=` to empty
+- Development: Stop the service (`docker compose stop tux-adminer`) or omit the dev profile
 - Production: Adminer is disabled by default. Enable with `--profile dev` if needed:
 
 ```bash
