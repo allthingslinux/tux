@@ -200,8 +200,13 @@ class TestDatabaseCLICommands:
             assert cmd in stdout, f"Command '{cmd}' not found in help output"
 
     @pytest.mark.integration
+    @pytest.mark.slow
     def test_readonly_commands_work(self):
-        """Test that readonly commands (status, tables, health, version) work correctly."""
+        """Test that readonly commands (status, tables, health, version) work correctly.
+
+        This test spawns multiple subprocess calls and typically takes 4-6 seconds,
+        making it a slow test that should be excluded from fast test runs.
+        """
         # Combine multiple fast readonly commands into one test to reduce subprocess overhead
         commands = [
             ("status", ["Migration Status", "Checking migration status"]),
@@ -579,8 +584,13 @@ class TestCLIPerformance(TestDatabaseCLICommands):
 
     @pytest.mark.integration
     @pytest.mark.performance
+    @pytest.mark.slow
     def test_commands_execute_quickly(self):
-        """Test that CLI commands execute within reasonable time limits."""
+        """Test that CLI commands execute within reasonable time limits.
+
+        Despite the name, this test spawns multiple subprocess calls and typically
+        takes 4-5 seconds, making it a slow test that should be excluded from fast test runs.
+        """
         commands_to_test = [
             ("status", "Status check"),
             ("tables", "Table listing"),

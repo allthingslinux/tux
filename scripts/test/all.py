@@ -16,9 +16,12 @@ app = create_app()
 def all_tests() -> None:
     """Run all tests with coverage."""
     print_section("Running Tests", "blue")
+    # Set PYTHONDONTWRITEBYTECODE for faster test execution
+    env = os.environ.copy()
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
     cmd = ["uv", "run", "pytest"]
     print_info(f"Running: {' '.join(cmd)}")
-    os.execvp(cmd[0], cmd)
+    os.execvpe(cmd[0], cmd, env)
 
 
 if __name__ == "__main__":

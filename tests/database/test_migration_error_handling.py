@@ -20,8 +20,13 @@ class TestMigrationErrorHandling:
     """Test error handling in migration system."""
 
     @pytest.mark.asyncio
+    @pytest.mark.slow
     async def test_migration_timeout_raises_error(self):
-        """Test that migration timeout raises TuxDatabaseMigrationError."""
+        """Test that migration timeout raises TuxDatabaseMigrationError.
+
+        This test intentionally sleeps for 35 seconds to verify timeout behavior,
+        making it a slow test that should be excluded from fast test runs.
+        """
         db_service = DatabaseService()
         setup_service = DatabaseSetupService(db_service)
 

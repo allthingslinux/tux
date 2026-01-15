@@ -60,9 +60,12 @@ def parallel_tests(
         # Default to loadscope for better stability with our fixtures
         cmd.extend(["--dist", "loadscope"])
 
+    # Set PYTHONDONTWRITEBYTECODE for faster test execution
+    env = os.environ.copy()
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
     print_info(f"Running: {' '.join(cmd)}")
     try:
-        os.execvp(cmd[0], cmd)
+        os.execvpe(cmd[0], cmd, env)
     except OSError as e:
         print_error(f"Failed to execute command: {e}")
         sys.exit(1)

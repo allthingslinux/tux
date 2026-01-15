@@ -36,6 +36,21 @@ def pytest_configure(config):
 
     configure_testing_logging()
 
+    # pytest-socket is configured via --disable-socket --allow-unix-socket in pyproject.toml
+    # This prevents inadvertent network access while allowing Unix sockets for PGlite.
+    #
+    # PGlite (in-memory PostgreSQL) uses Unix domain sockets to communicate with its
+    # Node.js process, which is safe and necessary for database tests.
+    #
+    # Tests using httpx_mock should work fine since httpx_mock intercepts
+    # at the httpx level before socket creation.
+    #
+    # To allow network access for specific tests:
+    # - Use @pytest.mark.enable_socket decorator on the test
+    # - Use the socket_enabled fixture: def test_something(socket_enabled):
+    # - Use @pytest.mark.allow_hosts(['hostname']) for specific hosts
+    # - Run with --force-enable-socket to disable blocking globally
+
 
 def pytest_sessionfinish(session, exitstatus):
     """Run hook after all tests finish.

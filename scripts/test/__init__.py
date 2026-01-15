@@ -13,8 +13,10 @@ from scripts.test import (
 from scripts.test import (
     benchmark,
     coverage,
+    fast,
     file,
     html,
+    last_failed,
     parallel,
     plain,
     quick,
@@ -31,6 +33,8 @@ app.add_typer(file.app)
 app.add_typer(html.app)
 app.add_typer(coverage.app)
 app.add_typer(benchmark.app)
+app.add_typer(last_failed.app)
+app.add_typer(fast.app)
 
 
 @app.callback(invoke_without_command=True)

@@ -98,6 +98,9 @@ jobs:
       - name: Run All Tests with Coverage
         id: run_tests
         continue-on-error: true  # Continue even if tests fail to upload results
+        env:
+          # Disable bytecode generation for faster test execution
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           echo "Running all tests with unified coverage..."
           echo "Working directory: $(pwd)"
