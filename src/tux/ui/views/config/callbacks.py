@@ -254,7 +254,7 @@ def create_role_update_callback(
             else:
                 message = f"✅ Rank {rank_value} roles unchanged"
 
-            await interaction.response.send_message(message, ephemeral=True)
+            await interaction.followup.send(message, ephemeral=True)
 
             # Invalidate cache and rebuild to show updated assignments
             await invalidate_and_rebuild(
@@ -325,7 +325,7 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
                 )
                 rank_obj = next((r for r in ranks if r.rank == rank_value), None)
                 if not rank_obj:
-                    await interaction.response.send_message(
+                    await interaction.followup.send(
                         f"❌ Rank {rank_value} does not exist.",
                         ephemeral=True,
                     )
@@ -339,7 +339,7 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
                 message = f"✅ Command `{command_name}` assigned to Rank {rank_value} ({rank_obj.name})"
             else:
                 # No valid selection made
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "❌ No valid selection made.",
                     ephemeral=True,
                 )
@@ -748,15 +748,15 @@ def create_confirm_assignment_callback(
         ):
             return
 
+        # Defer immediately since database operations may take time
+        await interaction.response.defer()
+
         if not selected_roles:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "❌ No roles selected.",
                 ephemeral=True,
             )
             return
-
-        # Defer immediately since database operations may take time
-        await interaction.response.defer()
 
         try:
             assigned_count = 0
