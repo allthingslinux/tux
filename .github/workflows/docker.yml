@@ -36,7 +36,8 @@ jobs:
     outputs:
       # For tags (immutable), always return true to allow build
       # For other events, use the actual changed-files output
-      docker: ${{ startsWith(github.ref, 'refs/tags/') && 'true' || steps.docker_changes.outputs.any_changed }}
+      # Note: workflow_dispatch sets github.ref to refs/heads/<tag>, so check ref_name instead
+      docker: ${{ (startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && startsWith(github.ref_name, 'v'))) && 'true' || steps.docker_changes.outputs.any_changed }}
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
@@ -220,11 +221,12 @@ jobs:
     name: Build & Push
     runs-on: ubuntu-latest
     needs: [changes]
+    # Run for tag pushes or workflow_dispatch on version tags (v*)
+    # Note: workflow_dispatch sets github.ref to refs/heads/<tag> instead of refs/tags/<tag>
+    # So we check github.ref_name (just the tag name) instead
     if: |
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
-      (github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/tags/'))
-    # For workflow_dispatch, always run (skip changes check)
-    # For push events, changes job will determine if Docker files changed
+      (github.event_name == 'workflow_dispatch' && startsWith(github.ref_name, 'v'))
     permissions:
       contents: read
       packages: write
