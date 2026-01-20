@@ -27,44 +27,57 @@ class EventHandler(BaseCog):
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         """Register all guilds the bot is in on startup and reconnections."""
-        # Check if bot setup has completed
-        if not self.bot.setup_complete:
-            logger.warning("on_ready fired before setup_complete")
-            return
+        try:
+            # Check if bot setup has completed
+            if not self.bot.setup_complete:
+                logger.warning("on_ready fired before setup_complete")
+                self.bot.guilds_registered.set()  # Unblock waiters so they do not hang
+                return
 
-        logger.info("Bot ready, registering guilds...")
+            self.bot.guilds_registered.clear()  # New cycle; waiters block until we set()
+            logger.info("Bot ready, registering guilds...")
 
-        # Always register guilds on ready - Discord.py can reconnect and guilds may change
-        logger.info("Registering all guilds in database...")
-        registered_count = 0
-        skipped_count = 0
+            # Always register guilds on ready - Discord.py can reconnect and guilds may change
+            logger.info("Registering all guilds in database...")
+            registered_count = 0
+            skipped_count = 0
 
-        for guild in self.bot.guilds:
-            try:
-                logger.debug(f"Attempting to register guild {guild.id} ({guild.name})")
-                result, created = await self.db.guild.get_or_create(id=guild.id)
-                if created:
-                    registered_count += 1
-                    logger.info(
-                        f"Successfully registered guild {guild.id} ({guild.name}) - id {result.id}",
-                    )
-                else:
-                    skipped_count += 1
+            for guild in self.bot.guilds:
+                try:
                     logger.debug(
-                        f"Guild {guild.id} ({guild.name}) already exists - skipped",
+                        f"Attempting to register guild {guild.id} ({guild.name})",
                     )
-            except Exception as e:
-                # This shouldn't happen with get_or_create, but log if it does
-                skipped_count += 1
-                logger.error(
-                    f"Unexpected error registering guild {guild.id} ({guild.name}): {e}",
-                )
-                logger.debug(f"Guild registration error details: {e}", exc_info=True)
+                    result, created = await self.db.guild.get_or_create(id=guild.id)
+                    if created:
+                        registered_count += 1
+                        logger.info(
+                            f"Successfully registered guild {guild.id} ({guild.name}) - id {result.id}",
+                        )
+                    else:
+                        skipped_count += 1
+                        logger.debug(
+                            f"Guild {guild.id} ({guild.name}) already exists - skipped",
+                        )
+                except Exception as e:
+                    # This shouldn't happen with get_or_create, but log if it does
+                    skipped_count += 1
+                    logger.error(
+                        f"Unexpected error registering guild {guild.id} ({guild.name}): {e}",
+                    )
+                    logger.debug(
+                        f"Guild registration error details: {e}",
+                        exc_info=True,
+                    )
 
-        logger.info(
-            f"Registered {registered_count} guilds, skipped {skipped_count} existing guilds in database",
-        )
-        self._guilds_registered = True
+            logger.info(
+                f"Registered {registered_count} guilds, skipped {skipped_count} existing guilds in database",
+            )
+            self._guilds_registered = True
+            self.bot.guilds_registered.set()  # Unblock RemindMe, StatusRoles, etc.
+        except Exception:
+            self.bot.guilds_registered.set()  # Unblock waiters even on failure
+            logger.exception("EventHandler.on_ready failed (cog=EventHandler)")
+            raise
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
