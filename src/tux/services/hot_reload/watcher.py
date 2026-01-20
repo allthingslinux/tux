@@ -14,6 +14,15 @@ from .config import FileWatchError, HotReloadConfig
 from .file_utils import FileHashTracker, get_extension_from_path, validate_python_syntax
 
 
+def _shorten_path(path: Path, base: Path | None = None) -> str:
+    """Return path relative to base (default cwd) when possible, else the path as-is."""
+    base = (base or Path.cwd()).resolve()
+    try:
+        return str(path.resolve().relative_to(base))
+    except ValueError:
+        return str(path)
+
+
 class FileSystemWatcherProtocol(Protocol):
     """Protocol for file system watchers."""
 
@@ -35,6 +44,8 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         reload_callback: Callable[[str], None],
         base_dir: Path,
         event_loop: asyncio.AbstractEventLoop | None = None,
+        *,
+        cwd: Path | None = None,
     ) -> None:
         """
         Initialize the cog watcher.
@@ -49,6 +60,8 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             Base directory to watch.
         event_loop : asyncio.AbstractEventLoop | None, optional
             Event loop for async operations, by default None.
+        cwd : Path | None, optional
+            Working directory for shortening logged paths, by default None.
         """
         super().__init__()
         self.config = config
@@ -56,8 +69,8 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         self.base_dir = base_dir
         self.event_loop = event_loop
         self.hash_tracker = FileHashTracker()
-        logger.info(
-            f"Created CogWatcher for base_dir: {base_dir} (exists: {base_dir.exists()})",
+        logger.debug(
+            f"CogWatcher base_dir: {_shorten_path(base_dir, cwd)} (exists: {base_dir.exists()})",
         )
 
     def should_process_file(self, file_path: Path) -> bool:
@@ -201,20 +214,25 @@ class FileWatcher:
 
         try:
             current_dir = Path.cwd()
-            logger.debug(f"Current working directory: {current_dir}")
-            logger.info(
-                f"Hot reload config watch directories: {self.config.watch_directories}",
+            logger.trace(f"Current working directory: {current_dir}")
+            logger.debug(
+                "Hot reload watch directories: [%s]",
+                ", ".join(
+                    _shorten_path(p.resolve(), current_dir)
+                    for p in self.config.watch_directories
+                ),
             )
 
             self.observer = watchdog.observers.Observer()
 
             for watch_dir in self.config.watch_directories:
                 abs_watch_dir = watch_dir.resolve()
-                logger.info(
-                    f"Setting up watch for directory: {watch_dir} -> {abs_watch_dir} (exists: {abs_watch_dir.exists()})",
+                short = _shorten_path(abs_watch_dir, current_dir)
+                logger.debug(
+                    f"Setting up watch: {short} (exists: {abs_watch_dir.exists()})",
                 )
                 if not abs_watch_dir.exists():
-                    logger.warning(f"Watch directory does not exist: {abs_watch_dir}")
+                    logger.warning(f"Watch directory does not exist: {short}")
                     continue
 
                 # Get the current event loop to pass to CogWatcher
@@ -228,11 +246,12 @@ class FileWatcher:
                     self.reload_callback,
                     abs_watch_dir,
                     current_loop,
+                    cwd=current_dir,
                 )
                 self.watchers.append(watcher)
 
                 self.observer.schedule(watcher, str(abs_watch_dir), recursive=True)
-                logger.info(f"Watching directory: {abs_watch_dir}")
+                logger.debug(f"Watching: {short}")
 
             self.observer.start()
             logger.success("File watcher started successfully")
