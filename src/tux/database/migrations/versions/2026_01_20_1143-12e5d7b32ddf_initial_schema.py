@@ -1,7 +1,7 @@
 """
-Revision ID: 55296ad22e23
+Revision ID: 12e5d7b32ddf
 Revises:
-Create Date: 2025-12-01 20:53:03.942766+00:00
+Create Date: 2026-01-20 11:43:08.183366+00:00
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = "55296ad22e23"
+revision: str = "12e5d7b32ddf"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -26,18 +26,18 @@ def upgrade() -> None:
         "guild",
         sa.Column(
             "created_at",
-            sa.DateTime(timezone=True),
+            sa.DateTime(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=True,
         ),
         sa.Column(
             "updated_at",
-            sa.DateTime(timezone=True),
+            sa.DateTime(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=True,
         ),
         sa.Column("id", sa.BigInteger(), nullable=False),
-        sa.Column("guild_joined_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("guild_joined_at", sa.DateTime(), nullable=True),
         sa.Column("case_count", sa.Integer(), nullable=False),
         sa.CheckConstraint("case_count >= 0", name="check_case_count_positive"),
         sa.CheckConstraint("id > 0", name="check_guild_id_valid"),
@@ -48,6 +48,18 @@ def upgrade() -> None:
 
     op.create_table(
         "afk",
+        sa.Column(
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=True,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=True,
+        ),
         sa.Column("member_id", sa.BigInteger(), nullable=False),
         sa.Column("guild_id", sa.BigInteger(), nullable=False),
         sa.Column(
@@ -56,8 +68,8 @@ def upgrade() -> None:
         sa.Column(
             "reason", sqlmodel.sql.sqltypes.AutoString(length=500), nullable=False
         ),
-        sa.Column("since", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("until", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("since", sa.DateTime(), nullable=False),
+        sa.Column("until", sa.DateTime(), nullable=True),
         sa.Column("enforced", sa.Boolean(), nullable=False),
         sa.Column("perm_afk", sa.Boolean(), nullable=False),
         sa.CheckConstraint("guild_id > 0", name="check_afk_guild_id_valid"),
@@ -85,13 +97,13 @@ def upgrade() -> None:
         "cases",
         sa.Column(
             "created_at",
-            sa.DateTime(timezone=True),
+            sa.DateTime(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=True,
         ),
         sa.Column(
             "updated_at",
-            sa.DateTime(timezone=True),
+            sa.DateTime(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=True,
         ),
@@ -126,7 +138,7 @@ def upgrade() -> None:
         sa.Column("case_user_id", sa.BigInteger(), nullable=False),
         sa.Column("case_user_roles", sa.JSON(), nullable=False),
         sa.Column("case_number", sa.Integer(), nullable=True),
-        sa.Column("case_expires_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("case_expires_at", sa.DateTime(), nullable=True),
         sa.Column("case_metadata", sa.JSON(), nullable=True),
         sa.Column("mod_log_message_id", sa.BigInteger(), nullable=True),
         sa.Column("guild_id", sa.BigInteger(), nullable=False),
@@ -178,13 +190,13 @@ def upgrade() -> None:
         "guild_config",
         sa.Column(
             "created_at",
-            sa.DateTime(timezone=True),
+            sa.DateTime(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=True,
         ),
         sa.Column(
             "updated_at",
-            sa.DateTime(timezone=True),
+            sa.DateTime(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=True,
         ),
@@ -245,12 +257,24 @@ def upgrade() -> None:
     )
     op.create_table(
         "levels",
+        sa.Column(
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=True,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=True,
+        ),
         sa.Column("member_id", sa.BigInteger(), nullable=False),
         sa.Column("guild_id", sa.BigInteger(), nullable=False),
         sa.Column("xp", sa.Float(), nullable=False),
         sa.Column("level", sa.Integer(), nullable=False),
         sa.Column("blacklisted", sa.Boolean(), nullable=False),
-        sa.Column("last_message", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("last_message", sa.DateTime(), nullable=False),
         sa.CheckConstraint("guild_id > 0", name="check_levels_guild_id_valid"),
         sa.CheckConstraint("level >= 0", name="check_level_positive"),
         sa.CheckConstraint("member_id > 0", name="check_levels_member_id_valid"),
@@ -275,13 +299,13 @@ def upgrade() -> None:
         "permission_commands",
         sa.Column(
             "created_at",
-            sa.DateTime(timezone=True),
+            sa.DateTime(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=True,
         ),
         sa.Column(
             "updated_at",
-            sa.DateTime(timezone=True),
+            sa.DateTime(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=True,
         ),
@@ -322,13 +346,13 @@ def upgrade() -> None:
         "permission_ranks",
         sa.Column(
             "created_at",
-            sa.DateTime(timezone=True),
+            sa.DateTime(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=True,
         ),
         sa.Column(
             "updated_at",
-            sa.DateTime(timezone=True),
+            sa.DateTime(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=True,
         ),
@@ -353,13 +377,25 @@ def upgrade() -> None:
 
     op.create_table(
         "reminder",
+        sa.Column(
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=True,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=True,
+        ),
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column(
             "reminder_content",
             sqlmodel.sql.sqltypes.AutoString(length=2000),
             nullable=False,
         ),
-        sa.Column("reminder_expires_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("reminder_expires_at", sa.DateTime(), nullable=False),
         sa.Column("reminder_channel_id", sa.BigInteger(), nullable=False),
         sa.Column("reminder_user_id", sa.BigInteger(), nullable=False),
         sa.Column("reminder_sent", sa.Boolean(), nullable=False),
@@ -396,6 +432,18 @@ def upgrade() -> None:
 
     op.create_table(
         "snippet",
+        sa.Column(
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=True,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=True,
+        ),
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column(
             "snippet_name", sqlmodel.sql.sqltypes.AutoString(length=100), nullable=False
@@ -430,6 +478,18 @@ def upgrade() -> None:
 
     op.create_table(
         "starboard",
+        sa.Column(
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=True,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=True,
+        ),
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("starboard_channel_id", sa.BigInteger(), nullable=False),
         sa.Column(
@@ -458,13 +518,25 @@ def upgrade() -> None:
 
     op.create_table(
         "starboard_message",
+        sa.Column(
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=True,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=True,
+        ),
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column(
             "message_content",
             sqlmodel.sql.sqltypes.AutoString(length=4000),
             nullable=False,
         ),
-        sa.Column("message_expires_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("message_expires_at", sa.DateTime(), nullable=False),
         sa.Column("message_channel_id", sa.BigInteger(), nullable=False),
         sa.Column("message_user_id", sa.BigInteger(), nullable=False),
         sa.Column("message_guild_id", sa.BigInteger(), nullable=False),
@@ -511,13 +583,13 @@ def upgrade() -> None:
         "permission_assignments",
         sa.Column(
             "created_at",
-            sa.DateTime(timezone=True),
+            sa.DateTime(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=True,
         ),
         sa.Column(
             "updated_at",
-            sa.DateTime(timezone=True),
+            sa.DateTime(),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=True,
         ),

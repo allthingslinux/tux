@@ -22,7 +22,7 @@ from sqlalchemy import (
 )
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.orm import Mapped, relationship
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship
 
 from .base import BaseModel
 from .enums import CaseType, OnboardingStage
@@ -720,7 +720,7 @@ class Case(BaseModel, table=True):
 # =============================================================================
 
 
-class Snippet(SQLModel, table=True):
+class Snippet(BaseModel, table=True):
     """Custom command snippets for guilds.
 
     Represents user-defined text snippets that can be triggered by custom commands
@@ -821,7 +821,7 @@ class Snippet(SQLModel, table=True):
 # =============================================================================
 
 
-class Reminder(SQLModel, table=True):
+class Reminder(BaseModel, table=True):
     """Scheduled reminders for users.
 
     Represents reminders that users can set to be notified about at a specific time.
@@ -907,7 +907,7 @@ class Reminder(SQLModel, table=True):
         return f"<Reminder id={self.id} guild={self.guild_id} user={self.reminder_user_id} expires={self.reminder_expires_at:%Y-%m-%d %H:%M}>"
 
 
-class AFK(SQLModel, table=True):
+class AFK(BaseModel, table=True):
     """Away From Keyboard status for users.
 
     Tracks when users set themselves as AFK and provides a reason
@@ -1006,7 +1006,7 @@ class AFK(SQLModel, table=True):
 # =============================================================================
 
 
-class Levels(SQLModel, table=True):
+class Levels(BaseModel, table=True):
     """User experience and leveling data.
 
     Tracks user experience points and level progression within guilds.
@@ -1093,7 +1093,7 @@ class Levels(SQLModel, table=True):
 # =============================================================================
 
 
-class Starboard(SQLModel, table=True):
+class Starboard(BaseModel, table=True):
     """Starboard configuration for guilds.
 
     Defines the starboard channel and emoji settings for a guild,
@@ -1156,7 +1156,7 @@ class Starboard(SQLModel, table=True):
         return f"<Starboard guild={self.id} channel={self.starboard_channel_id} threshold={self.starboard_threshold}>"
 
 
-class StarboardMessage(SQLModel, table=True):
+class StarboardMessage(BaseModel, table=True):
     """Messages that have been starred on the starboard.
 
     Tracks individual messages that have been posted to the starboard

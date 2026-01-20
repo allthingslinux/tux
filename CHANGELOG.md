@@ -10,6 +10,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+* **Database Migration Plugin**: Comprehensive solution for migrating from Prisma to SQLModel
+  * Full database schema inspection and analysis (`$migrate audit`, `$migrate validate-schema`)
+  * Automatic model mapping and data transformation
+  * Batch processing with progress tracking
+  * Transaction-based migration with rollback support
+  * Post-migration validation and verification (`$migrate validate`, `$migrate status`)
+  * Discord bot commands for migration management (`$migrate all`, `$migrate table`, `$migrate dry-run`)
+  * Comprehensive deployment documentation with multiple scenarios (fresh install, same server, testing)
+  * Case ordering ensures chronological migration even with missing case numbers
+  * Enhanced error handling for unique constraint violations
+  * Consolidated documentation in `PLUGIN.md` with complete table/column mappings
+  * Primary key constraint checking (`$migrate check-pk`)
+  * Duplicate detection tools (`$migrate check-duplicates`)
 * **Cursor Rules & Commands System**: Comprehensive system for managing AI-assisted development patterns
   * CLI tool for validating Cursor rules and commands (`uv run ai validate-rules`)
   * Comprehensive guides for creating Cursor rules and commands
@@ -82,6 +95,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   * Standardized command usage across documentation
   * Updated lifecycle and setup documentation for clarity
   * Removed outdated installation links and updated database installation references
+* **Database Migration Plugin Documentation**: Consolidated migration documentation
+  * Merged `README.md`, `DEPLOYMENT.md`, `TABLE.md`, and `REVIEW.md` into single `PLUGIN.md`
+  * Added comprehensive deployment scenarios and safety warnings
+  * Included complete table and column mapping reference
+  * Added troubleshooting guide and post-migration verification steps
 * **CI/CD**: Enhanced workflows and automation
   * Optimized cache management in CI workflows
   * Updated workflows with improved permissions and error handling
@@ -101,6 +119,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+* **Database Migration Plugin**: Improved migration reliability and data integrity
+  * Cases now migrate in chronological order (`guild_id`, `case_created_at`) to ensure proper insertion order even with missing case numbers
+  * Enhanced error handling for unique constraint violations with clear error messages
+  * Improved duplicate detection and validation tools
 * **Validation**: Improved rule validation system
   * Added support for large file exceptions in rule validation
   * Enhanced error handling and frontmatter validation in rule files
