@@ -131,12 +131,19 @@ class LevelsService(BaseCog):
         new_xp = current_xp + xp_increment
         new_level = self.calculate_level(new_xp)
 
+        # Store as naive datetime to match database schema
+        # Database stores naive datetimes (no timezone info)
+        last_message_naive = datetime.datetime.fromtimestamp(
+            time.time(),
+            tz=datetime.UTC,
+        ).replace(tzinfo=None)
+
         await self.db.levels.update_xp_and_level(
             member.id,
             guild.id,
             xp=new_xp,
             level=new_level,
-            last_message=datetime.datetime.fromtimestamp(time.time(), tz=datetime.UTC),
+            last_message=last_message_naive,
         )
 
         if new_level > current_level:
@@ -159,6 +166,11 @@ class LevelsService(BaseCog):
         bool
             True if the member is on cooldown, False otherwise.
         """
+        # Normalize last_message_time to UTC-aware if it's naive
+        # Database stores naive datetimes, but we compare with aware datetimes
+        if last_message_time.tzinfo is None:
+            last_message_time = last_message_time.replace(tzinfo=datetime.UTC)
+
         return (
             datetime.datetime.fromtimestamp(time.time(), tz=datetime.UTC)
             - last_message_time
