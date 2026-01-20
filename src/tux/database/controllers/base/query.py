@@ -110,7 +110,7 @@ class QueryController[ModelT]:
             if offset is not None:
                 stmt = stmt.offset(offset)
 
-            logger.debug(
+            logger.trace(
                 f"Executing find_all query on {self.model.__name__} (limit={limit}, has_filters={filters is not None})",
             )
             result = await session.execute(stmt)
