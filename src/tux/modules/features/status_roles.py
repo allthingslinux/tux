@@ -42,16 +42,22 @@ class StatusRoles(BaseCog):
         )
 
     @commands.Cog.listener()
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         """Check all users' statuses when the bot starts up."""
-        # Skip status role checking during maintenance mode
-        if self.bot.maintenance_mode:
-            return
+        try:
+            await self.bot.guilds_registered.wait()
 
-        logger.info("StatusRoles cog ready, checking all users' statuses")
-        for guild in self.bot.guilds:
-            for member in guild.members:
-                await self.check_and_update_roles(member)
+            # Skip status role checking during maintenance mode
+            if self.bot.maintenance_mode:
+                return
+
+            logger.info("StatusRoles cog ready, checking all users' statuses")
+            for guild in self.bot.guilds:
+                for member in guild.members:
+                    await self.check_and_update_roles(member)
+        except Exception:
+            logger.exception("StatusRoles.on_ready failed (cog=StatusRoles)")
+            raise
 
     @commands.Cog.listener()
     async def on_presence_update(self, before: discord.Member, after: discord.Member):
