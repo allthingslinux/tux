@@ -212,14 +212,15 @@
             prPriority: 5,
         },
         {
-            // Python runtime - groups .python-version, workflows, and Dockerfile
+            // Python runtime - groups requires-python, .python-version, workflows, and Dockerfile
             matchManagers: [
+                'pep621',
                 'dockerfile',
                 'github-actions',
-                'custom.regex'
+                'custom.regex',
             ],
             matchPackageNames: [
-                'python'
+                'python',
             ],
             groupName: 'python runtime',
             addLabels: [
@@ -230,15 +231,16 @@
         {
             // Python patch updates auto-merge
             matchManagers: [
+                'pep621',
                 'dockerfile',
                 'github-actions',
-                'custom.regex'
+                'custom.regex',
             ],
             matchPackageNames: [
-                'python'
+                'python',
             ],
             matchUpdateTypes: [
-                'patch'
+                'patch',
             ],
             automerge: true,
             automergeType: 'branch',
@@ -247,16 +249,17 @@
         {
             // Python minor/major need review
             matchManagers: [
+                'pep621',
                 'dockerfile',
                 'github-actions',
-                'custom.regex'
+                'custom.regex',
             ],
             matchPackageNames: [
-                'python'
+                'python',
             ],
             matchUpdateTypes: [
                 'minor',
-                'major'
+                'major',
             ],
             automerge: false,
             addLabels: [

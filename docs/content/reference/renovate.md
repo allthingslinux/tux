@@ -78,7 +78,7 @@ Renovate monitors these file types:
 | `pep621` | `pyproject.toml`, `uv.lock` | Python dependencies and lock file |
 | `docker-compose` | `compose.yaml` | Docker Compose service images |
 | `dockerfile` | `Containerfile` | Dockerfile base images and dependencies |
-| `custom.regex` | Various (via custom patterns) | Custom version variables (e.g., `PYTHON_VERSION`) |
+| `custom.regex` | `.python-version` | Python version (via custom regex manager) |
 | `devcontainer` | `.devcontainer/devcontainer.json` | Dev container images and features |
 | `pre-commit` | `.pre-commit-config.yaml` | Pre-commit hook versions |
 | `nix` | `flake.nix`, `flake.lock` | Nix flake inputs and lock file |
@@ -87,9 +87,9 @@ Renovate monitors these file types:
 
 | Setting | Value | Description |
 |---------|-------|-------------|
-| `prConcurrentLimit` | `10` | Maximum open PRs at once |
-| `prHourlyLimit` | `10` | Maximum PRs created per hour |
-| `prCreation` | `not-pending` | Waits 24 hours after CI completes before creating PR |
+| `prConcurrentLimit` | `0` | No limit (unlimited open PRs) |
+| `prHourlyLimit` | `0` | No limit (unlimited PRs per hour) |
+| `prCreation` | `not-pending` | Creates PR when CI is not pending (waits up to 24h for status via `prNotPendingHours`) |
 | `platformAutomerge` | `true` | Uses GitHub's native auto-merge |
 | `rebaseWhen` | `conflicted` | Rebases PRs only when conflicted (more efficient) |
 | `recreateWhen` | `auto` | Recreates PRs when needed |
@@ -107,7 +107,7 @@ Renovate monitors these file types:
 }
 ```
 
-Security updates are detected via OSV, labeled with `deps: security`, and require manual review (no auto-merge).
+Renovate detects security updates via OSV, labels them with `deps: security`, and requires manual review (no auto-merge).
 
 ### Update Strategy
 
@@ -116,8 +116,9 @@ Security updates are detected via OSV, labeled with `deps: security`, and requir
 | `separateMinorPatch` | `false` | Minor and patch updates are combined |
 | `separateMajorMinor` | `true` | Major updates are separated |
 | `updateNotScheduled` | `true` | Allows updates outside schedule for urgent fixes |
-| `rangeStrategy` | `update-lockfile` | Updates lock file when version ranges change |
-| `constraints.python` | `>=3.14,<3.15` | Constrained to Python 3.14.x |
+| `rangeStrategy` | `update-lockfile` | Updates lock file when version ranges change (pep621 only) |
+| `constraints.python` | `>=3.13.2,<3.14` | Constrained to Python 3.13.x |
+| `constraints.postgres` | `<=17` | PostgreSQL version constraint |
 
 ## Package Rules
 
@@ -147,10 +148,10 @@ Security updates are detected via OSV, labeled with `deps: security`, and requir
 | **dev** | `pre-commit`, `ruff`, `basedpyright`, `yamllint`, `yamlfix`, `pydoclint`, `docstr-coverage`, `pydantic-settings-export` | ✅ Branch | `deps: dev` | Weekly |
 | **test** | All packages in `test` dependency group (pytest, pytest-*, py-pglite) | ✅ Branch | `deps: test` | Weekly |
 | **docs** | `zensical` | 🚩 Manual | `deps: docs`, `deps: needs-review` | Monthly |
-| **types** | `/^types-/`, `annotated-types`, `asyncpg-stubs` | ✅ Branch | `deps: types` | Monthly |
+| **types** | `types-*`, `type-*`, `typing-*`, `@types/*`, `*-types`, `*-stub(s)` (e.g. `annotated-types`, `asyncpg-stubs`) | ✅ Branch | `deps: types` | Monthly |
 | **actions** | All GitHub Actions | ✅ Branch | `deps: github-actions` | Weekly |
 | **docker** | Docker Compose + Dockerfile dependencies | ✅ Branch | `deps: docker` | Weekly |
-| **python runtime** | `.python-version`, workflows, Dockerfile Python version | See below | `deps: python` | Weekly |
+| **python runtime** | `requires-python` (pep621), `.python-version`, workflows, Dockerfile | See below | `deps: python` | Weekly |
 | **nix** | All Nix flake inputs | ✅ Branch | `deps: nix` | Weekly |
 
 ### Critical Runtime Dependencies
@@ -174,7 +175,7 @@ Critical packages inherit behavior from global update type rules (patch/minor au
 | **Python runtime** | Patch | ✅ Branch | `10` | `deps: python` | Auto-merge after 3 days |
 | **Python runtime** | Minor/Major | 🚩 Manual | `10` | `deps: python`, `deps: needs-review`, `breaking` | Requires review |
 
-**Python Runtime**: Groups updates to `.python-version`, `PYTHON_VERSION` in workflows, and Dockerfile Python version. All files update together in one PR.
+**Python runtime**: Groups `requires-python` in `pyproject.toml` (pep621), `.python-version`, `PYTHON_VERSION` in workflows, and Dockerfile Python version. All update together in one PR.
 
 ### Lock File Maintenance
 
@@ -193,7 +194,7 @@ Automatically maintains lock files weekly with auto-merge enabled:
 - **`uv.lock`**: Python dependency lock file
 - **`flake.lock`**: Nix flake lock file
 
-Lock file updates are silent (branch automerge) if tests pass, creating a PR only if tests fail.
+Lock file maintenance creates a PR and auto-merges when CI passes.
 
 ## PR Configuration
 
@@ -226,9 +227,9 @@ Lock file updates are silent (branch automerge) if tests pass, creating a PR onl
 
 1. **Weekly Schedule**: Runs every Monday before 4am ET (most updates)
 2. **Monthly Schedule**: Type stubs and documentation tools run on the first of the month at 4am ET
-3. **PR Creation**: Creates PRs after CI checks complete (24 hour wait)
-4. **Branch Automerge**: Automatically merges passing updates directly to main branch (silent, no PR)
-5. **PR Automerge**: Creates PR only if tests fail (for visibility)
+3. **PR Creation**: Creates PRs when CI is not pending (waits up to 24h for status)
+4. **Branch Automerge**: Auto-merges PRs when CI passes (no human review needed)
+5. **PR Automerge**: PRs are created for all updates; branch automerge merges them when CI passes
 6. **Manual Review**: Major updates, Python minor/major, uv, and Zensical require manual review
 7. **Grouping**: Related dependencies grouped to reduce noise
 8. **Stability Waiting**: Waits 7 days after release before automerging (3 days for Python patches)
@@ -247,7 +248,7 @@ Lock file updates are silent (branch automerge) if tests pass, creating a PR onl
 
 - **Title**: `chore(deps): update critical`
 - **Labels**: `deps: critical`
-- **Behavior**: All critical packages grouped together, auto-merged after 14 days
+- **Behavior**: All critical packages grouped together, auto-merged after 7 days
 
 ### General Updates
 
@@ -371,9 +372,9 @@ The dependency dashboard issue provides:
 
 Tux's configuration implements advanced noise reduction:
 
-### Silent Updates (Branch Automerge)
+### Branch automerge (no human review)
 
-Most updates merge **silently** without creating PRs:
+These updates create PRs that are auto-merged when CI passes:
 
 - ✅ Patch updates (after 7 days)
 - ✅ Minor updates (after 7 days)
@@ -387,25 +388,24 @@ Most updates merge **silently** without creating PRs:
 - ✅ Nix inputs
 - ✅ Lock file maintenance
 
-**Result**: You only see PRs when something needs review or tests fail.
+**Result**: PRs are created for all updates; they are auto-merged when CI passes. You only need to review PRs that require manual review or when CI fails.
 
-### Rate Limiting
+### Rate limiting
 
-- **Max 10 concurrent PRs**: Allows parallel updates while preventing overwhelm
-- **Max 10 PRs per hour**: Controlled rollout for stability
-- **24-hour wait**: PRs created only after tests complete (branch automerge has time to work)
+- **No PR limit** (`prConcurrentLimit: 0`, `prHourlyLimit: 0`): Unlimited concurrent and hourly PRs
+- **PR creation**: PRs created when CI is not pending (waits up to 24h for status)
 
-### Smart Scheduling
+### Smart scheduling
 
 - **Weekly**: Most updates (Monday 4am ET, outside work hours)
 - **Monthly**: Low-priority updates (types, docs - 1st of month, 4am ET)
 - **Urgent**: Security updates bypass schedule
 
-### Expected Weekly Noise
+### Expected weekly noise
 
-- **Best case**: 0 PRs (everything auto-merged silently)
-- **Typical case**: 1-2 PRs (major updates requiring review)
-- **Worst case**: 10 PRs (concurrent limit reached)
+- **Best case**: Most PRs auto-merge when CI passes; few need human review
+- **Typical case**: 1-2 PRs require manual review (major updates, uv, zensical)
+- **Worst case**: Many PRs when many major updates or failing CI need attention
 
 ## Advanced Features
 
@@ -416,7 +416,7 @@ Renovate detects and updates version variables in GitHub Actions workflows:
 ```yaml
 env:
   # renovate: datasource=python-version depName=python
-  PYTHON_VERSION: 3.14.0
+  PYTHON_VERSION: 3.13.8
 ```
 
 **Custom Manager for `.python-version`**:
@@ -426,14 +426,15 @@ Renovate also tracks the `.python-version` file using a custom regex manager:
 ```json5
 {
     "customType": "regex",
-    "fileMatch": ["^\\.python-version$"],
+    "managerFilePatterns": ["/^\\.python-version$/"],
     "matchStrings": ["(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
     "datasourceTemplate": "python-version",
-    "depNameTemplate": "python"
+    "depNameTemplate": "python",
+    "versioningTemplate": "pep440"
 }
 ```
 
-This ensures `.python-version`, `PYTHON_VERSION` in workflows, and Dockerfile Python versions all update together in one PR.
+This ensures `requires-python` (pep621), `.python-version`, `PYTHON_VERSION` in workflows, and Dockerfile Python versions all update together in one PR.
 
 ### Automated Fixes
 
