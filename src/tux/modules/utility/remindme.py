@@ -33,11 +33,37 @@ class RemindMe(BaseCog):
     async def send_reminder(self, reminder: Reminder) -> None:
         """Send a reminder to a user.
 
+        Marks the reminder as sent before sending so a restart between send and
+        delete does not cause a duplicate. If the row is already gone (e.g.
+        another timer or process sent and deleted it), skips to avoid duplicate.
+
         Parameters
         ----------
         reminder : Reminder
             The reminder to send.
         """
+        if reminder.id is None:
+            logger.warning("send_reminder: reminder has no id, skipping")
+            return
+
+        # Mark as sent before sending so a restart between send and delete
+        # does not cause a duplicate send.
+        try:
+            updated = await self.db.reminder.update_reminder(
+                reminder.id,
+                reminder_sent=True,
+            )
+            if updated is None:
+                # Row not found (already deleted); skip to avoid duplicate
+                return
+        except Exception as e:
+            logger.error(
+                "Failed to mark reminder %s as sent: %s",
+                reminder.id,
+                e,
+            )
+            # Proceed to send; we may get a duplicate on restart if delete also fails
+
         user = self.bot.get_user(reminder.reminder_user_id)
         if user is not None:
             embed = EmbedCreator.create_embed(
@@ -76,8 +102,7 @@ class RemindMe(BaseCog):
             )
 
         try:
-            if reminder.id is not None:
-                await self.db.reminder.delete_reminder_by_id(reminder.id)
+            await self.db.reminder.delete_reminder_by_id(reminder.id)
         except Exception as e:
             logger.error(f"Failed to delete reminder: {e}")
 
