@@ -45,6 +45,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
     * RemindMe: exception handling, timezone-aware expiry checks, reminder scheduling only when timer fires (prevents unawaited coroutine on shutdown)
     * Status roles: exception handling, guild-registration wait before status checks
 * **TTY roles**: Jailed members are skipped in role assignment on join so the jail role is not overridden by re-jail logic
+* **Rank modals**: Response handling in EditRankModal and CreateRankModal uses defer and followup for modal submissions; streamlined error handling for rank creation and editing
+* **Permission ranks**: Description handling in PermissionRankController: `MISSING` by default, `None` clears, omitting leaves unchanged
 
 ## [0.1.0] - 2026-01-20
 
