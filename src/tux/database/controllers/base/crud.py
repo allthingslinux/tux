@@ -44,9 +44,12 @@ class CrudController[ModelT]:
             # Only refresh if the commit was successful and we need to populate auto-generated fields
             try:
                 await session.refresh(instance)
-                logger.debug(
-                    f"Refresh succeeded for {self.model.__name__} with id {getattr(instance, 'id', 'unknown')}",
+                pk = (
+                    f" with id {v}"
+                    if (v := getattr(instance, "id", None)) is not None
+                    else ""
                 )
+                logger.debug(f"Refresh succeeded for {self.model.__name__}{pk}")
             except Exception as e:
                 # If refresh fails (e.g., due to database-managed timestamp fields),
                 # just continue - the instance is still valid for our purposes
