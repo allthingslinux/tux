@@ -242,7 +242,18 @@ class PaginationHelper:
         elif custom_id == f"{mode_prefix}_nav_last":
             setattr(dashboard, current_page_attr, total_pages - 1)
 
-        # Invalidate cache and rebuild
-        dashboard.invalidate_cache()
+        # Extract mode from mode_prefix (e.g., "ranks" from "ranks_nav")
+        mode = mode_prefix.replace("_nav", "")
+
+        # Check cache first - if cached, edit immediately without rebuild
+        cache_key = dashboard._get_cache_key(mode)
+        if cached := dashboard.get_cached_mode(cache_key):
+            dashboard.clear_items()
+            dashboard.add_item(cached)
+            await interaction.response.edit_message(view=dashboard)
+            return
+
+        # Not cached - invalidate cache and rebuild
+        dashboard.invalidate_cache(mode)
         await rebuild_method()
         await interaction.response.edit_message(view=dashboard)

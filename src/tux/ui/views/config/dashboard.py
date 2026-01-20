@@ -76,9 +76,16 @@ class ConfigDashboard(discord.ui.LayoutView):
             """Handle button click to switch to ranks mode."""
             view = self.view
             if isinstance(view, ConfigDashboard):
-                # Defer immediately since building ranks mode may take time on first load
-                await interaction.response.defer()
                 view.current_mode = "ranks"
+                # Check cache first - if cached, edit immediately without defer
+                cache_key = view._get_cache_key("ranks")
+                if cached := view.get_cached_mode(cache_key):
+                    view.clear_items()
+                    view.add_item(cached)
+                    await interaction.response.edit_message(view=view)
+                    return
+                # Not cached - defer and build
+                await interaction.response.defer()
                 await view.build_layout()
                 await interaction.followup.edit_message(
                     message_id=interaction.message.id,
@@ -99,9 +106,16 @@ class ConfigDashboard(discord.ui.LayoutView):
             """Handle button click to switch to roles mode."""
             view = self.view
             if isinstance(view, ConfigDashboard):
-                # Defer immediately since building roles mode may take time on first load
-                await interaction.response.defer()
                 view.current_mode = "roles"
+                # Check cache first - if cached, edit immediately without defer
+                cache_key = view._get_cache_key("roles")
+                if cached := view.get_cached_mode(cache_key):
+                    view.clear_items()
+                    view.add_item(cached)
+                    await interaction.response.edit_message(view=view)
+                    return
+                # Not cached - defer and build
+                await interaction.response.defer()
                 await view.build_layout()
                 await interaction.followup.edit_message(
                     message_id=interaction.message.id,
@@ -122,9 +136,16 @@ class ConfigDashboard(discord.ui.LayoutView):
             """Handle button click to switch to commands mode."""
             view = self.view
             if isinstance(view, ConfigDashboard):
-                # Defer immediately since building commands mode may take time
-                await interaction.response.defer()
                 view.current_mode = "commands"
+                # Check cache first - if cached, edit immediately without defer
+                cache_key = view._get_cache_key("commands")
+                if cached := view.get_cached_mode(cache_key):
+                    view.clear_items()
+                    view.add_item(cached)
+                    await interaction.response.edit_message(view=view)
+                    return
+                # Not cached - defer and build
+                await interaction.response.defer()
                 await view.build_layout()
                 await interaction.followup.edit_message(
                     message_id=interaction.message.id,
@@ -145,9 +166,16 @@ class ConfigDashboard(discord.ui.LayoutView):
             """Handle button click to switch to logs mode."""
             view = self.view
             if isinstance(view, ConfigDashboard):
-                # Defer immediately since building logs mode may take time on first load
-                await interaction.response.defer()
                 view.current_mode = "logs"
+                # Check cache first - if cached, edit immediately without defer
+                cache_key = view._get_cache_key("logs")
+                if cached := view.get_cached_mode(cache_key):
+                    view.clear_items()
+                    view.add_item(cached)
+                    await interaction.response.edit_message(view=view)
+                    return
+                # Not cached - defer and build
+                await interaction.response.defer()
                 await view.build_layout()
                 await interaction.followup.edit_message(
                     message_id=interaction.message.id,
@@ -168,9 +196,16 @@ class ConfigDashboard(discord.ui.LayoutView):
             """Handle button click to switch to jail mode."""
             view = self.view
             if isinstance(view, ConfigDashboard):
-                # Defer immediately since building jail mode may take time on first load
-                await interaction.response.defer()
                 view.current_mode = "jail"
+                # Check cache first - if cached, edit immediately without defer
+                cache_key = view._get_cache_key("jail")
+                if cached := view.get_cached_mode(cache_key):
+                    view.clear_items()
+                    view.add_item(cached)
+                    await interaction.response.edit_message(view=view)
+                    return
+                # Not cached - defer and build
+                await interaction.response.defer()
                 await view.build_layout()
                 await interaction.followup.edit_message(
                     message_id=interaction.message.id,
