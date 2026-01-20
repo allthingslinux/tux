@@ -255,7 +255,19 @@ class HelpRenderer:
         """
         # Use help (full docstring) if available, otherwise fall back to short_doc (first line)
         # For hybrid commands, help might be None but short_doc should be populated
-        help_text = format_multiline_description(command.help or command.short_doc)
+        # If both are None, try to extract docstring directly from the callback function
+        help_text = command.help or command.short_doc
+        if not help_text and hasattr(command, "callback") and command.callback.__doc__:
+            # Extract docstring directly from function if command attributes are None
+            # This can happen with hybrid commands in production
+            docstring = command.callback.__doc__.strip()
+            # Use first line as short description, or full docstring if single line
+            help_text = (
+                docstring.split("\n\n")[0]
+                if "\n\n" in docstring
+                else docstring.split("\n")[0]
+            )
+        help_text = format_multiline_description(help_text)
         embed = self.create_base_embed(
             title=f"{self.prefix}{command.qualified_name}",
             description=help_text,
