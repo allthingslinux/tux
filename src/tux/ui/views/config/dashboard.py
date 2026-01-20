@@ -358,6 +358,34 @@ class ConfigDashboard(discord.ui.LayoutView):
         """Cache a built container for a mode."""
         self._built_modes[mode] = container
 
+    def _count_total_components(
+        self,
+        item: discord.ui.Item[discord.ui.LayoutView]
+        | discord.ui.Container[discord.ui.LayoutView],
+    ) -> int:
+        """
+        Count total components including nested ones.
+
+        Parameters
+        ----------
+        item : discord.ui.Item | discord.ui.Container
+            Component to count
+
+        Returns
+        -------
+        int
+            Total component count including nested
+        """
+        count = 1  # Count the item itself
+        # Use walk_children if available (LayoutView method)
+        if hasattr(item, "walk_children"):
+            count += sum(1 for _ in item.walk_children())
+        # Fallback: manually check common nested structures
+        elif hasattr(item, "children"):
+            for child in item.children:
+                count += self._count_total_components(child)
+        return count
+
     async def build_layout(self) -> None:
         # sourcery skip: merge-comparisons, merge-duplicate-blocks, remove-redundant-if
         """Build the dashboard layout based on current mode."""
@@ -1341,18 +1369,26 @@ class ConfigDashboard(discord.ui.LayoutView):
         sanitized_name = "".join(
             c if c.isalnum() or c in ("_", "-") else "_" for c in cmd_name
         )
-        # Ensure custom_id is unique and within Discord's 100 char limit
-        base_custom_id = f"cmd_{sanitized_name}"[
-            :90
+        # Include page number in custom_id to ensure uniqueness across pagination
+        # This prevents collisions if the same command appears on different pages
+        current_page = getattr(self, "commands_current_page", 0)
+        base_custom_id = f"cmd_{current_page}_{sanitized_name}"[
+            :85
         ]  # Leave room for uniqueness suffix if needed
 
         # Ensure uniqueness by checking against used IDs
         custom_id = base_custom_id
         if used_custom_ids is not None:
             if custom_id in used_custom_ids:
-                # Add hash suffix if collision (shouldn't happen with unique command names)
-                suffix = hashlib.md5(cmd_name.encode()).hexdigest()[:8]
-                custom_id = f"{base_custom_id[:82]}_{suffix}"[:100]
+                # Add hash suffix if collision (shouldn't happen with unique command names + page)
+                suffix = hashlib.md5(f"{current_page}_{cmd_name}".encode()).hexdigest()[
+                    :8
+                ]
+                custom_id = f"{base_custom_id[:77]}_{suffix}"[:100]
+                logger.warning(
+                    f"Custom ID collision detected for {cmd_name} on page {current_page}, "
+                    f"using suffix: {custom_id}",
+                )
             used_custom_ids.add(custom_id)
 
         rank_select = discord.ui.Select[discord.ui.LayoutView](
@@ -1364,6 +1400,130 @@ class ConfigDashboard(discord.ui.LayoutView):
         )
         rank_select.callback = create_command_rank_callback(self, cmd_name)
         return rank_select
+
+    async def _build_commands_list(
+        self,
+    ) -> tuple[list[tuple[str, int | None, bool]], dict[int, Any]]:
+        """
+        Build the list of commands with their assignment status.
+
+        Returns
+        -------
+        tuple[list[tuple[str, int | None, bool]], dict[int, Any]]
+            Tuple of (all_commands, rank_map)
+        """
+        # Get all moderation commands
+        moderation_commands = get_moderation_commands(self.bot)
+
+        # Get existing command permissions
+        existing_permissions = (
+            await self.bot.db.command_permissions.get_all_command_permissions(
+                self.guild.id,
+            )
+        )
+        permission_map = {perm.command_name: perm for perm in existing_permissions}
+
+        # Get ranks for display
+        ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+            self.guild.id,
+        )
+        rank_map = {r.rank: r for r in ranks}
+
+        # Build list of all commands with their assignment status
+        # Sort alphabetically by name to maintain stable positions
+        all_commands: list[tuple[str, int | None, bool]] = []
+        for cmd_name in sorted(moderation_commands):
+            if cmd_name in permission_map:
+                all_commands.append(
+                    (cmd_name, permission_map[cmd_name].required_rank, True),
+                )
+            else:
+                all_commands.append((cmd_name, None, False))
+
+        return all_commands, rank_map
+
+    def _add_commands_to_container(
+        self,
+        container: discord.ui.Container[discord.ui.LayoutView],
+        page_commands: list[tuple[str, int | None, bool]],
+        rank_map: dict[int, Any],
+        ranks: list[Any],
+        used_custom_ids: set[str],
+    ) -> None:
+        """
+        Add command displays to the container.
+
+        Parameters
+        ----------
+        container : discord.ui.Container
+            Container to add commands to
+        page_commands : list[tuple[str, int | None, bool]]
+            Commands to display on this page
+        rank_map : dict[int, Any]
+            Map of rank values to rank objects
+        ranks : list[Any]
+            List of all ranks
+        used_custom_ids : set[str]
+            Set of used custom IDs to prevent duplicates
+        """
+        for cmd_idx, (cmd_name, rank_value, is_assigned) in enumerate(page_commands):
+            # Build command display
+            cmd_display = self._build_command_display(
+                cmd_name,
+                rank_value,
+                is_assigned,
+                rank_map,
+            )
+            container.add_item(cmd_display)
+
+            # Build rank selector
+            rank_select = self._build_command_rank_selector(
+                cmd_name,
+                rank_value,
+                is_assigned,
+                ranks,
+                used_custom_ids,
+            )
+            selector_row = discord.ui.ActionRow[discord.ui.LayoutView]()
+            selector_row.add_item(rank_select)
+            container.add_item(selector_row)
+
+            # Build status display
+            status_display = self._build_command_status_display(
+                rank_value,
+                is_assigned,
+                rank_map,
+            )
+            container.add_item(status_display)
+
+            # Separator between commands
+            if cmd_idx < len(page_commands) - 1:
+                container.add_item(discord.ui.Separator())
+
+    def _validate_component_count(
+        self,
+        container: discord.ui.Container[discord.ui.LayoutView],
+    ) -> None:
+        """
+        Validate that component count doesn't exceed Discord's limit.
+
+        Parameters
+        ----------
+        container : discord.ui.Container
+            Container to validate
+
+        Raises
+        ------
+        ValueError
+            If component count exceeds 40
+        """
+        total_components = self._count_total_components(container)
+        if total_components > 40:
+            error_msg = (
+                f"Component limit exceeded: {total_components} > 40. "
+                "Reduce CONFIG_COMMANDS_PER_PAGE or simplify UI structure."
+            )
+            raise ValueError(error_msg)
 
     async def build_commands_mode(self) -> None:
         """Build the command permissions configuration mode."""
@@ -1386,35 +1546,14 @@ class ConfigDashboard(discord.ui.LayoutView):
             # Track custom_ids to prevent duplicates
             used_custom_ids: set[str] = set()
 
-            # Get all moderation commands
-            moderation_commands = get_moderation_commands(self.bot)
+            # Build commands list and get maps
+            all_commands, rank_map = await self._build_commands_list()
+            total_commands = len(all_commands)
 
-            # Get existing command permissions
-            existing_permissions = (
-                await self.bot.db.command_permissions.get_all_command_permissions(
-                    self.guild.id,
-                )
-            )
-            permission_map = {perm.command_name: perm for perm in existing_permissions}
-
-            # Get ranks for display
+            # Get ranks for selectors
             ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
                 self.guild.id,
             )
-            rank_map = {r.rank: r for r in ranks}
-
-            # Build list of all commands with their assignment status
-            # Sort alphabetically by name to maintain stable positions
-            all_commands: list[tuple[str, int | None, bool]] = []
-            for cmd_name in sorted(moderation_commands):
-                if cmd_name in permission_map:
-                    all_commands.append(
-                        (cmd_name, permission_map[cmd_name].required_rank, True),
-                    )
-                else:
-                    all_commands.append((cmd_name, None, False))
-
-            total_commands = len(all_commands)
 
             # Calculate pagination info
             start_idx, end_idx, total_pages, _ = PaginationHelper.setup_pagination(
@@ -1439,42 +1578,14 @@ class ConfigDashboard(discord.ui.LayoutView):
             # Top separator
             container.add_item(discord.ui.Separator())
 
-            # Display commands
-            for cmd_idx, (cmd_name, rank_value, is_assigned) in enumerate(
+            # Add commands to container
+            self._add_commands_to_container(
+                container,
                 page_commands,
-            ):
-                # Build command display
-                cmd_display = self._build_command_display(
-                    cmd_name,
-                    rank_value,
-                    is_assigned,
-                    rank_map,
-                )
-                container.add_item(cmd_display)
-
-                # Build rank selector
-                rank_select = self._build_command_rank_selector(
-                    cmd_name,
-                    rank_value,
-                    is_assigned,
-                    ranks,
-                    used_custom_ids,
-                )
-                selector_row = discord.ui.ActionRow[discord.ui.LayoutView]()
-                selector_row.add_item(rank_select)
-                container.add_item(selector_row)
-
-                # Build status display
-                status_display = self._build_command_status_display(
-                    rank_value,
-                    is_assigned,
-                    rank_map,
-                )
-                container.add_item(status_display)
-
-                # Separator between commands
-                if cmd_idx < len(page_commands) - 1:
-                    container.add_item(discord.ui.Separator())
+                rank_map,
+                ranks,
+                used_custom_ids,
+            )
 
             # Bottom separator
             container.add_item(discord.ui.Separator())
@@ -1500,6 +1611,9 @@ class ConfigDashboard(discord.ui.LayoutView):
 
             # Back button
             add_back_button_to_container(container, self)
+
+            # Validate component count before adding
+            self._validate_component_count(container)
 
             self.add_item(container)
 

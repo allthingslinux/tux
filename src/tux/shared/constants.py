@@ -204,7 +204,7 @@ BANS_LIMIT: Final[int] = 2000
 CONFIG_RANKS_PER_PAGE: Final[int] = 3  # 1 create + 3 ranks + 1 nav = 5 ActionRows max
 CONFIG_ROLES_PER_PAGE: Final[int] = 4  # 4 selects + 1 nav = 5 ActionRows max
 CONFIG_COMMANDS_PER_PAGE: Final[int] = (
-    3  # Limited by 40 component limit (3 commands = ~20 components with nesting)
+    2  # Limited by 40 component limit (2 commands = ~15 components with nesting)
 )
 CONFIG_LOGS_PER_PAGE: Final[int] = 5  # Only ChannelSelects, no ActionRow limit issue
 
