@@ -7,9 +7,8 @@ status setting, message notifications, and nickname management for Discord users
 
 import contextlib
 import textwrap
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import cast
-from zoneinfo import ZoneInfo
 
 import discord
 from discord.ext import commands, tasks
@@ -190,7 +189,9 @@ class Afk(BaseCog):
             if not entry:
                 return
 
-            if entry.since + timedelta(seconds=10) > datetime.now(ZoneInfo("UTC")):
+            if entry.since + timedelta(seconds=10) > datetime.now(UTC).replace(
+                tzinfo=None,
+            ):
                 return
 
             if await self.db.afk.is_perm_afk(
