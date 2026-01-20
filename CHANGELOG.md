@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 -->
+<!-- markdownlint-disable MD024 MD007 -->
 
 # Changelog
 
@@ -13,169 +13,169 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 
 * **Database Migration Plugin**: Comprehensive solution for migrating from Prisma to SQLModel
-  * Full database schema inspection and analysis (`$migrate audit`, `$migrate validate-schema`)
-  * Automatic model mapping and data transformation
-  * Batch processing with progress tracking
-  * Transaction-based migration with rollback support
-  * Post-migration validation and verification (`$migrate validate`, `$migrate status`)
-  * Discord bot commands for migration management (`$migrate all`, `$migrate table`, `$migrate dry-run`)
-  * Comprehensive deployment documentation with multiple scenarios (fresh install, same server, testing)
-  * Case ordering ensures chronological migration even with missing case numbers
-  * Enhanced error handling for unique constraint violations
-  * Consolidated documentation in `PLUGIN.md` with complete table/column mappings
-  * Primary key constraint checking (`$migrate check-pk`)
-  * Duplicate detection tools (`$migrate check-duplicates`)
+    * Full database schema inspection and analysis (`$migrate audit`, `$migrate validate-schema`)
+    * Automatic model mapping and data transformation
+    * Batch processing with progress tracking
+    * Transaction-based migration with rollback support
+    * Post-migration validation and verification (`$migrate validate`, `$migrate status`)
+    * Discord bot commands for migration management (`$migrate all`, `$migrate table`, `$migrate dry-run`)
+    * Comprehensive deployment documentation with multiple scenarios (fresh install, same server, testing)
+    * Case ordering ensures chronological migration even with missing case numbers
+    * Enhanced error handling for unique constraint violations
+    * Consolidated documentation in `PLUGIN.md` with complete table/column mappings
+    * Primary key constraint checking (`$migrate check-pk`)
+    * Duplicate detection tools (`$migrate check-duplicates`)
 * **Maintenance Mode**: Bot-wide maintenance mode for safe migrations and maintenance windows
-  * `MAINTENANCE_MODE` configuration option to enable/disable maintenance mode
-  * Global command check that blocks non-owner commands during maintenance
-  * Event handler checks prevent user event processing (levels, AFK, starboard, bookmarks, status roles, temp VC, polls, GIF limiting)
-  * Background task checks prevent data modification during maintenance (AFK expiration, tempban processing, GIF cleanup)
-  * Owner and sysadmin commands remain functional during maintenance mode
-  * Comprehensive integration with database migration plugin for safe migrations
+    * `MAINTENANCE_MODE` configuration option to enable/disable maintenance mode
+    * Global command check that blocks non-owner commands during maintenance
+    * Event handler checks prevent user event processing (levels, AFK, starboard, bookmarks, status roles, temp VC, polls, GIF limiting)
+    * Background task checks prevent data modification during maintenance (AFK expiration, tempban processing, GIF cleanup)
+    * Owner and sysadmin commands remain functional during maintenance mode
+    * Comprehensive integration with database migration plugin for safe migrations
 * **Cursor Rules & Commands System**: Comprehensive system for managing AI-assisted development patterns
-  * CLI tool for validating Cursor rules and commands (`uv run ai validate-rules`)
-  * Comprehensive guides for creating Cursor rules and commands
-  * Templates for rule and command documentation
-  * Enhanced validation with frontmatter checking and large file exception support
-  * README for Cursor rules and commands system
-* **Docker Improvements**: Enhanced Docker setup and deployment
-  * Production Docker Compose configuration (`compose.production.yaml`)
-  * Multi-stage Containerfile build with common setup stage
-  * Auto-login form plugin for Adminer database administration
-  * Validation and date generation functions in Docker scripts
-  * Enhanced CI/CD pipeline with validation and caching improvements
-* **Documentation**: New self-hosting and installation guides
-  * Bare metal installation guide
-  * Enhanced self-hosting guide with detailed requirements and installation methods
-  * CI/CD best practices documentation
-* **Bot Infrastructure**: Improved initialization and setup
-  * Prefix manager setup service for bot initialization
-  * `VALID_LOG_LEVELS` constant exported from logging module
-  * `SLOW_COG_LOAD_THRESHOLD` constant for performance monitoring
-* **Test Structure Reorganization**: Comprehensive test reorganization from flat structure to domain-based organization
-  * New test directories: `tests/core/`, `tests/database/`, `tests/services/`, `tests/shared/`, `tests/modules/`, `tests/help/`, `tests/plugins/`
-  * Database model tests: creation, queries, relationships, serialization, performance, and timestamp functionality
-  * Error extractor tests: arguments, flags, HTTP, permissions, roles, utilities, and integration tests
-  * Config loader tests: basic loading, environment variable handling, and generation
-  * Version system tests: module functions, version objects, and system integration
-* **Test Fixture Improvements**: Enhanced test fixture organization and utilities
-  * New `tests/fixtures/data_fixtures.py` for test constants and sample data
-  * New `tests/fixtures/utils.py` with validation utilities for guild configs, guilds, and relationship integrity
-  * Improved database fixture organization and PGlite management
+    * CLI tool for validating Cursor rules and commands (`uv run ai validate-rules`)
+    * Comprehensive guides for creating Cursor rules and commands
+    * Templates for rule and command documentation
+    * Enhanced validation with frontmatter checking and large file exception support
+    * README for Cursor rules and commands system
+* Docker Improvements: Enhanced Docker setup and deployment
+    * Production Docker Compose configuration (`compose.production.yaml`)
+    * Multi-stage Containerfile build with common setup stage
+    * Auto-login form plugin for Adminer database administration
+    * Validation and date generation functions in Docker scripts
+    * Enhanced CI/CD pipeline with validation and caching improvements
+* Documentation: New self-hosting and installation guides
+    * Bare metal installation guide
+    * Enhanced self-hosting guide with detailed requirements and installation methods
+    * CI/CD best practices documentation
+* Bot Infrastructure: Improved initialization and setup
+    * Prefix manager setup service for bot initialization
+    * `VALID_LOG_LEVELS` constant exported from logging module
+    * `SLOW_COG_LOAD_THRESHOLD` constant for performance monitoring
+* Test Structure Reorganization: Comprehensive test reorganization from flat structure to domain-based organization
+    * New test directories: `tests/core/`, `tests/database/`, `tests/services/`, `tests/shared/`, `tests/modules/`, `tests/help/`, `tests/plugins/`
+    * Database model tests: creation, queries, relationships, serialization, performance, and timestamp functionality
+    * Error extractor tests: arguments, flags, HTTP, permissions, roles, utilities, and integration tests
+    * Config loader tests: basic loading, environment variable handling, and generation
+    * Version system tests: module functions, version objects, and system integration
+* Test Fixture Improvements: Enhanced test fixture organization and utilities
+    * New `tests/fixtures/data_fixtures.py` for test constants and sample data
+    * New `tests/fixtures/utils.py` with validation utilities for guild configs, guilds, and relationship integrity
+    * Improved database fixture organization and PGlite management
 * Database controller improvements with enhanced error handling and logging
 
 ### Changed
 
-* **Cursor Rules System**: Refactored validation command structure and enhanced documentation
-  * Updated AGENTS.md with Cursor rules and commands overview
-  * Expanded and organized Cursor rules and commands documentation
-  * Enhanced pre-commit configuration for commit message handling
-* **Docker Configuration**: Updated Docker Compose and build processes
-  * Updated Docker Compose configurations for production and development environments
-  * Enhanced health checks and service management
-  * Restructured Containerfile into multi-stage build with common setup
-  * Enhanced database connection handling and startup logic in entrypoint script
-  * Expanded `.dockerignore` to include additional files and directories
-  * Disabled attestations in GitHub Actions for improved architecture visibility
-* **Bot Architecture**: Improved initialization and error handling
-  * Consolidated setup services with improved error handling
-  * Simplified bot startup and enhanced shutdown handling
-  * Streamlined prefix resolution
-  * Enhanced configuration loading and data handling
-  * Improved bot readiness checks and logging
-* **Code Quality**: Enhanced error handling and type annotations across modules
-  * Improved error handling in database migration tests
-  * Enhanced logging configuration and error handling
-  * Improved type annotations across multiple modules (AFK, Godbolt, TLDR, info, task monitor, decorators)
-  * Enhanced error handling in validation, linting, and VSCode settings parsing
-  * Improved error extractor tests for httpx exceptions
-  * Enhanced database model relationship tests
-* **Module Refactoring**: Improved code organization and functionality
-  * Streamlined embed creation and improved boolean formatting in info module
-  * Enhanced cache handling and command processing in TLDR module
-  * Enhanced AFK management and filtering capabilities
-  * Streamlined prefix management and improved cache handling
-  * Enhanced cog loading process and improved performance monitoring
-  * Replaced custom logging methods with loguru for consistency
-  * Simplified `get_recent_cases` method and updated documentation
-* **Documentation**: Updated guides and references
-  * Updated command syntax in migration and development documentation
-  * Updated validation command in AGENTS.md for consistency
-  * Standardized command usage across documentation
-  * Updated lifecycle and setup documentation for clarity
-  * Removed outdated installation links and updated database installation references
-* **Database Migration Plugin Documentation**: Consolidated migration documentation
-  * Merged `README.md`, `DEPLOYMENT.md`, `TABLE.md`, and `REVIEW.md` into single `PLUGIN.md`
-  * Added comprehensive deployment scenarios and safety warnings
-  * Updated migration workflow to include maintenance mode instructions
-  * Clarified bot operation requirements during migration (bot must run for Discord commands, but maintenance mode prevents user events)
-  * Included complete table and column mapping reference
-  * Added troubleshooting guide and post-migration verification steps
-* **CI/CD**: Enhanced workflows and automation
-  * Optimized cache management in CI workflows
-  * Updated workflows with improved permissions and error handling
-  * Added checks for Cloudflare API token in preview deployment
-* **Test Organization**: Reorganized tests from `tests/unit/` and `tests/integration/` to domain-specific directories
-  * Core permission system tests moved to `tests/core/`
-  * Database tests consolidated in `tests/database/` with comprehensive model coverage
-  * Service layer tests organized in `tests/services/` with error handler and HTTP client tests
-  * Shared utility tests moved to `tests/shared/` for config and version management
-  * Module integration tests organized in `tests/modules/`
-* **Test Fixtures**: Improved fixture organization with better separation of concerns
-  * Consolidated test constants and sample data fixtures
-  * Enhanced validation utilities for test data integrity
-  * Improved PGlite process management and cleanup
+* Cursor Rules System: Refactored validation command structure and enhanced documentation
+    * Updated AGENTS.md with Cursor rules and commands overview
+    * Expanded and organized Cursor rules and commands documentation
+    * Enhanced pre-commit configuration for commit message handling
+* Docker Configuration: Updated Docker Compose and build processes
+    * Updated Docker Compose configurations for production and development environments
+    * Enhanced health checks and service management
+    * Restructured Containerfile into multi-stage build with common setup
+    * Enhanced database connection handling and startup logic in entrypoint script
+    * Expanded `.dockerignore` to include additional files and directories
+    * Disabled attestations in GitHub Actions for improved architecture visibility
+* Bot Architecture: Improved initialization and error handling
+    * Consolidated setup services with improved error handling
+    * Simplified bot startup and enhanced shutdown handling
+    * Streamlined prefix resolution
+    * Enhanced configuration loading and data handling
+    * Improved bot readiness checks and logging
+* Code Quality: Enhanced error handling and type annotations across modules
+    * Improved error handling in database migration tests
+    * Enhanced logging configuration and error handling
+    * Improved type annotations across multiple modules (AFK, Godbolt, TLDR, info, task monitor, decorators)
+    * Enhanced error handling in validation, linting, and VSCode settings parsing
+    * Improved error extractor tests for httpx exceptions
+    * Enhanced database model relationship tests
+* Module Refactoring: Improved code organization and functionality
+    * Streamlined embed creation and improved boolean formatting in info module
+    * Enhanced cache handling and command processing in TLDR module
+    * Enhanced AFK management and filtering capabilities
+    * Streamlined prefix management and improved cache handling
+    * Enhanced cog loading process and improved performance monitoring
+    * Replaced custom logging methods with loguru for consistency
+    * Simplified `get_recent_cases` method and updated documentation
+* Documentation: Updated guides and references
+    * Updated command syntax in migration and development documentation
+    * Updated validation command in AGENTS.md for consistency
+    * Standardized command usage across documentation
+    * Updated lifecycle and setup documentation for clarity
+    * Removed outdated installation links and updated database installation references
+* Database Migration Plugin Documentation: Consolidated migration documentation
+    * Merged `README.md`, `DEPLOYMENT.md`, `TABLE.md`, and `REVIEW.md` into single `PLUGIN.md`
+    * Added comprehensive deployment scenarios and safety warnings
+    * Updated migration workflow to include maintenance mode instructions
+    * Clarified bot operation requirements during migration (bot must run for Discord commands, but maintenance mode prevents user events)
+    * Included complete table and column mapping reference
+    * Added troubleshooting guide and post-migration verification steps
+* CI/CD: Enhanced workflows and automation
+    * Optimized cache management in CI workflows
+    * Updated workflows with improved permissions and error handling
+    * Added checks for Cloudflare API token in preview deployment
+* Test Organization: Reorganized tests from `tests/unit/` and `tests/integration/` to domain-specific directories
+    * Core permission system tests moved to `tests/core/`
+    * Database tests consolidated in `tests/database/` with comprehensive model coverage
+    * Service layer tests organized in `tests/services/` with error handler and HTTP client tests
+    * Shared utility tests moved to `tests/shared/` for config and version management
+    * Module integration tests organized in `tests/modules/`
+* Test Fixtures: Improved fixture organization with better separation of concerns
+    * Consolidated test constants and sample data fixtures
+    * Enhanced validation utilities for test data integrity
+    * Improved PGlite process management and cleanup
 * Database controller error handling and logging improvements
 * Documentation updates for debugging, testing fixtures, and versioning
 
 ### Fixed
 
 * **Database Migration Plugin**: Improved migration reliability and data integrity
-  * Cases now migrate in chronological order (`guild_id`, `case_created_at`) to ensure proper insertion order even with missing case numbers
-  * Enhanced error handling for unique constraint violations with clear error messages
-  * Improved duplicate detection and validation tools
-  * Fixed exception message formatting (extracted f-strings to variables for better error handling)
-  * Fixed session variable shadowing in migration methods
-  * Removed unnecessary type ignore comments
-  * Added complexity suppressions for large migration methods
-* **Code Quality**: Fixed linting and type checking issues
-  * Removed unused functions from migration plugin tests
-  * Improved code quality compliance across migration plugin
-* **Validation**: Improved rule validation system
-  * Added support for large file exceptions in rule validation
-  * Enhanced error handling and frontmatter validation in rule files
-  * Fixed pre-commit hook entry for cursor validation
-* **Documentation**: Fixed command syntax and references
-  * Updated command syntax in migration and development documentation
-  * Fixed validation command in AGENTS.md for consistency
-  * Updated related links in database management documentation
-  * Fixed database installation link in configuration documentation
-* **Testing**: Enhanced test reliability and accuracy
-  * Enhanced error handling in database migration tests
-  * Improved database model relationship tests and error handler assertions
-  * Updated URL assertion in error extractor tests for accuracy
-  * Enhanced logging tests to verify handler behavior
-* **Configuration**: Fixed configuration and validation issues
-  * Enhanced exception handling for VSCode settings parsing
-  * Updated markdownlint configuration format
-  * Specified exception types for improved error handling in validation and linting
-* **TLDR Module**: Resolved cache directory path to avoid permission issues
-* **Workflows**: Fixed CI/CD workflow issues
-  * Updated permissions and error handling in docs workflow
-  * Added checks for Cloudflare API token in preview deployment
-  * Removed unnecessary exception handling for subprocess errors
-* **Harmful Commands**: Fixed edge cases in harmful command detection
-* **GitHub Badge**: Adjusted GitHub release badge boolean parameter
-* **Base Cog**: Enhanced error handling and logging
+    * Cases now migrate in chronological order (`guild_id`, `case_created_at`) to ensure proper insertion order even with missing case numbers
+    * Enhanced error handling for unique constraint violations with clear error messages
+    * Improved duplicate detection and validation tools
+    * Fixed exception message formatting (extracted f-strings to variables for better error handling)
+    * Fixed session variable shadowing in migration methods
+    * Removed unnecessary type ignore comments
+    * Added complexity suppressions for large migration methods
+* Code Quality: Fixed linting and type checking issues
+    * Removed unused functions from migration plugin tests
+    * Improved code quality compliance across migration plugin
+* Validation: Improved rule validation system
+    * Added support for large file exceptions in rule validation
+    * Enhanced error handling and frontmatter validation in rule files
+    * Fixed pre-commit hook entry for cursor validation
+* Documentation: Fixed command syntax and references
+    * Updated command syntax in migration and development documentation
+    * Fixed validation command in AGENTS.md for consistency
+    * Updated related links in database management documentation
+    * Fixed database installation link in configuration documentation
+* Testing: Enhanced test reliability and accuracy
+    * Enhanced error handling in database migration tests
+    * Improved database model relationship tests and error handler assertions
+    * Updated URL assertion in error extractor tests for accuracy
+    * Enhanced logging tests to verify handler behavior
+* Configuration: Fixed configuration and validation issues
+    * Enhanced exception handling for VSCode settings parsing
+    * Updated markdownlint configuration format
+    * Specified exception types for improved error handling in validation and linting
+* TLDR Module: Resolved cache directory path to avoid permission issues
+* Workflows: Fixed CI/CD workflow issues
+    * Updated permissions and error handling in docs workflow
+    * Added checks for Cloudflare API token in preview deployment
+    * Removed unnecessary exception handling for subprocess errors
+* Harmful Commands: Fixed edge cases in harmful command detection
+* GitHub Badge: Adjusted GitHub release badge boolean parameter
+* Base Cog: Enhanced error handling and logging
 
 ### Removed
 
 * **Legacy Files**: Cleaned up deprecated and outdated files
-  * Removed `.trivyignore` file for deprecated vulnerability tracking
-  * Removed FORCE_MIGRATE references from Docker and database documentation
-  * Removed example Docker Compose override file
-* **Legacy Test Structure**: Removed `tests/unit/` and `tests/integration/` directories in favor of domain-based organization
-* **Deprecated Fixtures**: Removed `tests/fixtures/pglite_fixtures.py` and `tests/fixtures/test_data_fixtures.py` in favor of reorganized fixture structure
+    * Removed `.trivyignore` file for deprecated vulnerability tracking
+    * Removed FORCE_MIGRATE references from Docker and database documentation
+    * Removed example Docker Compose override file
+* Legacy Test Structure: Removed `tests/unit/` and `tests/integration/` directories in favor of domain-based organization
+* Deprecated Fixtures: Removed `tests/fixtures/pglite_fixtures.py` and `tests/fixtures/test_data_fixtures.py` in favor of reorganized fixture structure
 
 ### Security
 
@@ -202,22 +202,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Info command handling and documentation improvements
 * Dependency updates for Pillow and MkDocs Material
 * CI workflow improvements with shfmt flag updates
-* **Database System Migration**: Complete migration from Prisma to SQLModel (SQLAlchemy + Pydantic)
-  * SQLModel ORM implementation with async PostgreSQL support
-  * Database controllers with BaseController pattern
-  * DatabaseCoordinator facade for centralized access
-  * Alembic migration system with PostgreSQL enum support
-  * Connection pooling with retry logic and health checks
-* **CLI Framework Migration**: Migrated from Click to Typer for improved type safety and developer experience
-* **Type Checker Migration**: Switched from pyright to basedpyright for enhanced type checking
-* **Source Layout Migration**: Reorganized from flat layout (tux/) to src layout (src/tux/) following Python packaging best practices
-* **Configuration System**: Modular configuration management with multi-format support (TOML, YAML, JSON), priority-based loading, and pydantic-settings validation
-* **Plugin System**: Modular plugin architecture for extending functionality without modifying core code
-* **Task Monitoring**: Background task monitoring and management system
-* **Activity Rotation**: Dynamic bot activity rotation with placeholder substitution
-* **Cloudflare Workers Integration**: Documentation deployment via Cloudflare Workers with Wrangler CLI
-* **Database Testing**: py-pglite integration for in-memory PostgreSQL testing
-* **Plugins**: Deepfry (image manipulation), Flag Remover (flag emoji removal), Support Notifier (support channel notifications), Harmful Commands (detection and warning for potentially harmful shell commands), Fact (fun facts system)
+* Database System Migration: Complete migration from Prisma to SQLModel (SQLAlchemy + Pydantic)
+    * SQLModel ORM implementation with async PostgreSQL support
+    * Database controllers with BaseController pattern
+    * DatabaseCoordinator facade for centralized access
+    * Alembic migration system with PostgreSQL enum support
+    * Connection pooling with retry logic and health checks
+* CLI Framework Migration: Migrated from Click to Typer for improved type safety and developer experience
+* Type Checker Migration: Switched from pyright to basedpyright for enhanced type checking
+* Source Layout Migration: Reorganized from flat layout (tux/) to src layout (src/tux/) following Python packaging best practices
+* Configuration System: Modular configuration management with multi-format support (TOML, YAML, JSON), priority-based loading, and pydantic-settings validation
+* Plugin System: Modular plugin architecture for extending functionality without modifying core code
+* Task Monitoring: Background task monitoring and management system
+* Activity Rotation: Dynamic bot activity rotation with placeholder substitution
+* Cloudflare Workers Integration: Documentation deployment via Cloudflare Workers with Wrangler CLI
+* Database Testing: py-pglite integration for in-memory PostgreSQL testing
+* Plugins: Deepfry (image manipulation), Flag Remover (flag emoji removal), Support Notifier (support channel notifications), Harmful Commands (detection and warning for potentially harmful shell commands), Fact (fun facts system)
 
 ### Changed
 
@@ -229,14 +229,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Updated documentation build and serve scripts with better error handling and configuration checks
 * Restructured development checks with a new `Check` class
 * Updated `wrangler` deployment scripts with improved argument handling and error checks
-* **Package Manager Migration**: Migrated from Poetry to uv for faster dependency resolution
-* **Project Structure**: Reorganized from flat layout (tux/) to src layout (src/tux/) with clear separation: `core/`, `database/`, `services/`, `modules/`, `plugins/`, `ui/`, `shared/`, `help/`
-* **Documentation Structure**: Reorganized documentation from `developer-guide/` and `admin-guide/` to `developer/concepts/` with subdirectories (`core/`, `handlers/`, `tasks/`, `ui/`, `wrappers/`, `database/`) and `admin/` structure
-* **Help System**: Refactored help command with separated components, improved pagination, and interactive navigation
-* **Bot Lifecycle**: Streamlined initialization process with dedicated setup services
+* Package Manager Migration: Migrated from Poetry to uv for faster dependency resolution
+* Project Structure: Reorganized from flat layout (tux/) to src layout (src/tux/) with clear separation: `core/`, `database/`, `services/`, `modules/`, `plugins/`, `ui/`, `shared/`, `help/`
+* Documentation Structure: Reorganized documentation from `developer-guide/` and `admin-guide/` to `developer/concepts/` with subdirectories (`core/`, `handlers/`, `tasks/`, `ui/`, `wrappers/`, `database/`) and `admin/` structure
+* Help System: Refactored help command with separated components, improved pagination, and interactive navigation
+* Bot Lifecycle: Streamlined initialization process with dedicated setup services
 * **Database Controllers**: Improved session management with instance expunging and lazy loading
-* **Command Suggestions**: Enhanced accuracy with qualified name prioritization and alias support
-* **Logging Configuration**: Simplified to console-only logging, removed file logging configuration
+* Command Suggestions: Enhanced accuracy with qualified name prioritization and alias support
+* Logging Configuration: Simplified to console-only logging, removed file logging configuration
 * Code formatting to 88 character line length
 * Pre-commit hooks and package version updates
 * Documentation workflow components renamed for clarity
@@ -274,16 +274,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Prisma**: Removed Prisma client in favor of SQLModel for better Python integration
 * **Click CLI**: Removed Click framework in favor of Typer
 * **pyright**: Removed pyright in favor of basedpyright
-* **Legacy Permission System**: ConditionChecker and hardcoded permission levels replaced with database-driven system
-* **File Logging**: Removed file logging configuration and related methods in favor of console-only logging
-* **Note Database Table**: Removed unused Note model and table
-* **Legacy Config Management**: Removed old config management.py and wizard.py files
-* **Deprecated Migration Commands**: Removed migrate_deploy and migrate_format commands from DatabaseCLI
-* **Legacy Database Methods**: Removed deprecated methods from BaseController
-* **Legacy CLI Scripts**: Removed old CLI architecture in favor of Click-based scripts
-* **Adminer Theme**: Removed custom CSS theme for Adminer
-* **ASCII Art Module**: Removed separate ASCII art module, integrated into banner system
-* **Various Documentation Files**: Reorganized and removed outdated documentation files during documentation restructuring
+* Legacy Permission System: ConditionChecker and hardcoded permission levels replaced with database-driven system
+* File Logging: Removed file logging configuration and related methods in favor of console-only logging
+* Note Database Table: Removed unused Note model and table
+* Legacy Config Management: Removed old config management.py and wizard.py files
+* Deprecated Migration Commands: Removed migrate_deploy and migrate_format commands from DatabaseCLI
+* Legacy Database Methods: Removed deprecated methods from BaseController
+* Legacy CLI Scripts: Removed old CLI architecture in favor of Click-based scripts
+* Adminer Theme: Removed custom CSS theme for Adminer
+* ASCII Art Module: Removed separate ASCII art module, integrated into banner system
+* Various Documentation Files: Reorganized and removed outdated documentation files during documentation restructuring
 
 ### Security
 
@@ -541,7 +541,7 @@ Docker & Deployment
 
 ### Changed
 
-* **Case Creation**: Enhanced with thread-safe case numbering using locking mechanism to prevent race conditions
+* Case Creation: Enhanced with thread-safe case numbering using locking mechanism to prevent race conditions
 
 ### Fixed
 
@@ -555,17 +555,17 @@ Docker & Deployment
 * **Snippet System**: Fixed reply mention behavior
 * **Code Execution**: Fixed handling for various programming languages
 * **Config System**: Fixed crashes when configuration files are outdated
-* **CI/CD**: Fixed type checking and Codecov uploads
+* CI/CD: Fixed type checking and Codecov uploads
 
 ### Removed
 
-* **File Logging**: Removed file logging configuration and related methods in favor of console-only logging (October 6, 2025)
+* File Logging: Removed file logging configuration and related methods in favor of console-only logging (October 6, 2025)
 * **Supabase Client**: Removed Supabase client in favor of direct PostgreSQL connection (March 28, 2024)
-* **ASCII Art Module**: Removed separate ASCII art module, integrated into banner system (August 2025)
+* ASCII Art Module: Removed separate ASCII art module, integrated into banner system (August 2025)
 * **Ghost Ping Detection**: Removed ghost ping notification feature (April 9, 2024)
 * **Requirements.txt**: Removed in favor of pyproject.toml for dependency management (March 26, 2024)
-* **Adminer Theme**: Removed custom CSS theme for Adminer (November 10, 2025)
-* **Various Documentation Files**: Reorganized and removed outdated documentation files during documentation restructuring (September-November 2025)
+* Adminer Theme: Removed custom CSS theme for Adminer (November 10, 2025)
+* Various Documentation Files: Reorganized and removed outdated documentation files during documentation restructuring (September-November 2025)
 
 ### Security
 

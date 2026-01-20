@@ -364,7 +364,7 @@ link = "https://discord.gg/gpmSjcjQxg"
 [project.markdown_extensions.toc]
 permalink = true
 
-[project.markdown_extensions.sane_lists]
+# [project.markdown_extensions.sane_lists]
 
 [project.markdown_extensions.pymdownx.highlight]
 use_pygments = true
