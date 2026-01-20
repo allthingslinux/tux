@@ -7,10 +7,12 @@ to eliminate duplication across different dashboard modes.
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import TYPE_CHECKING, Any
 
 import discord
+from loguru import logger
 
 if TYPE_CHECKING:
     from .dashboard import ConfigDashboard
@@ -241,19 +243,45 @@ class PaginationHelper:
             )
         elif custom_id == f"{mode_prefix}_nav_last":
             setattr(dashboard, current_page_attr, total_pages - 1)
-
-        # Extract mode from mode_prefix (e.g., "ranks" from "ranks_nav")
-        mode = mode_prefix.replace("_nav", "")
-
-        # Check cache first - if cached, edit immediately without rebuild
-        cache_key = dashboard._get_cache_key(mode)
-        if cached := dashboard.get_cached_mode(cache_key):
-            dashboard.clear_items()
-            dashboard.add_item(cached)
-            await interaction.response.edit_message(view=dashboard)
+        else:
+            # Unknown custom_id - shouldn't happen but handle gracefully
+            await interaction.response.send_message(
+                "❌ Unknown pagination action.",
+                ephemeral=True,
+            )
             return
 
-        # Not cached - invalidate cache and rebuild
-        dashboard.invalidate_cache(mode)
-        await rebuild_method()
-        await interaction.response.edit_message(view=dashboard)
+        # mode_prefix is already the mode name (e.g., "ranks")
+        mode = mode_prefix
+
+        try:
+            # Check cache first - if cached, edit immediately without rebuild
+            cache_key = dashboard._get_cache_key(mode)
+            if cached := dashboard.get_cached_mode(cache_key):
+                dashboard.clear_items()
+                dashboard.add_item(cached)
+                await interaction.response.edit_message(view=dashboard)
+                return
+
+            # Not cached - defer since rebuild involves database operations
+            await interaction.response.defer()
+            dashboard.invalidate_cache(mode)
+            await rebuild_method()
+            if interaction.message:
+                await interaction.followup.edit_message(
+                    message_id=interaction.message.id,
+                    view=dashboard,
+                )
+        except Exception as e:
+            logger.error(f"Error handling pagination for {mode}: {e}", exc_info=True)
+            with contextlib.suppress(Exception):
+                if interaction.response.is_done():
+                    await interaction.followup.send(
+                        f"❌ Error navigating pages: {e}",
+                        ephemeral=True,
+                    )
+                else:
+                    await interaction.response.send_message(
+                        f"❌ Error navigating pages: {e}",
+                        ephemeral=True,
+                    )
