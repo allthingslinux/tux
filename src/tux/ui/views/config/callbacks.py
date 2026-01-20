@@ -218,7 +218,6 @@ def create_role_update_callback(
             roles_to_remove = current_role_ids - selected_role_ids
 
             # Apply changes
-            added_count = 0
             removed_count = 0
 
             # Add new roles
@@ -228,7 +227,6 @@ def create_role_update_callback(
                     rank_db_id,
                     role_id,
                 )
-                added_count += 1
 
             # Remove unselected roles
             for role_id in roles_to_remove:
@@ -244,17 +242,8 @@ def create_role_update_callback(
                 if deleted_count > 0:
                     removed_count += 1
 
-            # Build response message
-            if added_count > 0 and removed_count > 0:
-                message = f"✅ Updated Rank {rank_value}: Added {added_count} role(s), removed {removed_count} role(s)"
-            elif added_count > 0:
-                message = f"✅ Added {added_count} role(s) to Rank {rank_value}"
-            elif removed_count > 0:
-                message = f"✅ Removed {removed_count} role(s) from Rank {rank_value}"
-            else:
-                message = f"✅ Rank {rank_value} roles unchanged"
-
-            await interaction.followup.send(message, ephemeral=True)
+            # Don't send success message - UI reflects the change automatically
+            # Users can see the updated role assignments in the view itself
 
             # Invalidate cache and rebuild to show updated assignments
             await invalidate_and_rebuild(
@@ -314,7 +303,6 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
                         PermissionCommand.command_name == command_name,
                     ),
                 )
-                message = f"✅ Command `{command_name}` unassigned (now disabled)"
             elif selected_value is not None:
                 # Assign rank to command
                 rank_value = int(selected_value)
@@ -336,7 +324,6 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
                     command_name=command_name,
                     required_rank=rank_value,
                 )
-                message = f"✅ Command `{command_name}` assigned to Rank {rank_value} ({rank_obj.name})"
             else:
                 # No valid selection made
                 await interaction.followup.send(
@@ -345,15 +332,21 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
                 )
                 return
 
-            await interaction.followup.send(message, ephemeral=True)
+            # Don't send success message - UI reflects the change automatically
+            # Users can see the updated command assignment in the view itself
 
-            # Invalidate cache and rebuild to show updated assignments
-            await invalidate_and_rebuild(
-                dashboard,
-                "commands",
-                dashboard.build_commands_mode,
+            # Try dynamic update first (more efficient)
+            if not await dashboard.refresh_command_status_display(
+                command_name,
                 interaction,
-            )
+            ):
+                # Fall back to full rebuild if dynamic update failed
+                await invalidate_and_rebuild(
+                    dashboard,
+                    "commands",
+                    dashboard.build_commands_mode,
+                    interaction,
+                )
 
         except Exception as e:
             await handle_callback_error(
@@ -370,6 +363,9 @@ def create_jail_channel_callback(dashboard: ConfigDashboard) -> Any:
     """Create a callback for jail channel selection."""
 
     async def callback(interaction: discord.Interaction) -> None:
+        # Defer immediately since database operations may take time
+        await interaction.response.defer(ephemeral=True)
+
         if not await validate_author(
             interaction,
             dashboard.author,
@@ -382,7 +378,7 @@ def create_jail_channel_callback(dashboard: ConfigDashboard) -> Any:
                 "jail_channel_select",
             )
             if not channel_select:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "❌ Could not find channel selector",
                     ephemeral=True,
                 )
@@ -399,7 +395,6 @@ def create_jail_channel_callback(dashboard: ConfigDashboard) -> Any:
                 jail_channel_id=channel_id,
             )
 
-            await interaction.response.defer()
             await interaction.followup.send(
                 f"✅ Jail channel set to {selected.mention}"
                 if selected
@@ -430,6 +425,9 @@ def create_jail_role_callback(dashboard: ConfigDashboard) -> Any:
     """Create a callback for jail role selection."""
 
     async def callback(interaction: discord.Interaction) -> None:
+        # Defer immediately since database operations may take time
+        await interaction.response.defer(ephemeral=True)
+
         if not await validate_author(
             interaction,
             dashboard.author,
@@ -446,18 +444,8 @@ def create_jail_role_callback(dashboard: ConfigDashboard) -> Any:
                 role_id,
             )
 
-            role_mention = ""
-            if role_id:
-                role = dashboard.guild.get_role(role_id)
-                role_mention = role.mention if role else f"<@&{role_id}>"
-
-            await interaction.response.defer()
-            await interaction.followup.send(
-                f"✅ Jail role set to {role_mention}"
-                if role_id
-                else "✅ Jail role cleared",
-                ephemeral=True,
-            )
+            # Don't send success message - UI reflects the change automatically
+            # Users can see the updated role in the view itself
 
             dashboard.invalidate_cache()
             dashboard.current_mode = "jail"
@@ -610,14 +598,12 @@ def create_channel_callback(dashboard: ConfigDashboard, option_key: str) -> Any:
                     option_key,
                     selected_channel.id,
                     interaction,
-                    f"✅ Channel set to {selected_channel.mention}",
                 )
             else:
                 await dashboard.update_channel_and_rebuild(
                     option_key,
                     None,
                     interaction,
-                    "✅ Channel cleared",
                 )
         except Exception as e:
             await handle_callback_error(
@@ -697,10 +683,9 @@ def create_delete_rank_callback(
             )
 
             await interaction.response.defer()
-            await interaction.followup.send(
-                f"✅ Deleted rank **{rank_value}**: **{rank_name}**",
-                ephemeral=True,
-            )
+
+            # Don't send success message - UI reflects the change automatically
+            # Users can see the rank removed from the view itself
 
             # Invalidate cache and rebuild to show updated ranks
             await invalidate_and_rebuild(
@@ -782,10 +767,8 @@ def create_confirm_assignment_callback(
                     )
                     assigned_count += 1
 
-            await interaction.followup.send(
-                f"✅ Successfully assigned {assigned_count} role(s) to Rank {rank_id}",
-                ephemeral=True,
-            )
+            # Don't send success message - UI reflects the change automatically
+            # Users can see the updated role assignments in the view itself
 
             await invalidate_and_rebuild(
                 dashboard,

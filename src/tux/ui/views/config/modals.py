@@ -108,10 +108,8 @@ class EditRankModal(discord.ui.Modal):
                 )
                 return
 
-            await interaction.followup.send(
-                f"✅ Updated rank **{self.rank_value}**: **{self.rank_name.value}**",
-                ephemeral=True,
-            )
+            # Don't send success message - UI reflects the change automatically
+            # Users can see the updated rank in the view itself
 
             # Update the specific rank in cache and refresh display
             await self.dashboard.update_rank_in_cache(
@@ -257,10 +255,8 @@ class CreateRankModal(discord.ui.Modal):
                 description=description,
             )
 
-            await interaction.followup.send(
-                f"✅ Created rank **{rank_value}**: **{self.rank_name.value}**",
-                ephemeral=True,
-            )
+            # Don't send success message - UI reflects the change automatically
+            # Users can see the new rank in the view itself
 
             # Invalidate cache and rebuild to show new rank
             self.dashboard.invalidate_cache()

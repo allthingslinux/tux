@@ -7,6 +7,7 @@ built on top of the extensible UI core system.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any
@@ -53,6 +54,19 @@ from .ranks import initialize_default_ranks
 if TYPE_CHECKING:
     from tux.core.bot import Tux
 
+# Component IDs for dynamic updates using find_item()
+# Using high numbers to avoid conflicts with auto-generated IDs
+RANK_DISPLAY_BASE_ID = (
+    10000  # Base ID for rank displays (rank 0 = 10000, rank 1 = 10001, etc.)
+)
+RANK_STATUS_BASE_ID = 20000  # Base ID for rank status displays
+ROLE_STATUS_BASE_ID = 30000  # Base ID for role assignment status
+COMMAND_STATUS_BASE_ID = 40000  # Base ID for command status displays
+PAGINATION_INFO_ID = 50000  # Pagination info footer
+RANK_COUNT_ID = 60000  # Total rank count display
+ROLE_COUNT_ID = 70000  # Total role count display
+COMMAND_COUNT_ID = 80000  # Total command count display
+
 
 class ConfigDashboard(discord.ui.LayoutView):
     """
@@ -79,7 +93,7 @@ class ConfigDashboard(discord.ui.LayoutView):
             if isinstance(view, ConfigDashboard):
                 view.current_mode = "ranks"
                 # Check cache first - if cached, edit immediately without defer
-                cache_key = view._get_cache_key("ranks")
+                cache_key = view.get_cache_key("ranks")
                 if cached := view.get_cached_mode(cache_key):
                     view.clear_items()
                     view.add_item(cached)
@@ -110,7 +124,7 @@ class ConfigDashboard(discord.ui.LayoutView):
             if isinstance(view, ConfigDashboard):
                 view.current_mode = "roles"
                 # Check cache first - if cached, edit immediately without defer
-                cache_key = view._get_cache_key("roles")
+                cache_key = view.get_cache_key("roles")
                 if cached := view.get_cached_mode(cache_key):
                     view.clear_items()
                     view.add_item(cached)
@@ -141,7 +155,7 @@ class ConfigDashboard(discord.ui.LayoutView):
             if isinstance(view, ConfigDashboard):
                 view.current_mode = "commands"
                 # Check cache first - if cached, edit immediately without defer
-                cache_key = view._get_cache_key("commands")
+                cache_key = view.get_cache_key("commands")
                 if cached := view.get_cached_mode(cache_key):
                     view.clear_items()
                     view.add_item(cached)
@@ -172,7 +186,7 @@ class ConfigDashboard(discord.ui.LayoutView):
             if isinstance(view, ConfigDashboard):
                 view.current_mode = "logs"
                 # Check cache first - if cached, edit immediately without defer
-                cache_key = view._get_cache_key("logs")
+                cache_key = view.get_cache_key("logs")
                 if cached := view.get_cached_mode(cache_key):
                     view.clear_items()
                     view.add_item(cached)
@@ -203,7 +217,7 @@ class ConfigDashboard(discord.ui.LayoutView):
             if isinstance(view, ConfigDashboard):
                 view.current_mode = "jail"
                 # Check cache first - if cached, edit immediately without defer
-                cache_key = view._get_cache_key("jail")
+                cache_key = view.get_cache_key("jail")
                 if cached := view.get_cached_mode(cache_key):
                     view.clear_items()
                     view.add_item(cached)
@@ -248,6 +262,11 @@ class ConfigDashboard(discord.ui.LayoutView):
         self.author = author
         self.current_mode = mode
 
+        logger.debug(
+            f"Initialized ConfigDashboard for guild {self.guild.id} "
+            f"(name: {self.guild.name}), mode: {mode}",
+        )
+
         # State management
         self.selected_channels: dict[str, discord.TextChannel | None] = {}
         self.current_page = 0
@@ -257,7 +276,7 @@ class ConfigDashboard(discord.ui.LayoutView):
 
         # Initialize the view (layout will be built when needed)
 
-    def _get_cache_key(self, mode: str) -> str:
+    def get_cache_key(self, mode: str) -> str:
         """Generate cache key for a mode based on current pagination state."""
         page_attr = f"{mode}_current_page"
         current_page = getattr(self, page_attr, 0)
@@ -377,13 +396,23 @@ class ConfigDashboard(discord.ui.LayoutView):
             Total component count including nested
         """
         count = 1  # Count the item itself
-        # Use walk_children if available (LayoutView method)
-        if hasattr(item, "walk_children"):
-            count += sum(1 for _ in item.walk_children())
+        # Use walk_children if available (LayoutView/Container method)
+        if isinstance(item, discord.ui.Container):
+            # Container has walk_children method
+            with contextlib.suppress(AttributeError, TypeError):
+                count += sum(1 for _ in item.walk_children())
+                return count
         # Fallback: manually check common nested structures
-        elif hasattr(item, "children"):
-            for child in item.children:
-                count += self._count_total_components(child)
+        # Note: Some components like ActionRow have children attribute
+        if hasattr(item, "children"):
+            children = getattr(item, "children", [])
+            if isinstance(children, list):
+                for child in children:  # type: ignore[assignment]
+                    if isinstance(
+                        child,
+                        (discord.ui.Item, discord.ui.Container),
+                    ):
+                        count += self._count_total_components(child)  # type: ignore[arg-type]
         return count
 
     async def build_layout(self) -> None:
@@ -501,7 +530,7 @@ class ConfigDashboard(discord.ui.LayoutView):
         """Build the ranks management mode (create, delete, view ranks)."""
         try:
             # Check cache first (invalidate if pagination state changed)
-            cache_key = self._get_cache_key("ranks")
+            cache_key = self.get_cache_key("ranks")
             if cached := self.get_cached_mode(cache_key):
                 self.clear_items()
                 self.add_item(cached)
@@ -516,9 +545,13 @@ class ConfigDashboard(discord.ui.LayoutView):
             )
 
             # Get ranks
+            logger.debug(
+                f"Fetching ranks for guild {self.guild.id} (guild name: {self.guild.name})",
+            )
             ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
                 self.guild.id,
             )
+            logger.debug(f"Found {len(ranks)} ranks for guild {self.guild.id}")
 
             if not ranks:
                 # No ranks configured
@@ -710,8 +743,26 @@ class ConfigDashboard(discord.ui.LayoutView):
     def _build_rank_status_display(
         self,
         rank_assignments: list[dict[str, Any]],
+        rank_value: int | None = None,
+        component_id: int | None = None,
     ) -> discord.ui.TextDisplay[discord.ui.LayoutView]:
-        """Build the status display for a rank."""
+        """
+        Build the status display for a rank.
+
+        Parameters
+        ----------
+        rank_assignments : list[dict[str, Any]]
+            List of role assignments for the rank
+        rank_value : int | None
+            Rank value for generating unique ID
+        component_id : int | None
+            Optional component ID for dynamic updates
+
+        Returns
+        -------
+        discord.ui.TextDisplay[discord.ui.LayoutView]
+            Status display component
+        """
         if rank_assignments:
             role_list = [f"• {item['role'].mention}" for item in rank_assignments[:5]]
             if len(rank_assignments) > 5:
@@ -723,7 +774,14 @@ class ConfigDashboard(discord.ui.LayoutView):
         else:
             status_content = "**Status:** No roles assigned"
 
-        return discord.ui.TextDisplay[discord.ui.LayoutView](status_content)
+        # Generate ID if not provided but rank_value is available
+        if component_id is None and rank_value is not None:
+            component_id = RANK_STATUS_BASE_ID + rank_value
+
+        display = discord.ui.TextDisplay[discord.ui.LayoutView](status_content)
+        if component_id is not None:
+            display.id = component_id
+        return display
 
     def _build_role_selector(
         self,
@@ -754,7 +812,7 @@ class ConfigDashboard(discord.ui.LayoutView):
         """Build the role-to-rank assignment mode."""
         try:
             # Check cache first (invalidate if pagination state changed)
-            cache_key = self._get_cache_key("roles")
+            cache_key = self.get_cache_key("roles")
             if cached := self.get_cached_mode(cache_key):
                 self.clear_items()
                 self.add_item(cached)
@@ -826,8 +884,11 @@ class ConfigDashboard(discord.ui.LayoutView):
                         selector_row.add_item(role_select)
                         container.add_item(selector_row)
 
-                    # Build status display
-                    status_display = self._build_rank_status_display(rank_assignments)
+                    # Build status display with ID for dynamic updates
+                    status_display = self._build_rank_status_display(
+                        rank_assignments,
+                        rank_value=rank.rank,
+                    )
                     container.add_item(status_display)
 
                     # Separator between ranks
@@ -1282,12 +1343,11 @@ class ConfigDashboard(discord.ui.LayoutView):
             self.invalidate_cache()
             self.current_mode = "roles"
             await self.build_roles_mode()
-            await interaction.followup.edit_message(
-                message_id=interaction.message.id,
-                content="Removal completed! Returning to roles configuration...",
-                view=self,  # type: ignore[arg-type]
-                embed=None,
-            )
+            if interaction.message:
+                await interaction.followup.edit_message(
+                    message_id=interaction.message.id,
+                    view=self,
+                )
 
         except Exception as e:
             await handle_callback_error(interaction, e, "removing roles", "")
@@ -1321,21 +1381,77 @@ class ConfigDashboard(discord.ui.LayoutView):
 
         return discord.ui.TextDisplay[discord.ui.LayoutView](cmd_content)
 
+    def _format_roles_suffix(
+        self,
+        assignments_by_rank: dict[int, list[dict[str, Any]]],
+        rank_value: int,
+    ) -> str:
+        """Format the role(s) suffix for a rank: ' - @role1, @role2' or ' - (no roles)'."""
+        items = assignments_by_rank.get(rank_value, [])
+        if not items:
+            return " - (no roles)"
+        role_mentions = [item["role"].mention for item in items[:3]]
+        if len(items) > 3:
+            role_mentions.append(f"... and {len(items) - 3} more")
+        return " - " + ", ".join(role_mentions)
+
     def _build_command_status_display(
         self,
         rank_value: int | None,
         is_assigned: bool,
         rank_map: dict[int, Any],
+        cmd_name: str | None = None,
+        component_id: int | None = None,
+        assignments_by_rank: dict[int, list[dict[str, Any]]] | None = None,
     ) -> discord.ui.TextDisplay[discord.ui.LayoutView]:
-        """Build the status display for a command."""
+        """
+        Build the status display for a command.
+
+        Parameters
+        ----------
+        rank_value : int | None
+            The rank value assigned to the command
+        is_assigned : bool
+            Whether the command has an assigned rank
+        rank_map : dict[int, Any]
+            Map of rank values to rank objects
+        cmd_name : str | None
+            Command name for generating unique ID
+        component_id : int | None
+            Optional component ID for dynamic updates
+        assignments_by_rank : dict[int, list[dict[str, Any]]] | None
+            Map of rank values to role assignments for showing roles in status
+
+        Returns
+        -------
+        discord.ui.TextDisplay[discord.ui.LayoutView]
+            Status display component
+        """
         if is_assigned and rank_value is not None:
             rank_info = rank_map.get(rank_value)
             rank_name = rank_info.name if rank_info else f"Rank {rank_value}"
-            status_content = f"**Status:** Assigned (Rank {rank_value}: {rank_name})"
+            roles_suffix = ""
+            if assignments_by_rank is not None:
+                roles_suffix = self._format_roles_suffix(
+                    assignments_by_rank,
+                    rank_value,
+                )
+            status_content = (
+                f"**Status:** Assigned (Rank {rank_value}: {rank_name}{roles_suffix})"
+            )
         else:
             status_content = "**Status:** Unassigned (disabled)"
 
-        return discord.ui.TextDisplay[discord.ui.LayoutView](status_content)
+        # Generate ID if not provided but cmd_name is available
+        if component_id is None and cmd_name is not None:
+            # Use hash of command name to generate stable ID
+            cmd_hash = hash(cmd_name) % 10000  # Keep within reasonable range
+            component_id = COMMAND_STATUS_BASE_ID + cmd_hash
+
+        display = discord.ui.TextDisplay[discord.ui.LayoutView](status_content)
+        if component_id is not None:
+            display.id = component_id
+        return display
 
     def _build_command_rank_selector(
         self,
@@ -1403,31 +1519,54 @@ class ConfigDashboard(discord.ui.LayoutView):
 
     async def _build_commands_list(
         self,
-    ) -> tuple[list[tuple[str, int | None, bool]], dict[int, Any]]:
+    ) -> tuple[
+        list[tuple[str, int | None, bool]],
+        dict[int, Any],
+        dict[int, list[dict[str, Any]]],
+    ]:
         """
         Build the list of commands with their assignment status.
 
         Returns
         -------
-        tuple[list[tuple[str, int | None, bool]], dict[int, Any]]
-            Tuple of (all_commands, rank_map)
+        tuple[list[tuple[str, int | None, bool]], dict[int, Any], dict[int, list[dict[str, Any]]]]
+            Tuple of (all_commands, rank_map, assignments_by_rank)
         """
         # Get all moderation commands
         moderation_commands = get_moderation_commands(self.bot)
+        logger.debug(
+            f"Found {len(moderation_commands)} moderation commands for guild {self.guild.id}",
+        )
 
         # Get existing command permissions
+        logger.debug(
+            f"Fetching command permissions for guild {self.guild.id}",
+        )
         existing_permissions = (
             await self.bot.db.command_permissions.get_all_command_permissions(
                 self.guild.id,
             )
         )
+        logger.debug(
+            f"Found {len(existing_permissions)} existing command permissions for guild {self.guild.id}",
+        )
         permission_map = {perm.command_name: perm for perm in existing_permissions}
 
         # Get ranks for display
+        logger.debug(
+            f"Fetching ranks for guild {self.guild.id} in _build_commands_list",
+        )
         ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
             self.guild.id,
         )
+        logger.debug(f"Found {len(ranks)} ranks for guild {self.guild.id}")
         rank_map = {r.rank: r for r in ranks}
+
+        # Get role-to-rank assignments for showing roles in command status
+        assignments = await self.bot.db.permission_assignments.get_assignments_by_guild(
+            self.guild.id,
+        )
+        assignments_by_rank = self._group_assignments_by_rank(ranks, assignments)
 
         # Build list of all commands with their assignment status
         # Sort alphabetically by name to maintain stable positions
@@ -1440,7 +1579,7 @@ class ConfigDashboard(discord.ui.LayoutView):
             else:
                 all_commands.append((cmd_name, None, False))
 
-        return all_commands, rank_map
+        return all_commands, rank_map, assignments_by_rank
 
     def _add_commands_to_container(
         self,
@@ -1449,6 +1588,7 @@ class ConfigDashboard(discord.ui.LayoutView):
         rank_map: dict[int, Any],
         ranks: list[Any],
         used_custom_ids: set[str],
+        assignments_by_rank: dict[int, list[dict[str, Any]]],
     ) -> None:
         """
         Add command displays to the container.
@@ -1465,6 +1605,8 @@ class ConfigDashboard(discord.ui.LayoutView):
             List of all ranks
         used_custom_ids : set[str]
             Set of used custom IDs to prevent duplicates
+        assignments_by_rank : dict[int, list[dict[str, Any]]]
+            Map of rank values to role assignments for showing roles in status
         """
         for cmd_idx, (cmd_name, rank_value, is_assigned) in enumerate(page_commands):
             # Build command display
@@ -1488,17 +1630,118 @@ class ConfigDashboard(discord.ui.LayoutView):
             selector_row.add_item(rank_select)
             container.add_item(selector_row)
 
-            # Build status display
+            # Build status display with ID for dynamic updates
             status_display = self._build_command_status_display(
                 rank_value,
                 is_assigned,
                 rank_map,
+                cmd_name=cmd_name,
+                assignments_by_rank=assignments_by_rank,
             )
             container.add_item(status_display)
 
             # Separator between commands
             if cmd_idx < len(page_commands) - 1:
                 container.add_item(discord.ui.Separator())
+
+    def _update_command_status_display(
+        self,
+        cmd_name: str,
+        rank_value: int | None,
+        is_assigned: bool,
+        rank_map: dict[int, Any],
+        assignments_by_rank: dict[int, list[dict[str, Any]]] | None = None,
+    ) -> bool:
+        """
+        Update a command's status display using find_item().
+
+        Parameters
+        ----------
+        cmd_name : str
+            Command name to find the status display for
+        rank_value : int | None
+            New rank value
+        is_assigned : bool
+            Whether command is assigned
+        rank_map : dict[int, Any]
+            Map of rank values to rank objects
+        assignments_by_rank : dict[int, list[dict[str, Any]]] | None
+            Map of rank values to role assignments for showing roles in status
+
+        Returns
+        -------
+        bool
+            True if update succeeded, False if component not found
+        """
+        # Generate the same ID used when building
+        cmd_hash = hash(cmd_name) % 10000
+        component_id = COMMAND_STATUS_BASE_ID + cmd_hash
+
+        try:
+            status_display = self.find_item(component_id)
+            if isinstance(status_display, discord.ui.TextDisplay):
+                if is_assigned and rank_value is not None:
+                    rank_info = rank_map.get(rank_value)
+                    rank_name = rank_info.name if rank_info else f"Rank {rank_value}"
+                    roles_suffix = ""
+                    if assignments_by_rank is not None:
+                        roles_suffix = self._format_roles_suffix(
+                            assignments_by_rank,
+                            rank_value,
+                        )
+                    status_display.content = f"**Status:** Assigned (Rank {rank_value}: {rank_name}{roles_suffix})"
+                else:
+                    status_display.content = "**Status:** Unassigned (disabled)"
+                return True
+        except (AttributeError, KeyError, TypeError):
+            # Component not found or wrong type
+            return False
+        return False
+
+    def _update_rank_status_display(
+        self,
+        rank_value: int,
+        rank_assignments: list[dict[str, Any]],
+    ) -> bool:
+        """
+        Update a rank's status display using find_item().
+
+        Parameters
+        ----------
+        rank_value : int
+            Rank value to find the status display for
+        rank_assignments : list[dict[str, Any]]
+            Updated list of role assignments
+
+        Returns
+        -------
+        bool
+            True if update succeeded, False if component not found
+        """
+        component_id = RANK_STATUS_BASE_ID + rank_value
+
+        try:
+            status_display = self.find_item(component_id)
+            if isinstance(status_display, discord.ui.TextDisplay):
+                if rank_assignments:
+                    role_list = [
+                        f"• {item['role'].mention}" for item in rank_assignments[:5]
+                    ]
+                    if len(rank_assignments) > 5:
+                        role_list.append(
+                            f"*... and {len(rank_assignments) - 5} more*",
+                        )
+                    status_display.content = (
+                        f"**Status:** {len(rank_assignments)} role(s) assigned\n"
+                        + "\n".join(role_list)
+                    )
+                else:
+                    status_display.content = "**Status:** No roles assigned"
+                return True
+        except (AttributeError, KeyError, TypeError):
+            # Component not found or wrong type
+            return False
+        return False
 
     def _validate_component_count(
         self,
@@ -1529,7 +1772,7 @@ class ConfigDashboard(discord.ui.LayoutView):
         """Build the command permissions configuration mode."""
         try:
             # Check cache first
-            cache_key = self._get_cache_key("commands")
+            cache_key = self.get_cache_key("commands")
             if cached := self.get_cached_mode(cache_key):
                 self.clear_items()
                 self.add_item(cached)
@@ -1547,8 +1790,16 @@ class ConfigDashboard(discord.ui.LayoutView):
             used_custom_ids: set[str] = set()
 
             # Build commands list and get maps
-            all_commands, rank_map = await self._build_commands_list()
+            logger.debug(
+                f"Building commands mode for guild {self.guild.id} (guild name: {self.guild.name})",
+            )
+            (
+                all_commands,
+                rank_map,
+                assignments_by_rank,
+            ) = await self._build_commands_list()
             total_commands = len(all_commands)
+            logger.debug(f"Found {total_commands} commands for guild {self.guild.id}")
 
             # Get ranks for selectors
             ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
@@ -1585,6 +1836,7 @@ class ConfigDashboard(discord.ui.LayoutView):
                 rank_map,
                 ranks,
                 used_custom_ids,
+                assignments_by_rank,
             )
 
             # Bottom separator
@@ -1683,7 +1935,7 @@ class ConfigDashboard(discord.ui.LayoutView):
         """Build logs configuration mode with improved organization."""
         try:
             # Check cache first
-            cache_key = self._get_cache_key("logs")
+            cache_key = self.get_cache_key("logs")
             if cached := self.get_cached_mode(cache_key):
                 self.clear_items()
                 self.add_item(cached)
@@ -1838,7 +2090,7 @@ class ConfigDashboard(discord.ui.LayoutView):
     async def build_jail_mode(self) -> None:  # noqa: PLR0915
         """Build the jail channel and jail role configuration mode."""
         try:
-            cache_key = self._get_cache_key("jail")
+            cache_key = self.get_cache_key("jail")
             if cached := self.get_cached_mode(cache_key):
                 self.clear_items()
                 self.add_item(cached)
@@ -2002,17 +2254,21 @@ class ConfigDashboard(discord.ui.LayoutView):
         option_key: str,
         channel_id: int | None,
         interaction: discord.Interaction,
-        message: str,
     ) -> None:
-        """Update channel config and rebuild logs mode."""
+        """
+        Update channel config and rebuild logs mode.
+
+        Updates silently - the UI reflects changes automatically, so no success
+        message is needed. This prevents message spam when setting multiple channels.
+        """
+        # Defer immediately since database operations may take time
+        await interaction.response.defer(ephemeral=True)
+
         channel = self.guild.get_channel(channel_id) if channel_id else None
         self.selected_channels[option_key] = (
             channel if isinstance(channel, discord.TextChannel) else None
         )
         await self._save_channel_config(option_key, channel_id)
-
-        await interaction.response.defer()
-        await interaction.followup.send(message, ephemeral=True)
 
         self.invalidate_cache()
         self.current_mode = "logs"
@@ -2330,6 +2586,74 @@ class ConfigDashboard(discord.ui.LayoutView):
         """
         # Rebuild just the ranks mode instead of the entire dashboard
         await self.build_ranks_mode()
+
+    async def refresh_command_status_display(
+        self,
+        cmd_name: str,
+        interaction: discord.Interaction | None = None,
+    ) -> bool:
+        """
+        Refresh a command's status display using find_item() if possible.
+
+        Falls back to full rebuild if component not found or not in commands mode.
+
+        Parameters
+        ----------
+        cmd_name : str
+            Command name to update
+        interaction : discord.Interaction | None
+            Optional interaction to update the message for
+
+        Returns
+        -------
+        bool
+            True if update succeeded using find_item(), False if rebuild needed
+        """
+        # Only try dynamic update if we're in commands mode
+        if self.current_mode != "commands":
+            return False
+
+        try:
+            # Get current command permission and rank map
+            existing_permissions = (
+                await self.bot.db.command_permissions.get_all_command_permissions(
+                    self.guild.id,
+                )
+            )
+            permission_map = {perm.command_name: perm for perm in existing_permissions}
+            perm = permission_map.get(cmd_name)
+
+            ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+                self.guild.id,
+            )
+            rank_map = {r.rank: r for r in ranks}
+
+            assignments = (
+                await self.bot.db.permission_assignments.get_assignments_by_guild(
+                    self.guild.id,
+                )
+            )
+            assignments_by_rank = self._group_assignments_by_rank(ranks, assignments)
+
+            # Try to update using find_item()
+            if self._update_command_status_display(
+                cmd_name,
+                perm.required_rank if perm else None,
+                perm is not None,
+                rank_map,
+                assignments_by_rank=assignments_by_rank,
+            ):
+                # Successfully updated, now update the message
+                if interaction and interaction.message:
+                    await interaction.followup.edit_message(
+                        message_id=interaction.message.id,
+                        view=self,
+                    )
+                return True
+        except Exception as e:
+            logger.debug(f"Failed to update command status dynamically: {e}")
+
+        return False
 
     async def on_timeout(self) -> None:
         """Handle dashboard timeout."""

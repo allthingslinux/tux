@@ -256,7 +256,7 @@ class PaginationHelper:
 
         try:
             # Check cache first - if cached, edit immediately without rebuild
-            cache_key = dashboard._get_cache_key(mode)
+            cache_key = dashboard.get_cache_key(mode)
             if cached := dashboard.get_cached_mode(cache_key):
                 dashboard.clear_items()
                 dashboard.add_item(cached)
