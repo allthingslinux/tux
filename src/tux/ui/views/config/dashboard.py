@@ -7,6 +7,7 @@ built on top of the extensible UI core system.
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import hashlib
 from collections.abc import Awaitable, Callable
@@ -273,6 +274,21 @@ class ConfigDashboard(discord.ui.LayoutView):
 
         # Component caching for performance
         self._built_modes: dict[str, discord.ui.Container[discord.ui.LayoutView]] = {}
+        # Cached data for modes; reused across pagination to avoid refetching.
+        # Cleared on full invalidate_cache() or when underlying data changes.
+        self._commands_data: (
+            tuple[
+                list[tuple[str, int | None, bool]],
+                dict[int, Any],
+                dict[int, list[dict[str, Any]]],
+            ]
+            | None
+        ) = None
+        self._ranks_data: list[Any] | None = None
+        self._roles_data: tuple[list[Any], list[Any]] | None = (
+            None  # (ranks, assignments)
+        )
+        self._logs_data: Any = None  # GuildConfig | None
 
         # Initialize the view (layout will be built when needed)
 
@@ -351,16 +367,21 @@ class ConfigDashboard(discord.ui.LayoutView):
     def invalidate_cache(self, mode: str | None = None) -> None:
         """Invalidate cached components for performance optimization."""
         if mode:
-            # Invalidate specific mode cache
+            # Invalidate specific mode cache (and its pagination variants)
             self._built_modes.pop(mode, None)
-            # Also invalidate pagination-specific caches for that mode
             keys_to_remove = [
                 k for k in self._built_modes if k.startswith(f"{mode}_page_")
             ]
             for key in keys_to_remove:
                 self._built_modes.pop(key, None)
+            # Pagination does not clear _*_data; it is cleared only on full
+            # invalidate or in update_rank_in_cache (rank edit) for ranks/commands.
         else:
             self._built_modes.clear()
+            self._commands_data = None
+            self._ranks_data = None
+            self._roles_data = None
+            self._logs_data = None
 
     def get_cached_mode(
         self,
@@ -544,14 +565,24 @@ class ConfigDashboard(discord.ui.LayoutView):
                 accent_color=CONFIG_COLOR_YELLOW,
             )
 
-            # Get ranks
-            logger.debug(
-                f"Fetching ranks for guild {self.guild.id} (guild name: {self.guild.name})",
-            )
-            ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
-                self.guild.id,
-            )
-            logger.debug(f"Found {len(ranks)} ranks for guild {self.guild.id}")
+            # Reuse fetched data when only the page changed (pagination)
+            if self._ranks_data is not None:
+                ranks = self._ranks_data
+                logger.debug(
+                    f"Ranks mode for guild {self.guild.id}: reusing cached data "
+                    f"({len(ranks)} ranks), page {getattr(self, 'ranks_current_page', 0)}",
+                )
+            else:
+                logger.debug(
+                    f"Fetching ranks for guild {self.guild.id} (guild name: {self.guild.name})",
+                )
+                ranks = (
+                    await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+                        self.guild.id,
+                    )
+                )
+                self._ranks_data = ranks
+                logger.debug(f"Found {len(ranks)} ranks for guild {self.guild.id}")
 
             if not ranks:
                 # No ranks configured
@@ -808,7 +839,7 @@ class ConfigDashboard(discord.ui.LayoutView):
         role_select.callback = create_role_update_callback(self, rank.rank, rank.id)
         return role_select
 
-    async def build_roles_mode(self) -> None:
+    async def build_roles_mode(self) -> None:  # noqa: PLR0915
         """Build the role-to-rank assignment mode."""
         try:
             # Check cache first (invalidate if pagination state changed)
@@ -826,18 +857,31 @@ class ConfigDashboard(discord.ui.LayoutView):
                 accent_color=CONFIG_COLOR_GREEN,
             )
 
-            # Get ranks and assignments
-            ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
-                self.guild.id,
-            )
-            assignments = (
-                await self.bot.db.permission_assignments.get_assignments_by_guild(
-                    self.guild.id,
+            # Reuse fetched data when only the page changed (pagination)
+            if self._roles_data is not None:
+                ranks, assignments = self._roles_data
+                assignments_by_rank = self._group_assignments_by_rank(
+                    ranks,
+                    assignments,
                 )
-            )
-
-            # Group assignments by rank value
-            assignments_by_rank = self._group_assignments_by_rank(ranks, assignments)
+                logger.debug(
+                    f"Roles mode for guild {self.guild.id}: reusing cached data "
+                    f"({len(ranks)} ranks), page {getattr(self, 'roles_current_page', 0)}",
+                )
+            else:
+                ranks, assignments = await asyncio.gather(
+                    self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+                        self.guild.id,
+                    ),
+                    self.bot.db.permission_assignments.get_assignments_by_guild(
+                        self.guild.id,
+                    ),
+                )
+                self._roles_data = (ranks, assignments)
+                assignments_by_rank = self._group_assignments_by_rank(
+                    ranks,
+                    assignments,
+                )
 
             if not ranks:
                 # No ranks configured
@@ -1538,34 +1582,29 @@ class ConfigDashboard(discord.ui.LayoutView):
             f"Found {len(moderation_commands)} moderation commands for guild {self.guild.id}",
         )
 
-        # Get existing command permissions
-        logger.debug(
-            f"Fetching command permissions for guild {self.guild.id}",
-        )
-        existing_permissions = (
-            await self.bot.db.command_permissions.get_all_command_permissions(
+        # Fetch command permissions, ranks, and assignments in parallel to reduce
+        # latency (notably in production where DB round-trips are slower).
+        (
+            existing_permissions,
+            ranks,
+            assignments,
+        ) = await asyncio.gather(
+            self.bot.db.command_permissions.get_all_command_permissions(
                 self.guild.id,
-            )
+            ),
+            self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+                self.guild.id,
+            ),
+            self.bot.db.permission_assignments.get_assignments_by_guild(
+                self.guild.id,
+            ),
         )
         logger.debug(
-            f"Found {len(existing_permissions)} existing command permissions for guild {self.guild.id}",
+            f"Commands list for guild {self.guild.id}: "
+            f"{len(existing_permissions)} perms, {len(ranks)} ranks, {len(assignments)} assignments",
         )
         permission_map = {perm.command_name: perm for perm in existing_permissions}
-
-        # Get ranks for display
-        logger.debug(
-            f"Fetching ranks for guild {self.guild.id} in _build_commands_list",
-        )
-        ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
-            self.guild.id,
-        )
-        logger.debug(f"Found {len(ranks)} ranks for guild {self.guild.id}")
         rank_map = {r.rank: r for r in ranks}
-
-        # Get role-to-rank assignments for showing roles in command status
-        assignments = await self.bot.db.permission_assignments.get_assignments_by_guild(
-            self.guild.id,
-        )
         assignments_by_rank = self._group_assignments_by_rank(ranks, assignments)
 
         # Build list of all commands with their assignment status
@@ -1789,22 +1828,32 @@ class ConfigDashboard(discord.ui.LayoutView):
             # Track custom_ids to prevent duplicates
             used_custom_ids: set[str] = set()
 
-            # Build commands list and get maps
-            logger.debug(
-                f"Building commands mode for guild {self.guild.id} (guild name: {self.guild.name})",
-            )
-            (
-                all_commands,
-                rank_map,
-                assignments_by_rank,
-            ) = await self._build_commands_list()
-            total_commands = len(all_commands)
-            logger.debug(f"Found {total_commands} commands for guild {self.guild.id}")
+            # Reuse fetched data when only the page changed (e.g. pagination);
+            # refetch only when _commands_data was cleared (full invalidate).
+            if self._commands_data is not None:
+                all_commands, rank_map, assignments_by_rank = self._commands_data
+                total_commands = len(all_commands)
+                logger.debug(
+                    f"Commands mode for guild {self.guild.id}: reusing cached data "
+                    f"({total_commands} commands), page {getattr(self, 'commands_current_page', 0)}",
+                )
+            else:
+                logger.debug(
+                    f"Building commands mode for guild {self.guild.id} (guild name: {self.guild.name})",
+                )
+                (
+                    all_commands,
+                    rank_map,
+                    assignments_by_rank,
+                ) = await self._build_commands_list()
+                self._commands_data = (all_commands, rank_map, assignments_by_rank)
+                total_commands = len(all_commands)
+                logger.debug(
+                    f"Found {total_commands} commands for guild {self.guild.id}",
+                )
 
-            # Get ranks for selectors
-            ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
-                self.guild.id,
-            )
+            # Use ranks from rank_map (already loaded in _build_commands_list or cache)
+            ranks = sorted(rank_map.values(), key=lambda r: r.rank)
 
             # Calculate pagination info
             start_idx, end_idx, total_pages, _ = PaginationHelper.setup_pagination(
@@ -1986,10 +2035,18 @@ class ConfigDashboard(discord.ui.LayoutView):
 
             total_logs = len(log_options)
 
-            # Get current config to show selected channels
-            config = await self.bot.db.guild_config.get_config_by_guild_id(
-                self.guild.id,
-            )
+            # Reuse fetched config when only the page changed (pagination)
+            if self._logs_data is not None:
+                config = self._logs_data
+                logger.debug(
+                    f"Logs mode for guild {self.guild.id}: reusing cached config, "
+                    f"page {getattr(self, 'logs_current_page', 0)}",
+                )
+            else:
+                config = await self.bot.db.guild_config.get_config_by_guild_id(
+                    self.guild.id,
+                )
+                self._logs_data = config
 
             # Calculate pagination info
             start_idx, end_idx, total_pages, _ = PaginationHelper.setup_pagination(
@@ -2098,8 +2155,8 @@ class ConfigDashboard(discord.ui.LayoutView):
 
             self.clear_items()
 
-            await self.bot.db.guild_config.get_or_create_config(self.guild.id)
-            config = await self.bot.db.guild_config.get_config_by_guild_id(
+            # get_or_create_config returns the config; avoids a second DB round-trip
+            config = await self.bot.db.guild_config.get_or_create_config(
                 self.guild.id,
             )
 
@@ -2567,9 +2624,10 @@ class ConfigDashboard(discord.ui.LayoutView):
         new_description : str | None
             The new description for the rank
         """
-        # For now, we'll invalidate the ranks cache since updating individual
-        # cached objects is complex with the current architecture
-        # This is still better than a full rebuild
+        # Invalidate ranks containers and clear data caches that include
+        # rank_map / ranks so the next build refetches.
+        self._ranks_data = None
+        self._commands_data = None
         self.invalidate_cache("ranks")
 
     async def refresh_rank_display(self, rank_value: int) -> None:
@@ -2614,25 +2672,21 @@ class ConfigDashboard(discord.ui.LayoutView):
             return False
 
         try:
-            # Get current command permission and rank map
-            existing_permissions = (
-                await self.bot.db.command_permissions.get_all_command_permissions(
+            # Fetch in parallel to reduce latency in production
+            existing_permissions, ranks, assignments = await asyncio.gather(
+                self.bot.db.command_permissions.get_all_command_permissions(
                     self.guild.id,
-                )
+                ),
+                self.bot.db.permission_ranks.get_permission_ranks_by_guild(
+                    self.guild.id,
+                ),
+                self.bot.db.permission_assignments.get_assignments_by_guild(
+                    self.guild.id,
+                ),
             )
             permission_map = {perm.command_name: perm for perm in existing_permissions}
             perm = permission_map.get(cmd_name)
-
-            ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(
-                self.guild.id,
-            )
             rank_map = {r.rank: r for r in ranks}
-
-            assignments = (
-                await self.bot.db.permission_assignments.get_assignments_by_guild(
-                    self.guild.id,
-                )
-            )
             assignments_by_rank = self._group_assignments_by_rank(ranks, assignments)
 
             # Try to update using find_item()
