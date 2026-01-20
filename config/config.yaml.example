@@ -59,7 +59,7 @@
 # XP cooldown in seconds
 #   xp_cooldown: 1
 # Levels exponent
-#   levels_exponent: 2
+#   levels_exponent: 2.0
 # Show XP progress
 #   show_xp_progress: true
 # Enable XP cap

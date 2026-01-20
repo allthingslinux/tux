@@ -37,7 +37,7 @@
     "xp_roles": [],
     "xp_multipliers": [],
     "xp_cooldown": 1,
-    "levels_exponent": 2,
+    "levels_exponent": 2.0,
     "show_xp_progress": true,
     "enable_xp_cap": false
   },

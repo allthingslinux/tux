@@ -230,9 +230,9 @@ class XP(BaseModel):
         ),
     ]
     LEVELS_EXPONENT: Annotated[
-        int,
+        float,
         Field(
-            default=2,
+            default=2.0,
             description="Levels exponent",
             examples=[2, 3, 1.5],
         ),
