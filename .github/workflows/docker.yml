@@ -285,8 +285,49 @@ jobs:
       # - Full registry path (ghcr.io/owner/repo) for production images
       # - Multiple tags for flexibility (full version, minor version, latest)
       # - Comprehensive OCI labels for traceability and compliance
-      - name: Extract metadata
-        id: meta
+      #
+      # Note: We extract metadata twice - once for validation (manifest-only annotations
+      # since index annotations aren't supported when loading to Docker daemon) and once
+      # for push (manifest+index annotations for full registry support).
+      - name: Extract metadata for validation
+        id: meta_validate
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051  # v5
+        with:
+          # Full registry path for production images (ghcr.io/owner/repo)
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.title=${{ env.DOCKER_IMAGE_TITLE }}
+            org.opencontainers.image.description=${{ env.DOCKER_IMAGE_DESCRIPTION }}
+            org.opencontainers.image.source=${{ env.DOCKER_IMAGE_SOURCE }}
+            org.opencontainers.image.licenses=${{ env.DOCKER_IMAGE_LICENSE }}
+            org.opencontainers.image.authors=${{ env.DOCKER_IMAGE_AUTHORS }}
+            org.opencontainers.image.vendor=${{ env.DOCKER_IMAGE_VENDOR }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.documentation=${{ env.DOCKER_IMAGE_DOCS }}
+          # GHCR often reads description from OCI annotations (manifest/index)
+          # rather than only image config labels, especially when Buildx produces
+          # an OCI index (e.g. when provenance/attestations are attached).
+          # For validation builds (load: true), we only use manifest annotations
+          # since index annotations aren't supported for single-platform Docker exports.
+          annotations: |
+            org.opencontainers.image.title=${{ env.DOCKER_IMAGE_TITLE }}
+            org.opencontainers.image.description=${{ env.DOCKER_IMAGE_DESCRIPTION }}
+            org.opencontainers.image.source=${{ env.DOCKER_IMAGE_SOURCE }}
+            org.opencontainers.image.licenses=${{ env.DOCKER_IMAGE_LICENSE }}
+            org.opencontainers.image.authors=${{ env.DOCKER_IMAGE_AUTHORS }}
+            org.opencontainers.image.vendor=${{ env.DOCKER_IMAGE_VENDOR }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.documentation=${{ env.DOCKER_IMAGE_DOCS }}
+        env:
+          # Only manifest annotations for validation builds (load: true)
+          # Index annotations aren't supported when loading to Docker daemon
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest
+      - name: Extract metadata for push
+        id: meta_push
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051  # v5
         with:
           # Full registry path for production images (ghcr.io/owner/repo)
@@ -318,6 +359,7 @@ jobs:
             org.opencontainers.image.documentation=${{ env.DOCKER_IMAGE_DOCS }}
         env:
           # Place annotations on both the manifest and (when present) the index.
+          # Index annotations are supported when pushing to registry.
           DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
       - name: Generate Release Version
         id: release_version
@@ -370,11 +412,12 @@ jobs:
             type=gha,mode=max
           # Image tags for identification (semver versions + latest from metadata extraction)
           # Multiple tags created: v1.2.3, 1.2, 1, latest (for default branch)
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta_validate.outputs.tags }}
           # OCI labels for image metadata (title, description, source, license, etc.)
-          labels: ${{ steps.meta.outputs.labels }}
+          labels: ${{ steps.meta_validate.outputs.labels }}
           # OCI annotations for registry UIs (e.g. GHCR package description)
-          annotations: ${{ steps.meta.outputs.annotations }}
+          # Using manifest-only annotations since index annotations aren't supported when loading
+          annotations: ${{ steps.meta_validate.outputs.annotations }}
           # Disable attestations for validation build (faster validation, attestations added in push step)
           # Note: Attestations (SBOM/provenance) are only generated when pushing, not when loading to daemon
           provenance: false
@@ -393,7 +436,7 @@ jobs:
         uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de  # v1
         with:
           command: cves
-          image: ${{ steps.meta.outputs.tags }}
+          image: ${{ steps.meta_validate.outputs.tags }}
           only-severities: critical,high
           exit-code: 1
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -430,11 +473,12 @@ jobs:
             type=gha,mode=max
           # Image tags for identification (semver versions + latest from metadata extraction)
           # Multiple tags created: v1.2.3, 1.2, 1, latest (for default branch)
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta_push.outputs.tags }}
           # OCI labels for image metadata (title, description, source, license, etc.)
-          labels: ${{ steps.meta.outputs.labels }}
+          labels: ${{ steps.meta_push.outputs.labels }}
           # OCI annotations for registry UIs (e.g. GHCR package description)
-          annotations: ${{ steps.meta.outputs.annotations }}
+          # Using manifest+index annotations for full registry support
+          annotations: ${{ steps.meta_push.outputs.annotations }}
           # Enable SBOM and provenance for supply chain security
           # SBOM: Software Bill of Materials for dependency tracking
           # Provenance: Build attestations for supply chain security (mode=max includes all metadata)
