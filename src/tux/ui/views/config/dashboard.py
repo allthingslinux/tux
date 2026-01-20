@@ -76,9 +76,14 @@ class ConfigDashboard(discord.ui.LayoutView):
             """Handle button click to switch to ranks mode."""
             view = self.view
             if isinstance(view, ConfigDashboard):
+                # Defer immediately since building ranks mode may take time on first load
+                await interaction.response.defer()
                 view.current_mode = "ranks"
                 await view.build_layout()
-                await interaction.response.edit_message(view=view)
+                await interaction.followup.edit_message(
+                    message_id=interaction.message.id,
+                    view=view,
+                )
 
     class RolesButton(discord.ui.Button[discord.ui.LayoutView]):
         """Button to open the Role Assignments configuration mode."""
@@ -94,9 +99,14 @@ class ConfigDashboard(discord.ui.LayoutView):
             """Handle button click to switch to roles mode."""
             view = self.view
             if isinstance(view, ConfigDashboard):
+                # Defer immediately since building roles mode may take time on first load
+                await interaction.response.defer()
                 view.current_mode = "roles"
                 await view.build_layout()
-                await interaction.response.edit_message(view=view)
+                await interaction.followup.edit_message(
+                    message_id=interaction.message.id,
+                    view=view,
+                )
 
     class CommandsButton(discord.ui.Button[discord.ui.LayoutView]):
         """Button to open the Command Permissions configuration mode."""
@@ -112,9 +122,14 @@ class ConfigDashboard(discord.ui.LayoutView):
             """Handle button click to switch to commands mode."""
             view = self.view
             if isinstance(view, ConfigDashboard):
+                # Defer immediately since building commands mode may take time
+                await interaction.response.defer()
                 view.current_mode = "commands"
                 await view.build_layout()
-                await interaction.response.edit_message(view=view)
+                await interaction.followup.edit_message(
+                    message_id=interaction.message.id,
+                    view=view,
+                )
 
     class LogsButton(discord.ui.Button[discord.ui.LayoutView]):
         """Button to open the Log Channels configuration mode."""
@@ -130,9 +145,14 @@ class ConfigDashboard(discord.ui.LayoutView):
             """Handle button click to switch to logs mode."""
             view = self.view
             if isinstance(view, ConfigDashboard):
+                # Defer immediately since building logs mode may take time on first load
+                await interaction.response.defer()
                 view.current_mode = "logs"
                 await view.build_layout()
-                await interaction.response.edit_message(view=view)
+                await interaction.followup.edit_message(
+                    message_id=interaction.message.id,
+                    view=view,
+                )
 
     class JailButton(discord.ui.Button[discord.ui.LayoutView]):
         """Button to open the Jail configuration mode."""
@@ -148,9 +168,14 @@ class ConfigDashboard(discord.ui.LayoutView):
             """Handle button click to switch to jail mode."""
             view = self.view
             if isinstance(view, ConfigDashboard):
+                # Defer immediately since building jail mode may take time on first load
+                await interaction.response.defer()
                 view.current_mode = "jail"
                 await view.build_layout()
-                await interaction.response.edit_message(view=view)
+                await interaction.followup.edit_message(
+                    message_id=interaction.message.id,
+                    view=view,
+                )
 
     class ResetButton(discord.ui.Button[discord.ui.LayoutView]):
         """Button to reset all configuration to defaults."""
