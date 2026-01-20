@@ -21,6 +21,7 @@ from rich.console import Console
 from tux.core.setup.orchestrator import BotSetupOrchestrator
 from tux.core.task_monitor import TaskMonitor
 from tux.database.controllers import DatabaseCoordinator
+from tux.database.models.enums import CaseType
 from tux.database.service import DatabaseService
 from tux.services.emoji_manager import EmojiManager
 from tux.services.http_client import http_client
@@ -100,6 +101,10 @@ class Tux(commands.Bot):
 
         # Background task monitor (manages periodic tasks and cleanup)
         self.task_monitor = TaskMonitor(self)
+
+        # Event set when guild registration has completed in on_ready. Other on_ready
+        # listeners (RemindMe, StatusRoles, etc.) wait on this before guild-dependent work.
+        self.guilds_registered = asyncio.Event()
 
         # Service integrations
         self.db_service = DatabaseService()
@@ -183,6 +188,32 @@ class Tux(commands.Bot):
         if self._db_coordinator is None:
             self._db_coordinator = DatabaseCoordinator(self.db_service)
         return self._db_coordinator
+
+    async def is_jailed(self, guild_id: int, user_id: int) -> bool:
+        """
+        Check if a user is currently jailed.
+
+        Considers only JAIL and UNJAIL cases; the user is jailed if the latest
+        of those is a JAIL. Used by on-join logic (e.g. TTY roles) to avoid
+        adding roles to jailed members.
+
+        Parameters
+        ----------
+        guild_id : int
+            Guild ID to check.
+        user_id : int
+            User ID to check.
+
+        Returns
+        -------
+        bool
+            True if the user is jailed, False otherwise.
+        """
+        latest = await self.db.case.get_latest_jail_or_unjail_case(
+            user_id=user_id,
+            guild_id=guild_id,
+        )
+        return bool(latest and latest.case_type == CaseType.JAIL)
 
     async def setup_hook(self) -> None:
         """
