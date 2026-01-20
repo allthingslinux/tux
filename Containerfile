@@ -173,10 +173,12 @@ RUN apt-get update && \
 WORKDIR /app
 
 # Production-specific environment variables (extends common Python env vars)
+# PYTHONOPTIMIZE=1 enables optimizations (-O) while preserving docstrings
+# PYTHONOPTIMIZE=2 (-OO) would strip docstrings, breaking help system
 ENV VIRTUAL_ENV=/app/.venv \
         PATH="/app/.venv/bin:$PATH" \
         PYTHONPATH="/app:/app/src" \
-        PYTHONOPTIMIZE=2 \
+        PYTHONOPTIMIZE=1 \
         TLDR_CACHE_DIR=/app/.cache/tldr
 
 COPY --from=build --chown=nonroot:nonroot /app/.venv /app/.venv
