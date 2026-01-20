@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import discord
 from loguru import logger
 
 from tux.database.controllers.base import BaseController
@@ -122,10 +123,13 @@ class PermissionRankController(BaseController[PermissionRank]):
         guild_id: int,
         rank: int,
         name: str | None = None,
-        description: str | None = None,
+        description: str | None = discord.utils.MISSING,
     ) -> PermissionRank | None:
         """
         Update a permission rank.
+
+        Pass ``description=None`` to clear the description; omit the argument
+        to leave it unchanged.
 
         Returns
         -------
@@ -141,11 +145,11 @@ class PermissionRankController(BaseController[PermissionRank]):
             return None
 
         # Update the record
-        update_data = {}
+        update_data: dict[str, str | None] = {}
         if name is not None:
             update_data["name"] = name
-        if description is not None:
-            update_data["description"] = description
+        if description is not discord.utils.MISSING:
+            update_data["description"] = description  # None clears it
         # Note: updated_at is automatically managed by the database via TimestampMixin
 
         return await self.update_by_id(record.id, **update_data)
