@@ -44,14 +44,26 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract version from tag
+        id: version
+        run: |
+          # Remove 'v' prefix if present (v0.1.0 -> 0.1.0)
+          VERSION="${INPUT_TAG#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          # Extract major.minor (0.1.0 -> 0.1)
+          MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1,2)
+          echo "major_minor=$MAJOR_MINOR" >> "$GITHUB_OUTPUT"
+          echo "Extracted version: $VERSION (major.minor: $MAJOR_MINOR)"
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051  # v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=${{ steps.version.outputs.major_minor }}
             type=raw,value=latest
           labels: |
             org.opencontainers.image.title=${{ env.DOCKER_IMAGE_TITLE }}
