@@ -112,7 +112,59 @@ class Tux(commands.Bot):
         self.console = Console(stderr=True, force_terminal=True)
         self.uptime = discord.utils.utcnow().timestamp()
 
+        # Set up maintenance mode check for commands
+        self.add_check(self._maintenance_mode_check)
+
         logger.debug("Bot initialization complete")
+
+    @property
+    def maintenance_mode(self) -> bool:
+        """
+        Check if bot is in maintenance mode.
+
+        Returns
+        -------
+        bool
+            True if maintenance mode is enabled, False otherwise.
+        """
+        from tux.shared.config import CONFIG  # noqa: PLC0415
+
+        return CONFIG.MAINTENANCE_MODE
+
+    async def _maintenance_mode_check(self, ctx: commands.Context[Any]) -> bool:
+        """
+        Global command check that blocks non-owner commands during maintenance mode.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Any]
+            The command context.
+
+        Returns
+        -------
+        bool
+            True if command should proceed, False if blocked.
+        """
+        if not self.maintenance_mode:
+            return True
+
+        # Allow bot owners and sysadmins to use commands during maintenance
+        if self.owner_ids and ctx.author.id in self.owner_ids:
+            return True
+
+        # Block all other commands during maintenance
+        from tux.shared.config import CONFIG  # noqa: PLC0415
+
+        if CONFIG.ALLOW_SYSADMINS_EVAL and ctx.author.id in CONFIG.USER_IDS.SYSADMINS:
+            return True
+
+        # Send maintenance message
+        await ctx.send(
+            "🔧 **Maintenance Mode**: The bot is currently in maintenance mode. "
+            "Only bot owners can use commands at this time.",
+            ephemeral=True,
+        )
+        return False
 
     @property
     def db(self) -> DatabaseCoordinator:

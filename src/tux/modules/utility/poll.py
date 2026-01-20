@@ -38,6 +38,10 @@ class Poll(ModerationCogBase):
         payload: discord.RawReactionActionEvent,
     ) -> None:
         """On raw reaction add event handler."""
+        # Skip poll reaction processing during maintenance mode
+        if self.bot.maintenance_mode:
+            return
+
         # get reaction from payload.message_id, payload.channel_id, payload.guild_id, payload.emoji
         channel = await get_channel_safe(self.bot, payload.channel_id)
         if channel is None:

@@ -184,7 +184,7 @@ Check row counts and verify all tables were migrated successfully.
 
 ## ⚠️ CRITICAL: Migration Safety
 
-**IMPORTANT**: This migration plugin is designed to run **WHILE THE BOT IS STOPPED**.
+**IMPORTANT**: Migration commands (`$migrate all`, etc.) are Discord bot commands that require the bot to be running. However, the bot should **NOT be processing user events** during migration to prevent data conflicts.
 
 ### DO NOT
 
@@ -199,7 +199,7 @@ Check row counts and verify all tables were migrated successfully.
    - New bot writes to new database
    - Data gets out of sync
 
-3. **Run migration while new bot is processing events**
+3. **Run migration while new bot is processing user events**
    - Users interacting during migration create new records
    - Migration may overwrite or conflict with new data
    - Timestamps get mixed up
@@ -210,9 +210,17 @@ Check row counts and verify all tables were migrated successfully.
    - Prevents new data creation in old database
    - Ensures consistent snapshot
 
-2. **Run migration while new bot is stopped or in maintenance mode**
-   - No user interactions during migration
-   - Clean data transfer
+2. **Run migration with bot in maintenance mode**
+   - Bot must be running to execute Discord commands (`$migrate all`)
+   - Enable maintenance mode to prevent user events from being processed
+   - **How to enable**: Set `MAINTENANCE_MODE=true` in your `.env` file or environment
+   - During maintenance mode:
+     - Only bot owners and sysadmins can use commands (migration commands will work)
+     - All event processing is skipped (no XP gain, no GIF limiting, etc.)
+     - Users will see a maintenance message if they try to use commands
+   - Alternative options:
+     - Use a test/development bot token (not production)
+     - Run migration during low-traffic period and monitor closely
 
 3. **Test with dry-run first**
    - Validates migration will work
@@ -279,7 +287,7 @@ Check row counts and verify all tables were migrated successfully.
    uv run tux start
    ```
 
-5. **Run Migration Commands** (in Discord or via script)
+6. **Run Migration Commands** (in Discord or via script)
 
    ```bash
    # In Discord (as bot owner/sysadmin):
@@ -291,7 +299,7 @@ Check row counts and verify all tables were migrated successfully.
    $migrate status         # Check migration status
    ```
 
-6. **Stop Old Bot**
+7. **Stop Old Bot**
 
    ```bash
    # On old server/environment
@@ -299,7 +307,14 @@ Check row counts and verify all tables were migrated successfully.
    # This prevents users from creating new data in old database
    ```
 
-7. **Switch Bot Token** (if using same Discord bot)
+8. **Disable Maintenance Mode** (after migration completes)
+
+   ```bash
+   # Remove from .env or set to false:
+   MAINTENANCE_MODE=false
+   ```
+
+9. **Switch Bot Token** (if using same Discord bot)
 
    ```bash
    # Update .env with production bot token
@@ -313,11 +328,12 @@ Check row counts and verify all tables were migrated successfully.
    uv run tux start
    ```
 
-9. **Verify Everything Works**
-   - Test critical commands
-   - Check levels/XP are preserved
-   - Verify guild configs are intact
-   - Monitor for errors
+11. **Verify Everything Works**
+
+- Test critical commands
+- Check levels/XP are preserved
+- Verify guild configs are intact
+- Monitor for errors
 
 ### Scenario 2: Same Server Migration
 
@@ -373,23 +389,33 @@ Check row counts and verify all tables were migrated successfully.
    export OLD_DATABASE_URL="postgresql://user:password@localhost:5432/old_database"
    ```
 
-6. **Run Migration**
+6. **Enable Maintenance Mode** (recommended)
 
    ```bash
-   # Start bot (it will be in migration mode)
+   # Add to .env file:
+   MAINTENANCE_MODE=true
+   ```
+
+7. **Run Migration**
+
+   ```bash
+   # Start bot - MUST be running to execute Discord commands
+   # If MAINTENANCE_MODE=true, user events will be automatically skipped
    uv run tux start
    
-   # In Discord, run migration commands:
+   # In Discord (as bot owner/sysadmin), run migration commands:
    $migrate audit
    $migrate dry-run
    $migrate all
    $migrate validate
    ```
 
-7. **Switch to Production**
+8. **Disable Maintenance Mode and Switch to Production**
 
    ```bash
    # Stop bot
+   # Remove MAINTENANCE_MODE from .env or set to false
+   MAINTENANCE_MODE=false
    # Update .env if needed
    # Restart bot
    uv run tux start
@@ -461,9 +487,10 @@ Check row counts and verify all tables were migrated successfully.
 
 2. **Migration Window** (requires downtime):
    - Stop old bot
-   - Run `migrate all`
-   - Run `migrate validate`
-   - Start new bot
+   - Start new bot (in restricted mode - not processing user events)
+   - Run `$migrate all` (bot must be running to execute Discord commands)
+   - Run `$migrate validate`
+   - Switch to production mode (if using test token) or enable event processing
    - Verify functionality
 
 3. **Rollback Plan** (if migration fails):
@@ -481,6 +508,8 @@ Check row counts and verify all tables were migrated successfully.
 - [ ] New database initialized with migrations (`uv run db push`)
 - [ ] Dry-run completed successfully (`$migrate dry-run`)
 - [ ] **Old bot stopped** (critical - prevents data conflicts)
+- [ ] **Maintenance mode enabled** (`MAINTENANCE_MODE=true` in `.env`) - prevents user event processing
+- [ ] **New bot ready** (must be running to execute Discord commands)
 - [ ] Maintenance window scheduled
 - [ ] Rollback plan prepared
 
@@ -490,15 +519,40 @@ Check row counts and verify all tables were migrated successfully.
    - This prevents new data from being created in the old database
    - Ensures a consistent snapshot for migration
 
-2. **Start new bot** (if not already running):
-   - Bot should connect to the NEW database (empty or pre-migrated)
-   - Bot should NOT be processing user events during migration
-   - Consider using a maintenance mode or different token for migration
+2. **Enable maintenance mode** (recommended):
 
-3. **Run migration**: Execute `$migrate all` command
+   ```bash
+   # Add to .env file:
+   MAINTENANCE_MODE=true
+   
+   # Or set as environment variable:
+   export MAINTENANCE_MODE=true
+   ```
+
+   - Maintenance mode prevents user events from being processed
+   - Only bot owners/sysadmins can use commands (migration commands will work)
+   - Users will see a maintenance message if they try to use commands
+
+3. **Start new bot** (required for Discord commands):
+   - Bot MUST be running to execute `$migrate` commands via Discord
+   - Bot should connect to the NEW database (empty or pre-migrated)
+   - If maintenance mode is enabled, user events will be automatically skipped
+   - **Alternative**: Use a test/development bot token if maintenance mode isn't available
+
+4. **Run migration**: Execute `$migrate all` command in Discord
    - Requires confirmation (react with ✅)
    - Monitor progress and handle any errors
    - Migration runs in a transaction (all-or-nothing)
+   - **Note**: Bot must be running to receive and process this command
+
+5. **Disable maintenance mode** (after migration completes):
+
+   ```bash
+   # Remove from .env or set to false:
+   MAINTENANCE_MODE=false
+   
+   # Then restart the bot
+   ```
 
 4. **Validate**: Run `$migrate validate` to verify data
    - Checks row counts match

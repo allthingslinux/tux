@@ -175,6 +175,10 @@ class Afk(BaseCog):
         message : discord.Message
             The message to check.
         """
+        # Skip AFK processing during maintenance mode
+        if self.bot.maintenance_mode:
+            return
+
         if not message.guild or message.author.bot:
             return
 
@@ -253,6 +257,10 @@ class Afk(BaseCog):
     @tasks.loop(seconds=120, name="afk_expiration_handler")
     async def handle_afk_expiration(self) -> None:
         """Check AFK database at a regular interval, remove AFK from users with an entry that has expired."""
+        # Skip AFK expiration processing during maintenance mode
+        if self.bot.maintenance_mode:
+            return
+
         for guild in self.bot.guilds:
             expired_entries = await self._get_expired_afk_entries(guild.id)
 

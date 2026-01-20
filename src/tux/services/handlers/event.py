@@ -89,6 +89,17 @@ class EventHandler(BaseCog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """On message event handler."""
+        # Skip event processing during maintenance mode (except IRC bridge)
+        if self.bot.maintenance_mode:
+            # Still allow IRC bridge during maintenance
+            if message.webhook_id in CONFIG.IRC_CONFIG.BRIDGE_WEBHOOK_IDS and (
+                message.content.startswith(f"{CONFIG.get_prefix()}s ")
+                or message.content.startswith(f"{CONFIG.get_prefix()}snippet ")
+            ):
+                ctx = await self.bot.get_context(message)
+                await self.bot.invoke(ctx)
+            return
+
         # Allow the IRC bridge to use the snippet command only
         if message.webhook_id in CONFIG.IRC_CONFIG.BRIDGE_WEBHOOK_IDS and (
             message.content.startswith(f"{CONFIG.get_prefix()}s ")

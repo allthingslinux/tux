@@ -62,6 +62,10 @@ class LevelsService(BaseCog):
         message : discord.Message
             The message object.
         """
+        # Skip XP processing during maintenance mode
+        if self.bot.maintenance_mode:
+            return
+
         if (
             message.author.bot
             or not message.guild

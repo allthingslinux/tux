@@ -44,6 +44,10 @@ class StatusRoles(BaseCog):
     @commands.Cog.listener()
     async def on_ready(self):
         """Check all users' statuses when the bot starts up."""
+        # Skip status role checking during maintenance mode
+        if self.bot.maintenance_mode:
+            return
+
         logger.info("StatusRoles cog ready, checking all users' statuses")
         for guild in self.bot.guilds:
             for member in guild.members:
@@ -52,6 +56,10 @@ class StatusRoles(BaseCog):
     @commands.Cog.listener()
     async def on_presence_update(self, before: discord.Member, after: discord.Member):
         """Event triggered when a user's presence changes."""
+        # Skip status role processing during maintenance mode
+        if self.bot.maintenance_mode:
+            return
+
         logger.trace(
             f"Presence update for {after.display_name}: {before.status} -> {after.status}",
         )

@@ -23,6 +23,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   * Consolidated documentation in `PLUGIN.md` with complete table/column mappings
   * Primary key constraint checking (`$migrate check-pk`)
   * Duplicate detection tools (`$migrate check-duplicates`)
+* **Maintenance Mode**: Bot-wide maintenance mode for safe migrations and maintenance windows
+  * `MAINTENANCE_MODE` configuration option to enable/disable maintenance mode
+  * Global command check that blocks non-owner commands during maintenance
+  * Event handler checks prevent user event processing (levels, AFK, starboard, bookmarks, status roles, temp VC, polls, GIF limiting)
+  * Background task checks prevent data modification during maintenance (AFK expiration, tempban processing, GIF cleanup)
+  * Owner and sysadmin commands remain functional during maintenance mode
+  * Comprehensive integration with database migration plugin for safe migrations
 * **Cursor Rules & Commands System**: Comprehensive system for managing AI-assisted development patterns
   * CLI tool for validating Cursor rules and commands (`uv run ai validate-rules`)
   * Comprehensive guides for creating Cursor rules and commands
@@ -98,6 +105,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Database Migration Plugin Documentation**: Consolidated migration documentation
   * Merged `README.md`, `DEPLOYMENT.md`, `TABLE.md`, and `REVIEW.md` into single `PLUGIN.md`
   * Added comprehensive deployment scenarios and safety warnings
+  * Updated migration workflow to include maintenance mode instructions
+  * Clarified bot operation requirements during migration (bot must run for Discord commands, but maintenance mode prevents user events)
   * Included complete table and column mapping reference
   * Added troubleshooting guide and post-migration verification steps
 * **CI/CD**: Enhanced workflows and automation
@@ -123,6 +132,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   * Cases now migrate in chronological order (`guild_id`, `case_created_at`) to ensure proper insertion order even with missing case numbers
   * Enhanced error handling for unique constraint violations with clear error messages
   * Improved duplicate detection and validation tools
+  * Fixed exception message formatting (extracted f-strings to variables for better error handling)
+  * Fixed session variable shadowing in migration methods
+  * Removed unnecessary type ignore comments
+  * Added complexity suppressions for large migration methods
+* **Code Quality**: Fixed linting and type checking issues
+  * Removed unused functions from migration plugin tests
+  * Improved code quality compliance across migration plugin
 * **Validation**: Improved rule validation system
   * Added support for large file exceptions in rule validation
   * Enhanced error handling and frontmatter validation in rule files

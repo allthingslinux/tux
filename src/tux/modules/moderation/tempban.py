@@ -139,6 +139,10 @@ class TempBan(ModerationCogBase):
     @tasks.loop(minutes=1, name="tempban_checker")
     async def check_tempbans(self) -> None:
         """Check for expired tempbans and unbans the user."""
+        # Skip tempban processing during maintenance mode
+        if self.bot.maintenance_mode:
+            return
+
         if self._processing_tempbans:
             logger.debug("Tempban check is already in progress. Skipping.")
             return

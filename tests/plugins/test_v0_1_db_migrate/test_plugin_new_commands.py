@@ -81,9 +81,6 @@ class TestNewMigrationCommands:
             mock_inspector_class.return_value = mock_inspector
 
             # Mock executor
-            async def run_in_executor(executor, func, *args):
-                return func(*args)
-
             mock_event_loop = MagicMock()
             mock_event_loop.run_in_executor = AsyncMock(
                 side_effect=lambda executor, func, *args: func(*args),
@@ -199,10 +196,7 @@ class TestNewMigrationCommands:
             mock_inspector.disconnect = MagicMock()
             mock_inspector_class.return_value = mock_inspector
 
-            # Mock executor to return test data
-            def query_duplicates():
-                return ([], 3, 3)  # No duplicates, 3 total rows, 3 unique member_ids
-
+            # Mock executor
             mock_event_loop = MagicMock()
             mock_event_loop.run_in_executor = AsyncMock(
                 side_effect=lambda executor, func, *args: func(*args),
@@ -239,14 +233,7 @@ class TestNewMigrationCommands:
             mock_inspector.disconnect = MagicMock()
             mock_inspector_class.return_value = mock_inspector
 
-            # Mock executor to return duplicates
-            def query_duplicates():
-                return (
-                    [(123456789, 2, [111111111, 222222222])],  # 1 duplicate
-                    5,  # 5 total rows
-                    4,  # 4 unique member_ids
-                )
-
+            # Mock executor
             mock_event_loop = MagicMock()
             mock_event_loop.run_in_executor = AsyncMock(
                 side_effect=lambda executor, func, *args: func(*args),

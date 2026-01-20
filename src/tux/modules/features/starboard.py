@@ -49,6 +49,10 @@ class Starboard(BaseCog):
         payload : discord.RawReactionActionEvent
             The raw reaction event payload.
         """
+        # Skip starboard processing during maintenance mode
+        if self.bot.maintenance_mode:
+            return
+
         await self.handle_starboard_reaction(payload)
 
     @commands.Cog.listener("on_raw_reaction_remove")
@@ -63,6 +67,10 @@ class Starboard(BaseCog):
         payload : discord.RawReactionActionEvent
             The raw reaction event payload.
         """
+        # Skip starboard processing during maintenance mode
+        if self.bot.maintenance_mode:
+            return
+
         await self.handle_starboard_reaction(payload)
 
     @commands.Cog.listener("on_raw_reaction_clear")
@@ -77,6 +85,10 @@ class Starboard(BaseCog):
         payload : discord.RawReactionClearEvent
             The raw reaction clear event payload.
         """
+        # Skip starboard processing during maintenance mode
+        if self.bot.maintenance_mode:
+            return
+
         await self.handle_reaction_clear(payload)
 
     @commands.Cog.listener("on_raw_reaction_clear_emoji")
@@ -91,6 +103,10 @@ class Starboard(BaseCog):
         payload : discord.RawReactionClearEmojiEvent
             The raw reaction clear emoji event payload.
         """
+        # Skip starboard processing during maintenance mode
+        if self.bot.maintenance_mode:
+            return
+
         await self.handle_reaction_clear(payload, payload.emoji)
 
     @commands.hybrid_group(

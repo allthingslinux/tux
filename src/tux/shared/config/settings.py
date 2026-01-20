@@ -125,6 +125,14 @@ class Config(BaseSettings):
             examples=["INFO", "DEBUG", "WARNING", "ERROR"],
         ),
     ]
+    MAINTENANCE_MODE: Annotated[
+        bool,
+        Field(
+            default=False,
+            description="Enable maintenance mode (blocks non-owner commands and event processing)",
+            examples=[False, True],
+        ),
+    ]
 
     # Bot tokens
     BOT_TOKEN: Annotated[

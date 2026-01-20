@@ -1,8 +1,9 @@
 # Config
 # Main Tux configuration using Pydantic Settings with multi-format support.
 # Configuration is loaded from multiple sources in priority order: 1. Environment
-# variables (highest priority) 2. .env file 3. config.toml file 4. config.yaml
-# file 5. config.json file 6. Default values (lowest priority)
+# variables (highest priority) 2. .env file 3. config/config.toml or config.toml
+# file 4. config/config.yaml or config.yaml file 5. config/config.json or
+# config.json file 6. Default values (lowest priority)
 
 # DEBUG: boolean
 # Enable debug mode
@@ -15,6 +16,12 @@
 # Default: "INFO"
 # Examples: "INFO", "DEBUG", "WARNING", "ERROR"
 # LOG_LEVEL = "INFO"
+
+# MAINTENANCE_MODE: boolean
+# Enable maintenance mode (blocks non-owner commands and event processing)
+# Default: false
+# Examples: false, true
+# MAINTENANCE_MODE = false
 
 # BOT_TOKEN: string
 # Discord bot token

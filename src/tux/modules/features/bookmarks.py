@@ -62,6 +62,10 @@ class Bookmarks(BaseCog):
         payload : discord.RawReactionActionEvent
             The event payload containing information about the reaction.
         """
+        # Skip bookmark processing during maintenance mode
+        if self.bot.maintenance_mode:
+            return
+
         # If the bot reacted to the message, or the user is the bot, or the emoji is not valid, return
         if (
             not self.bot.user

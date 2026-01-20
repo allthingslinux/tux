@@ -50,6 +50,10 @@ class TempVc(BaseCog):
         after : discord.VoiceState
             The voice state after the event.
         """
+        # Skip temp VC processing during maintenance mode
+        if self.bot.maintenance_mode:
+            return
+
         # Ensure CONFIGants are set correctly
         temp_channel_id = int(CONFIG.TEMPVC.TEMPVC_CHANNEL_ID or "0")
         temp_category_id = int(CONFIG.TEMPVC.TEMPVC_CATEGORY_ID or "0")

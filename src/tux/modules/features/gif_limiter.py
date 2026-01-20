@@ -140,6 +140,10 @@ class GifLimiter(BaseCog):
         message : discord.Message
             The message to check.
         """
+        # Skip GIF limiting during maintenance mode
+        if self.bot.maintenance_mode:
+            return
+
         if await self._should_process_message(message):
             await self._handle_gif_message(message)
 
@@ -153,6 +157,10 @@ class GifLimiter(BaseCog):
         self : GifLimiter
             The GifLimiter instance.
         """
+        # Skip GIF cleanup during maintenance mode
+        if self.bot.maintenance_mode:
+            return
+
         current_time: int = int(time())
 
         async with self.gif_lock:
