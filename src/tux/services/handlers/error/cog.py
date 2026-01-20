@@ -1,8 +1,9 @@
-"""Comprehensive error handler for Discord commands."""
+"""Comprehensive error handler for Discord commands and client events."""
 
 import importlib
 import sys
 import traceback
+from typing import Any
 
 import discord
 from discord import app_commands
@@ -24,7 +25,11 @@ from .suggestions import CommandSuggester
 
 
 class ErrorHandler(commands.Cog):
-    """Centralized error handling for both prefix and slash commands."""
+    """Centralized error handling for commands and client events.
+
+    Handles app command (tree.on_error), prefix/hybrid (on_command_error), and
+    raw client events (Client.on_error for on_ready, on_member_join, etc.).
+    """
 
     def __init__(self, bot: Tux) -> None:
         """Initialize the error handler cog.
@@ -37,19 +42,26 @@ class ErrorHandler(commands.Cog):
         self.bot = bot
         self.formatter = ErrorFormatter()
         self.suggester = CommandSuggester()
-        self._old_tree_error = None
+        self._old_tree_error: Any = None
+        self._old_client_on_error: Any = None
 
     async def cog_load(self) -> None:
-        """Override app command error handler."""
+        """Override app command and client event error handlers."""
         tree = self.bot.tree
         self._old_tree_error = tree.on_error
         tree.on_error = self.on_app_command_error
+
+        self._old_client_on_error = self.bot.on_error
+        self.bot.on_error = self._on_client_error
+
         logger.debug("Error handler loaded")
 
     async def cog_unload(self) -> None:
-        """Restore original app command error handler."""
-        if self._old_tree_error:
+        """Restore original app command and client error handlers."""
+        if self._old_tree_error is not None:
             self.bot.tree.on_error = self._old_tree_error
+        if self._old_client_on_error is not None:
+            self.bot.on_error = self._old_client_on_error
         logger.debug("Error handler unloaded")
 
     async def cog_reload(self) -> None:
@@ -73,6 +85,29 @@ class ErrorHandler(commands.Cog):
                     logger.warning(f"Failed to reload {module_name}: {e}")
 
         logger.debug("Error handler reloaded with fresh modules")
+
+    async def _on_client_error(
+        self,
+        event_method: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        """Handle errors in non-command event listeners (e.g. on_ready, on_member_join).
+
+        When an event listener raises, discord.py calls Client.on_error. We override
+        that here to log full tracebacks and report to Sentry, replacing the default
+        'Ignoring exception in {event}' with actionable diagnostics. The exception
+        is not passed by discord; we use sys.exception() (or sys.exc_info()).
+        """
+        exc = sys.exception()
+        if exc is not None and isinstance(exc, Exception):
+            logger.exception("Exception in event %s: %s", event_method, exc)
+            capture_exception_safe(exc, extra_context={"event": event_method})
+        else:
+            logger.error(
+                "Exception in event %s (exception context not available)",
+                event_method,
+            )
 
     async def _handle_error(
         self,
