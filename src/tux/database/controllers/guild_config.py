@@ -408,6 +408,28 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         return await self.update_channel_field(guild_id, "jail_channel_id", channel_id)
 
+    async def update_jail_role_id(
+        self,
+        guild_id: int,
+        role_id: int | None,
+    ) -> GuildConfig | None:
+        """
+        Update jail role ID.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+        role_id : int | None
+            The role ID to assign, or None to clear.
+
+        Returns
+        -------
+        GuildConfig | None
+            The updated configuration, or None if not found.
+        """
+        return await self.update_config(guild_id, jail_role_id=role_id)
+
     async def update_starboard_channel_id(
         self,
         guild_id: int,
