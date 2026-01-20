@@ -200,10 +200,13 @@ EMOTES_PER_PAGE: Final[int] = 128
 BANS_LIMIT: Final[int] = 2000
 
 # Config Dashboard pagination
-CONFIG_RANKS_PER_PAGE: Final[int] = 5
-CONFIG_ROLES_PER_PAGE: Final[int] = 5
-CONFIG_COMMANDS_PER_PAGE: Final[int] = 5
-CONFIG_LOGS_PER_PAGE: Final[int] = 5
+# Limited by Discord's 5 ActionRow per message limit
+CONFIG_RANKS_PER_PAGE: Final[int] = 3  # 1 create + 3 ranks + 1 nav = 5 ActionRows max
+CONFIG_ROLES_PER_PAGE: Final[int] = 4  # 4 selects + 1 nav = 5 ActionRows max
+CONFIG_COMMANDS_PER_PAGE: Final[int] = (
+    3  # Limited by 40 component limit (3 commands = ~20 components with nesting)
+)
+CONFIG_LOGS_PER_PAGE: Final[int] = 5  # Only ChannelSelects, no ActionRow limit issue
 
 # Config Dashboard colors (Discord brand colors)
 CONFIG_COLOR_BLURPLE: Final[int] = 0x5865F2  # Discord blurple (primary)

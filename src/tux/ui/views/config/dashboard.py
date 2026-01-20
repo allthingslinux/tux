@@ -7,6 +7,7 @@ built on top of the extensible UI core system.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any
 
@@ -87,10 +88,11 @@ class ConfigDashboard(discord.ui.LayoutView):
                 # Not cached - defer and build
                 await interaction.response.defer()
                 await view.build_layout()
-                await interaction.followup.edit_message(
-                    message_id=interaction.message.id,
-                    view=view,
-                )
+                if interaction.message:
+                    await interaction.followup.edit_message(
+                        message_id=interaction.message.id,
+                        view=view,
+                    )
 
     class RolesButton(discord.ui.Button[discord.ui.LayoutView]):
         """Button to open the Role Assignments configuration mode."""
@@ -117,10 +119,11 @@ class ConfigDashboard(discord.ui.LayoutView):
                 # Not cached - defer and build
                 await interaction.response.defer()
                 await view.build_layout()
-                await interaction.followup.edit_message(
-                    message_id=interaction.message.id,
-                    view=view,
-                )
+                if interaction.message:
+                    await interaction.followup.edit_message(
+                        message_id=interaction.message.id,
+                        view=view,
+                    )
 
     class CommandsButton(discord.ui.Button[discord.ui.LayoutView]):
         """Button to open the Command Permissions configuration mode."""
@@ -147,10 +150,11 @@ class ConfigDashboard(discord.ui.LayoutView):
                 # Not cached - defer and build
                 await interaction.response.defer()
                 await view.build_layout()
-                await interaction.followup.edit_message(
-                    message_id=interaction.message.id,
-                    view=view,
-                )
+                if interaction.message:
+                    await interaction.followup.edit_message(
+                        message_id=interaction.message.id,
+                        view=view,
+                    )
 
     class LogsButton(discord.ui.Button[discord.ui.LayoutView]):
         """Button to open the Log Channels configuration mode."""
@@ -177,10 +181,11 @@ class ConfigDashboard(discord.ui.LayoutView):
                 # Not cached - defer and build
                 await interaction.response.defer()
                 await view.build_layout()
-                await interaction.followup.edit_message(
-                    message_id=interaction.message.id,
-                    view=view,
-                )
+                if interaction.message:
+                    await interaction.followup.edit_message(
+                        message_id=interaction.message.id,
+                        view=view,
+                    )
 
     class JailButton(discord.ui.Button[discord.ui.LayoutView]):
         """Button to open the Jail configuration mode."""
@@ -207,10 +212,11 @@ class ConfigDashboard(discord.ui.LayoutView):
                 # Not cached - defer and build
                 await interaction.response.defer()
                 await view.build_layout()
-                await interaction.followup.edit_message(
-                    message_id=interaction.message.id,
-                    view=view,
-                )
+                if interaction.message:
+                    await interaction.followup.edit_message(
+                        message_id=interaction.message.id,
+                        view=view,
+                    )
 
     class ResetButton(discord.ui.Button[discord.ui.LayoutView]):
         """Button to reset all configuration to defaults."""
@@ -1309,6 +1315,7 @@ class ConfigDashboard(discord.ui.LayoutView):
         rank_value: int | None,
         is_assigned: bool,
         ranks: list[Any],
+        used_custom_ids: set[str] | None = None,
     ) -> discord.ui.Select[discord.ui.LayoutView]:
         """Build a rank selector for a command."""
         options: list[discord.SelectOption] = [
@@ -1329,11 +1336,30 @@ class ConfigDashboard(discord.ui.LayoutView):
                 option.default = True
             options.append(option)
 
+        # Sanitize custom_id: Discord allows alphanumeric, underscore, hyphen only
+        # Max 100 characters, command names should be unique so sanitization preserves uniqueness
+        sanitized_name = "".join(
+            c if c.isalnum() or c in ("_", "-") else "_" for c in cmd_name
+        )
+        # Ensure custom_id is unique and within Discord's 100 char limit
+        base_custom_id = f"cmd_{sanitized_name}"[
+            :90
+        ]  # Leave room for uniqueness suffix if needed
+
+        # Ensure uniqueness by checking against used IDs
+        custom_id = base_custom_id
+        if used_custom_ids is not None:
+            if custom_id in used_custom_ids:
+                # Add hash suffix if collision (shouldn't happen with unique command names)
+                suffix = hashlib.md5(cmd_name.encode()).hexdigest()[:8]
+                custom_id = f"{base_custom_id[:82]}_{suffix}"[:100]
+            used_custom_ids.add(custom_id)
+
         rank_select = discord.ui.Select[discord.ui.LayoutView](
             placeholder=f"Select rank for {cmd_name}",
             min_values=1,
             max_values=1,
-            custom_id=f"assign_command_{cmd_name}",
+            custom_id=custom_id,
             options=options,
         )
         rank_select.callback = create_command_rank_callback(self, cmd_name)
@@ -1356,6 +1382,9 @@ class ConfigDashboard(discord.ui.LayoutView):
             container = discord.ui.Container[discord.ui.LayoutView](
                 accent_color=CONFIG_COLOR_YELLOW,
             )
+
+            # Track custom_ids to prevent duplicates
+            used_custom_ids: set[str] = set()
 
             # Get all moderation commands
             moderation_commands = get_moderation_commands(self.bot)
@@ -1429,6 +1458,7 @@ class ConfigDashboard(discord.ui.LayoutView):
                     rank_value,
                     is_assigned,
                     ranks,
+                    used_custom_ids,
                 )
                 selector_row = discord.ui.ActionRow[discord.ui.LayoutView]()
                 selector_row.add_item(rank_select)
