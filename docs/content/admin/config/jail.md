@@ -18,7 +18,7 @@ Configure the jail channel and jail role required for the `/jail` and `/unjail` 
 
 ### Using the dashboard
 
-1. Run `/config jail` or open the [Configuration Dashboard](overview.md) and use **Jail** → **Open**.
+1. Run `/config jail` or open the [Admin Configuration](index.md) and use **Jail** → **Open**.
 2. **Jail channel** – Choose the text channel where jailed members can talk. This is the only channel they can access while jailed.
 3. **Jail role** – Choose the role applied to jailed members. It should have *View* (and usually *Send messages*) denied on all channels except the jail channel.
 

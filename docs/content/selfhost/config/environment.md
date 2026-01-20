@@ -8,322 +8,80 @@ tags:
 
 # Environment Configuration
 
-Configure Tux using environment variables for different deployment scenarios.
+Configure Tux using environment variables. The **[ENV Reference](../../reference/env.md)** is auto-generated from code and lists every variable, type, default, and example—use it as the single source of truth.
 
-!!! tip "Configuration Priority"
-    Configuration loads in this priority order (highest to lowest):
-    1. Environment variables
-    2. `.env` file
-    3. `config/config.toml` or `config.toml` file
-    4. `config/config.yaml` or `config.yaml` file
-    5. `config/config.json` or `config.json` file
-    6. Default values
+!!! tip "Configuration priority"
+    Load order (highest to lowest): environment variables → `.env` → `config/config.toml` → `config/config.yaml` → `config/config.json` → defaults. See the [ENV Reference](../../reference/env.md) for details.
 
-    See the **[Complete ENV Reference](../../reference/env.md)** for all available variables.
+## Essential variables
 
-## Core Configuration
+You must set these to run Tux:
 
-### Discord Bot Settings
+### Bot token
 
-Set your Discord bot token and basic bot settings:
+```env
+BOT_TOKEN=your_bot_token_here
+```
 
-    ```env
-    # Required: Discord bot token
-    BOT_TOKEN=your_bot_token_here
+Get a token from the [Discord Developer Portal](https://discord.com/developers/applications). See [Bot Token Setup](bot-token.md) for details.
 
-    # Bot prefix (default: $)
-    BOT_INFO__PREFIX=$
+### Database
 
-    # Bot owner user ID
-    USER_IDS__BOT_OWNER_ID=123456789012345678
+Use either **individual PostgreSQL variables** or a **connection URL**:
 
-    # System admin user IDs (JSON array)
-    USER_IDS__SYSADMINS=[123456789012345678,987654321098765432]
-    ```
+```env
+# Option A: Individual (recommended for Docker)
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=tuxdb
+POSTGRES_USER=tuxuser
+POSTGRES_PASSWORD=your_secure_password
 
-### Database Configuration
-
-Tux uses PostgreSQL. Configure it using individual variables or a connection URL:
-
-#### Option 1: Individual PostgreSQL Variables (Recommended)
-
-    ```env
-    POSTGRES_HOST=localhost
-    POSTGRES_PORT=5432
-    POSTGRES_DB=tuxdb
-    POSTGRES_USER=tuxuser
-    POSTGRES_PASSWORD=your_secure_password_here
-    ```
-
-#### Option 2: Database URL Override
-
-    ```env
-    # Custom database URL (overrides individual POSTGRES_* variables)
-    DATABASE_URL=postgresql://user:password@localhost:5432/tuxdb
-    ```
+# Option B: Override with a URL (overrides POSTGRES_*)
+# DATABASE_URL=postgresql://user:password@localhost:5432/tuxdb
+```
 
 !!! warning "Security"
-    Always use strong passwords for PostgreSQL. Change the default password immediately in production.
+    Use a strong `POSTGRES_PASSWORD` in production. Never commit real credentials.
 
-See [Database Configuration](database.md) for detailed database setup.
+See [Database Configuration](database.md) for setup.
 
-### Logging Configuration
+### Bot owner (recommended)
 
-Control logging behavior:
+```env
+USER_IDS__BOT_OWNER_ID=123456789012345678
+```
 
-    ```env
-    # Log level (TRACE, DEBUG, INFO, SUCCESS, WARNING, ERROR, CRITICAL)
-    LOG_LEVEL=INFO
+Enables owner-only commands and maintenance control. [ENV Reference](../../reference/env.md) documents `USER_IDS__SYSADMINS` and other IDs.
 
-    # Enable debug mode
-    DEBUG=false
-    ```
+## Docker
 
-### Bot Information
+With Docker Compose, put variables in `.env`; Compose loads them automatically. At minimum set `BOT_TOKEN` and database settings (e.g. `POSTGRES_PASSWORD` and, if needed, `POSTGRES_HOST=tux-postgres`). For the full set of variables, see the [ENV Reference](../../reference/env.md).
 
-Configure bot display settings:
+The `compose.yaml` uses `${VARIABLE_NAME}`. See [Docker Installation](../install/docker.md) for setup.
 
-    ```env
-    # Bot display name
-    BOT_INFO__BOT_NAME=Tux
+## Validation and testing
 
-    # Bot activities (JSON array)
-    BOT_INFO__ACTIVITIES=[{"type":"playing","name":"with Linux"}]
+```bash
+uv run config validate    # Check config and which sources are loaded
+uv run db health          # Test database connection
+uv run tux start --debug  # Run with .env loaded (good for quick tests)
+```
 
-    # Hide bot owner information
-    BOT_INFO__HIDE_BOT_OWNER=false
-    ```
-
-## Feature Configuration
-
-### XP System
-
-Configure the experience point system:
-
-    ```env
-    # XP cooldown in seconds
-    XP_CONFIG__XP_COOLDOWN=1
-
-    # XP blacklist channels (JSON array)
-    XP_CONFIG__XP_BLACKLIST_CHANNELS=[123456789012345678,987654321098765432]
-
-    # Show XP progress
-    XP_CONFIG__SHOW_XP_PROGRESS=true
-
-    # Enable XP cap
-    XP_CONFIG__ENABLE_XP_CAP=false
-    ```
-
-### Snippets
-
-Configure snippet access:
-
-    ```env
-    # Limit snippets to specific roles
-    SNIPPETS__LIMIT_TO_ROLE_IDS=false
-
-    # Snippet access role IDs (JSON array)
-    SNIPPETS__ACCESS_ROLE_IDS=[123456789012345678]
-    ```
-
-### Temporary Voice Channels
-
-Set up temporary voice channels:
-
-    ```env
-    # Temporary VC channel ID
-    TEMPVC__TEMPVC_CHANNEL_ID=123456789012345678
-
-    # Temporary VC category ID
-    TEMPVC__TEMPVC_CATEGORY_ID=123456789012345678
-    ```
-
-### GIF Limiter
-
-Configure GIF rate limiting:
-
-    ```env
-    # Recent GIF age limit (seconds)
-    GIF_LIMITER__RECENT_GIF_AGE=60
-
-    # Excluded channels from GIF limits (JSON array)
-    GIF_LIMITER__GIF_LIMIT_EXCLUDE=[123456789012345678]
-    ```
-
-## External Services
-
-### Sentry (Error Tracking)
-
-Enable error tracking with Sentry:
-
-    ```env
-    EXTERNAL_SERVICES__SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
-    ```
-
-### GitHub Integration
-
-Configure GitHub integration:
-
-    ```env
-    # GitHub App ID
-    EXTERNAL_SERVICES__GITHUB_APP_ID=123456
-
-    # GitHub Installation ID
-    EXTERNAL_SERVICES__GITHUB_INSTALLATION_ID=12345678
-
-    # GitHub Private Key (base64 encoded or raw)
-    EXTERNAL_SERVICES__GITHUB_PRIVATE_KEY=your_private_key_here
-
-    # GitHub OAuth Client ID
-    EXTERNAL_SERVICES__GITHUB_CLIENT_ID=your_client_id
-
-    # GitHub OAuth Client Secret
-    EXTERNAL_SERVICES__GITHUB_CLIENT_SECRET=your_client_secret
-
-    # GitHub Repository URL
-    EXTERNAL_SERVICES__GITHUB_REPO_URL=https://github.com/owner/repo
-
-    # GitHub Repository Owner
-    EXTERNAL_SERVICES__GITHUB_REPO_OWNER=owner
-
-    # GitHub Repository Name
-    EXTERNAL_SERVICES__GITHUB_REPO=repo
-    ```
-
-### InfluxDB (Metrics)
-
-Configure metrics collection with InfluxDB:
-
-    ```env
-    EXTERNAL_SERVICES__INFLUXDB_URL=http://localhost:8086
-    EXTERNAL_SERVICES__INFLUXDB_TOKEN=your_token
-    EXTERNAL_SERVICES__INFLUXDB_ORG=your_org
-    ```
-
-### Other Services
-
-Configure additional external services:
-
-    ```env
-    # Mailcow API
-    EXTERNAL_SERVICES__MAILCOW_API_KEY=your_api_key
-    EXTERNAL_SERVICES__MAILCOW_API_URL=https://mail.example.com/api/v1
-
-    # Wolfram Alpha
-    EXTERNAL_SERVICES__WOLFRAM_APP_ID=your_app_id
-    ```
-
-## Advanced Configuration
-
-### System Administration
-
-Configure system administration features:
-
-    ```env
-    # Allow sysadmins to use eval command
-    ALLOW_SYSADMINS_EVAL=false
-    ```
-
-### Status Roles
-
-Configure status-based role assignments:
-
-    ```env
-    # Status to role mappings (JSON array)
-    STATUS_ROLES__MAPPINGS=[{"status": "online", "role_id": 123456789012345678}]
-    ```
-
-### IRC Bridge
-
-Configure IRC bridge webhooks:
-
-    ```env
-    # IRC bridge webhook IDs (JSON array)
-    IRC_CONFIG__BRIDGE_WEBHOOK_IDS=[123456789012345678,987654321098765432]
-    ```
-
-## Docker Configuration
-
-When using Docker Compose, set environment variables in your `.env` file. Docker Compose automatically loads variables from `.env`:
-
-    ```env
-    # .env file for Docker
-    BOT_TOKEN=your_bot_token_here
-    POSTGRES_HOST=tux-postgres
-    POSTGRES_DB=tuxdb
-    POSTGRES_USER=tuxuser
-    POSTGRES_PASSWORD=your_secure_password
-    LOG_LEVEL=INFO
-    ```
-
-The `compose.yaml` file references these variables using `${VARIABLE_NAME}` syntax. See [Docker Installation](../install/docker.md) for complete Docker setup instructions.
-
-## Validation
-
-### Check Configuration
-
-Validate your configuration:
-
-    ```bash
-    # Validate environment variables
-    uv run config validate
-
-    # Test database connection
-    uv run db health
-    ```
-
-### Environment Testing
-
-Test your configuration:
-
-    ```bash
-    # Start Tux with debug mode (automatically loads .env file)
-    uv run tux start --debug
-    ```
-
-!!! note "Automatic .env Loading"
-    Tux automatically loads the `.env` file when it starts. You don't need to manually source it.
+!!! note "Automatic .env loading"
+    Tux loads `.env` on startup; you don't need to `source` it.
 
 ## Troubleshooting
 
-### Common Issues
+| Issue | What to check |
+|-------|----------------|
+| **Missing/unknown variables** | Use the **[ENV Reference](../../reference/env.md)** for correct names (e.g. `BOT_TOKEN`, not `DISCORD_TOKEN`). Nested keys use `__` (e.g. `BOT_INFO__PREFIX`). |
+| **Database errors** | Verify `POSTGRES_*` or `DATABASE_URL`, that the DB is running, and that the database exists with correct permissions. |
+| **Config not loading** | Run `uv run config validate` to see which files are used. Ensure paths and UTF-8 encoding are correct. |
 
-**Missing required variables:**
+## Next steps
 
-- Check all required variables are set (`BOT_TOKEN`, database credentials)
-- Verify variable names are correct (use `BOT_TOKEN`, not `DISCORD_TOKEN`)
-- Check for typos in variable names
-
-**Database connection errors:**
-
-- Verify `POSTGRES_*` variables or `DATABASE_URL` format
-- Check database server is running
-- Test network connectivity
-- Ensure database exists and user has proper permissions
-
-**Permission errors:**
-
-- Check file permissions on config files
-- Verify user has access to directories
-- Check systemd service permissions
-
-**Nested configuration:**
-
-- Use double underscore (`__`) for nested fields (e.g., `BOT_INFO__PREFIX`)
-- Check the **[ENV Reference](../../reference/env.md)** for correct variable names
-
-**Configuration not loading:**
-
-- Verify configuration file paths (`config/config.toml`, not just `config.toml`)
-- Check file permissions and encoding (must be UTF-8)
-- Run `uv run config validate` to see which files are loaded
-
-## Next Steps
-
-After you configure environment variables:
-
-- [Database Configuration](database.md) - Database setup
-- [First Run Setup](../install/first-run.md) - Initial configuration
-- [System Operations](../manage/operations.md) - Monitoring and maintenance
-
-For a complete list of all environment variables, see the **[ENV Reference](../../reference/env.md)**.
+- [Database Configuration](database.md) – Database setup
+- [First Run Setup](../install/first-run.md) – Initial configuration
+- [System Operations](../manage/operations.md) – Monitoring and maintenance  
+- **[ENV Reference](../../reference/env.md)** – Full, auto-generated list of all variables

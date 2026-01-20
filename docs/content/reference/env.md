@@ -105,15 +105,15 @@ XP system configuration.
 
 **Environment Prefix**: `XP_CONFIG__`
 
-| Name                               | Type      | Default | Description            | Example                                               |
-|------------------------------------|-----------|---------|------------------------|-------------------------------------------------------|
-| `XP_CONFIG__XP_BLACKLIST_CHANNELS` | `array`   | `[]`    | XP blacklist channels  | `[123456789012345678]`                                |
-| `XP_CONFIG__XP_ROLES`              | `array`   | `[]`    | XP roles               | `[{"role_id":123456789012345678,"xp_required":1000}]` |
-| `XP_CONFIG__XP_MULTIPLIERS`        | `array`   | `[]`    | XP multipliers         | `[{"role_id":123456789012345678,"multiplier":1.5}]`   |
-| `XP_CONFIG__XP_COOLDOWN`           | `integer` | `1`     | XP cooldown in seconds | `1`, `5`, `10`                                        |
-| `XP_CONFIG__LEVELS_EXPONENT`       | `integer` | `2`     | Levels exponent        | `2`, `3`, `1.5`                                       |
-| `XP_CONFIG__SHOW_XP_PROGRESS`      | `boolean` | `true`  | Show XP progress       | `true`, `false`                                       |
-| `XP_CONFIG__ENABLE_XP_CAP`         | `boolean` | `false` | Enable XP cap          | `false`, `true`                                       |
+| Name                               | Type      | Default | Description            | Example                                             |
+|------------------------------------|-----------|---------|------------------------|-----------------------------------------------------|
+| `XP_CONFIG__XP_BLACKLIST_CHANNELS` | `array`   | `[]`    | XP blacklist channels  | `[123456789012345678]`                              |
+| `XP_CONFIG__XP_ROLES`              | `array`   | `[]`    | XP roles               | `[{"level":5,"role_id":123456789012345678}]`        |
+| `XP_CONFIG__XP_MULTIPLIERS`        | `array`   | `[]`    | XP multipliers         | `[{"role_id":123456789012345678,"multiplier":1.5}]` |
+| `XP_CONFIG__XP_COOLDOWN`           | `integer` | `1`     | XP cooldown in seconds | `1`, `5`, `10`                                      |
+| `XP_CONFIG__LEVELS_EXPONENT`       | `number`  | `2.0`   | Levels exponent        | `2.0`, `3.0`, `1.5`                                 |
+| `XP_CONFIG__SHOW_XP_PROGRESS`      | `boolean` | `true`  | Show XP progress       | `true`, `false`                                     |
+| `XP_CONFIG__ENABLE_XP_CAP`         | `boolean` | `false` | Enable XP cap          | `false`, `true`                                     |
 
 ### Snippets
 

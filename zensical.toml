@@ -125,6 +125,7 @@ nav = [
         { "Management" = [
             "selfhost/manage/index.md",
             "selfhost/manage/database.md",
+            "selfhost/manage/docker.md",
             "selfhost/manage/operations.md",
         ] },
     ] },
@@ -145,6 +146,7 @@ nav = [
         { "Guides" = [
             "developer/guides/index.md",
             "developer/guides/components-v2.md",
+            "developer/guides/docker-images.md",
             "developer/guides/extending-cli.md",
             "developer/guides/creating-cursor-rules.md",
             "developer/guides/creating-cursor-commands.md",
@@ -260,6 +262,7 @@ nav = [
             "support/troubleshooting/admin.md",
             "support/troubleshooting/selfhost.md",
             "support/troubleshooting/developer.md",
+            "support/troubleshooting/docker.md",
         ] },
     ] },
     "changelog/index.md",

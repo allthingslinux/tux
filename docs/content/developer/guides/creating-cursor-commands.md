@@ -67,7 +67,7 @@ Numbered steps with sub-steps:
 ## Steps
 
 1. **Create Migration**
-   - Run `uv run db migrate-dev "description"`
+   - Run `uv run db dev --name "description"`
    - Review generated migration file
    - Verify upgrade and downgrade functions
 

@@ -187,7 +187,7 @@
 # XP_ROLES: array
 # XP roles
 # Default: []
-# Examples: [{"role_id":123456789012345678,"xp_required":1000}]
+# Examples: [{"level":5,"role_id":123456789012345678}]
 # XP_ROLES = []
 
 # XP_MULTIPLIERS: array
@@ -202,10 +202,10 @@
 # Examples: 1, 5, 10
 # XP_COOLDOWN = 1
 
-# LEVELS_EXPONENT: float
+# LEVELS_EXPONENT: number
 # Levels exponent
 # Default: 2.0
-# Examples: 2, 3, 1.5, 1.75
+# Examples: 2.0, 3.0, 1.5
 # LEVELS_EXPONENT = 2.0
 
 # SHOW_XP_PROGRESS: boolean
