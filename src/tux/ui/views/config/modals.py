@@ -61,6 +61,7 @@ class EditRankModal(discord.ui.Modal):
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
         """Handle modal submission."""
+        await interaction.response.defer(ephemeral=True)
         try:
             # Check if rank exists
             existing = await self.bot.db.permission_ranks.get_permission_rank(
@@ -68,7 +69,7 @@ class EditRankModal(discord.ui.Modal):
                 self.rank_value,
             )
             if not existing:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"❌ Rank {self.rank_value} does not exist.",
                     ephemeral=True,
                 )
@@ -85,7 +86,7 @@ class EditRankModal(discord.ui.Modal):
                 and rank.rank != self.rank_value
                 for rank in all_ranks
             ):
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"❌ A rank with the name **{self.rank_name.value}** already exists.",
                     ephemeral=True,
                 )
@@ -101,13 +102,13 @@ class EditRankModal(discord.ui.Modal):
             )
 
             if not updated:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"❌ Failed to update rank {self.rank_value}.",
                     ephemeral=True,
                 )
                 return
 
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"✅ Updated rank **{self.rank_value}**: **{self.rank_name.value}**",
                 ephemeral=True,
             )
@@ -124,16 +125,10 @@ class EditRankModal(discord.ui.Modal):
         except Exception as e:
             logger.error(f"Error updating rank: {e}", exc_info=True)
             try:
-                if interaction.response.is_done():
-                    await interaction.followup.send(
-                        f"❌ Error updating rank: {e}",
-                        ephemeral=True,
-                    )
-                else:
-                    await interaction.response.send_message(
-                        f"❌ Error updating rank: {e}",
-                        ephemeral=True,
-                    )
+                await interaction.followup.send(
+                    f"❌ Error updating rank: {e}",
+                    ephemeral=True,
+                )
             except Exception as send_error:
                 logger.error(f"Failed to send error message: {send_error}")
 
@@ -198,6 +193,7 @@ class CreateRankModal(discord.ui.Modal):
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
         """Handle modal submission."""
+        await interaction.response.defer(ephemeral=True)
         try:
             # Tell the type checker what our components are...
             # basedpyright strict mode needs help with discord.py Components V2 types
@@ -207,7 +203,7 @@ class CreateRankModal(discord.ui.Modal):
             try:
                 rank_value = int(self.rank_number.component.values[0])  # type: ignore[reportUnknownMemberType]
             except (ValueError, IndexError):
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "❌ Invalid rank selection.",
                     ephemeral=True,
                 )
@@ -228,7 +224,7 @@ class CreateRankModal(discord.ui.Modal):
             available_ranks = missing_default_ranks | custom_ranks
 
             if rank_value not in available_ranks:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"❌ Rank {rank_value} is no longer available to create.",
                     ephemeral=True,
                 )
@@ -243,7 +239,7 @@ class CreateRankModal(discord.ui.Modal):
             if any(
                 rank.name.lower() == self.rank_name.value.lower() for rank in all_ranks
             ):
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"❌ A rank with the name **{self.rank_name.value}** already exists.",
                     ephemeral=True,
                 )
@@ -258,7 +254,7 @@ class CreateRankModal(discord.ui.Modal):
                 description=description,
             )
 
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"✅ Created rank **{rank_value}**: **{self.rank_name.value}**",
                 ephemeral=True,
             )
@@ -275,15 +271,9 @@ class CreateRankModal(discord.ui.Modal):
         except Exception as e:
             logger.error(f"Error creating rank: {e}", exc_info=True)
             try:
-                if interaction.response.is_done():
-                    await interaction.followup.send(
-                        f"❌ Error creating rank: {e}",
-                        ephemeral=True,
-                    )
-                else:
-                    await interaction.response.send_message(
-                        f"❌ Error creating rank: {e}",
-                        ephemeral=True,
-                    )
+                await interaction.followup.send(
+                    f"❌ Error creating rank: {e}",
+                    ephemeral=True,
+                )
             except Exception as send_error:
                 logger.error(f"Failed to send error message: {send_error}")
