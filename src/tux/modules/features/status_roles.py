@@ -57,7 +57,7 @@ class StatusRoles(BaseCog):
     async def on_presence_update(self, before: discord.Member, after: discord.Member):
         """Event triggered when a user's presence changes."""
         # Skip status role processing during maintenance mode
-        if self.bot.maintenance_mode:
+        if getattr(self.bot, "maintenance_mode", False):
             return
 
         logger.trace(

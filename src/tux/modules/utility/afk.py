@@ -176,7 +176,7 @@ class Afk(BaseCog):
             The message to check.
         """
         # Skip AFK processing during maintenance mode
-        if self.bot.maintenance_mode:
+        if getattr(self.bot, "maintenance_mode", False):
             return
 
         if not message.guild or message.author.bot:

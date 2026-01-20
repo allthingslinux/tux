@@ -50,7 +50,7 @@ class Starboard(BaseCog):
             The raw reaction event payload.
         """
         # Skip starboard processing during maintenance mode
-        if self.bot.maintenance_mode:
+        if getattr(self.bot, "maintenance_mode", False):
             return
 
         await self.handle_starboard_reaction(payload)
@@ -68,7 +68,7 @@ class Starboard(BaseCog):
             The raw reaction event payload.
         """
         # Skip starboard processing during maintenance mode
-        if self.bot.maintenance_mode:
+        if getattr(self.bot, "maintenance_mode", False):
             return
 
         await self.handle_starboard_reaction(payload)
@@ -86,7 +86,7 @@ class Starboard(BaseCog):
             The raw reaction clear event payload.
         """
         # Skip starboard processing during maintenance mode
-        if self.bot.maintenance_mode:
+        if getattr(self.bot, "maintenance_mode", False):
             return
 
         await self.handle_reaction_clear(payload)
@@ -104,7 +104,7 @@ class Starboard(BaseCog):
             The raw reaction clear emoji event payload.
         """
         # Skip starboard processing during maintenance mode
-        if self.bot.maintenance_mode:
+        if getattr(self.bot, "maintenance_mode", False):
             return
 
         await self.handle_reaction_clear(payload, payload.emoji)

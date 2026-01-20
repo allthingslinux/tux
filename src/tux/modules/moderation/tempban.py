@@ -140,7 +140,7 @@ class TempBan(ModerationCogBase):
     async def check_tempbans(self) -> None:
         """Check for expired tempbans and unbans the user."""
         # Skip tempban processing during maintenance mode
-        if self.bot.maintenance_mode:
+        if getattr(self.bot, "maintenance_mode", False):
             return
 
         if self._processing_tempbans:

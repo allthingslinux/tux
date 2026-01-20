@@ -51,7 +51,7 @@ class TempVc(BaseCog):
             The voice state after the event.
         """
         # Skip temp VC processing during maintenance mode
-        if self.bot.maintenance_mode:
+        if getattr(self.bot, "maintenance_mode", False):
             return
 
         # Ensure CONFIGants are set correctly

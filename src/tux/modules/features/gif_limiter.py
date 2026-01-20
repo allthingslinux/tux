@@ -141,7 +141,7 @@ class GifLimiter(BaseCog):
             The message to check.
         """
         # Skip GIF limiting during maintenance mode
-        if self.bot.maintenance_mode:
+        if getattr(self.bot, "maintenance_mode", False):
             return
 
         if await self._should_process_message(message):

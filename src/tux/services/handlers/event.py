@@ -90,7 +90,7 @@ class EventHandler(BaseCog):
     async def on_message(self, message: discord.Message) -> None:
         """On message event handler."""
         # Skip event processing during maintenance mode (except IRC bridge)
-        if self.bot.maintenance_mode:
+        if getattr(self.bot, "maintenance_mode", False):
             # Still allow IRC bridge during maintenance
             if message.webhook_id in CONFIG.IRC_CONFIG.BRIDGE_WEBHOOK_IDS and (
                 message.content.startswith(f"{CONFIG.get_prefix()}s ")

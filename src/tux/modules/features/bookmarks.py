@@ -63,7 +63,7 @@ class Bookmarks(BaseCog):
             The event payload containing information about the reaction.
         """
         # Skip bookmark processing during maintenance mode
-        if self.bot.maintenance_mode:
+        if getattr(self.bot, "maintenance_mode", False):
             return
 
         # If the bot reacted to the message, or the user is the bot, or the emoji is not valid, return

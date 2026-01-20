@@ -63,7 +63,7 @@ class LevelsService(BaseCog):
             The message object.
         """
         # Skip XP processing during maintenance mode
-        if self.bot.maintenance_mode:
+        if getattr(self.bot, "maintenance_mode", False):
             return
 
         if (

@@ -39,7 +39,7 @@ class Poll(ModerationCogBase):
     ) -> None:
         """On raw reaction add event handler."""
         # Skip poll reaction processing during maintenance mode
-        if self.bot.maintenance_mode:
+        if getattr(self.bot, "maintenance_mode", False):
             return
 
         # get reaction from payload.message_id, payload.channel_id, payload.guild_id, payload.emoji
