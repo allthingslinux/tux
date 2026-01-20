@@ -8,6 +8,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+* **Jail system**: Jail configuration and re-jail functionality
+    * Commands to configure jail channel and role via `/config jail` and the Configuration Dashboard
+    * Automatic re-jailing of members who leave and rejoin while jailed
+    * `is_jailed` method to check user jail status from latest JAIL/UNJAIL cases
+    * `guilds_registered` event to coordinate guild-dependent tasks after registration
+    * `update_jail_role_id` in guild config for jail role configuration
+    * Case controller: `get_latest_jail_case` and `get_latest_jail_or_unjail_case` for jail status checks
+* **Error handling**: Client event error handling
+    * Error handler manages errors from both app commands and client events (e.g. `on_ready`, `on_member_join`)
+    * Exceptions in non-command event listeners are logged and reported for diagnostics
+
+### Changed
+
+* **Time conversion**: `convert_to_seconds` supports multi-character and compound units
+    * Multi-character units (e.g. `1wks`, `2hrs`, `5min`) and compounds (e.g. `1h30m`)
+    * Case-insensitive unit lookups
+* **Hot reload**: Path shortening and log levels
+    * `_shorten_path` utility for logs relative to base directory
+    * Less verbose hot-reload watcher logs (debug for less critical messages)
+* **Cog loader**: Logging and terminology
+    * Per-category extension counts (e.g. `X plugins from atl`) when a batch has multiple categories
+    * Folder-level summary uses "plugins" for the plugins folder, "extensions" for others
+    * Clearer labels and type annotations
+* **Database logging**: Reduced noise and clearer messages
+    * Query: `find_all` execution logged at trace instead of debug
+    * CRUD: refresh logging shows ID only when the instance has a singular `id` (avoids "unknown" for composite keys)
+
+### Fixed
+
+* **on_ready handlers**: Error handling and startup order
+    * Event handler: exception handling for guild registration, waiters unblocked on failure
+    * Activity handler: exception handling for activity rotation startup
+    * RemindMe: exception handling, timezone-aware expiry checks, reminder scheduling only when timer fires (prevents unawaited coroutine on shutdown)
+    * Status roles: exception handling, guild-registration wait before status checks
+* **TTY roles**: Jailed members are skipped in role assignment on join so the jail role is not overridden by re-jail logic
+
 ## [0.1.0] - 2026-01-20
 
 ### Added
