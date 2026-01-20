@@ -354,7 +354,8 @@ class CogLoader(commands.Cog):
             return
 
         set_span_attributes({"cog_count": len(cogs)})
-        if categories := {cog.parent.name for cog in cogs if cog.parent}:
+        categories: set[str] = {cog.parent.name for cog in cogs if cog.parent}
+        if categories:
             set_span_attributes({"categories": list(categories)})
 
         start_time = time.perf_counter()
@@ -375,9 +376,16 @@ class CogLoader(commands.Cog):
             },
         )
 
-        logger.info(
-            f"Loaded {success_count} cogs from {cogs[0].parent.name} cog group in {end_time - start_time:.2f}s",
-        )
+        if len(categories) > 1:
+            by_cat: dict[str, int] = {}
+            for result, cog in zip(results, cogs, strict=False):
+                if result is not None:
+                    continue
+                cat = cog.parent.name if cog.parent else "unknown"
+                by_cat[cat] = by_cat.get(cat, 0) + 1
+            for cat in sorted(by_cat):
+                n = by_cat[cat]
+                logger.info(f"{n} plugin{'s' if n != 1 else ''} from {cat}")
 
         for result, cog in zip(results, cogs, strict=False):
             if isinstance(result, Exception):
@@ -550,9 +558,13 @@ class CogLoader(commands.Cog):
             )
 
             folder_module_prefix = folder_name.replace("/", ".")
-            folder_cogs = [k for k in self.load_times if folder_module_prefix in k]
+            folder_extensions = [
+                k for k in self.load_times if folder_module_prefix in k
+            ]
+            n = len(folder_extensions)
+            noun = "plugin" if folder_name == "plugins" else "extension"
             logger.info(
-                f"Loaded {len(folder_cogs)} cogs from {folder_name} in {load_time * 1000:.0f}ms",
+                f"{n} {noun}{'s' if n != 1 else ''} from {folder_name} in {load_time * 1000:.0f}ms",
             )
 
             if slow_cogs := {
