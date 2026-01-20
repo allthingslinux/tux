@@ -345,7 +345,7 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
                 )
                 return
 
-            await interaction.response.send_message(message, ephemeral=True)
+            await interaction.followup.send(message, ephemeral=True)
 
             # Invalidate cache and rebuild to show updated assignments
             await invalidate_and_rebuild(

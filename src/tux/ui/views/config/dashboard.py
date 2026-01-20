@@ -1150,6 +1150,9 @@ class ConfigDashboard(discord.ui.LayoutView):
         if not await validate_interaction_data(interaction):
             return
 
+        # Defer immediately since database operations may take time
+        await interaction.response.defer()
+
         custom_id = interaction.data.get("custom_id", "")  # type: ignore[index]
         if not custom_id.startswith("confirm_remove_"):
             return
@@ -1162,7 +1165,7 @@ class ConfigDashboard(discord.ui.LayoutView):
         )
         rank_obj = next((r for r in ranks if r.rank == rank_id), None)
         if not rank_obj or rank_obj.id is None:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"❌ Rank {rank_id} does not exist.",
                 ephemeral=True,
             )
@@ -1170,7 +1173,7 @@ class ConfigDashboard(discord.ui.LayoutView):
 
         # Find selected roles from message
         if not interaction.message:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "❌ Unable to find role selector",
                 ephemeral=True,
             )
@@ -1181,7 +1184,7 @@ class ConfigDashboard(discord.ui.LayoutView):
             f"role_remove_select_{rank_id}",
         )
         if not selected_roles:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "❌ No roles selected",
                 ephemeral=True,
             )
@@ -1201,7 +1204,7 @@ class ConfigDashboard(discord.ui.LayoutView):
                 if deleted_count > 0:
                     removed_count += 1
 
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"✅ Successfully removed {removed_count} role(s) from Rank {rank_id}",
                 ephemeral=True,
             )
@@ -1967,7 +1970,7 @@ class ConfigDashboard(discord.ui.LayoutView):
                     logger.error(
                         f"Failed to register guild {self.guild.id}: {reg_error}",
                     )
-                    await interaction.response.send_message(
+                    await interaction.followup.send(
                         "❌ **Guild Registration Failed**\n\n"
                         "Unable to register this guild in the database. Please try again later or contact support.",
                         ephemeral=True,
@@ -1989,7 +1992,7 @@ class ConfigDashboard(discord.ui.LayoutView):
                 logger.info(
                     f"Guild {self.guild.id} already has ranks, skipping initialization",
                 )
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "⚠️ Permission ranks already exist!\n\n"
                     f"This guild already has {len(existing_ranks)} permission ranks configured.\n\n"
                     "Existing ranks will be preserved. Use the **+ Create Rank** button to add more ranks.",
@@ -2028,7 +2031,7 @@ class ConfigDashboard(discord.ui.LayoutView):
                 f"• **Rank {rank_num}**: {rank_data['name']}"
                 for rank_num, rank_data in sorted(DEFAULT_RANKS.items())
             )
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "✅ **Default permission ranks initialized!**\n\n"
                 "Created ranks 0-7:\n" + "\n".join(rank_lines) + "\n\n"
                 "Use the role assignment screen to assign Discord roles to these ranks.",
