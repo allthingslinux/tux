@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from loguru import logger
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import noload
 
 from tux.database.controllers.base import BaseController
@@ -428,6 +428,53 @@ class CaseController(BaseController[Case]):
         # Sort by ID descending (assuming higher ID = newer case) and return the first one
         return await self.find_one(
             filters=(Case.case_user_id == user_id) & (Case.guild_id == guild_id),
+            order_by=[Case.id.desc()],  # type: ignore[attr-defined]
+        )
+
+    async def get_latest_jail_case(self, user_id: int, guild_id: int) -> Case | None:
+        """
+        Get the most recent JAIL case for a user in a guild.
+
+        Used when unjailing to restore roles from the case_user_roles stored at jail time.
+
+        Returns
+        -------
+        Case | None
+            The most recent JAIL case if found, None otherwise.
+        """
+        return await self.find_one(
+            filters=(Case.case_user_id == user_id)
+            & (Case.guild_id == guild_id)
+            & (Case.case_type == DBCaseType.JAIL),
+            order_by=[Case.id.desc()],  # type: ignore[attr-defined]
+        )
+
+    async def get_latest_jail_or_unjail_case(
+        self,
+        user_id: int,
+        guild_id: int,
+    ) -> Case | None:
+        """
+        Get the most recent JAIL or UNJAIL case for a user in a guild.
+
+        Used to determine if a user is currently jailed: if the latest of these
+        is JAIL, they are jailed; if UNJAIL or none, they are not. Ignores other
+        case types (e.g. WARN) so intervening actions do not break jail status.
+
+        Returns
+        -------
+        Case | None
+            The most recent JAIL or UNJAIL case if found, None otherwise.
+        """
+        return await self.find_one(
+            filters=(Case.case_user_id == user_id)
+            & (Case.guild_id == guild_id)
+            & (
+                or_(
+                    Case.case_type == DBCaseType.JAIL,  # type: ignore[arg-type]
+                    Case.case_type == DBCaseType.UNJAIL,  # type: ignore[arg-type]
+                )
+            ),
             order_by=[Case.id.desc()],  # type: ignore[attr-defined]
         )
 
