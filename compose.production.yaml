@@ -53,6 +53,17 @@ services:
     container_name: tux
     hostname: tux
     # Production: Use pre-built images from GitHub Container Registry
+    #
+    # HOW TO USE LOCAL BUILDS IN PRODUCTION:
+    # 1. Build locally first:
+    #    docker build -f Containerfile --target production -t tux:local .
+    #
+    # 2. Then use it:
+    #    TUX_IMAGE=tux TUX_IMAGE_TAG=local docker compose -f compose.production.yaml up -d
+    #
+    # 3. Or temporarily add a 'build' section below (like in compose.yaml)
+    #
+    # By default, uses pre-built images from GitHub Container Registry
     # No build configuration - images must be built and published separately
     image: ${TUX_IMAGE:-ghcr.io/allthingslinux/tux}:${TUX_IMAGE_TAG:-latest}
     volumes:

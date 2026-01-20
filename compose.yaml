@@ -52,11 +52,24 @@ services:
     container_name: tux
     hostname: tux
     # Development: Build from source by default, or use pre-built image
+    #
+    # HOW TO USE LOCAL BUILDS:
+    # 1. Just run: docker compose up -d --build
+    #    (This builds locally and uses the built image automatically)
+    #
+    # 2. Or build first, then start:
+    #    docker compose build
+    #    docker compose up -d
+    #
+    # 3. To use a pre-built image instead, set environment variable:
+    #    TUX_IMAGE=ghcr.io/allthingslinux/tux TUX_IMAGE_TAG=latest docker compose up -d
+    #
+    # The 'build' section below tells compose to build locally if image doesn't exist
     image: ${TUX_IMAGE:-ghcr.io/allthingslinux/tux}:${TUX_IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Containerfile
-      target: production
+      target: production  # Use 'production' target (or 'dev' for dev dependencies)
       args:
         VERSION: ${VERSION:-dev}
         GIT_SHA: ${GIT_SHA:-}
