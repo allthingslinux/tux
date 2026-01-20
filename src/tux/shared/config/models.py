@@ -210,7 +210,7 @@ class XP(BaseModel):
         Field(
             default_factory=list,
             description="XP roles",
-            examples=[[{"role_id": 123456789012345678, "xp_required": 1000}]],
+            examples=[[{"level": 5, "role_id": 123456789012345678}]],
         ),
     ]
     XP_MULTIPLIERS: Annotated[

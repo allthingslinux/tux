@@ -117,6 +117,35 @@ class FileConfigSource(PydanticBaseSettingsSource, ABC):
         """Get field value (not used as we implement __call__)."""
         return None, field_name, False
 
+    def _unflatten_dict(self, d: dict[str, Any]) -> dict[str, Any]:
+        """Unflatten a dictionary with double underscore delimiter back to nested structure.
+
+        This is needed for nested BaseModel fields, as Pydantic Settings doesn't
+        automatically reconstruct them from flattened keys.
+
+        Parameters
+        ----------
+        d : dict[str, Any]
+            Flattened dictionary with keys like "XP_CONFIG__XP_ROLES"
+
+        Returns
+        -------
+        dict[str, Any]
+            Nested dictionary like {"XP_CONFIG": {"XP_ROLES": [...]}}
+        """
+        result: dict[str, Any] = {}
+        for key, value in d.items():
+            parts = key.split("__")
+            current = result
+            # Navigate/create nested structure
+            for _i, part in enumerate(parts[:-1]):
+                if part not in current:
+                    current[part] = {}
+                current = current[part]
+            # Set the final value
+            current[parts[-1]] = value
+        return result
+
     def __call__(self) -> dict[str, Any]:
         """Return all loaded config data, flattened and uppercased.
 
@@ -125,7 +154,11 @@ class FileConfigSource(PydanticBaseSettingsSource, ABC):
         dict[str, Any]
             Configuration data
         """
-        return self._flatten_dict(self._raw_data)
+        flattened = self._flatten_dict(self._raw_data)
+        # Reconstruct nested structure for BaseModel fields
+        # Pydantic Settings can handle flattened keys for simple nested fields,
+        # but for nested BaseModel fields, we need to reconstruct the structure
+        return self._unflatten_dict(flattened)
 
 
 class TomlConfigSource(FileConfigSource):
