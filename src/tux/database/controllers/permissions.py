@@ -7,7 +7,7 @@ servers to customize their permission levels and role assignments.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import discord
 from loguru import logger
@@ -153,6 +153,61 @@ class PermissionRankController(BaseController[PermissionRank]):
         # Note: updated_at is automatically managed by the database via TimestampMixin
 
         return await self.update_by_id(record.id, **update_data)
+
+    async def bulk_create_permission_ranks(
+        self,
+        ranks_data: list[dict[str, Any]],
+    ) -> list[PermissionRank]:
+        """
+        Bulk create multiple permission ranks in a single transaction.
+
+        Parameters
+        ----------
+        ranks_data : list[dict[str, Any]]
+            List of rank data dictionaries, each containing guild_id, rank, name, description
+
+        Returns
+        -------
+        list[PermissionRank]
+            List of created permission rank instances
+        """
+        logger.debug(f"Bulk creating {len(ranks_data)} permission ranks")
+        try:
+            async with self.db.session() as session:
+                instances = []
+                for data in ranks_data:
+                    instance = self.model(**data)
+                    session.add(instance)
+                    instances.append(instance)
+
+                await session.commit()
+
+                # Refresh all instances to get auto-generated fields
+                for instance in instances:
+                    try:
+                        await session.refresh(instance)
+                    except Exception as e:
+                        logger.warning(f"Refresh failed for {self.model.__name__}: {e}")
+
+                # Expunge all instances
+                for instance in instances:
+                    session.expunge(instance)
+
+                logger.debug(
+                    f"Successfully bulk created {len(instances)} permission ranks",
+                )
+                return instances
+
+        except Exception as e:
+            logger.error(f"Error bulk creating permission ranks: {e}")
+            capture_exception_safe(
+                e,
+                extra_context={
+                    "operation": "bulk_create_permission_ranks",
+                    "count": str(len(ranks_data)),
+                },
+            )
+            raise
 
     async def delete_permission_rank(self, guild_id: int, rank: int) -> bool:
         """

@@ -171,27 +171,33 @@ class PermissionSystem:
             )
             return
 
-        # Create missing ranks only
+        # Create missing ranks in bulk for better performance
         logger.info(
             f"Creating {len(ranks_to_create)} missing default ranks for guild {guild_id}",
         )
-        for rank, default_data in ranks_to_create:
-            try:
-                logger.trace(f"Creating rank {rank}: {default_data}")
-                await self.db.permission_ranks.create_permission_rank(
-                    guild_id=guild_id,
-                    rank=rank,
-                    name=default_data["name"],
-                    description=default_data["description"],
-                )
-                logger.debug(f"Successfully created rank {rank} for guild {guild_id}")
-            except Exception as e:
-                logger.error(
-                    f"Error creating rank {rank} for guild {guild_id}: {e}",
-                    exc_info=True,
-                )
-                logger.error(f"Rank data: {default_data}")
-                raise
+
+        # Prepare bulk data
+        bulk_data = [
+            {
+                "guild_id": guild_id,
+                "rank": rank,
+                "name": default_data["name"],
+                "description": default_data["description"],
+            }
+            for rank, default_data in ranks_to_create
+        ]
+
+        try:
+            await self.db.permission_ranks.bulk_create_permission_ranks(bulk_data)
+            logger.debug(
+                f"Successfully bulk created {len(ranks_to_create)} ranks for guild {guild_id}",
+            )
+        except Exception as e:
+            logger.error(
+                f"Error bulk creating ranks for guild {guild_id}: {e}",
+                exc_info=True,
+            )
+            raise
 
         logger.success(
             f"Successfully initialized missing default ranks for guild {guild_id}",

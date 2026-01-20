@@ -191,6 +191,9 @@ def create_role_update_callback(
         if not await validate_interaction_data(interaction):
             return
 
+        # Defer immediately since database operations may take time
+        await interaction.response.defer()
+
         try:
             # Get selected role IDs from interaction
             selected_role_ids: set[int] = set()
@@ -295,6 +298,9 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
                 ephemeral=True,
             )
             return
+
+        # Defer immediately since database operations may take time
+        await interaction.response.defer()
 
         try:
             values = interaction.data.get("values", [])  # type: ignore[index]
@@ -749,6 +755,9 @@ def create_confirm_assignment_callback(
             )
             return
 
+        # Defer immediately since database operations may take time
+        await interaction.response.defer()
+
         try:
             assigned_count = 0
             existing_assignments = (
@@ -773,7 +782,7 @@ def create_confirm_assignment_callback(
                     )
                     assigned_count += 1
 
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"✅ Successfully assigned {assigned_count} role(s) to Rank {rank_id}",
                 ephemeral=True,
             )

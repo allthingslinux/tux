@@ -1920,6 +1920,9 @@ class ConfigDashboard(discord.ui.LayoutView):
         ):
             return
 
+        # Defer immediately since this operation can take several seconds
+        await interaction.response.defer(ephemeral=True)
+
         try:
             logger.info(
                 f"Starting default rank initialization for guild {self.guild.id}",
