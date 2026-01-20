@@ -127,9 +127,30 @@ class LevelsService(BaseCog):
         current_xp = user_level_data.xp if user_level_data else 0.0
         current_level = user_level_data.level if user_level_data else 0
 
+        # Recalculate what level the current XP should be (in case exponent changed)
+        # This ensures level is always correct based on current XP and exponent
+        expected_level_from_xp = self.calculate_level(current_xp)
+
+        # If stored level doesn't match calculated level, log and use calculated level
+        if abs(expected_level_from_xp - current_level) > 1:
+            logger.warning(
+                f"Level mismatch detected for {member.name} ({member.id}): "
+                f"Stored level: {current_level}, Calculated from XP ({current_xp:.2f}): {expected_level_from_xp}, "
+                f"exponent: {self.levels_exponent}. Using calculated level.",
+            )
+            current_level = expected_level_from_xp
+
         xp_increment = self.calculate_xp_increment(member)
         new_xp = current_xp + xp_increment
         new_level = self.calculate_level(new_xp)
+
+        # Log if there's a suspicious level jump (more than 5 levels from expected)
+        if new_level > expected_level_from_xp + 5:
+            logger.warning(
+                f"Suspicious level jump detected for {member.name} ({member.id}): "
+                f"Level {expected_level_from_xp} -> {new_level} (XP: {current_xp:.2f} -> {new_xp:.2f}, "
+                f"increment: {xp_increment:.2f}, exponent: {self.levels_exponent})",
+            )
 
         # Store as naive datetime to match database schema
         # Database stores naive datetimes (no timezone info)
