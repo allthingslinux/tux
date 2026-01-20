@@ -1,0 +1,116 @@
+---
+name: Docker Push (Manual)
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to build and push (e.g., v0.1.0)
+        required: true
+        type: string
+permissions:
+  contents: read
+  packages: write
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  DOCKER_BUILD_SUMMARY: true
+  DOCKER_BUILD_CHECKS_ANNOTATIONS: true
+  PYTHON_VERSION: 3.13.8
+  SHA_PREFIX_LENGTH: 7
+  VALIDATE_TIMEOUT_MINUTES: 10
+  BUILD_TIMEOUT_MINUTES: 15
+  DOCKER_IMAGE_TITLE: Tux
+  DOCKER_IMAGE_DESCRIPTION: Tux - The all in one discord bot for the All Things Linux
+    Community
+  DOCKER_IMAGE_SOURCE: https://github.com/allthingslinux/tux
+  DOCKER_IMAGE_LICENSE: GPL-3.0
+  DOCKER_IMAGE_AUTHORS: All Things Linux
+  DOCKER_IMAGE_VENDOR: All Things Linux
+  DOCKER_IMAGE_DOCS: https://github.com/allthingslinux/tux/blob/main/README.md
+jobs:
+  build:
+    name: Build & Push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f  # v3
+      - name: Login to Registry
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef  # v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051  # v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.title=${{ env.DOCKER_IMAGE_TITLE }}
+            org.opencontainers.image.description=${{ env.DOCKER_IMAGE_DESCRIPTION }}
+            org.opencontainers.image.source=${{ env.DOCKER_IMAGE_SOURCE }}
+            org.opencontainers.image.licenses=${{ env.DOCKER_IMAGE_LICENSE }}
+            org.opencontainers.image.authors=${{ env.DOCKER_IMAGE_AUTHORS }}
+            org.opencontainers.image.vendor=${{ env.DOCKER_IMAGE_VENDOR }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.documentation=${{ env.DOCKER_IMAGE_DOCS }}
+          annotations: |
+            org.opencontainers.image.title=${{ env.DOCKER_IMAGE_TITLE }}
+            org.opencontainers.image.description=${{ env.DOCKER_IMAGE_DESCRIPTION }}
+            org.opencontainers.image.source=${{ env.DOCKER_IMAGE_SOURCE }}
+            org.opencontainers.image.licenses=${{ env.DOCKER_IMAGE_LICENSE }}
+            org.opencontainers.image.authors=${{ env.DOCKER_IMAGE_AUTHORS }}
+            org.opencontainers.image.vendor=${{ env.DOCKER_IMAGE_VENDOR }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.documentation=${{ env.DOCKER_IMAGE_DOCS }}
+          context: workflow
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+      - name: Generate Release Version
+        id: release_version
+        run: ./.github/scripts/docker.sh generate-release-version \ "refs/tags/${{ inputs.tag }}"
+          \ "${{ env.SHA_PREFIX_LENGTH }}"
+      - name: Validate Build Configuration
+        run: ./.github/scripts/docker.sh validate-build-config "${{ github.sha }}"
+      - name: Calculate SOURCE_DATE_EPOCH
+        id: source_date
+        run: ./.github/scripts/docker.sh calculate-source-date-epoch \ "$(git log
+          -1 --format=%ci ${{ github.sha }})" \ "${{ github.event.repository.created_at }}"
+      - name: Generate Build Date
+        id: build_date
+        run: echo "date=$(./.github/scripts/docker.sh generate-build-date)" >> "$GITHUB_OUTPUT"
+      - name: Build and Push
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83  # v6
+        timeout-minutes: 15
+        env:
+          SOURCE_DATE_EPOCH: ${{ steps.source_date.outputs.epoch }}
+        with:
+          context: .
+          file: Containerfile
+          target: production
+          push: true
+          load: false
+          cache-from: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+            type=gha
+          cache-to: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+            type=gha,mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          provenance: mode=max
+          sbom: true
+          pull: true
+          build-args: |-
+            VERSION=${{ steps.release_version.outputs.version }}
+            GIT_SHA=${{ github.sha }}
+            BUILD_DATE=${{ steps.build_date.outputs.date }}
