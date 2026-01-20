@@ -164,9 +164,13 @@ class ActivityHandler(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         """Start activity rotation when bot is ready."""
-        if self._activity_task is None or self._activity_task.done():
-            logger.info("Starting activity rotation")
-            self._activity_task = asyncio.create_task(self._activity_loop())
+        try:
+            if self._activity_task is None or self._activity_task.done():
+                logger.info("Starting activity rotation")
+                self._activity_task = asyncio.create_task(self._activity_loop())
+        except Exception:
+            logger.exception("ActivityHandler.on_ready failed (cog=ActivityHandler)")
+            raise
 
     async def _activity_loop(self) -> None:
         """Rotate activities.
