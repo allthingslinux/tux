@@ -86,10 +86,6 @@ jobs:
           context: workflow
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
-      - name: Generate Release Version
-        id: release_version
-        run: ./.github/scripts/docker.sh generate-release-version \ "refs/tags/${{ inputs.tag }}"
-          \ "${{ env.SHA_PREFIX_LENGTH }}"
       - name: Validate Build Configuration
         run: ./.github/scripts/docker.sh validate-build-config "${{ github.sha }}"
       - name: Calculate SOURCE_DATE_EPOCH
@@ -123,6 +119,6 @@ jobs:
           sbom: true
           pull: true
           build-args: |-
-            VERSION=${{ steps.release_version.outputs.version }}
+            VERSION=${{ steps.version.outputs.version }}
             GIT_SHA=${{ github.sha }}
             BUILD_DATE=${{ steps.build_date.outputs.date }}
