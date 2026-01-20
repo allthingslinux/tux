@@ -126,6 +126,8 @@ def convert_to_seconds(time_str: str) -> int:
     """
     Convert a formatted time string with the formats Mwdhms.
 
+    Supports multi-character units (e.g. 1wks, 2hrs, 5min) and compounds (e.g. 1h30m).
+
     Parameters
     ----------
     time_str : str
@@ -136,57 +138,56 @@ def convert_to_seconds(time_str: str) -> int:
     int
         The total seconds from the formatted time string. Returns 0 if the format is invalid.
     """
-    # Time conversion factors from units to seconds
-    time_units = {
-        "mo": 2592000,  # Months to seconds
-        "mnths": 2592000,  # Months to seconds
-        "month": 2592000,  # Months to seconds
-        "months": 2592000,  # Months to seconds
-        "W": 604800,  # Weeks to seconds
-        "w": 604800,  # Weeks to seconds
-        "wk": 604800,  # Weeks to seconds
-        "wks": 604800,  # Weeks to seconds
-        "week": 604800,  # Weeks to seconds
-        "weeks": 604800,  # Weeks to seconds
-        "D": 86400,  # Days to seconds
-        "d": 86400,  # Days to seconds
-        "day": 86400,  # Days to seconds
-        "days": 86400,  # Days to seconds
-        "H": 3600,  # Hours to seconds
-        "h": 3600,  # Hours to seconds
-        "hr": 3600,  # Hours to seconds
-        "hrs": 3600,  # Hours to seconds
-        "hours": 3600,  # Hours to seconds
-        "m": 60,  # Minutes to seconds
-        "min": 60,  # Minutes to seconds
-        "mins": 60,  # Minutes to seconds
-        "minutes": 60,  # Minutes to seconds
-        "s": 1,  # Seconds to seconds
-        "sec": 1,  # Seconds to seconds
-        "secs": 1,  # Seconds to seconds
-        "seconds": 1,  # Seconds to seconds
+    # Time conversion factors from units to seconds (lowercased for case-insensitive lookup)
+    _raw = {
+        "mo": 2592000,
+        "mnths": 2592000,
+        "month": 2592000,
+        "months": 2592000,
+        "W": 604800,
+        "w": 604800,
+        "wk": 604800,
+        "wks": 604800,
+        "week": 604800,
+        "weeks": 604800,
+        "D": 86400,
+        "d": 86400,
+        "day": 86400,
+        "days": 86400,
+        "H": 3600,
+        "h": 3600,
+        "hr": 3600,
+        "hrs": 3600,
+        "hours": 3600,
+        "m": 60,
+        "min": 60,
+        "mins": 60,
+        "minutes": 60,
+        "s": 1,
+        "sec": 1,
+        "secs": 1,
+        "seconds": 1,
     }
+    time_units = {k.lower(): v for k, v in _raw.items()}
 
     total_seconds = 0
-    current_value = 0
-
-    for char in time_str:
-        if char.isdigit():
-            # Build the current number
-            current_value = current_value * 10 + int(char)
-        elif char in time_units:
-            # If the unit is known, update total_seconds
-            if current_value == 0:
-                return (
-                    0  # No number specified for the unit, thus treat as invalid input
-                )
-            total_seconds += current_value * time_units[char]
-            current_value = 0  # Reset for next number-unit pair
-        else:
-            # Unknown character indicates an invalid format
+    rest = time_str.strip()
+    # Match (number)(unit) pairs: e.g. 1wks, 2h, 30m, 1h30m
+    pattern = re.compile(r"^(\d+)([a-zA-Z]+)")
+    while rest:
+        m = pattern.match(rest)
+        if not m:
             return 0
-
-    return 0 if current_value != 0 else total_seconds
+        value = int(m[1])
+        unit = m[2].lower()
+        mult = time_units.get(unit)
+        if mult is None:
+            return 0
+        if value == 0:
+            return 0
+        total_seconds += value * mult
+        rest = rest[m.end() :].lstrip()
+    return total_seconds
 
 
 def seconds_to_human_readable(seconds: int) -> str:
