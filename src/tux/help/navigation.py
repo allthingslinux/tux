@@ -155,7 +155,10 @@ class HelpNavigation:
         )
 
         # Create embed similar to command embed but with paginated subcommands
-        help_text = format_multiline_description(self.current_command_obj.help)
+        # Use help (full docstring) if available, otherwise fall back to short_doc (first line)
+        help_text = format_multiline_description(
+            self.current_command_obj.help or self.current_command_obj.short_doc,
+        )
         embed = self.renderer.create_base_embed(
             title=f"{self.renderer.prefix}{self.current_command_obj.qualified_name}",
             description=help_text,

@@ -253,7 +253,9 @@ class HelpRenderer:
         discord.Embed
             The command embed with details and usage.
         """
-        help_text = format_multiline_description(command.help)
+        # Use help (full docstring) if available, otherwise fall back to short_doc (first line)
+        # For hybrid commands, help might be None but short_doc should be populated
+        help_text = format_multiline_description(command.help or command.short_doc)
         embed = self.create_base_embed(
             title=f"{self.prefix}{command.qualified_name}",
             description=help_text,
