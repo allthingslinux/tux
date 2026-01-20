@@ -113,10 +113,13 @@ class EditRankModal(discord.ui.Modal):
                 ephemeral=True,
             )
 
-            # Invalidate cache and rebuild to show updated rank
-            self.dashboard.invalidate_cache()
-            self.dashboard.current_mode = "ranks"
-            await self.dashboard.build_ranks_mode()
+            # Update the specific rank in cache and refresh display
+            await self.dashboard.update_rank_in_cache(
+                self.rank_value,
+                self.rank_name.value,
+                description,
+            )
+            await self.dashboard.refresh_rank_display(self.rank_value)
             if interaction.message:
                 await interaction.followup.edit_message(
                     message_id=interaction.message.id,
