@@ -89,24 +89,29 @@ class EventHandler(BaseCog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """On message event handler."""
-        # Skip event processing during maintenance mode (except IRC bridge)
-        if getattr(self.bot, "maintenance_mode", False):
-            # Still allow IRC bridge during maintenance
+        try:
+            # Skip event processing during maintenance mode (except IRC bridge)
+            if getattr(self.bot, "maintenance_mode", False):
+                # Still allow IRC bridge during maintenance
+                if message.webhook_id in CONFIG.IRC_CONFIG.BRIDGE_WEBHOOK_IDS and (
+                    message.content.startswith(f"{CONFIG.get_prefix()}s ")
+                    or message.content.startswith(f"{CONFIG.get_prefix()}snippet ")
+                ):
+                    ctx = await self.bot.get_context(message)
+                    await self.bot.invoke(ctx)
+                return
+
+            # Allow the IRC bridge to use the snippet command only
             if message.webhook_id in CONFIG.IRC_CONFIG.BRIDGE_WEBHOOK_IDS and (
                 message.content.startswith(f"{CONFIG.get_prefix()}s ")
                 or message.content.startswith(f"{CONFIG.get_prefix()}snippet ")
             ):
                 ctx = await self.bot.get_context(message)
                 await self.bot.invoke(ctx)
-            return
-
-        # Allow the IRC bridge to use the snippet command only
-        if message.webhook_id in CONFIG.IRC_CONFIG.BRIDGE_WEBHOOK_IDS and (
-            message.content.startswith(f"{CONFIG.get_prefix()}s ")
-            or message.content.startswith(f"{CONFIG.get_prefix()}snippet ")
-        ):
-            ctx = await self.bot.get_context(message)
-            await self.bot.invoke(ctx)
+        except Exception as e:
+            logger.exception(
+                f"Error in event handler on_message listener for message {message.id}: {e}",
+            )
 
     @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel) -> None:

@@ -175,37 +175,47 @@ class Afk(BaseCog):
         message : discord.Message
             The message to check.
         """
-        # Skip AFK processing during maintenance mode
-        if getattr(self.bot, "maintenance_mode", False):
-            return
+        try:
+            # Skip AFK processing during maintenance mode
+            if getattr(self.bot, "maintenance_mode", False):
+                return
 
-        if not message.guild or message.author.bot:
-            return
+            if not message.guild or message.author.bot:
+                return
 
-        assert isinstance(message.author, discord.Member)
+            assert isinstance(message.author, discord.Member)
 
-        entry = await self._get_afk_entry(message.author.id, message.guild.id)
+            entry = await self._get_afk_entry(message.author.id, message.guild.id)
 
-        if not entry:
-            return
+            if not entry:
+                return
 
-        if entry.since + timedelta(seconds=10) > datetime.now(ZoneInfo("UTC")):
-            return
+            if entry.since + timedelta(seconds=10) > datetime.now(ZoneInfo("UTC")):
+                return
 
-        if await self.db.afk.is_perm_afk(message.author.id, guild_id=message.guild.id):
-            return
+            if await self.db.afk.is_perm_afk(
+                message.author.id,
+                guild_id=message.guild.id,
+            ):
+                return
 
-        await self.db.afk.remove_afk(message.author.id, message.guild.id)
-        logger.info(
-            f"✅ AFK status removed: {message.author.name} ({message.author.id}) returned to {message.guild.name}",
-        )
+            await self.db.afk.remove_afk(message.author.id, message.guild.id)
+            logger.info(
+                f"✅ AFK status removed: {message.author.name} ({message.author.id}) returned to {message.guild.name}",
+            )
 
-        await message.reply("Welcome back!", delete_after=5)
+            await message.reply("Welcome back!", delete_after=5)
 
-        # Suppress Forbidden errors if the bot doesn't have permission to change the nickname
-        with contextlib.suppress(discord.Forbidden):
-            await message.author.edit(nick=entry.nickname)
-            logger.debug(f"Nickname restored for {message.author.id}: {entry.nickname}")
+            # Suppress Forbidden errors if the bot doesn't have permission to change the nickname
+            with contextlib.suppress(discord.Forbidden):
+                await message.author.edit(nick=entry.nickname)
+                logger.debug(
+                    f"Nickname restored for {message.author.id}: {entry.nickname}",
+                )
+        except Exception as e:
+            logger.exception(
+                f"Error in remove_afk listener for message {message.id}: {e}",
+            )
 
     @commands.Cog.listener("on_message")
     async def check_afk(self, message: discord.Message) -> None:
@@ -217,42 +227,47 @@ class Afk(BaseCog):
         message : discord.Message
             The message to check.
         """
-        if not message.guild or message.author.bot:
-            return
+        try:
+            if not message.guild or message.author.bot:
+                return
 
-        # Check if the message is a self-timeout command.
-        # if it is, the member is probably trying to upgrade to a self-timeout, so AFK status should not be removed.
-        prefix = (
-            await self.bot.prefix_manager.get_prefix(message.guild.id)
-            if self.bot.prefix_manager
-            else CONFIG.get_prefix()
-        )
-        if message.content.startswith(f"{prefix}sto"):
-            return
+            # Check if the message is a self-timeout command.
+            # if it is, the member is probably trying to upgrade to a self-timeout, so AFK status should not be removed.
+            prefix = (
+                await self.bot.prefix_manager.get_prefix(message.guild.id)
+                if self.bot.prefix_manager
+                else CONFIG.get_prefix()
+            )
+            if message.content.startswith(f"{prefix}sto"):
+                return
 
-        afks_mentioned: list[tuple[discord.Member, AFKMODEL]] = []
+            afks_mentioned: list[tuple[discord.Member, AFKMODEL]] = []
 
-        for mentioned in message.mentions:
-            entry = await self._get_afk_entry(mentioned.id, message.guild.id)
-            if entry:
-                afks_mentioned.append((cast(discord.Member, mentioned), entry))
+            for mentioned in message.mentions:
+                entry = await self._get_afk_entry(mentioned.id, message.guild.id)
+                if entry:
+                    afks_mentioned.append((cast(discord.Member, mentioned), entry))
 
-        if not afks_mentioned:
-            return
+            if not afks_mentioned:
+                return
 
-        logger.debug(
-            f"AFK notification: {len(afks_mentioned)} AFK users mentioned in {message.guild.name}",
-        )
+            logger.debug(
+                f"AFK notification: {len(afks_mentioned)} AFK users mentioned in {message.guild.name}",
+            )
 
-        msgs: list[str] = [
-            f'{mentioned.mention} is currently AFK {f"until <t:{int(afk.until.timestamp())}:f>" if afk.until is not None else ""}: "{afk.reason}" [<t:{int(afk.since.timestamp())}:R>]'
-            for mentioned, afk in afks_mentioned
-        ]
+            msgs: list[str] = [
+                f'{mentioned.mention} is currently AFK {f"until <t:{int(afk.until.timestamp())}:f>" if afk.until is not None else ""}: "{afk.reason}" [<t:{int(afk.since.timestamp())}:R>]'
+                for mentioned, afk in afks_mentioned
+            ]
 
-        await message.reply(
-            content="\n".join(msgs),
-            allowed_mentions=AFK_ALLOWED_MENTIONS,
-        )
+            await message.reply(
+                content="\n".join(msgs),
+                allowed_mentions=AFK_ALLOWED_MENTIONS,
+            )
+        except Exception as e:
+            logger.exception(
+                f"Error in check_afk listener for message {message.id}: {e}",
+            )
 
     @tasks.loop(seconds=120, name="afk_expiration_handler")
     async def handle_afk_expiration(self) -> None:

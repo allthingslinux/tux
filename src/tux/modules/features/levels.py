@@ -62,44 +62,49 @@ class LevelsService(BaseCog):
         message : discord.Message
             The message object.
         """
-        # Skip XP processing during maintenance mode
-        if getattr(self.bot, "maintenance_mode", False):
-            return
+        try:
+            # Skip XP processing during maintenance mode
+            if getattr(self.bot, "maintenance_mode", False):
+                return
 
-        if (
-            message.author.bot
-            or not message.guild
-            or message.channel.id in CONFIG.XP_CONFIG.XP_BLACKLIST_CHANNELS
-        ):
-            return
+            if (
+                message.author.bot
+                or not message.guild
+                or message.channel.id in CONFIG.XP_CONFIG.XP_BLACKLIST_CHANNELS
+            ):
+                return
 
-        # Ignore messages that are commands
-        ctx = await self.bot.get_context(message)
-        if ctx.valid:
-            return
+            # Ignore messages that are commands
+            ctx = await self.bot.get_context(message)
+            if ctx.valid:
+                return
 
-        # Fetch member object
-        member = message.guild.get_member(message.author.id)
-        if not member:
-            return
+            # Fetch member object
+            member = message.guild.get_member(message.author.id)
+            if not member:
+                return
 
-        # Fetch all user level data in one query to minimize DB calls
-        user_level_data = await self.db.levels.get_user_level_data(
-            member.id,
-            message.guild.id,
-        )
+            # Fetch all user level data in one query to minimize DB calls
+            user_level_data = await self.db.levels.get_user_level_data(
+                member.id,
+                message.guild.id,
+            )
 
-        # Check if the user is blacklisted
-        if user_level_data and user_level_data.blacklisted:
-            return
+            # Check if the user is blacklisted
+            if user_level_data and user_level_data.blacklisted:
+                return
 
-        # Check if the user is on cooldown
-        last_message_time = user_level_data.last_message if user_level_data else None
-        if last_message_time and self.is_on_cooldown(last_message_time):
-            return
+            # Check if the user is on cooldown
+            last_message_time = (
+                user_level_data.last_message if user_level_data else None
+            )
+            if last_message_time and self.is_on_cooldown(last_message_time):
+                return
 
-        # Process XP gain with the already fetched data
-        await self.process_xp_gain(member, message.guild, user_level_data)
+            # Process XP gain with the already fetched data
+            await self.process_xp_gain(member, message.guild, user_level_data)
+        except Exception as e:
+            logger.exception(f"Error in XP listener for message {message.id}: {e}")
 
     async def process_xp_gain(
         self,

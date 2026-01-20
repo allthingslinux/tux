@@ -10,6 +10,7 @@ import re
 
 import discord
 from discord.ext import commands
+from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
@@ -133,13 +134,23 @@ class HarmfulCommands(BaseCog):
         after: discord.Message,
     ) -> None:
         """Handle message edits to check for newly harmful content."""
-        if not self.is_harmful(before.content) and self.is_harmful(after.content):
-            await self.handle_harmful_message(after)
+        try:
+            if not self.is_harmful(before.content) and self.is_harmful(after.content):
+                await self.handle_harmful_message(after)
+        except Exception as e:
+            logger.exception(
+                f"Error in harmful commands on_message_edit listener for message {after.id}: {e}",
+            )
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Handle new messages to check for harmful content."""
-        await self.handle_harmful_message(message)
+        try:
+            await self.handle_harmful_message(message)
+        except Exception as e:
+            logger.exception(
+                f"Error in harmful commands listener for message {message.id}: {e}",
+            )
 
 
 async def setup(bot: Tux) -> None:

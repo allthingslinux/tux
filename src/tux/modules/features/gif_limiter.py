@@ -11,6 +11,7 @@ from time import time
 
 import discord
 from discord.ext import commands, tasks
+from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
@@ -140,12 +141,17 @@ class GifLimiter(BaseCog):
         message : discord.Message
             The message to check.
         """
-        # Skip GIF limiting during maintenance mode
-        if getattr(self.bot, "maintenance_mode", False):
-            return
+        try:
+            # Skip GIF limiting during maintenance mode
+            if getattr(self.bot, "maintenance_mode", False):
+                return
 
-        if await self._should_process_message(message):
-            await self._handle_gif_message(message)
+            if await self._should_process_message(message):
+                await self._handle_gif_message(message)
+        except Exception as e:
+            logger.exception(
+                f"Error in GIF limiter listener for message {message.id}: {e}",
+            )
 
     @tasks.loop(seconds=20, name="old_gif_remover")
     async def old_gif_remover(self) -> None:
