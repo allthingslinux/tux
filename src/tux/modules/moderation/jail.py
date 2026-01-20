@@ -4,7 +4,13 @@ Jail moderation commands.
 This module provides functionality to jail Discord members by assigning them
 a jail role and removing their other roles. Jailed members are typically restricted
 to a designated jail channel and lose access to other server channels.
+
+If a jailed member leaves the server and rejoins before being unjailed, they are
+automatically re-jailed on rejoin (on_member_join). A delayed cleanup run strips
+roles added by other on-join handlers (e.g. TTY roles, which add after 5s).
 """
+
+import asyncio
 
 import discord
 from discord.ext import commands
@@ -70,6 +76,103 @@ class Jail(ModerationCogBase):
             guild.get_channel(jail_channel_id) if jail_channel_id is not None else None
         )
         return channel if isinstance(channel, discord.TextChannel) else None
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member) -> None:
+        """Re-apply jail if the member was jailed and left the server before being unjailed."""
+        if not member.guild:
+            return
+        if not await self.is_jailed(member.guild.id, member.id):
+            return
+        jail_role = await self.get_jail_role(member.guild)
+        if not jail_role:
+            logger.warning(
+                f"Cannot rejail {member} on rejoin: no jail role configured for guild {member.guild.id} ({member.guild.name})",
+            )
+            return
+        jail_channel_id = await self.db.guild_config.get_jail_channel_id(
+            member.guild.id,
+        )
+        if not jail_channel_id:
+            logger.warning(
+                f"Cannot rejail {member} on rejoin: no jail channel configured for guild {member.guild.id} ({member.guild.name})",
+            )
+            return
+        reason = "Re-jail on rejoin (was jailed before leaving)"
+        try:
+            await member.add_roles(jail_role, reason=reason)
+            if user_roles := self._get_manageable_roles(member, jail_role):
+                try:
+                    await member.remove_roles(*user_roles, reason=reason)
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to remove all roles at once from {member} on rejail, falling back to individual removal: {e}",
+                    )
+                    for role in user_roles:
+                        try:
+                            await member.remove_roles(role, reason=reason)
+                        except Exception as role_e:
+                            logger.error(
+                                f"Failed to remove role {role} from {member} on rejail: {role_e}",
+                            )
+        except discord.Forbidden as e:
+            logger.error(
+                f"Failed to rejail {member} on rejoin in guild {member.guild.id}: {e}",
+            )
+            return
+        except Exception as e:
+            logger.exception(f"Unexpected error rejailing {member} on rejoin: {e}")
+            return
+        logger.info(
+            f"Re-jailed {member} on rejoin in guild {member.guild.id} ({member.guild.name})",
+        )
+        # Strip roles added by other on_member_join handlers (e.g. TTY roles ~5s)
+        asyncio.create_task(  # noqa: RUF006
+            self._delayed_rejail_cleanup(member.guild.id, member.id),
+        )
+
+    async def _delayed_rejail_cleanup(self, guild_id: int, user_id: int) -> None:
+        """
+        Run a second pass to remove roles added by delayed on-join logic.
+
+        Plugins like TTY roles add a role 5 seconds after join. This runs
+        after that window and strips any such roles if the user is still jailed.
+        """
+        try:
+            await asyncio.sleep(6)
+            guild = self.bot.get_guild(guild_id)
+            if not guild:
+                return
+            member = guild.get_member(user_id)
+            if not member or not await self.is_jailed(guild_id, user_id):
+                return
+            jail_role = await self.get_jail_role(guild)
+            if not jail_role:
+                return
+            if user_roles := self._get_manageable_roles(member, jail_role):
+                try:
+                    await member.remove_roles(
+                        *user_roles,
+                        reason="Re-jail delayed cleanup (on-join roles)",
+                    )
+                except Exception as e:
+                    logger.warning(
+                        f"Delayed rejail cleanup: failed to remove roles from {member}: {e}",
+                    )
+                    for role in user_roles:
+                        try:
+                            await member.remove_roles(
+                                role,
+                                reason="Re-jail delayed cleanup (on-join roles)",
+                            )
+                        except Exception as role_e:
+                            logger.error(
+                                f"Delayed rejail cleanup: failed to remove {role} from {member}: {role_e}",
+                            )
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            logger.exception(f"Delayed rejail cleanup for {guild_id}/{user_id}: {e}")
 
     @commands.hybrid_command(
         name="jail",

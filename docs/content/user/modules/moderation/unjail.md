@@ -12,6 +12,8 @@ tags:
 
 The `unjail` command releases a member from isolation, removing the "Jail" role and restoring the previous roles they held before being jailed. Tux automatically tracks and stores a member's roles when they are jailed, making it easy to return them to their original state once the issue is resolved.
 
+If a jailed member leaves and rejoins the server, Tux re-jails them automatically; use `/unjail` when you intend to release them.
+
 ## Syntax
 
 The `unjail` command can be used in two ways:

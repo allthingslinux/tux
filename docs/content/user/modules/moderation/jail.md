@@ -83,7 +83,7 @@ Jail behavior relies on guild-specific configuration:
 - **Jail Channel:** The channel jailed members are restricted to.
 
 !!! info "Admin Setup"
-    Administrators must set up the `jail_role_id` and `jail_channel_id` using the configuration commands before this command can be used.
+    Administrators must set the jail channel and jail role with `/config jail` (or the Configuration Dashboard) before this command can be used. See [Jail Configuration](../../../admin/config/jail.md).
 
 ## Usage Examples
 
@@ -115,6 +115,10 @@ When executed successfully, Tux will:
 
 The confirmation message includes the jailed user's name, the reason, and a link to view the moderation case. The stored roles are automatically restored when using `/unjail`.
 
+### Re-jail on rejoin
+
+If a jailed member leaves the server and rejoins before being unjailed, Tux automatically re-applies the jail (adds the Jail role and strips any roles they gained on rejoin). No new case is created and no DM is sent. Use `/unjail` when you are ready to release them.
+
 ## Error Handling
 
 ### Common Errors
@@ -144,7 +148,7 @@ The confirmation message includes the jailed user's name, the reason, and a link
 
 #### Error: No Jail Role/Channel Found
 
-**When it occurs:** The guild has not configured a jail role or channel ID in the bot's settings.
+**When it occurs:** The guild has not set a jail role or jail channel (use `/config jail`).
 
 **Solution:** Ask a server administrator to configure these settings via Tux's configuration module.
 

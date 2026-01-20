@@ -5,15 +5,16 @@ Tests focus on:
 - Role management logic (_get_manageable_roles)
 - Database operations for storing/retrieving jail cases
 - Role restoration logic
+- Re-jail on rejoin when a jailed user leaves and rejoins
 """
 
 import asyncio
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import discord
 import pytest
 
-from tux.database.controllers import CaseController
+from tux.database.controllers import CaseController, DatabaseCoordinator
 from tux.database.models import CaseType
 from tux.database.service import DatabaseService
 from tux.modules.moderation.jail import Jail
@@ -23,6 +24,8 @@ ALT_GUILD_ID = 987654
 TEST_USER_ID = 789012
 TEST_MODERATOR_ID = 111111
 SECOND_MODERATOR_ID = 222222
+JAIL_ROLE_ID = 8888
+JAIL_CHANNEL_ID = 9999
 
 
 def create_mock_role(role_id: int, name: str, **kwargs: bool) -> MagicMock:
@@ -458,3 +461,131 @@ class TestJailSystemEdgeCases:
         # Should handle without errors
         manageable = Jail._get_manageable_roles(member, jail_role)
         assert len(manageable) == 1
+
+
+class TestRejailOnRejoin:
+    """Test re-jailing users who left the server while jailed."""
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_on_member_join_rejails_user_with_active_jail_case(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
+        """When a jailed user leaves and rejoins, on_member_join re-applies the jail role."""
+        coord = DatabaseCoordinator(db_service)
+
+        # Guild and config are required for Case FK and for get_jail_role_id/get_jail_channel_id
+        await coord.guild.get_or_create_guild(TEST_GUILD_ID)
+        await coord.guild_config.get_or_create_config(TEST_GUILD_ID)
+        await coord.guild_config.update_config(
+            TEST_GUILD_ID,
+            jail_role_id=JAIL_ROLE_ID,
+            jail_channel_id=JAIL_CHANNEL_ID,
+        )
+
+        # Create a JAIL case (no UNJAIL after) so is_jailed returns True
+        await coord.case.create_case(
+            case_type=CaseType.JAIL,
+            case_user_id=TEST_USER_ID,
+            case_moderator_id=TEST_MODERATOR_ID,
+            guild_id=TEST_GUILD_ID,
+            case_reason="Rejail test",
+            case_user_roles=[],
+        )
+
+        bot = MagicMock()
+        bot.db = coord
+
+        jail_role = create_mock_role(JAIL_ROLE_ID, "Jailed")
+        mock_channel = MagicMock()
+
+        guild = MagicMock()
+        guild.id = TEST_GUILD_ID
+        guild.name = "Test Guild"
+        guild.get_role = MagicMock(return_value=jail_role)
+        guild.get_channel = MagicMock(return_value=mock_channel)
+
+        member = MagicMock(spec=discord.Member)
+        member.guild = guild
+        member.id = TEST_USER_ID
+        everyone = create_mock_role(1, "@everyone", is_default=True)
+        member.roles = [everyone]
+        member.add_roles = AsyncMock()
+        member.remove_roles = AsyncMock()
+
+        with patch(
+            "tux.services.moderation.factory.ModerationServiceFactory.create_coordinator",
+            return_value=MagicMock(),
+        ):
+            cog = Jail(bot)
+
+        await cog.on_member_join(member)
+
+        member.add_roles.assert_called_once_with(
+            jail_role,
+            reason="Re-jail on rejoin (was jailed before leaving)",
+        )
+        # Only @everyone on rejoin; it is excluded by _get_manageable_roles
+        member.remove_roles.assert_not_called()
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_on_member_join_does_nothing_when_not_jailed(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
+        """on_member_join does not rejail when the user's latest case is not JAIL."""
+        coord = DatabaseCoordinator(db_service)
+        await coord.guild.get_or_create_guild(TEST_GUILD_ID)
+        await coord.guild_config.get_or_create_config(TEST_GUILD_ID)
+        await coord.guild_config.update_config(
+            TEST_GUILD_ID,
+            jail_role_id=JAIL_ROLE_ID,
+            jail_channel_id=JAIL_CHANNEL_ID,
+        )
+
+        # Create UNJAIL as latest case (user was unjailed) so is_jailed is False
+        await coord.case.create_case(
+            case_type=CaseType.JAIL,
+            case_user_id=TEST_USER_ID,
+            case_moderator_id=TEST_MODERATOR_ID,
+            guild_id=TEST_GUILD_ID,
+            case_reason="Jailed",
+            case_user_roles=[],
+        )
+        await asyncio.sleep(0.01)
+        await coord.case.create_case(
+            case_type=CaseType.UNJAIL,
+            case_user_id=TEST_USER_ID,
+            case_moderator_id=TEST_MODERATOR_ID,
+            guild_id=TEST_GUILD_ID,
+            case_reason="Released",
+        )
+
+        bot = MagicMock()
+        bot.db = coord
+        jail_role = create_mock_role(JAIL_ROLE_ID, "Jailed")
+        guild = MagicMock()
+        guild.id = TEST_GUILD_ID
+        guild.name = "Test Guild"
+        guild.get_role = MagicMock(return_value=jail_role)
+        guild.get_channel = MagicMock(return_value=MagicMock())
+
+        member = MagicMock(spec=discord.Member)
+        member.guild = guild
+        member.id = TEST_USER_ID
+        member.roles = [create_mock_role(1, "@everyone", is_default=True)]
+        member.add_roles = AsyncMock()
+        member.remove_roles = AsyncMock()
+
+        with patch(
+            "tux.services.moderation.factory.ModerationServiceFactory.create_coordinator",
+            return_value=MagicMock(),
+        ):
+            cog = Jail(bot)
+
+        await cog.on_member_join(member)
+
+        member.add_roles.assert_not_called()
+        member.remove_roles.assert_not_called()

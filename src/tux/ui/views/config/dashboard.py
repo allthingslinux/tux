@@ -34,6 +34,9 @@ from .callbacks import (
     create_confirm_assignment_callback,
     create_delete_rank_callback,
     create_edit_rank_callback,
+    create_jail_channel_callback,
+    create_jail_role_callback,
+    create_jail_setup_all_callback,
     create_role_selection_callback,
     create_role_update_callback,
     handle_callback_error,
@@ -128,6 +131,24 @@ class ConfigDashboard(discord.ui.LayoutView):
             view = self.view
             if isinstance(view, ConfigDashboard):
                 view.current_mode = "logs"
+                await view.build_layout()
+                await interaction.response.edit_message(view=view)
+
+    class JailButton(discord.ui.Button[discord.ui.LayoutView]):
+        """Button to open the Jail configuration mode."""
+
+        def __init__(self) -> None:
+            super().__init__(
+                label="Open",
+                style=discord.ButtonStyle.primary,
+                custom_id="btn_jail",
+            )
+
+        async def callback(self, interaction: discord.Interaction) -> None:
+            """Handle button click to switch to jail mode."""
+            view = self.view
+            if isinstance(view, ConfigDashboard):
+                view.current_mode = "jail"
                 await view.build_layout()
                 await interaction.response.edit_message(view=view)
 
@@ -280,6 +301,8 @@ class ConfigDashboard(discord.ui.LayoutView):
             await self.build_roles_mode()
         elif self.current_mode == "commands":
             await self.build_commands_mode()
+        elif self.current_mode == "jail":
+            await self.build_jail_mode()
         else:
             self._build_overview_mode()
 
@@ -344,6 +367,17 @@ class ConfigDashboard(discord.ui.LayoutView):
             accessory=self.LogsButton(),
         )
         container.add_item(logs_section)
+
+        # Jail Section
+        jail_section = discord.ui.Section[discord.ui.LayoutView](
+            discord.ui.TextDisplay[discord.ui.LayoutView](
+                "### 🔒 Jail\n"
+                "Set the jail channel and jail role for `/jail` and `/unjail`. "
+                "Jailed members are restricted to the jail channel only.",
+            ),
+            accessory=self.JailButton(),
+        )
+        container.add_item(jail_section)
 
         # Separator before quick actions
         container.add_item(discord.ui.Separator(spacing=discord.SeparatorSpacing.small))
@@ -1587,6 +1621,125 @@ class ConfigDashboard(discord.ui.LayoutView):
             )
             self.add_item(error_container)
 
+    async def build_jail_mode(self) -> None:  # noqa: PLR0915
+        """Build the jail channel and jail role configuration mode."""
+        try:
+            cache_key = self._get_cache_key("jail")
+            if cached := self.get_cached_mode(cache_key):
+                self.clear_items()
+                self.add_item(cached)
+                return
+
+            self.clear_items()
+
+            await self.bot.db.guild_config.get_or_create_config(self.guild.id)
+            config = await self.bot.db.guild_config.get_config_by_guild_id(
+                self.guild.id,
+            )
+
+            jail_channel_id = (
+                getattr(config, "jail_channel_id", None) if config else None
+            )
+            jail_role_id = getattr(config, "jail_role_id", None) if config else None
+
+            jail_channel: discord.TextChannel | None = None
+            if jail_channel_id:
+                ch = self.guild.get_channel(jail_channel_id)
+                if isinstance(ch, discord.TextChannel):
+                    jail_channel = ch
+
+            jail_role = self.guild.get_role(jail_role_id) if jail_role_id else None
+
+            container = discord.ui.Container[discord.ui.LayoutView](
+                accent_color=CONFIG_COLOR_BLURPLE,
+            )
+
+            page_header = discord.ui.TextDisplay[discord.ui.LayoutView](
+                "# 🔒 Jail\n\n"
+                "Set the channel and role for `/jail` and `/unjail`. "
+                "Jailed members are restricted to the jail channel only.",
+            )
+            container.add_item(page_header)
+            container.add_item(discord.ui.Separator())
+
+            # Jail channel
+            ch_status = jail_channel.mention if jail_channel else "Not set"
+            ch_display = discord.ui.TextDisplay[discord.ui.LayoutView](
+                f"### Jail Channel\n"
+                f"*The only channel jailed members can access.*\n"
+                f"**Current:** {ch_status}",
+            )
+            container.add_item(ch_display)
+
+            channel_select = discord.ui.ChannelSelect[discord.ui.LayoutView](
+                placeholder="Select jail channel (or clear)",
+                channel_types=[discord.ChannelType.text],
+                min_values=0,
+                max_values=1,
+                custom_id="jail_channel_select",
+            )
+            if jail_channel:
+                channel_select.default_values = [jail_channel]
+            channel_select.callback = create_jail_channel_callback(self)
+            channel_row = discord.ui.ActionRow[discord.ui.LayoutView]()
+            channel_row.add_item(channel_select)
+            container.add_item(channel_row)
+            container.add_item(discord.ui.Separator())
+
+            # Jail role
+            role_status = jail_role.mention if jail_role else "Not set"
+            role_display = discord.ui.TextDisplay[discord.ui.LayoutView](
+                f"### Jail Role\n"
+                f"*The role applied to jailed members (deny view on other channels).*\n"
+                f"**Current:** {role_status}",
+            )
+            container.add_item(role_display)
+
+            role_select = discord.ui.RoleSelect[discord.ui.LayoutView](
+                placeholder="Select jail role (or clear)",
+                min_values=0,
+                max_values=1,
+                custom_id="jail_role_select",
+            )
+            if jail_role:
+                role_select.default_values = [jail_role]
+            role_select.callback = create_jail_role_callback(self)
+            role_row = discord.ui.ActionRow[discord.ui.LayoutView]()
+            role_row.add_item(role_select)
+            container.add_item(role_row)
+            container.add_item(discord.ui.Separator())
+
+            # Setup all channels: deny jail role on every channel except the jail channel
+            setup_display = discord.ui.TextDisplay[discord.ui.LayoutView](
+                "### Apply to all channels\n"
+                "*Deny the jail role from viewing every channel (text, voice, forum, etc.) "
+                "except the jail channel. Use this to quickly set up a new server or fix permissions.*",
+            )
+            container.add_item(setup_display)
+            setup_btn = discord.ui.Button[discord.ui.LayoutView](
+                label="Setup all channels",
+                style=discord.ButtonStyle.primary,
+                custom_id="jail_setup_all_btn",
+            )
+            setup_btn.callback = create_jail_setup_all_callback(self)
+            setup_row = discord.ui.ActionRow[discord.ui.LayoutView]()
+            setup_row.add_item(setup_btn)
+            container.add_item(setup_row)
+            container.add_item(discord.ui.Separator())
+
+            add_back_button_to_container(container, self)
+
+            self.add_item(container)
+            self.cache_mode(cache_key, container)
+
+        except Exception as e:
+            logger.error(f"Error building jail mode: {e}")
+            error_container = create_error_container(
+                f"Error loading jail configuration: {e}",
+                self,
+            )
+            self.add_item(error_container)
+
     def find_channel_select_component(
         self,
         custom_id: str,
@@ -1702,7 +1855,7 @@ class ConfigDashboard(discord.ui.LayoutView):
         custom_id = interaction.data.get("custom_id", "")  # type: ignore[index]
         new_mode = custom_id.replace("btn_", "")
 
-        if new_mode in ["logs", "ranks", "roles", "commands"]:
+        if new_mode in ["logs", "ranks", "roles", "commands", "jail"]:
             self.current_mode = new_mode
 
             # Build the layout based on mode
@@ -1714,6 +1867,8 @@ class ConfigDashboard(discord.ui.LayoutView):
                 await self.build_roles_mode()
             elif new_mode == "commands":
                 await self.build_commands_mode()
+            elif new_mode == "jail":
+                await self.build_jail_mode()
             else:
                 await self.build_layout()
 

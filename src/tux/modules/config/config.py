@@ -9,6 +9,7 @@ from discord.ext import commands
 from tux.core.decorators import requires_command_permission
 
 from .commands import CommandManager
+from .jail import JailManager
 from .logs import LogManager
 from .overview import ConfigOverview
 from .ranks import RankManager
@@ -38,6 +39,7 @@ class Config(commands.Cog):
         self.roles = RoleManager(bot)
         self.commands = CommandManager(bot)
         self.log_manager = LogManager(bot)
+        self.jail_manager = JailManager(bot)
 
     @commands.hybrid_group(
         name="config",
@@ -101,6 +103,13 @@ class Config(commands.Cog):
     async def logs(self, ctx: commands.Context[Tux]) -> None:
         """Configure log channel assignments."""
         await self.log_manager.configure_logs(ctx)
+
+    @config.command(name="jail")
+    @commands.guild_only()
+    @requires_command_permission()
+    async def jail(self, ctx: commands.Context[Tux]) -> None:
+        """Configure the jail channel and jail role for the /jail and /unjail commands."""
+        await self.jail_manager.configure_jail(ctx)
 
 
 async def setup(bot: Tux) -> None:

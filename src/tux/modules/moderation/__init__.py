@@ -111,6 +111,9 @@ class ModerationCogBase(BaseCog):
     async def is_jailed(self, guild_id: int, user_id: int) -> bool:
         """Check if a user is jailed.
 
+        Only JAIL and UNJAIL cases are considered; other types (e.g. WARN) are
+        ignored so intervening moderation does not change jail status.
+
         Parameters
         ----------
         guild_id : int
@@ -123,11 +126,11 @@ class ModerationCogBase(BaseCog):
         bool
             True if user is jailed, False otherwise
         """
-        latest_case = await self.db.case.get_latest_case_by_user(
-            guild_id=guild_id,
+        latest = await self.db.case.get_latest_jail_or_unjail_case(
             user_id=user_id,
+            guild_id=guild_id,
         )
-        return bool(latest_case and latest_case.case_type == DBCaseType.JAIL)
+        return bool(latest and latest.case_type == DBCaseType.JAIL)
 
     async def is_pollbanned(self, guild_id: int, user_id: int) -> bool:
         """Check if a user is poll banned.

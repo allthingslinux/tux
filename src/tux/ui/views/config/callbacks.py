@@ -7,6 +7,7 @@ and cache invalidation in callback functions.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any
 
@@ -354,6 +355,215 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
                 e,
                 "updating command permission",
                 f"for {command_name}",
+            )
+
+    return callback
+
+
+def create_jail_channel_callback(dashboard: ConfigDashboard) -> Any:
+    """Create a callback for jail channel selection."""
+
+    async def callback(interaction: discord.Interaction) -> None:
+        if not await validate_author(
+            interaction,
+            dashboard.author,
+            "❌ You are not authorized to modify this configuration.",
+        ):
+            return
+
+        try:
+            channel_select = dashboard.find_channel_select_component(
+                "jail_channel_select",
+            )
+            if not channel_select:
+                await interaction.response.send_message(
+                    "❌ Could not find channel selector",
+                    ephemeral=True,
+                )
+                return
+
+            selected = dashboard.resolve_channel_from_interaction(
+                channel_select,
+                interaction,
+            )
+            channel_id = selected.id if selected else None
+
+            await dashboard.bot.db.guild_config.update_config(
+                dashboard.guild.id,
+                jail_channel_id=channel_id,
+            )
+
+            await interaction.response.defer()
+            await interaction.followup.send(
+                f"✅ Jail channel set to {selected.mention}"
+                if selected
+                else "✅ Jail channel cleared",
+                ephemeral=True,
+            )
+
+            dashboard.invalidate_cache()
+            dashboard.current_mode = "jail"
+            await dashboard.build_jail_mode()
+            if interaction.message:
+                await interaction.followup.edit_message(
+                    message_id=interaction.message.id,
+                    view=dashboard,
+                )
+        except Exception as e:
+            await handle_callback_error(
+                interaction,
+                e,
+                "updating jail channel",
+                "",
+            )
+
+    return callback
+
+
+def create_jail_role_callback(dashboard: ConfigDashboard) -> Any:
+    """Create a callback for jail role selection."""
+
+    async def callback(interaction: discord.Interaction) -> None:
+        if not await validate_author(
+            interaction,
+            dashboard.author,
+            "❌ You are not authorized to modify this configuration.",
+        ):
+            return
+
+        try:
+            values = (interaction.data or {}).get("values", [])
+            role_id = int(values[0]) if values else None
+
+            await dashboard.bot.db.guild_config.update_jail_role_id(
+                dashboard.guild.id,
+                role_id,
+            )
+
+            role_mention = ""
+            if role_id:
+                role = dashboard.guild.get_role(role_id)
+                role_mention = role.mention if role else f"<@&{role_id}>"
+
+            await interaction.response.defer()
+            await interaction.followup.send(
+                f"✅ Jail role set to {role_mention}"
+                if role_id
+                else "✅ Jail role cleared",
+                ephemeral=True,
+            )
+
+            dashboard.invalidate_cache()
+            dashboard.current_mode = "jail"
+            await dashboard.build_jail_mode()
+            if interaction.message:
+                await interaction.followup.edit_message(
+                    message_id=interaction.message.id,
+                    view=dashboard,
+                )
+        except Exception as e:
+            await handle_callback_error(
+                interaction,
+                e,
+                "updating jail role",
+                "",
+            )
+
+    return callback
+
+
+def create_jail_setup_all_callback(dashboard: ConfigDashboard) -> Any:
+    """Create a callback for the 'Setup all channels' jail button.
+
+    Denies the jail role from viewing every channel except the jail channel,
+    and allows view/send on the jail channel. Applies to text, voice, forum,
+    stage, and category channels.
+    """
+
+    async def callback(interaction: discord.Interaction) -> None:
+        if not await validate_author(
+            interaction,
+            dashboard.author,
+            "❌ You are not authorized to modify this configuration.",
+        ):
+            return
+
+        try:
+            await interaction.response.defer(ephemeral=True)
+
+            jail_role_id = await dashboard.bot.db.guild_config.get_jail_role_id(
+                dashboard.guild.id,
+            )
+            jail_channel_id = await dashboard.bot.db.guild_config.get_jail_channel_id(
+                dashboard.guild.id,
+            )
+
+            if not jail_role_id or not jail_channel_id:
+                await interaction.followup.send(
+                    "❌ Jail role and jail channel must be set first.",
+                    ephemeral=True,
+                )
+                return
+
+            jail_role = dashboard.guild.get_role(jail_role_id)
+            if not jail_role:
+                await interaction.followup.send(
+                    "❌ Jail role not found in this server.",
+                    ephemeral=True,
+                )
+                return
+
+            channels = await dashboard.guild.fetch_channels()
+            ok = 0
+            failed = 0
+
+            for i, channel in enumerate(channels):
+                if i > 0:
+                    await asyncio.sleep(0.25)
+                try:
+                    if channel.id == jail_channel_id:
+                        await channel.set_permissions(
+                            jail_role,
+                            view_channel=True,
+                            read_messages=True,
+                            send_messages=True,
+                            reason="Jail setup: allow jail role on jail channel",
+                        )
+                    else:
+                        await channel.set_permissions(
+                            jail_role,
+                            view_channel=False,
+                            read_messages=False,
+                            send_messages=False,
+                            reason="Jail setup: deny jail role on all channels",
+                        )
+                    ok += 1
+                except discord.Forbidden:
+                    failed += 1
+                    logger.warning(
+                        "Missing permissions to set jail role on channel %s in %s",
+                        channel.name,
+                        dashboard.guild.name,
+                    )
+                except Exception as e:
+                    failed += 1
+                    logger.exception(
+                        "Failed to set jail role on channel %s: %s",
+                        channel.name,
+                        e,
+                    )
+
+            await interaction.followup.send(
+                f"✅ **Setup complete.** Updated {ok} channel(s)."
+                + (f" {failed} failed (check bot permissions)." if failed else ""),
+                ephemeral=True,
+            )
+        except Exception as e:
+            await handle_callback_error(
+                interaction,
+                e,
+                "setting up jail role on all channels",
+                "",
             )
 
     return callback
