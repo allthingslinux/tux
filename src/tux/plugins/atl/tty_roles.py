@@ -35,11 +35,16 @@ class TtyRoles(BaseCog):
         """
         Assign a role to a user based on the number of users in the guild.
 
+        Skips jailed members so the jail role remains the only assignation
+        from on-join logic (avoids races with rejail-on-rejoin).
+
         Parameters
         ----------
         member : discord.Member
             The member that joined the guild.
         """
+        if await self.bot.is_jailed(member.guild.id, member.id):
+            return
         user_count = member.guild.member_count
         role_name = self._compute_role_name(user_count)
 
