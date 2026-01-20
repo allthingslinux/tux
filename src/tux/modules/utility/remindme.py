@@ -84,37 +84,57 @@ class RemindMe(BaseCog):
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         """On ready event handler."""
-        if self._initialized:
-            return
+        try:
+            await self.bot.guilds_registered.wait()
 
-        self._initialized = True
+            if self._initialized:
+                return
 
-        # Get reminders from all guilds since this is on_ready
-        reminders = await self.db.reminder.find_all()
-        dt_now = datetime.datetime.now(datetime.UTC)
+            self._initialized = True
 
-        for reminder in reminders:
-            # hotfix for an issue where old reminders from the old system would all send at once
-            if reminder.reminder_sent:
-                try:
-                    if reminder.id is not None:
-                        await self.db.reminder.delete_reminder_by_id(reminder.id)
-                except Exception as e:
-                    logger.error(f"Failed to delete reminder: {e}")
+            # Get reminders from all guilds since this is on_ready
+            reminders = await self.db.reminder.find_all()
+            dt_now = datetime.datetime.now(datetime.UTC)
 
-                continue
+            for reminder in reminders:
+                # hotfix for an issue where old reminders from the old system would all send at once
+                if reminder.reminder_sent:
+                    try:
+                        if reminder.id is not None:
+                            await self.db.reminder.delete_reminder_by_id(reminder.id)
+                    except Exception as e:
+                        logger.error(f"Failed to delete reminder: {e}")
 
-            seconds = (reminder.reminder_expires_at - dt_now).total_seconds()
+                    continue
 
-            if seconds <= 0:
-                await self.send_reminder(reminder)
-                continue
+                expires_at = reminder.reminder_expires_at
+                # Ensure timezone-aware for comparison (DB may return naive UTC)
+                if expires_at.tzinfo is None:
+                    expires_at = expires_at.replace(tzinfo=datetime.UTC)
 
-            self.bot.loop.call_later(
-                seconds,
-                asyncio.create_task,
-                self.send_reminder(reminder),
-            )
+                seconds = (expires_at - dt_now).total_seconds()
+
+                if seconds <= 0:
+                    try:
+                        await self.send_reminder(reminder)
+                    except Exception as e:
+                        logger.exception(
+                            "RemindMe.on_ready: send_reminder failed for reminder %s: %s",
+                            reminder.id,
+                            e,
+                        )
+                    continue
+
+                # Create coroutine only when the timer fires; creating it at schedule
+                # time causes "coroutine was never awaited" if the bot shuts down first.
+                self.bot.loop.call_later(
+                    seconds,
+                    lambda r: asyncio.create_task(self.send_reminder(r)),
+                    reminder,
+                )
+        except Exception:
+            logger.exception("RemindMe.on_ready failed (cog=RemindMe)")
+            raise
 
     @commands.hybrid_command(
         name="remindme",
@@ -129,16 +149,6 @@ class RemindMe(BaseCog):
     ) -> None:
         """
         Set a reminder for yourself.
-
-        The time format is `[number][unit]` where units can be:
-        - M, mo, month = months
-        - w, wk, week = weeks
-        - d, day = days
-        - h, hr = hours
-        - m, min = minutes
-        - s, sec = seconds
-
-        Example: `!remindme 1h30m "Take a break"` will remind you in 1 hour and 30 minutes.
 
         Parameters
         ----------
@@ -175,10 +185,12 @@ class RemindMe(BaseCog):
                 guild_id=ctx.guild.id if ctx.guild else 0,
             )
 
+            # Create coroutine only when the timer fires; creating it at schedule
+            # time causes "coroutine was never awaited" if the bot shuts down first.
             self.bot.loop.call_later(
                 seconds,
-                asyncio.create_task,
-                self.send_reminder(reminder_obj),
+                lambda r: asyncio.create_task(self.send_reminder(r)),
+                reminder_obj,
             )
 
             embed = EmbedCreator.create_embed(
