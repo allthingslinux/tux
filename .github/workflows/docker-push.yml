@@ -10,6 +10,8 @@ on:
 permissions:
   contents: read
   packages: write
+  # Required for BuildKit provenance signing (provenance: mode=max) via OIDC
+  id-token: write
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
