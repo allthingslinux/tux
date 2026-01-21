@@ -1,9 +1,10 @@
 ---
-title: Roles Configuration
+title: Roles
 tags:
   - admin-guide
   - configuration
   - roles
+icon: lucide/at-sign
 ---
 
 # Roles Configuration

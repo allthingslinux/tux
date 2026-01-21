@@ -1,9 +1,10 @@
 ---
-title: Ranks Configuration
+title: Ranks
 tags:
   - admin-guide
   - configuration
   - ranks
+icon: lucide/square-star
 ---
 
 # Ranks Configuration

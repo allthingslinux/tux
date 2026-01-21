@@ -1,12 +1,13 @@
 ---
-title: Jail Configuration
+title: Jail
 tags:
   - admin-guide
   - configuration
   - jail
+icon: lucide/columns-4
 ---
 
-# Jail
+# Jail Configuration
 
 Configure the jail channel and jail role required for the `/jail` and `/unjail` moderation commands.
 

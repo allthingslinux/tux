@@ -4,6 +4,7 @@ tags:
   - admin-guide
   - configuration
   - commands
+icon: lucide/command
 ---
 
 # Commands Configuration

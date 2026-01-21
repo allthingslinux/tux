@@ -1,9 +1,10 @@
 ---
-title: Logs Configuration
+title: Logs
 tags:
   - admin-guide
   - configuration
   - logs
+icon: lucide/message-square-text
 ---
 
 # Logs Configuration
