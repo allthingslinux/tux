@@ -38,11 +38,15 @@ INTERCEPTED_LIBRARIES = [
     "discord.http",
     "discord.app_commands",  # Slash commands and app command tree
     "discord.ui",  # UI components (buttons, modals, views)
+    "discord.webhook",  # Webhook request/response (e.g. followup, interactions)
     "jishaku",
     "aiohttp",
     "httpx",
     "urllib3",
     "h2",  # HTTP/2 library (used by httpx)
+    "hpack",  # HTTP/2 header compression (used by h2/httpcore)
+    "httpcore",  # HTTP client used by httpx (http2, connection)
+    "PIL",  # Pillow image loading (PngImagePlugin, etc.; used by deepfry, wolfram, xkcd)
     "asyncio",
     "sqlalchemy",
     "sqlalchemy.engine",
@@ -73,6 +77,8 @@ THIRD_PARTY_LOG_LEVELS = {
     # App commands and UI components - INFO for important events
     "discord.app_commands": logging.INFO,
     "discord.ui": logging.INFO,
+    # Webhook HTTP noise (followup, interaction callbacks)
+    "discord.webhook": logging.INFO,
     "jishaku": logging.INFO,
     # File watching - Suppress file I/O spam
     "watchdog": logging.WARNING,
@@ -108,6 +114,12 @@ THIRD_PARTY_LOG_LEVELS = {
     "psycopg": logging.INFO,
     # HTTP/2 - Suppress HTTP/2 protocol details (very verbose)
     "h2": logging.WARNING,
+    # HTTP/2 header compression - very verbose encode/decode per header
+    "hpack": logging.WARNING,
+    # HTTP client (used by httpx) - request/response and connection lifecycle spam
+    "httpcore": logging.WARNING,
+    # Pillow - image decode/encode and format-specific logging (deepfry, etc.)
+    "PIL": logging.WARNING,
     # Data validation - INFO for validation errors (useful for debugging)
     "pydantic": logging.INFO,
     # Settings management - INFO for config loading events

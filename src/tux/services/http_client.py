@@ -146,7 +146,11 @@ class HTTPClient:
             follow_redirects=True,  # Auto-follow redirects
         )
 
-        logger.debug("HTTP client created with connection pooling enabled")
+        logger.debug(
+            "HTTP client created (HTTP/2, pool max_connections=%s keepalive=%s)",
+            limits.max_connections,
+            limits.max_keepalive_connections,
+        )
         return client
 
     async def close(self) -> None:
@@ -163,7 +167,7 @@ class HTTPClient:
         if self._client is not None:
             await self._client.aclose()
             self._client = None
-            logger.debug("HTTP client closed")
+            logger.info("HTTP client closed")
 
     async def get(self, url: str, **kwargs: Any) -> httpx.Response:
         """Make a GET request.
