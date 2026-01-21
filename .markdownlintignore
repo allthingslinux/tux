@@ -49,3 +49,5 @@ docs/includes/abbreviations.md
 
 # Exclude CHANGELOG.md - it follows Keep-a-Changelog format which markdownlint may reformat incorrectly
 CHANGELOG.md
+
+.cursor/plans
