@@ -85,6 +85,8 @@ services:
       - ./data/temp:/app/temp  # Temporary files
       - ./data/user-home:/home/nonroot  # User home directory
       # Note: Source code changes are synced via docker compose watch (see develop section)
+    # .env = Postgres, ExternalServices, BOT_TOKEN, DATABASE_URL, DEBUG, LOG_LEVEL, MAINTENANCE_MODE (see .env.example).
+    # Compose uses .env for ${VAR}. Other app settings → config/config.json.
     env_file: [.env]
     environment:
       TUX_VERSION: ${VERSION:-dev}

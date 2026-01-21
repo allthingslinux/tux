@@ -221,6 +221,8 @@ RUN set -eux; \
 
 USER nonroot
 
+# Runtime config: env (incl. .env via compose env_file) and /app/config (mounted config.json).
+
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import tux.shared.config.settings; print('Health check passed')" || exit 1
 

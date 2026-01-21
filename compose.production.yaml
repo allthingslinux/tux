@@ -13,8 +13,9 @@
 #   docker compose -f compose.production.yaml --profile dev up -d adminer  # Enable Adminer
 #
 # Prerequisites:
-#   - .env file configured with all required secrets (BOT_TOKEN, POSTGRES_PASSWORD, etc.)
-#   - Pre-built image available at ghcr.io/allthingslinux/tux (or set TUX_IMAGE/TUX_IMAGE_TAG)
+#   - .env from .env.example: Postgres, ExternalServices, BOT_TOKEN, DATABASE_URL, DEBUG, LOG_LEVEL, MAINTENANCE_MODE
+#   - Optional: config/config.json for other app settings (see config.json.example)
+#   - Pre-built image at ghcr.io/allthingslinux/tux (or set TUX_IMAGE/TUX_IMAGE_TAG)
 #
 # For development, use compose.yaml instead.
 #
@@ -75,6 +76,8 @@ services:
       - ./data/cache:/app/.cache  # Application cache
       - ./data/temp:/app/temp  # Temporary files
       - ./data/user-home:/home/nonroot  # User home directory
+    # .env = Postgres, ExternalServices, BOT_TOKEN, DATABASE_URL, DEBUG, LOG_LEVEL, MAINTENANCE_MODE (see .env.example).
+    # Compose uses .env for ${VAR}. Other app settings → config/config.json.
     env_file: [.env]
     environment:
       TUX_VERSION: ${VERSION:-dev}
