@@ -22,7 +22,6 @@ import discord
 import sentry_sdk
 from discord import Interaction
 from discord.ext import commands
-from loguru import logger
 
 from .config import flush, flush_async, is_initialized, report_signal, setup
 from .context import (
@@ -132,8 +131,7 @@ class SentryManager:
     """
 
     def __init__(self) -> None:
-        """Initialize the SentryManager."""
-        logger.debug("SentryManager initialized")
+        """Initialize the SentryManager (wrapper only; Sentry SDK is initialized via setup())."""
 
     @staticmethod
     def setup() -> None:
