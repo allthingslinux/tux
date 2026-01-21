@@ -4,7 +4,7 @@ tags:
   - developer-guide
   - best-practices
   - testing
-icon: lucide/bug-off
+icon: lucide/text-quote
 ---
 
 # Testing
