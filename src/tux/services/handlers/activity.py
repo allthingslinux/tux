@@ -7,7 +7,6 @@ to display various status messages, version information, and statistics.
 
 import asyncio
 import contextlib
-import json
 
 import discord
 from discord.ext import commands
@@ -61,15 +60,9 @@ class ActivityHandler(commands.Cog):
         list[discord.Activity | discord.Streaming | discord.Game]
             List of activities for bot status rotation.
         """
-        activities_config = CONFIG.BOT_INFO.ACTIVITIES
+        activity_data = CONFIG.BOT_INFO.ACTIVITIES
 
-        if not activities_config or not str(activities_config).strip():
-            return [discord.Game(name="with Linux commands")]
-
-        try:
-            activity_data = json.loads(str(activities_config))
-        except json.JSONDecodeError:
-            logger.error(f"Failed to parse ACTIVITIES JSON: {activities_config!r}")
+        if not activity_data:
             return [discord.Game(name="with Linux commands")]
 
         activities: list[discord.Activity | discord.Streaming | discord.Game] = []
