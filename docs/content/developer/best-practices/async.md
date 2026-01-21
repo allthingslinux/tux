@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - best-practices
   - async
+icon: lucide/refresh-cw
 ---
 
 # Async Best Practices
