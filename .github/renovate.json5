@@ -116,7 +116,6 @@
                 'yamlfix',
                 'pydoclint',
                 'docstr-coverage',
-                'pydantic-settings-export',
             ],
             groupName: 'dev',
             automerge: true,
