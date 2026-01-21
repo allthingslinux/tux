@@ -3,6 +3,7 @@ title: Developer Best Practices
 tags:
   - developer-guide
   - best-practices
+icon: lucide/text-quote
 ---
 
 # Developer Best Practices
