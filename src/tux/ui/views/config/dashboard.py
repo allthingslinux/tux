@@ -809,10 +809,10 @@ class ConfigDashboard(discord.ui.LayoutView):
         if component_id is None and rank_value is not None:
             component_id = RANK_STATUS_BASE_ID + rank_value
 
-        display = discord.ui.TextDisplay[discord.ui.LayoutView](status_content)
-        if component_id is not None:
-            display.id = component_id
-        return display
+        return discord.ui.TextDisplay[discord.ui.LayoutView](
+            status_content,
+            id=component_id,
+        )
 
     def _build_role_selector(
         self,
@@ -1492,10 +1492,10 @@ class ConfigDashboard(discord.ui.LayoutView):
             cmd_hash = hash(cmd_name) % 10000  # Keep within reasonable range
             component_id = COMMAND_STATUS_BASE_ID + cmd_hash
 
-        display = discord.ui.TextDisplay[discord.ui.LayoutView](status_content)
-        if component_id is not None:
-            display.id = component_id
-        return display
+        return discord.ui.TextDisplay[discord.ui.LayoutView](
+            status_content,
+            id=component_id,
+        )
 
     def _build_command_rank_selector(
         self,
