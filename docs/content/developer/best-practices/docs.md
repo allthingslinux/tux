@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - best-practices
   - documentation
+icon: lucide/book-marked
 ---
 
 # Documentation Best Practices
