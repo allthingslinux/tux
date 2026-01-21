@@ -100,5 +100,6 @@ Snippet commands are available to all users by default, but snippet creation and
 
 ## Related Documentation
 
+- [Snippets Feature](../../features/snippets.md) – Configuration and role-based access
 - [Permission Configuration](../../../admin/config/commands.md)
 - [Admin Configuration Guide](../../../admin/config/index.md)
