@@ -65,8 +65,8 @@ cd /opt/tux
 
 ```bash
 # Copy example configuration file and edit it
-cp config/config.toml.example config/config.toml
-nano config/config.toml
+cp config/config.json.example config/config.json
+nano config/config.json
 
 # Copy example .env file and edit it
 cp .env.example .env

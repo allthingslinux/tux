@@ -11,7 +11,7 @@ tags:
 Configure Tux using environment variables. The **[ENV Reference](../../reference/env.md)** is auto-generated from code and lists every variable, type, default, and example—use it as the single source of truth.
 
 !!! tip "Configuration priority"
-    Load order (highest to lowest): environment variables → `.env` → `config/config.toml` → `config/config.yaml` → `config/config.json` → defaults. See the [ENV Reference](../../reference/env.md) for details.
+    Load order (highest to lowest): environment variables → `.env` → `config/config.json` or `config.json` → file secrets (`/run/secrets`) → defaults. See the [ENV Reference](../../reference/env.md) for details.
 
 ## Essential variables
 
