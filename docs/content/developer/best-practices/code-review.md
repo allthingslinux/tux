@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - best-practices
   - code-review
+icon: lucide/message-square-code
 ---
 
 # Code Review Best Practices
