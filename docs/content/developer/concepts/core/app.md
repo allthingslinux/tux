@@ -6,6 +6,7 @@ tags:
   - concepts
   - core
   - architecture
+icon: lucide/monitor-check
 ---
 
 # Application Layer
