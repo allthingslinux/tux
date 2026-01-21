@@ -40,7 +40,7 @@ The application layer handles the lifecycle, and the entry point delegates execu
 ```python
 if isinstance(e, TuxDatabaseError):
     logger.error("❌ Database connection failed")
-    logger.info("💡 To start the database, run: docker compose up")
+    logger.info("💡 To start the database, run: docker compose --profile dev up -d (or --profile production)")
 ```
 
 **Application Errors:**
@@ -189,7 +189,7 @@ python -m tux.main
 ```bash
 # Database connection failure
 ❌ "Database connection failed"
-💡 To start the database, run: docker compose up
+💡 To start the database, run: docker compose --profile dev up -d (or --profile production)
 
 # Configuration error
 ❌ "Bot startup failed: Invalid token"

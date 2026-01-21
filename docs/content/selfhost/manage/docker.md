@@ -34,14 +34,14 @@ docker compose logs tux | grep -i "error\|warning"
 ### Start Services
 
 ```bash
-# Start all services
-docker compose up -d
+# Start all services (use --profile dev or --profile production)
+docker compose --profile dev up -d
 
-# Start specific service
-docker compose up -d tux
+# Start specific service (use --profile dev or --profile production)
+docker compose --profile dev up -d tux
 
 # Start with build
-docker compose up -d --build
+docker compose --profile dev up -d --build
 ```
 
 ### Stop Services
@@ -66,8 +66,8 @@ docker compose restart
 # Restart specific service
 docker compose restart tux
 
-# Restart with recreation
-docker compose up -d --force-recreate tux
+# Restart with recreation (use --profile dev or --profile production)
+docker compose --profile dev up -d --force-recreate tux
 ```
 
 ### Check Status
@@ -108,13 +108,11 @@ To change Adminer port:
 ADMINER_PORT=9000
 ```
 
-To disable Adminer:
-
-- Development: Stop the service (`docker compose stop tux-adminer`) or omit the dev profile
-- Production: Adminer is disabled by default. Enable with `--profile dev` if needed:
+To disable Adminer, omit `--profile adminer`. To enable it with production or dev:
 
 ```bash
-docker compose -f compose.production.yaml --profile dev up -d adminer
+docker compose --profile production --profile adminer up -d
+docker compose --profile dev --profile adminer up -d
 ```
 
 ### Using Adminer
@@ -218,8 +216,8 @@ docker run --rm \
   -v $(pwd):/backup \
   alpine:latest sh -c "cd /data && tar xzf /backup/postgres_backup_20240101.tar.gz"
 
-# Start services
-docker compose up -d
+# Start services (use --profile dev or --profile production)
+docker compose --profile production up -d
 ```
 
 ## Monitoring
@@ -288,12 +286,12 @@ docker system prune -a
 # Pull latest images
 docker compose pull
 
-# Rebuild and restart
-docker compose up -d --build
+# Rebuild and restart (use --profile dev or --profile production)
+docker compose --profile dev up -d --build
 
 # Update specific service
 docker compose pull tux
-docker compose up -d tux
+docker compose --profile dev up -d tux
 ```
 
 ### View Container Information

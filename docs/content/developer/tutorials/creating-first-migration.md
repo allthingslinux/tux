@@ -180,8 +180,8 @@ uv run db status
 Start the bot and verify it works with the new schema:
 
 ```bash
-# Start bot (if using Docker)
-docker compose up -d tux
+# Start bot (if using Docker, use --profile dev or --profile production)
+docker compose --profile dev up -d tux
 
 # Or run locally
 uv run tux start --debug

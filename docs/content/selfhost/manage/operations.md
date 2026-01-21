@@ -217,9 +217,9 @@ Keep your Tux installation up to date with the latest features and security patc
 # Pull latest changes
 git pull origin main
 
-# Rebuild and restart
+# Rebuild and restart (use --profile dev or --profile production)
 docker compose down
-docker compose up -d --build
+docker compose --profile dev up -d --build
 ```
 
 ##### Using Docker Images
@@ -368,8 +368,8 @@ docker compose down
 # Restore previous image
 docker tag tux:previous tux:latest
 
-# Start with previous version
-docker compose up -d
+# Start with previous version (use --profile dev or --profile production)
+docker compose --profile production up -d
 ```
 
 #### Bare Metal Rollback

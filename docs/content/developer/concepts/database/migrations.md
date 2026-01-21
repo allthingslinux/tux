@@ -233,8 +233,8 @@ uv run db downgrade -1          # Rollback one migration
 ##### Option A: Let Bot Auto-Migrate (Recommended)
 
 ```bash
-# 1. Start services
-docker compose up -d
+# 1. Start services (use --profile dev or --profile production)
+docker compose --profile production up -d
 
 # 2. Bot automatically runs migrations on first startup
 # Bot will NOT start if migrations fail - check logs:
@@ -252,11 +252,11 @@ docker compose up -d tux-postgres
 # 2. Wait for DB to be ready
 docker compose exec tux-postgres pg_isready -U tuxuser
 
-# 3. Run migrations manually
-docker compose exec tux uv run db push
+# 3. Run migrations manually (use --profile dev or --profile production)
+docker compose --profile dev exec tux uv run db push
 
 # 4. Start bot
-docker compose up -d tux
+docker compose --profile dev up -d tux
 ```
 
 #### Updating Tux (Applying New Migrations)
@@ -355,8 +355,8 @@ Tux uses the **Docker Compose override pattern** - a standard approach used by D
 # Download compose.yaml
 curl -O https://raw.githubusercontent.com/allthingslinux/tux/main/compose.yaml
 
-# Start services - migrations come from image
-docker compose up -d
+# Start services - migrations come from image (use --profile production)
+docker compose --profile production up -d
 ```
 
 **No configuration needed** - migrations are automatically included in the Docker image.
@@ -383,8 +383,8 @@ services:
 ```
 
 ```bash
-# Start services - migrations come from local mount
-docker compose up -d
+# Start services - migrations come from local mount (use --profile dev or --profile production)
+docker compose --profile dev up -d
 ```
 
 **What this enables:**
@@ -408,9 +408,9 @@ uv run db dev --name "add custom features"
 # Enable override for iteration
 # Ensure compose.override.yaml exists with the migration mount (see above)
 
-# Build and run
-docker compose build
-docker compose up -d
+# Build and run (use --profile dev or --profile production)
+docker compose --profile dev build
+docker compose --profile dev up -d
 ```
 
 **Override file contents:**

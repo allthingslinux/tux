@@ -138,8 +138,8 @@ docker compose ps -a
 # View exit logs
 docker compose logs tux
 
-# Run interactively to debug
-docker compose run --rm tux sh
+# Run interactively to debug (use --profile dev or --profile production)
+docker compose --profile dev run --rm tux sh
 ```
 
 **Database connection timeout:**

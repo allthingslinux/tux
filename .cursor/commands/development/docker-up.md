@@ -7,7 +7,7 @@ Start Docker services (PostgreSQL, Adminer) for local development.
 ## Steps
 
 1. **Start Docker Services**
-   - Run `docker compose up -d`
+   - Run `docker compose --profile dev up -d` (or `--profile production` for production)
    - Wait for services to start
    - Verify containers are running
    - Check service health

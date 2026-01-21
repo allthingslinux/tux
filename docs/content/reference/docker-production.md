@@ -8,40 +8,52 @@ tags:
 
 # Docker Production Deployment
 
-Reference guide for deploying Tux in production using Docker.
+Reference guide for deploying Tux in production using Docker. The project uses a single `compose.yaml`; production mode is selected with the `production` profile.
 
-## Production Compose File
+## Production Profile
 
-For production deployments, use `compose.production.yaml` which:
+`compose.yaml` defines both development and production in one file. For production:
 
-- Removes development features (source code volume bindings, hot reload)
-- Uses pre-built images from GitHub Container Registry (GHCR)
-- Optimized for security and performance
-- No Adminer service (optional via `dev` profile)
+- **tux** (profile `production`): pre-built image, no build, security hardening
+- No source bindings or hot reload
+- Adminer is off unless you add `--profile adminer`
 
 ### Usage
 
 ```bash
-# Deploy production configuration
-docker compose -f compose.production.yaml up -d
+# Deploy production (set RESTART_POLICY=unless-stopped in .env)
+docker compose --profile production up -d
+
+# Or via COMPOSE_PROFILES (https://docs.docker.com/compose/how-tos/profiles/)
+COMPOSE_PROFILES=production docker compose up -d
 
 # With specific image version
 TUX_IMAGE=ghcr.io/allthingslinux/tux TUX_IMAGE_TAG=v1.0.0 \
-  docker compose -f compose.production.yaml up -d
+  docker compose --profile production up -d
 
-# Enable Adminer for debugging (if needed)
-docker compose -f compose.production.yaml --profile dev up -d adminer
+# Add Adminer for debugging
+docker compose --profile production --profile adminer up -d
 ```
 
-### Differences from Development
+### Profiles at a glance
 
-| Feature | Development (`compose.yaml`) | Production (`compose.production.yaml`) |
-|---------|------------------------------|----------------------------------------|
-| Source code bindings | ✅ Mounted from host | ❌ Included in image |
-| Hot reload | ✅ Enabled with `watch` | ❌ Disabled |
-| Build from source | ✅ Local build | ❌ Pre-built image |
-| Adminer | ✅ Enabled by default | ❌ Disabled (optional) |
-| Image source | Local build | GHCR registry |
+| Profile      | Use for                         |
+|-------------|----------------------------------|
+| `production`| Production app (pre-built image) |
+| `dev`       | Development (build, hot reload)  |
+| `adminer`   | Database UI (combine with dev or production) |
+
+### Development vs production
+
+| Feature            | `--profile dev`          | `--profile production`   |
+|--------------------|--------------------------|---------------------------|
+| App service        | tux-dev (build from source) | tux (pre-built image)   |
+| Source bindings    | For watch/sync           | In image only             |
+| Hot reload         | Yes with `--watch`       | No                        |
+| Adminer            | Add `--profile adminer`  | Add `--profile adminer`   |
+| security_opt       | No                       | no-new-privileges         |
+| read_only, tmpfs   | No                       | Yes                       |
+| restart            | no                       | unless-stopped            |
 
 ## Using Pre-Built Images
 
@@ -56,7 +68,7 @@ TUX_IMAGE_TAG=latest
 TUX_IMAGE_TAG=v1.0.0
 ```
 
-### Pull and Verify
+### Pull and verify
 
 ```bash
 # Pull latest image
@@ -71,7 +83,7 @@ docker inspect ghcr.io/allthingslinux/tux:latest
 
 ## Advanced Configuration
 
-### Custom Image Registry
+### Custom image registry
 
 ```env
 # Custom registry
@@ -83,25 +95,20 @@ TUX_IMAGE=tux:local
 TUX_IMAGE_TAG=latest
 ```
 
-### Development Overrides
+### Production .env
 
 ```env
-# Enable debug mode
-DEBUG=true
-LOG_LEVEL=DEBUG
-```
+# Restart policy for postgres and consistency
+RESTART_POLICY=unless-stopped
 
-### Startup Configuration
-
-```env
-# Maximum startup attempts
+# Optional
+DEBUG=false
+LOG_LEVEL=INFO
 MAX_STARTUP_ATTEMPTS=5
-
-# Delay between attempts (seconds)
 STARTUP_DELAY=10
 ```
 
-### Database Port Mapping
+### Database port mapping
 
 Expose PostgreSQL port to host:
 
@@ -111,34 +118,20 @@ POSTGRES_PORT=5432
 
 Access from host: `postgresql://tuxuser:password@localhost:5432/tuxdb`
 
-### Disable Adminer
-
-Comment out or remove the `tux-adminer` service in `compose.yaml`, or set:
-
-```env
-ADMINER_PORT=
-```
-
 ## Security Features
 
-Tux Docker images include several security best practices:
+The `tux` service (production profile) applies:
 
-### Non-Root User
+### Non-root user
 
-The container runs as `nonroot` user (UID/GID 1001):
+The container runs as `nonroot` (UID/GID 1001):
 
 ```bash
-# Verify user
-docker compose exec tux whoami
-# Output: nonroot
-
-docker compose exec tux id
-# Output: uid=1001(nonroot) gid=1001(nonroot)
+docker compose --profile production exec tux whoami
+# nonroot
 ```
 
-### Read-Only Root Filesystem
-
-The production image uses a read-only root filesystem with writable tmpfs mounts:
+### Read-only root filesystem
 
 ```yaml
 read_only: true
@@ -147,23 +140,18 @@ tmpfs:
   - /var/tmp:size=50m
 ```
 
-### Security Options
+### Security options
 
 ```yaml
 security_opt:
-  - no-new-privileges:true  # Prevents privilege escalation
+  - no-new-privileges:true
 ```
 
-### Minimal Base Image
+### Base image
 
-Uses `python:3.13.8-slim` with:
+Uses `python:3.13.8-slim` with pinned digest, minimal packages, and regular security updates.
 
-- Minimal system packages
-- Pinned base image digest for reproducibility
-- Optimized for size and security
-- Regular security updates
-
-## Related Documentation
+## Related documentation
 
 - **[Docker Installation](../selfhost/install/docker.md)** - Initial setup
 - **[Docker Operations](../selfhost/manage/docker.md)** - Service management

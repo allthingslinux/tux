@@ -99,28 +99,39 @@ DEBUG=false
 
 ### 3. Start Services
 
-**Development (recommended for testing):**
+**Development (build from source, hot reload):**
 
 ```bash
-# Start all services in background
-docker compose up -d
+docker compose --profile dev up -d
 
-# Or build and start
-docker compose up -d --build
+# With hot reload
+docker compose --profile dev up --watch
+
+# Using COMPOSE_PROFILES (https://docs.docker.com/compose/how-tos/profiles/)
+COMPOSE_PROFILES=dev docker compose up -d
+
+# With Adminer (DB UI)
+docker compose --profile dev --profile adminer up -d
 ```
 
-**Production deployment:**
+**Production (pre-built image, security hardening):**
 
 ```bash
-# Use production compose file (no source code bindings, uses pre-built images)
-docker compose -f compose.production.yaml up -d
+docker compose --profile production up -d
+
+# Or
+COMPOSE_PROFILES=production docker compose up -d
 ```
+
+Set `RESTART_POLICY=unless-stopped` in `.env` for production. To add Adminer: `--profile adminer`.
+
+Profiles work as in [Docker Compose](https://docs.docker.com/compose/how-tos/profiles/): `tux-postgres` has no profile (always started); `tux` and `tux-dev` are behind `production` and `dev` so you must enable one. `adminer` is optional.
 
 The Docker Compose setup includes:
 
 - **tux-postgres** - PostgreSQL database
-- **tux** - Tux Discord bot
-- **tux-adminer** (optional) - Database management UI at `http://localhost:8080` (dev mode only)
+- **tux** (production) or **tux-dev** (development) - Tux Discord bot
+- **tux-adminer** (optional) - Database management UI at `http://localhost:8080`; use `--profile adminer`
 
 ## Services Overview
 
@@ -145,10 +156,12 @@ PostgreSQL container provides:
 
 ### Adminer Service (Optional)
 
-Adminer provides a web-based database management interface when enabled with the dev profile:
+Adminer provides a web-based database management interface. Enable it with the `adminer` profile:
 
 ```bash
-docker compose --profile dev up -d tux-adminer
+docker compose --profile dev --profile adminer up -d
+# or
+docker compose --profile production --profile adminer up -d
 ```
 
 - Accessible at `http://localhost:8080` (default)
@@ -156,7 +169,7 @@ docker compose --profile dev up -d tux-adminer
 - Auto-login enabled by default
 - Useful for database inspection and management
 
-To disable Adminer, stop the service (`docker compose stop tux-adminer`) or omit the dev profile.
+Omit `--profile adminer` to run without Adminer.
 
 ## Configuration
 
@@ -224,8 +237,8 @@ docker compose logs --tail=100 tux
 ### Start/Stop Services
 
 ```bash
-# Start all services
-docker compose up -d
+# Start all services (use --profile dev or --profile production)
+docker compose --profile dev up -d
 
 # Stop all services
 docker compose down
@@ -245,12 +258,12 @@ docker compose ps
 # Pull latest changes
 git pull origin main
 
-# Rebuild and restart
+# Rebuild and restart (use --profile dev or --profile production)
 docker compose down
-docker compose up -d --build
+docker compose --profile dev up -d --build
 
 # Or rebuild without stopping
-docker compose up -d --build --no-deps tux
+docker compose --profile dev up -d --build --no-deps tux
 ```
 
 ### Update Dependencies
@@ -258,9 +271,9 @@ docker compose up -d --build --no-deps tux
 If `pyproject.toml` or `uv.lock` changes:
 
 ```bash
-# Rebuild container with new dependencies
-docker compose build --no-cache tux
-docker compose up -d tux
+# Rebuild container with new dependencies (use --profile dev or --profile production)
+docker compose --profile dev build --no-cache tux
+docker compose --profile dev up -d tux
 ```
 
 ### Database Migrations

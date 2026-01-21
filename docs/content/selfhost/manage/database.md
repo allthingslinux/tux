@@ -187,10 +187,14 @@ Web-based database administration interface.
 
 **Docker Compose users:**
 
-Adminer is available when enabled with the dev profile:
+Adminer is available when enabled with the adminer profile:
 
 ```bash
-docker compose --profile dev up -d tux-adminer
+# With dev profile
+docker compose --profile dev --profile adminer up -d
+
+# Or just adminer (only starts adminer and postgres)
+docker compose --profile adminer up -d
 ```
 
 Then access it at:
@@ -279,7 +283,7 @@ Then access at `http://localhost:9090`
 
 #### Disable Adminer
 
-Stop the service or omit the dev profile:
+Stop the service or omit the adminer profile:
 
 ```bash
 docker compose stop tux-adminer

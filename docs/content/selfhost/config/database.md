@@ -211,7 +211,7 @@ Reset migrations (WARNING: destroys data):
 
 ```bash
 uv run db reset
-docker compose up -d tux
+docker compose --profile dev up -d tux
 ```
 
 ### Performance Issues
@@ -250,10 +250,14 @@ See [Database Management](../manage/database.md) for detailed troubleshooting.
 
 ## Adminer Web UI
 
-Access your database through Adminer when enabled with the dev profile:
+Access your database through Adminer when enabled with the adminer profile:
 
 ```bash
-docker compose --profile dev up -d tux-adminer
+# With dev profile
+docker compose --profile dev --profile adminer up -d
+
+# Or just adminer (only starts adminer and postgres)
+docker compose --profile adminer up -d
 ```
 
 **Access:** `http://localhost:8080`
