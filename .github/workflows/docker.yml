@@ -488,17 +488,20 @@ jobs:
       # Run Docker Scout CVE scan to ensure image is safe before pushing to registry
       # Fails the workflow if critical or high-severity vulnerabilities are found
       # Note: continue-on-error allows workflow to proceed if Docker Scout authentication fails
+      # Note: image input requires a single image reference, so we construct it from registry, image name, and version
       - name: Docker Scout CVEs Before Push
         uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de  # v1
         continue-on-error: true
         with:
           command: cves
-          image: ${{ steps.meta_validate.outputs.tags }}
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.release_version.outputs.version
+            }}
           only-severities: critical,high
           exit-code: 1
           github-token: ${{ secrets.GITHUB_TOKEN }}
           summary: true
           format: json
+          write-comment: true
       # Push validated image to GitHub Container Registry (GHCR) with SBOM and provenance
       # Only runs if validation step passed (implicit dependency via step order)
       # Rebuild with push enabled to generate and push SBOM/provenance attestations
