@@ -89,7 +89,8 @@ services:
     # Compose uses .env for ${VAR}. Other app settings → config/config.json.
     env_file: [.env]
     environment:
-      TUX_VERSION: ${VERSION:-dev}
+      # Empty default: use /app/VERSION from image when VERSION unset; override when set (e.g. .env)
+      TUX_VERSION: ${VERSION:-}
       # Development settings
       DEBUG: ${DEBUG:-false}
       # Startup configuration
