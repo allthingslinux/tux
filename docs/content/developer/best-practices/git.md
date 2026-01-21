@@ -128,7 +128,7 @@ git clone https://github.com/allthingslinux/tux.git
 cd tux
 uv sync
 cp .env.example .env
-cp config/config.toml.example config/config.toml
+cp config/config.json.example config/config.json
 ```
 
 ### Development
@@ -170,7 +170,7 @@ Tux uses comprehensive pre-commit hooks to maintain code quality. All hooks run 
 
 ### Quality Checks
 
-- **JSON/TOML validation**: Ensures config files are valid
+- **JSON/TOML validation**: Ensures JSON and TOML files (e.g. `config.json`, `pyproject.toml`) are valid
 - **Code formatting**: Ruff handles Python formatting
 - **Import sorting**: Maintains consistent import order
 - **Type checking**: basedpyright validates types

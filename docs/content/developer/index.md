@@ -54,12 +54,12 @@ uv run pre-commit install
 ```bash
 # Generate and edit configuration files
 uv run config generate
-cp .env.example .env && cp config/config.toml.example config/config.toml
+cp .env.example .env && cp config/config.json.example config/config.json
 ```
 
 ### 4. **Edit configuration files**
 
-Edit the `.env` and `config/config.toml` files in your favorite text editor to set up your development environment.
+Edit the `.env` and `config/config.json` files in your favorite text editor to set up your development environment.
 
 At a minimum, you should set the `BOT_TOKEN` in `.env` to your Discord bot token, and also the `BOT_OWNER_ID` to your Discord user ID so you can use owner-only commands. ([See this guide if you need help finding your Discord user ID](https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID)).
 

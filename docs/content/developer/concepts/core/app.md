@@ -111,7 +111,7 @@ Shutdown always completes cleanup, even if errors occur during the process.
 The application layer integrates deeply with Tux's configuration system, reading from multiple sources:
 
 - **Environment Variables** - `.env` file for secrets and overrides
-- **TOML/YAML/JSON files** - Static configuration files
+- **config.json** - Static configuration file (`config/config.json` or `config.json`)
 - **Database** - Guild-specific settings (prefixes, permissions)
 - **Runtime Flags** - CLI arguments and dynamic settings
 
