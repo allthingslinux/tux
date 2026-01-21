@@ -4,6 +4,7 @@ tags:
   - developer-guide
   - best-practices
   - namespace
+icon: lucide/tag
 ---
 
 # Namespace Best Practices
