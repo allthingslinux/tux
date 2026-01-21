@@ -2,6 +2,7 @@
 
 from typing import Any, TypeVar
 
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import SQLModel
 
 from tux.database.service import DatabaseService
@@ -175,8 +176,16 @@ class UpsertController[ModelT]:
             create_data |= defaults
 
         crud_controller = CrudController(self.model, self.db)
-        new_instance = await crud_controller.create(**create_data)
-        return new_instance, True
+        try:
+            new_instance = await crud_controller.create(**create_data)
+        except IntegrityError:
+            # Race: another coroutine created the row between our find_one and create.
+            existing = await query_controller.find_one(filters)
+            if existing is not None:
+                return existing, False
+            raise
+        else:
+            return new_instance, True
 
     async def upsert(
         self,
