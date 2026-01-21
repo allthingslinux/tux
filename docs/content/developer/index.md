@@ -1,105 +1,98 @@
 ---
 title: Developer Guide
 icon: material/folder-search-outline
+description: Index of developer documentation—contributing, tutorials, concepts, best practices, and reference.
 tags:
   - developer-guide
 ---
 
 # Developer Guide
 
-!!! warning "Work in progress"
-    This section is a work in progress. Please help us by contributing to the documentation.
+Documentation for developing and contributing to Tux: setup, architecture, patterns, and tooling.
 
-This section contains documentation for developers working with Tux.
+---
 
-## Quick Start
+## Contributing
 
-If you don't need detailed instructions, you can get started quickly by following these steps.
+**[Contributing to Tux](contributing.md)** — Setup, workflow, pull requests, and where to find Git, branch naming, and code review guidance.
 
-### Prerequisites
+---
 
-- Linux development environment (WSL if on Windows)
-- [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-- [Docker](https://docs.docker.com/engine/install/)
-- [uv](https://docs.astral.sh/uv/getting-started/installation/) (the Tux development tool)
-- A Discord bot token (create one at the [Discord Developer Portal](https://discord.com/developers/applications) or check our [Bot Token Configuration guide](../selfhost/config/bot-token.md))
-- A Discord server that has the bot added to it
+## Tutorials
 
-!!! tip
-    Don't know how to add a bot to your server? Go to the OAuth2 tab, scroll down to the URL Generator, select the "bot" scope, then scroll down and set the permissions you want the bot to have. Open the generated URL to add the bot.
+**[Tutorials](tutorials/index.md)** — Step-by-step guides:
 
-### 1. **Clone the repository**
+| Topic | Description |
+|-------|-------------|
+| [Development Setup](tutorials/development-setup.md) | Environment and first run |
+| [First Contribution](tutorials/first-contribution.md) | End-to-end first PR |
+| [Creating Your First Cog](tutorials/creating-first-cog.md) | Module and cog structure |
+| [Creating Your First Command](tutorials/creating-first-command.md) | Commands and invocation |
+| [Creating Your First Migration](tutorials/creating-first-migration.md) | Database schema changes |
+| [Database Integration](tutorials/database-integration.md) | Using the database in code |
+| [Project Structure](tutorials/project-structure.md) | Layout and conventions |
+| [Testing Setup](tutorials/testing-setup.md) | Running and writing tests |
 
-```bash
-git clone https://github.com/allthingslinux/tux.git && cd tux
-```
+---
 
-!!! warning
-    If you plan to contribute changes back to the main repository, make sure to fork the repository first and clone your fork instead (replace allthingslinux with your GitHub username). Then add the main repository as an upstream remote:
-    <!-- markdownlint-disable MD046 -->
-    ```bash
-    git remote add upstream https://github.com/allthingslinux/tux.git
-    ```
+## Guides
 
-### 3. **Set up the development environment**
+**[Guides](guides/index.md)** — How-to and tooling:
 
-```bash
-# Install dependencies
-uv sync
+| Topic | Description |
+|-------|-------------|
+| [Components V2](guides/components-v2.md) | Discord.py Components V2 (buttons, views, modals) |
+| [Creating Cursor Rules](guides/creating-cursor-rules.md) | Cursor rules for the project |
+| [Creating Cursor Commands](guides/creating-cursor-commands.md) | Cursor slash commands |
+| [Docker Images](guides/docker-images.md) | Building and using Docker images |
+| [Extending the CLI](guides/extending-cli.md) | Adding CLI commands |
 
-# Install pre-commit hooks
-uv run pre-commit install
-```
+---
 
-```bash
-# Generate and edit configuration files
-uv run config generate
-cp .env.example .env && cp config/config.json.example config/config.json
-```
+## Concepts
 
-### 4. **Edit configuration files**
+**[Concepts](concepts/index.md)** — Architecture and internals:
 
-Edit the `.env` and `config/config.json` files in your favorite text editor to set up your development environment.
+| Area | Contents |
+|------|----------|
+| [Core](concepts/core/index.md) | App, bot, cogs, lifecycle, modules, permissions, plugins, logging |
+| [Database](concepts/database/index.md) | Architecture, service, models, controllers, migrations, testing, utilities |
+| [UI](concepts/ui/index.md) | Buttons, components, embeds, modals, views |
+| [Handlers](concepts/handlers/index.md) | Hot-reload and event handling |
+| [Services](concepts/services/index.md) | Service layer |
+| [Shared](concepts/shared/index.md) | Shared utilities and config |
+| [Tasks](concepts/tasks/index.md) | Task monitor and background work |
+| [Wrappers](concepts/wrappers/index.md) | Wrappers and helpers |
 
-At a minimum, you should set the `BOT_TOKEN` in `.env` to your Discord bot token, and also the `BOT_OWNER_ID` to your Discord user ID so you can use owner-only commands. ([See this guide if you need help finding your Discord user ID](https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID)).
+---
 
-If you want to set a custom database url (e.g. for managed services like supabase), set the variables for that. If you want to set a custom password or other database settings for the Docker database, set those and it will automatically apply to the Docker database on first run.
+## Best Practices
 
-### 5. **Start the database**
+**[Best Practices](best-practices/index.md)** — Conventions and patterns:
 
-**If you aren't using the self-hosted database, skip this step.**
+| Topic | Description |
+|-------|-------------|
+| [Git](best-practices/git.md) | Commits, rebasing, pre-commit, PRs |
+| [Branch Naming](best-practices/branch-naming.md) | Branch name format and types |
+| [Code Review](best-practices/code-review.md) | Review checklist and conduct |
+| [CI/CD](best-practices/ci-cd.md) | Pipelines and automation |
+| [Async](best-practices/async.md) | Async/await usage |
+| [Error Handling](best-practices/error-handling.md) | Exceptions and recovery |
+| [Logging](best-practices/logging.md) | Logging with loguru |
+| [Caching](best-practices/caching.md) | Caching strategies |
+| [Sentry](best-practices/sentry/index.md) | Instrumentation, sampling, metrics, spans |
+| [Testing](best-practices/testing/index.md) | Unit, integration, e2e, fixtures |
+| [Debugging](best-practices/debugging.md) | Debug workflow |
+| [Documentation](best-practices/docs.md) | Doc and Zensical practices |
+| [Namespace](best-practices/namespace.md) | Naming and structure |
 
-If you want a web UI at `http://localhost:8080` for managing the database, replace `tux-postgres` with `tux-adminer` in the `docker compose up -d` command below.
+---
 
-```bash
-# Setup database
-docker compose up -d tux-postgres
-```
+## Reference
 
-The database should automatically migrate with all required tables on first bot start.
-
-### 6. **Run the bot**
-
-The bot hot-reloads on code changes, so no need to restart it manually. For some things like config changes and state-based components, you may need to restart the bot.
-
-```bash
-uv run tux start --debug
-```
-
-Once you are done, run `$dev ct` (replace `$` with your prefix if you changed it) to register slash commands. You will need to run this whenever you add or change slash commands, more specifically slash command signatures.
-
-This will also let you confirm that the bot is running and that you have set your bot owner ID correctly.
-
-### 7. **Develop, run, lint, and test**
-
-This is a simple explanation of the development workflow.
-
-```bash
-# Develop, run, lint, and test
-git checkout -b feature/your-feature-name
-# ... make changes ...
-uv run dev all
-git commit -m "feat(command): add new command"
-# ... repeat until you are ready ...
-git push origin feature/your-feature-name
-```
+| Resource | Description |
+|----------|-------------|
+| [CLI](../reference/cli.md) | `tux`, `db`, `dev`, `test`, `config`, `docs` |
+| [Environment Variables](../reference/env.md) | `.env` and configuration |
+| [Versioning](../reference/versioning.md) | Versions and releases |
+| [Renovate](../reference/renovate.md) | Dependency updates |
