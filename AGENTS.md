@@ -36,7 +36,7 @@ uv run ai validate-rules      # Validate all rules and commands
 ```bash
 uv sync
 uv run config generate
-cp .env.example .env && cp config/config.toml.example config/config.toml
+cp .env.example .env && cp config/config.json.example config/config.json
 uv run tux start
 ```
 
@@ -139,7 +139,7 @@ uv run ai validate-rules   # Validate Cursor rules and commands
 
 ## Development Workflow
 
-1. **Setup:** `uv sync` → configure `.env` & `config.toml`
+1. **Setup:** `uv sync` → configure `.env` & `config.json`
 2. **Develop:** Make changes → `uv run dev all` → `uv run test quick`
 3. **Database:** Modify models → `uv run db new "description"` → `uv run db dev`
 4. **Rules:** Validate rules/commands → `uv run ai validate-rules`
