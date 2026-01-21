@@ -1,6 +1,6 @@
 ---
 title: Changelog
-icon: lucide/file-clock
+icon: lucide/text-quote
 ---
 
 --8<-- "CHANGELOG.md"
