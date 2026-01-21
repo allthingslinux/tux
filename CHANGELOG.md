@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-01-21
+
 ### Added
 
 * **Docker**: Local Docker build script (`docker-build.sh`) with versioning options, auto-detection from git tags, custom tags, and build targets (production/dev)
@@ -644,7 +646,8 @@ Docker & Deployment
 * **Sentry Integration**: Enhanced error reporting and monitoring
 * **Non-root Containers**: Docker containers run as non-root user
 
-[Unreleased]: https://github.com/allthingslinux/tux/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/allthingslinux/tux/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/allthingslinux/tux/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.5...v0.1.0
 [0.1.0-rc.5]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.4...v0.1.0-rc.5
 [0.1.0-rc.4]: https://github.com/allthingslinux/tux/compare/v0.1.0-rc.3...v0.1.0-rc.4
