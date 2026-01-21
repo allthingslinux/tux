@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - concepts
   - core
+icon: lucide/bot
 ---
 
 # Bot Core
