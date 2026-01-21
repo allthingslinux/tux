@@ -60,43 +60,42 @@ Users do not need to interact with Tux directly. They interact with the feature 
 
 ## Configuration
 
-Status Roles are configured through the server's `config.toml` file.
+Status Roles are configured through the server's `config.json` file.
 
 ### Configuration Options
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `mappings` | `array` | A list of objects defining the role-to-status relationships. |
-| `server_id` | `integer` | The ID of the Discord server where the mapping applies. |
-| `role_id` | `integer` | The ID of the role to be managed. |
-| `status_regex` | `string` | The regex pattern to match against the user's status. |
+| `MAPPINGS` | `array` | A list of objects with `status` and `role_id`. Each `status` is a regex or string to match against the user's custom status. |
+
+Each mapping object:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | `string` | Regex or literal string to match against the user's Discord custom status. |
+| `role_id` | `integer` | The role to assign when the status matches. |
 
 ### Example Configuration
 
-```toml
-[status_roles]
-mappings = [
-    {
-        server_id = 123456789012345678,
-        role_id = 987654321098765432,
-        status_regex = ".*tux.*"  # Matches any status containing "tux"
-    },
-    {
-        server_id = 123456789012345678,
-        role_id = 111222333444555666,
-        status_regex = "^Working$"  # Matches only if status is exactly "Working"
-    }
-]
+```json
+{
+  "STATUS_ROLES": {
+    "MAPPINGS": [
+      { "status": ".*tux.*", "role_id": 987654321098765432 },
+      { "status": "^Working$", "role_id": 111222333444555666 }
+    ]
+  }
+}
 ```
 
 ### Regex Pattern Examples
 
-```toml
-status_regex = ".*linux.*"              # Contains "linux"
-status_regex = "^Working$"              # Exactly "Working"
-status_regex = ".*(working|busy).*"     # Contains "working" OR "busy"
-status_regex = "^$"                     # Empty status
-```
+| Pattern | Matches |
+|---------|---------|
+| `".*linux.*"` | Status contains "linux" |
+| `"^Working$"` | Status is exactly "Working" |
+| `".*(working\|busy).*"` | Status contains "working" or "busy" |
+| `"^$"` | Empty status |
 
 !!! info "Configuration Guide"
     For detailed configuration instructions, see the [Admin Guide](../../admin/config/index.md).
@@ -129,7 +128,7 @@ None required. All members are eligible for status roles based on the server's c
 
 - Tux is missing the "Manage Roles" permission.
 - Tux's role is lower in the hierarchy than the role it is trying to assign.
-- The `server_id` or `role_id` in the configuration is incorrect.
+- The `role_id` in a `MAPPINGS` entry is incorrect.
 - The regex pattern is invalid or does not match as expected.
 
 **Solutions:**
@@ -159,7 +158,7 @@ None required. All members are eligible for status roles based on the server's c
 - **Custom Status Only:** Only the text in the "Custom Status" field is checked; "Playing", "Streaming", or "Listening" activities are ignored.
 - **Bot Exemption:** Bots cannot receive status roles to avoid potential loops or unintended behavior.
 - **Case Sensitivity:** By default, regex matching is case-insensitive unless the pattern explicitly handles it (e.g., `(?i)`).
-- **One Server Scope:** Each mapping is tied to a specific `server_id`.
+- **Server-scoped:** Status role mappings apply only within the guild where the config is used.
 
 ## Related Documentation
 

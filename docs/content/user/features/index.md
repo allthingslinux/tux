@@ -19,6 +19,7 @@ Tux provides automated features that enhance your Discord server experience. The
 
 ### Utility & Organization
 
+- **[Snippets](snippets.md)** - Create and manage code snippets with optional role-based access
 - **[Temp VC](temp-vc.md)** - Create temporary voice channels on demand
 - **[Bookmarks](bookmarks.md)** - Save important messages to your DMs
 
@@ -28,4 +29,4 @@ Tux provides automated features that enhance your Discord server experience. The
 
 ## Getting Started
 
-Most features require configuration in your server's `config.toml` file. See the [Admin Guide](../../admin/config/index.md) for setup instructions.
+Most features require configuration in your server's `config.json` file. See the [Admin Guide](../../admin/config/index.md) for setup instructions.

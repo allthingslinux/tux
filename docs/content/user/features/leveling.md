@@ -65,34 +65,37 @@ Users interact with this feature by:
 
 ## Configuration
 
-Leveling is configured through the server's `config.toml` file.
+Leveling is configured through the server's `config.json` file.
 
 ### Configuration Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `xp_cooldown` | `integer` | `1` | Seconds required between messages to earn XP. |
-| `levels_exponent` | `float` | `2.0` | The exponent used in the level calculation formula. |
-| `xp_blacklist_channels` | `array` | `[]` | List of channel IDs where users cannot earn XP. |
-| `xp_roles` | `array` | `[]` | List of level milestones and their associated role IDs. |
-| `xp_multipliers` | `array` | `[]` | Role-based multipliers to boost XP gain. |
+| `XP_COOLDOWN` | `integer` | `1` | Seconds required between messages to earn XP. |
+| `LEVELS_EXPONENT` | `float` | `2.0` | The exponent used in the level calculation formula. |
+| `XP_BLACKLIST_CHANNELS` | `array` | `[]` | List of channel IDs where users cannot earn XP. |
+| `XP_ROLES` | `array` | `[]` | List of level milestones and their associated role IDs (`level`, `role_id`). |
+| `XP_MULTIPLIERS` | `array` | `[]` | Role-based multipliers (`role_id`, `multiplier`) to boost XP gain. |
+| `SHOW_XP_PROGRESS` | `boolean` | `true` | Show XP progress in level/leaderboard output. |
+| `ENABLE_XP_CAP` | `boolean` | `false` | Enable an XP cap. |
 
 ### Example Configuration
 
-```toml
-[xp]
-xp_cooldown = 1
-levels_exponent = 1.75
-xp_blacklist_channels = [123456789012345678]
-
-xp_roles = [
-    { level = 5, role_id = 111222333444555666 },
-    { level = 10, role_id = 222333444555666777 }
-]
-
-xp_multipliers = [
-    { role_id = 555666777888999000, multiplier = 1.1 }  # 10% boost for this role
-]
+```json
+{
+  "XP_CONFIG": {
+    "XP_COOLDOWN": 1,
+    "LEVELS_EXPONENT": 1.75,
+    "XP_BLACKLIST_CHANNELS": [123456789012345678],
+    "XP_ROLES": [
+      { "level": 5, "role_id": 111222333444555666 },
+      { "level": 10, "role_id": 222333444555666777 }
+    ],
+    "XP_MULTIPLIERS": [
+      { "role_id": 555666777888999000, "multiplier": 1.1 }
+    ]
+  }
+}
 ```
 
 !!! info "Configuration Guide"
@@ -136,8 +139,8 @@ None required for basic usage. Administrator commands require appropriate permis
 
 **Causes:**
 
-- The channel is in the `xp_blacklist_channels` list.
-- The user is sending messages faster than the `xp_cooldown` setting allows.
+- The channel is in the `XP_BLACKLIST_CHANNELS` list.
+- The user is sending messages faster than the `XP_COOLDOWN` setting allows.
 - The user has been manually blacklisted from the XP system.
 
 **Solutions:**
@@ -156,13 +159,13 @@ None required for basic usage. Administrator commands require appropriate permis
 
 - Tux is missing the "Manage Roles" permission.
 - The role to be assigned is positioned above Tux's highest role in the Discord settings.
-- The `xp_roles` configuration has an incorrect role ID.
+- The `XP_ROLES` configuration has an incorrect role ID.
 
 **Solutions:**
 
 1. Ensure Tux has "Manage Roles" permission.
 2. Move Tux's role above the leveling roles in the server hierarchy.
-3. Double-check the role IDs in your `config.toml`.
+3. Double-check the role IDs in your `config.json`.
 
 ## Limitations
 

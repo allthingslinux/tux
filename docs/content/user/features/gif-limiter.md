@@ -57,29 +57,32 @@ Users do not need to interact with the bot to use this feature. They simply need
 
 ## Configuration
 
-The GIF Limiter is configured through the server's `config.toml` file.
+The GIF Limiter is configured through the server's `config.json` file.
 
 ### Configuration Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `recent_gif_age` | `integer` | `60` | The time window (in seconds) during which GIFs are tracked. |
-| `gif_limits_user` | `object` | `{}` | A mapping of channel IDs to the maximum GIFs allowed per user. |
-| `gif_limits_channel` | `object` | `{}` | A mapping of channel IDs to the maximum GIFs allowed total. |
-| `gif_limit_exclude` | `array` | `[]` | A list of channel IDs where the GIF Limiter will not run. |
+| `RECENT_GIF_AGE` | `integer` | `60` | The time window (in seconds) during which GIFs are tracked. |
+| `GIF_LIMITS_USER` | `object` | `{}` | A mapping of user IDs to the maximum GIFs that user may post in the window. |
+| `GIF_LIMITS_CHANNEL` | `object` | `{}` | A mapping of channel IDs to the maximum GIFs allowed in that channel (total). |
+| `GIF_LIMIT_EXCLUDE` | `array` | `[]` | A list of channel IDs where the GIF Limiter does not run. |
 
 ### Example Configuration
 
-```toml
-[gif_limiter]
-recent_gif_age = 60
-gif_limit_exclude = [123456789012345678]
-
-[gif_limiter.gif_limits_user]
-987654321098765432 = 2  # Max 2 GIFs per user every 60 seconds
-
-[gif_limiter.gif_limits_channel]
-987654321098765432 = 5  # Max 5 GIFs total every 60 seconds
+```json
+{
+  "GIF_LIMITER": {
+    "RECENT_GIF_AGE": 60,
+    "GIF_LIMIT_EXCLUDE": [123456789012345678],
+    "GIF_LIMITS_USER": {
+      "987654321098765432": 2
+    },
+    "GIF_LIMITS_CHANNEL": {
+      "987654321098765432": 5
+    }
+  }
+}
 ```
 
 !!! info "Configuration Guide"
@@ -114,7 +117,7 @@ None required. All users are subject to the limits unless the channel is exclude
 
 - The message does not contain the word "gif".
 - Discord has not yet generated an embed for the GIF link.
-- The channel is included in the `gif_limit_exclude` list.
+- The channel is in the `GIF_LIMIT_EXCLUDE` list.
 
 **Solutions:**
 

@@ -64,21 +64,24 @@ Users interact with this feature by:
 
 ## Configuration
 
-Temp VC is configured through the server's `config.toml` file.
+Temp VC is configured through the server's `config.json` file.
 
 ### Configuration Options
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `tempvc_channel_id` | `string` | The ID of the voice channel that acts as the "Join to Create" trigger. |
-| `tempvc_category_id` | `string` | The ID of the category where temporary channels will be created. |
+| `TEMPVC_CHANNEL_ID` | `string` \| `null` | The ID of the voice channel that acts as the "Join to Create" trigger. |
+| `TEMPVC_CATEGORY_ID` | `string` \| `null` | The ID of the category where temporary channels will be created. |
 
 ### Example Configuration
 
-```toml
-[temp_vc]
-tempvc_channel_id = "123456789012345678"
-tempvc_category_id = "987654321098765432"
+```json
+{
+  "TEMPVC": {
+    "TEMPVC_CHANNEL_ID": "123456789012345678",
+    "TEMPVC_CATEGORY_ID": "987654321098765432"
+  }
+}
 ```
 
 ### Setup Steps
@@ -87,7 +90,7 @@ tempvc_category_id = "987654321098765432"
 2. **Template Channel:** Create a voice channel inside that category (e.g., "➕ Create Channel").
 3. **Permissions:** Configure the permissions on the template channel exactly how you want the temporary channels to look (e.g., bitrates, user limits).
 4. **IDs:** Enable Discord Developer Mode and copy the IDs for both the channel and the category.
-5. **Config:** Add these IDs to your `config.toml` under the `[temp_vc]` section.
+5. **Config:** Add these IDs to your `config.json` under the `TEMPVC` object.
 
 !!! info "Configuration Guide"
     For detailed configuration instructions, see the [Admin Guide](../../admin/config/index.md).
@@ -120,13 +123,13 @@ None required to use the feature. Users only need permission to join the templat
 
 **Causes:**
 
-- The `tempvc_channel_id` or `tempvc_category_id` is incorrect.
+- The `TEMPVC_CHANNEL_ID` or `TEMPVC_CATEGORY_ID` is incorrect.
 - Tux is missing "Manage Channels" or "Move Members" permission.
 - The category has reached Discord's channel limit (50 channels per category).
 
 **Solutions:**
 
-1. Verify the IDs in your `config.toml`.
+1. Verify the IDs in your `config.json`.
 2. Ensure Tux has the necessary permissions in both the category and the template channel.
 3. Check if there are too many channels in the category.
 
