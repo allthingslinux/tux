@@ -250,7 +250,9 @@ class Tux(commands.Bot):
 
         except TuxDatabaseConnectionError as e:
             # Critical error already logged by database service, just provide hints
-            logger.info("To start the database, run: docker compose up")
+            logger.info(
+                "To start the database, run: docker compose --profile dev up -d (or --profile production)",
+            )
             logger.info("To run migrations manually, run: uv run db push")
             capture_database_error(e, operation="connection")
             raise
