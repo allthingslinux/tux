@@ -6,7 +6,7 @@ to highlight and celebrate high-quality content.
 """
 
 import contextlib
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
 import discord
 from discord.ext import commands
@@ -390,14 +390,18 @@ class Starboard(BaseCog):
             else:
                 starboard_message = await starboard_channel.send(embed=embed)
 
+            # message_expires_at is NOT NULL; use created_at with fallback and naive UTC.
+            base = getattr(original_message, "created_at", None) or datetime.now(UTC)
+            naive = base.replace(tzinfo=None) if base.tzinfo else base
+            message_expires_at = naive + timedelta(days=STARBOARD_MESSAGE_TTL_DAYS)
+
             await self.db.starboard_message.create_or_update_starboard_message(
                 id=original_message.id,
                 message_content=original_message.content or "",
                 message_channel_id=original_message.channel.id,
                 message_user_id=original_message.author.id,
                 message_guild_id=original_message.guild.id,
-                message_expires_at=original_message.created_at
-                + timedelta(days=STARBOARD_MESSAGE_TTL_DAYS),
+                message_expires_at=message_expires_at,
                 star_count=reaction_count,
                 starboard_message_id=starboard_message.id,
             )
