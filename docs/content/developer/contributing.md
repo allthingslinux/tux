@@ -97,7 +97,7 @@ For step-by-step walkthroughs, see [Development Setup](tutorials/development-set
 
    [Find your ID](https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID). Tweak other options as needed. Regenerate examples: `uv run config generate`.
 
-4. **Database:** If using local Docker: `docker compose up -d tux-postgres` (or `docker compose --profile adminer up -d` for Adminer web UI at `http://localhost:8080`). Then:
+4. **Database:** If using local Docker: `docker compose up -d tux-postgres` (or `docker compose --profile adminer up -d` to also start Adminer web UI at `http://localhost:8080`). Then:
 
    ```bash
    uv run db init
