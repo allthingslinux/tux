@@ -92,9 +92,9 @@ class BaseModel(SQLModel, TimestampMixin):
         # Ensure timestamp fields are always in __dict__ for SQLAlchemy compatibility
         # Only add them if they're not already present (don't override database values)
         if "created_at" not in self.__dict__:
-            self.__dict__["created_at"] = None
+            object.__setattr__(self, "created_at", None)
         if "updated_at" not in self.__dict__:
-            self.__dict__["updated_at"] = None
+            object.__setattr__(self, "updated_at", None)
 
     def to_dict(
         self,
