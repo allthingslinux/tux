@@ -10,8 +10,6 @@ on:
 permissions:
   contents: read
   packages: write
-  # Required for BuildKit provenance signing (provenance: mode=max) via OIDC
-  id-token: write
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -33,6 +31,11 @@ jobs:
   build:
     name: Build & Push
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      # Required for BuildKit provenance signing (provenance: mode=max) via OIDC
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
