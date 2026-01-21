@@ -95,7 +95,7 @@ Choose your path to get started with Tux:
 
     ---
 
-    TOML/YAML/JSON support with interactive dashboard.
+    JSON and .env with interactive dashboard.
 
 - :fontawesome-solid-plug-circle-check:{ .lg .middle } __Plugin System__
 
@@ -138,7 +138,7 @@ with modern Python and best practices.
 
     ---
 
-    Flexible setup with TOML/YAML/JSON and interactive dashboard
+    Flexible setup with config.json and .env and interactive dashboard
 
 - :material-chart-line:{ .lg .middle } __Analytics__
 
