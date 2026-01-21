@@ -52,7 +52,6 @@ logs/
 # Docker files (prevent recursive inclusion)
 Containerfile*
 compose.yaml
-compose.production.yaml
 compose.override.yaml.example
 .dockerignore
 
