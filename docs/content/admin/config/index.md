@@ -3,7 +3,7 @@ title: Admin Configuration
 tags:
   - admin-guide
   - configuration
-icon: lucide/og
+icon: lucide/cog
 ---
 
 # Admin Configuration
