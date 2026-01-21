@@ -301,10 +301,15 @@ def _add_console_handler(log_level: str) -> None:
 
     def safe_message_filter(record: Any) -> bool:
         """
-        Filter that escapes curly braces in log messages to prevent format errors.
+        Filter that escapes special characters in log messages to prevent format errors.
 
-        This prevents dictionaries and strings with braces from being interpreted
-        as format placeholders by Loguru, fixing issues like KeyError with dict keys.
+        Escapes:
+        - Curly braces ``{ }`` so dicts and strings are not interpreted as format
+          placeholders (avoids KeyError).
+        - ``<`` only (not ``>``) so strings like Discord mentions (e.g. ``<@&id>``)
+          or ``<locals>`` in tracebacks are not parsed as loguru color/tag directives,
+          avoiding 'ValueError: Tag "<...>" does not correspond to any known
+          color directive'. ``>`` is left as-is so ``->`` and ``=>`` stay readable.
 
         Parameters
         ----------
@@ -316,9 +321,11 @@ def _add_console_handler(log_level: str) -> None:
         bool
             Always True to allow the log message through.
         """
-        # Escape curly braces in the message to prevent format string interpretation
         if isinstance(record["message"], str):
-            record["message"] = record["message"].replace("{", "{{").replace("}", "}}")
+            s = record["message"]
+            s = s.replace("{", "{{").replace("}", "}}")
+            s = s.replace("<", "\\<")
+            record["message"] = s
         return True
 
     logger.add(
