@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - best-practices
   - error-handling
+icon: lucide/circle-alert
 ---
 
 # Error Handling Best Practices
