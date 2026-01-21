@@ -91,32 +91,13 @@ start_bot_with_retry() {
 
         # Configuration validated, start the bot
         # Use exec to replace shell process for proper signal handling (SIGTERM, SIGINT)
-        # This ensures signals are delivered directly to the bot process
+        # This ensures signals are delivered directly to the bot process, which handles
+        # them via asyncio signal handlers in src/tux/core/app.py
         echo "Configuration validated. Starting bot..."
         # shellcheck disable=SC2093
         exec tux start
   done
 }
-
-# Signal handlers for graceful shutdown
-cleanup() {
-    echo ""
-    echo "Received shutdown signal"
-    echo "Performing cleanup..."
-
-    # Kill any child processes
-    if [ -n "$BOT_PID" ]; then
-        echo "Stopping bot process (PID: $BOT_PID)..."
-        kill -TERM "$BOT_PID" 2> /dev/null || true
-        wait "$BOT_PID" 2> /dev/null || true
-  fi
-
-    echo "Cleanup complete"
-    exit 0
-}
-
-# Set up signal handlers
-trap cleanup SIGTERM SIGINT
 
 # Ensure cache directories exist with proper permissions
 # This handles cases where bind mounts don't include subdirectories
