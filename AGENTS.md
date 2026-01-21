@@ -4,8 +4,9 @@
 
 ## Tech Stack
 
-**Core:** Python 3.13+ • discord.py • PostgreSQL • SQLModel • Docker
+**Core:** Python 3.13.2+ • discord.py • PostgreSQL 17+ • SQLModel • Docker
 **Tools:** uv • ruff • basedpyright • pytest • loguru • sentry-sdk • httpx • Zensical
+**Additional:** typer (CLI) • Alembic (migrations) • psycopg (async PostgreSQL) • pydantic-settings
 
 ## Cursor Rules & Commands
 
@@ -34,30 +35,99 @@ uv run ai validate-rules      # Validate all rules and commands
 ## Quick Setup
 
 ```bash
+# Install dependencies
 uv sync
+
+# Generate configuration files
 uv run config generate
-cp .env.example .env && cp config/config.json.example config/config.json
+cp .env.example .env
+cp config/config.json.example config/config.json
+
+# Edit configuration (minimum required: BOT_TOKEN)
+nano .env
+nano config/config.json
+
+# Start database (Docker Compose)
+docker compose up -d tux-postgres
+# Or with Adminer UI:
+docker compose --profile adminer up -d
+
+# Initialize database
+uv run db init
+
+# Start bot
 uv run tux start
+# Or with debug mode:
+uv run tux start --debug
 ```
 
 ## Project Structure
 
 ```text
 tux/
-├── src/tux/                    # Main source
-│   ├── core/                   # Bot core
-│   ├── database/               # Models & migrations
-│   ├── services/               # Business logic
-│   ├── modules/                # Commands (cogs)
+├── src/tux/                    # Main source code
+│   ├── core/                   # Bot core (bot.py, app.py, base_cog.py)
+│   ├── database/               # Database layer
+│   │   ├── models/             # SQLModel models
+│   │   ├── migrations/         # Alembic migrations
+│   │   ├── controllers/        # Database controllers (CRUD)
+│   │   ├── service.py          # DatabaseService
+│   │   └── utils.py            # Database utilities
+│   ├── services/               # Business logic services
+│   │   ├── handlers/           # Event & error handlers
+│   │   ├── hot_reload/         # Hot reload system
+│   │   ├── moderation/         # Moderation services
+│   │   ├── sentry/             # Sentry integration
+│   │   └── wrappers/           # External API wrappers
+│   ├── modules/                # Discord commands (cogs)
+│   │   ├── admin/              # Admin commands
+│   │   ├── config/             # Configuration commands
+│   │   ├── features/           # Feature modules
+│   │   ├── fun/                # Fun commands
+│   │   ├── info/               # Information commands
+│   │   ├── levels/             # Leveling system
+│   │   ├── moderation/         # Moderation commands
+│   │   ├── snippets/           # Snippet commands
+│   │   ├── tools/              # Utility tools
+│   │   └── utility/            # Utility commands
 │   ├── plugins/                # Plugin system
-│   ├── ui/                     # Embeds & views
-│   ├── shared/                 # Utils & config
-│   └── main.py                 # Entry point
-├── scripts/                    # CLI scripts
-├── tests/                      # Tests (core/database/services/shared/modules)
+│   │   ├── atl/                # All Things Linux plugins
+│   ├── ui/                     # UI components
+│   │   ├── embeds.py           # Rich embeds
+│   │   ├── buttons.py          # Button components
+│   │   ├── modals/             # Modal dialogs
+│   │   └── views/              # View components
+│   ├── shared/                 # Shared utilities
+│   │   ├── config/             # Configuration models
+│   │   ├── constants.py        # Constants
+│   │   ├── exceptions.py       # Custom exceptions
+│   │   └── functions.py        # Utility functions
+│   ├── help/                   # Help system
+│   └── main.py                 # Application entry point
+├── scripts/                    # CLI command scripts
+│   ├── ai/                     # AI/Cursor validation
+│   ├── config/                 # Configuration commands
+│   ├── db/                     # Database commands
+│   ├── dev/                    # Development tools
+│   ├── docs/                   # Documentation commands
+│   ├── test/                   # Testing commands
+│   └── tux/                    # Bot commands
+├── tests/                      # Test suite
+│   ├── core/                   # Core tests
+│   ├── database/               # Database tests
+│   ├── services/               # Service tests
+│   ├── modules/                # Module tests
+│   ├── plugins/                # Plugin tests
+│   └── shared/                 # Shared test utilities
 ├── docs/                       # Zensical documentation
-├── docker/                     # Docker related files
-├── config/                     # Config examples
+│   └── content/                # Documentation content
+├── docker/                     # Docker configuration
+│   ├── entrypoint.sh           # Container entrypoint
+│   ├── postgres/               # PostgreSQL config
+│   └── adminer/                # Adminer config
+├── config/                     # Configuration examples
+├── compose.yaml                # Docker Compose (dev + production)
+├── Containerfile               # Docker image definition
 └── .cursor/                    # Cursor rules & commands
     ├── rules/                  # AI coding patterns (.mdc)
     ├── commands/               # Workflow commands (.md)
@@ -79,32 +149,65 @@ tux/
 **Quality checks:**
 
 ```bash
-uv run dev all            # Run all quality checks (lint, type, format)
-uv run dev pre-commit     # Run pre-commit checks
+uv run dev all                # Run all quality checks (format, lint, type-check)
+uv run dev pre-commit         # Run full pre-commit suite
+uv run dev format             # Format code with ruff
+uv run dev lint               # Lint code (check only)
+uv run dev lint-fix           # Lint and auto-fix issues
+uv run dev type-check         # Type checking with basedpyright
+uv run dev lint-docstring     # Lint docstrings with pydoclint
+uv run dev docstring-coverage # Check docstring coverage
+uv run dev clean              # Clean build artifacts and caches
 ```
 
 ## Testing
 
 ```bash
+uv run test                 # Quick tests (default, no coverage)
 uv run test all             # Full test suite with coverage
-uv run test quick           # Fast run (no coverage)
-uv run test html            # Generate HTML report
+uv run test quick           # Fast run (no coverage, explicit)
+uv run test fast            # Fast tests only
+uv run test plain           # Plain output (no colors/formatting)
+uv run test parallel        # Parallel test execution
+uv run test file <path>     # Run tests in specific file
+uv run test last-failed     # Re-run last failed tests
+uv run test coverage        # Generate coverage report
+uv run test html            # Generate HTML coverage report
+uv run test benchmark       # Run benchmark tests
 ```
 
 **Markers:** `unit`, `integration`, `slow`, `database`, `async`
 
 ## Database
 
-**Stack:** SQLModel (ORM) • Alembic (migrations) • PostgreSQL (psycopg async)
+**Stack:** SQLModel (ORM) • Alembic (migrations) • PostgreSQL 17+ (psycopg async)
 
 ```bash
-uv run db init              # Initialize with migrations
-uv run db dev               # Generate & apply migration
-uv run db push              # Apply pending migrations
-uv run db status            # Show migration status
-uv run db health            # Check connection
-uv run db reset             # Safe reset
-uv run db nuke              # Complete wipe (dangerous)
+# Migration Management
+uv run db init              # Initialize empty database with migrations
+uv run db dev               # Generate & apply migration (auto-name)
+uv run db dev --name "msg"  # Generate & apply with custom name
+uv run db new "description" # Create new migration file only
+uv run db push              # Apply all pending migrations
+uv run db downgrade -1      # Rollback one migration
+uv run db downgrade <rev>   # Rollback to specific revision
+
+# Status & Inspection
+uv run db status            # Show current revision and pending migrations
+uv run db current           # Show current revision
+uv run db history           # Show full migration history
+uv run db show head         # Show SQL for head revision
+uv run db check             # Validate migration files
+uv run db version           # Show Alembic version
+
+# Database Operations
+uv run db health            # Check database connection
+uv run db tables            # List all database tables
+uv run db schema            # Show database schema
+uv run db queries           # Run custom database queries
+uv run db reset             # Safe reset (downgrade to base, reapply all)
+uv run db nuke              # Complete wipe (destructive, requires confirmation)
+uv run db nuke --fresh      # Nuclear reset + delete migration files
 ```
 
 ## CLI Commands
@@ -114,14 +217,23 @@ uv run db nuke              # Complete wipe (dangerous)
 ```bash
 uv run tux start            # Start bot
 uv run tux start --debug    # Debug mode
+uv run tux version          # Show version information
 ```
 
 **Docs:**
 
 ```bash
-uv run docs serve           # Local preview
-uv run docs build           # Build site
-uv run docs deploy          # Deploy to GitHub Pages
+uv run docs serve           # Local preview server
+uv run docs build           # Build documentation site
+uv run docs lint            # Lint documentation files
+uv run docs deploy          # Deploy to GitHub Pages (via Wrangler)
+# Wrangler commands (Cloudflare Pages):
+uv run docs wrangler-dev    # Start Wrangler dev server
+uv run docs wrangler-deploy # Deploy to Cloudflare Pages
+uv run docs wrangler-rollback # Rollback deployment
+uv run docs wrangler-versions # List deployment versions
+uv run docs wrangler-tail   # Tail deployment logs
+uv run docs wrangler-deployments # List all deployments
 ```
 
 **Configuration:**
@@ -139,11 +251,43 @@ uv run ai validate-rules   # Validate Cursor rules and commands
 
 ## Development Workflow
 
-1. **Setup:** `uv sync` → configure `.env` & `config.json`
+1. **Setup:** `uv sync` → configure `.env` & `config.json` → `docker compose up -d tux-postgres` → `uv run db init`
 2. **Develop:** Make changes → `uv run dev all` → `uv run test quick`
-3. **Database:** Modify models → `uv run db new "description"` → `uv run db dev`
+3. **Database:** Modify models → `uv run db new "description"` → `uv run db dev` (or `uv run db dev --name "description"` for auto-create+apply)
 4. **Rules:** Validate rules/commands → `uv run ai validate-rules`
 5. **Commit:** `uv run dev pre-commit` → `uv run test all`
+
+## Docker Compose
+
+Tux uses a single `compose.yaml` with profiles for development and production:
+
+```bash
+# Development (build from source, hot reload)
+docker compose --profile dev up -d
+docker compose --profile dev up --watch  # With hot reload
+
+# Production (pre-built image, security hardening)
+docker compose --profile production up -d
+
+# Add Adminer (database UI)
+docker compose --profile dev --profile adminer up -d
+docker compose --profile production --profile adminer up -d
+
+# Using environment variable
+COMPOSE_PROFILES=dev docker compose up -d
+COMPOSE_PROFILES=production docker compose up -d
+
+# PostgreSQL only (no profile needed)
+docker compose up -d tux-postgres
+```
+
+**Profiles:**
+
+- `dev` - Development mode with source bindings and hot reload
+- `production` - Production mode with pre-built image and security hardening
+- `adminer` - Optional database management UI (combine with dev or production)
+
+**Note:** `tux-postgres` has no profile and always starts. Do not use `--profile dev` and `--profile production` together.
 
 ## Conventional Commits
 
@@ -217,41 +361,64 @@ refactor(database): optimize query performance
 
 **Security:**
 
-- No secrets in code
-- Environment variables for config
-- Validate all inputs
-- Proper permission checks
+- **No secrets in code** - Use `.env` files and environment variables
+- **Environment variables for config** - `pydantic-settings` for validation
+- **Validate all inputs** - User input validation at boundaries
+- **Proper permission checks** - Role-based permission system
+- **Read-only filesystem** - Production Docker containers use read-only root
+- **Non-root user** - Containers run as `nonroot` (UID 1001)
+- **Security options** - `no-new-privileges` in production
 
 **Performance:**
 
-- Async for I/O
-- Cache frequently accessed data
-- Optimize queries
-- Monitor memory
+- **Async for I/O** - All database and HTTP operations are async
+- **Connection pooling** - psycopg connection pooling for PostgreSQL
+- **Cache frequently accessed data** - aiocache for caching
+- **Optimize queries** - Use database controllers with proper indexing
+- **Monitor memory** - Sentry integration for performance monitoring
+- **Lazy loading** - Load modules and plugins on demand
 
 ## File Organization
 
-- Max 1600 lines per file
-- One class/function per file when possible
-- Descriptive filenames
+- **Max 1600 lines per file** - Split larger files into logical modules
+- **One class/function per file when possible** - Improves maintainability
+- **Descriptive filenames** - Use clear, purpose-driven names
+- **Absolute imports preferred** - Relative imports allowed within same module
+- **Import grouping** - stdlib → third-party → local (with blank lines)
 
 ## Troubleshooting
 
 ```bash
 # Database issues
-uv run db health
+uv run db health              # Check database connection
+uv run db status              # Check migration status
+docker compose ps tux-postgres # Check PostgreSQL container
 
 # Import errors
-uv sync --reinstall
+uv sync --reinstall          # Reinstall all dependencies
 
 # Type errors
-uv run basedpyright --verbose
+uv run dev type-check         # Run type checker
+uv run basedpyright --verbose # Verbose type checking
 
 # Test failures
-uv run pytest -v -s
+uv run test quick            # Quick test run
+uv run test last-failed      # Re-run failed tests
+uv run pytest -v -s          # Verbose pytest output
+
+# Code quality issues
+uv run dev all                # Run all quality checks
+uv run dev lint-fix           # Auto-fix linting issues
+uv run dev format             # Format code
 
 # Cursor validation
-uv run ai validate-rules
+uv run ai validate-rules      # Validate Cursor rules and commands
+
+# Docker issues
+docker compose logs tux       # View bot logs
+docker compose logs tux-postgres # View database logs
+docker compose ps             # Check container status
+docker compose restart tux    # Restart bot container
 ```
 
 ## Resources
