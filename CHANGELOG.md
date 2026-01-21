@@ -47,6 +47,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Database migration plugin**: `config.json` in setup and error handling; schema report runs in executor; error message truncation
 * **Docker / env**: Compose and Containerfile comments for required env and `config/config.json`; `.env.example` defaults for Postgres and external services
 * **Dependencies**: `pyyaml` and `types-pyyaml` updates; `pydantic-settings-export` removed from dev and Renovate
+* **Docker**: Merged `compose.yaml` and `compose.production.yaml` into one file; use `--profile dev` or `--profile production`; `--profile adminer` for DB UI
+    * YAML anchors/aliases for deduplication between dev and production services
+    * Enhanced `develop.watch` configuration with `initial_sync` for better developer experience
+    * Updated all documentation to use profile-based compose commands
 
 ### Fixed
 
@@ -60,10 +64,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **TTY roles**: Jailed members are skipped in role assignment on join so the jail role is not overridden by re-jail logic
 * **Rank modals**: Response handling in EditRankModal and CreateRankModal uses defer and followup for modal submissions; streamlined error handling for rank creation and editing
 * **Permission ranks**: Description handling in PermissionRankController: `MISSING` by default, `None` clears, omitting leaves unchanged
+* **Docker entrypoint**: Fixed TLDR cache directory permissions; entrypoint now ensures `/app/.cache/tldr` exists with proper ownership
+* **Type checking**: Fixed basedpyright deprecation warnings
+    * Replaced deprecated `asyncio.iscoroutinefunction` with `inspect.iscoroutinefunction` (Python 3.14 compatibility)
+    * Fixed `MappingProxyType` mutation by using `object.__setattr__` instead of direct `__dict__` assignment
 
 ### Removed
 
 * **Config**: TOML and YAML configuration formats; `config.toml.example` and `config.yaml.example`; `pydantic-settings-export` and its type stubs
+* **Docker**: `compose.production.yaml` (merged into `compose.yaml` with profiles)
 
 ## [0.1.0] - 2026-01-20
 
