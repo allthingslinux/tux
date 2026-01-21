@@ -1,26 +1,32 @@
 ---
-# Docker Compose configuration for DEVELOPMENT
+# Docker Compose — Development and Production
 #
-# This file is optimized for local development with:
-# - Hot reload for source code changes (requires docker compose watch)
-# - Local builds from source
-# - Source code volume mounts for plugins and assets
-# - Adminer enabled by default (dev profile)
-# - Development-friendly defaults (restart: no, debug mode)
+# One file, two modes. Profiles select which app variant runs (dev vs production);
+# tux-postgres has no profile and is always started. See:
+# https://docs.docker.com/compose/how-tos/profiles/
 #
-# Usage:
-#   docker compose up -d  # Start all services
-#   docker compose up --watch  # Start with hot reload
-#   docker compose --profile dev up -d  # Explicitly enable dev profile
+#   Development (build from source, hot reload):
+#     docker compose --profile dev up -d
+#     docker compose --profile dev up --watch
+#     COMPOSE_PROFILES=dev docker compose up -d
 #
-# For production deployments, use: docker compose -f compose.production.yaml up -d
+#   Production (pre-built image, security hardening):
+#     docker compose --profile production up -d
+#     COMPOSE_PROFILES=production docker compose up -d
 #
+#   Add Adminer (DB UI): use --profile adminer with dev or production.
+#
+# Without --profile dev or --profile production, only tux-postgres starts.
+# Do not use --profile production and --profile dev together (same container name).
+# Set RESTART_POLICY=unless-stopped in .env for production.
+#
+name: tux
 services:
   tux-postgres:
     container_name: tux-postgres
     hostname: tux-postgres
     image: postgres:17-alpine@sha256:ff4ccc02b97e0ebb6b328ef9ff92522f95586f83be6801896b615088defc8ad2
-    restart: 'no'
+    restart: ${RESTART_POLICY:-no}
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
       POSTGRES_USER: ${POSTGRES_USER:-tuxuser}
@@ -31,8 +37,6 @@ services:
       - tux_postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
-
-    # Logging configuration
     logging:
       driver: json-file
       options:
@@ -48,66 +52,39 @@ services:
       retries: 5
       start_period: 30s
     stop_grace_period: 30s
+
+  # Production app: pre-built image, no build, security hardening.
+  # Use: docker compose --profile production up -d
   tux:
     container_name: tux
     hostname: tux
-    # Development: Build from source by default, or use pre-built image
-    #
-    # HOW TO USE LOCAL BUILDS:
-    # 1. Just run: docker compose up -d --build
-    #    (This builds locally and uses the built image automatically)
-    #
-    # 2. Or build first, then start:
-    #    docker compose build
-    #    docker compose up -d
-    #
-    # 3. To use a pre-built image instead, set environment variable:
-    #    TUX_IMAGE=ghcr.io/allthingslinux/tux TUX_IMAGE_TAG=latest docker compose up -d
-    #
-    # The 'build' section below tells compose to build locally if image doesn't exist
+    profiles: [production]
     image: ${TUX_IMAGE:-ghcr.io/allthingslinux/tux}:${TUX_IMAGE_TAG:-latest}
-    build:
-      context: .
-      dockerfile: Containerfile
-      target: production  # Use 'production' target (or 'dev' for dev dependencies)
-      args:
-        VERSION: ${VERSION:-dev}
-        GIT_SHA: ${GIT_SHA:-}
-        BUILD_DATE: ${BUILD_DATE:-}
-        DEVCONTAINER: ${DEVCONTAINER:-0}
-    volumes:
-      # Mount source code for development (hot reload via watch mode)
-      - ./config:/app/config:ro  # Configuration files
-      - ./src/tux/plugins:/app/tux/plugins:ro  # Custom plugins
-      - ./assets:/app/assets:ro  # Static assets
-      - ./docker/entrypoint.sh:/entrypoint.sh:ro  # Entrypoint script
-      - ./data/cache:/app/.cache  # Application cache
-      - ./data/temp:/app/temp  # Temporary files
-      - ./data/user-home:/home/nonroot  # User home directory
-      # Note: Source code changes are synced via docker compose watch (see develop section)
-    # .env = Postgres, ExternalServices, BOT_TOKEN, DATABASE_URL, DEBUG, LOG_LEVEL, MAINTENANCE_MODE (see .env.example).
-    # Compose uses .env for ${VAR}. Other app settings → config/config.json.
-    env_file: [.env]
-    environment:
-      # Empty default: use /app/VERSION from image when VERSION unset; override when set (e.g. .env)
+    restart: unless-stopped
+    env_file: &tux-envfile
+      - path: .env
+        required: true
+    environment: &tux-env
       TUX_VERSION: ${VERSION:-}
-      # Development settings
       DEBUG: ${DEBUG:-false}
-      # Startup configuration
       MAX_STARTUP_ATTEMPTS: ${MAX_STARTUP_ATTEMPTS:-3}
       STARTUP_DELAY: ${STARTUP_DELAY:-5}
-      # Database connection (Docker Compose service names)
       POSTGRES_HOST: tux-postgres
       POSTGRES_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
       POSTGRES_USER: ${POSTGRES_USER:-tuxuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
-    restart: no  # Development: manual restart control
-    depends_on:
+    volumes:
+      - ./config:/app/config:ro
+      - ./src/tux/plugins:/app/tux/plugins:ro
+      - ./assets:/app/assets:ro
+      - ./data/cache:/app/.cache
+      - ./data/temp:/app/temp
+      - ./data/user-home:/home/nonroot
+    depends_on: &tux-depends
       tux-postgres:
         condition: service_healthy
-    healthcheck:
-      # Verify the bot process is running
+    healthcheck: &tux-health
       test:
         - CMD-SHELL
         - ps aux | grep -v grep | grep -q "tux start" || exit 1
@@ -116,22 +93,52 @@ services:
       retries: 3
       start_period: 40s
     stop_grace_period: 30s
-    # Development: Security settings disabled for easier debugging
-    # Production compose file enables: security_opt, read_only, tmpfs
-    logging:
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp:size=100m, /var/tmp:size=50m]
+    logging: &tux-logging
       driver: json-file
       options:
         max-size: 10m
         max-file: '3'
+        compress: 'true'
 
-    # Hot reload configuration (enabled with: docker compose --watch up)
-    # Syncs source code changes without rebuilding the container
+  # Development app: build from source, hot reload, no security hardening.
+  # Use: docker compose --profile dev up -d  or  --profile dev up --watch
+  tux-dev:
+    container_name: tux
+    hostname: tux
+    profiles: [dev]
+    image: ${TUX_IMAGE:-ghcr.io/allthingslinux/tux}:${TUX_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Containerfile
+      target: production
+      args:
+        VERSION: ${VERSION:-dev}
+        GIT_SHA: ${GIT_SHA:-}
+        BUILD_DATE: ${BUILD_DATE:-}
+    restart: 'no'
+    env_file: *tux-envfile
+    environment: *tux-env
+    volumes:
+      - ./config:/app/config:ro
+      - ./src/tux/plugins:/app/tux/plugins:ro
+      - ./assets:/app/assets:ro
+      - ./docker/entrypoint.sh:/entrypoint.sh:ro
+      - ./data/cache:/app/.cache
+      - ./data/temp:/app/temp
+      - ./data/user-home:/home/nonroot
+    depends_on: *tux-depends
+    healthcheck: *tux-health
+    stop_grace_period: 30s
+    logging: *tux-logging
     develop:
       watch:
-        # Python source code (hot reload)
         - action: sync
           path: ./src
           target: /app/src
+          initial_sync: true
           ignore:
             - __pycache__/
             - '*.pyc'
@@ -140,57 +147,48 @@ services:
             - .pytest_cache/
             - .mypy_cache/
             - .coverage
-        # Sync configuration changes
         - action: sync
           path: ./config
           target: /app/config
-        # Sync custom modules
+          initial_sync: true
         - action: sync
           path: ./src/tux/plugins
           target: /app/tux/plugins
-        # Sync assets
+          initial_sync: true
         - action: sync
           path: ./assets
           target: /app/assets
-        # Rebuild when dependencies change
+          initial_sync: true
         - action: rebuild
           path: pyproject.toml
         - action: rebuild
           path: uv.lock
-        # Restart when environment or Docker config changes
         - action: sync+restart
           path: .env
           target: /app/.env
-        - action: sync+restart
-          path: compose.yaml
-          target: /app/compose.yaml
+          initial_sync: true
   tux-adminer:
-    # Database management UI - enabled by default in development
     image: adminer:latest@sha256:b6d3c299d1754368031415e567609d500a4a5a22c17b7812749a8f677d93f066
     container_name: tux-adminer
     hostname: tux-adminer
-    profiles: [dev]  # Enable with: docker compose --profile dev up -d
+    profiles: [adminer]
     restart: 'no'
     depends_on:
       tux-postgres:
         condition: service_healthy
     ports: ['${ADMINER_PORT:-8080}:8080']
     environment:
-      # Plugin configuration for autologin
       ADMINER_DEFAULT_SYSTEM: pgsql
       ADMINER_DEFAULT_SERVER: tux-postgres
       ADMINER_DEFAULT_NAME: ${POSTGRES_USER:-tuxuser}
       ADMINER_DEFAULT_PASS: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
       ADMINER_DEFAULT_DATABASE: ${POSTGRES_DB:-tuxdb}
       ADMINER_AUTOLOGIN_AUTOSUBMIT: ${ADMINER_AUTO_LOGIN:-true}
-      # Additional plugins
       ADMINER_PLUGINS: backward-keys tables-filter dump-date dump-json dump-xml dump-zip
         edit-calendar edit-foreign enum-option foreign-system json-column pretty-json-column
         table-indexes-structure table-structure row-numbers config
       ADMINER_THEME: dracula
     volumes:
-      # Mount autologin plugin to plugins-enabled directory
-      # Adminer automatically loads plugins from this directory
       - ./docker/adminer/autologin-form.php:/var/www/html/plugins-enabled/autologin-form.php:ro
 volumes:
   tux_postgres_data:
