@@ -186,6 +186,13 @@ jobs:
             VERSION=${{ steps.pr_version.outputs.version }}
             GIT_SHA=${{ github.sha }}
             BUILD_DATE=${{ steps.build_date.outputs.date }}
+      # Authenticate to Docker Hub (required for Docker Scout when using a non-Docker-Hub registry like GHCR)
+      # See: https://docs.docker.com/scout/integrations/ci/gha/
+      - name: Authenticate to Docker Hub
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef  # v3
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PAT }}
       # Run Docker Scout analysis for vulnerability scanning
       # For PRs: Compare against production environment to show what changed
       # For other events: Run quickview and recommendations for general analysis
@@ -230,6 +237,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      # Required for BuildKit provenance signing (provenance: mode=max) via OIDC
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
@@ -371,14 +380,14 @@ jobs:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
       - name: Generate Release Version
         id: release_version
-        run: ./.github/scripts/docker.sh generate-release-version \ "${{ github.ref }}"
-          \ "${{ env.SHA_PREFIX_LENGTH }}"
+        run: ./.github/scripts/docker.sh generate-release-version "${{ github.ref }}"
+          "${{ env.SHA_PREFIX_LENGTH }}"
       - name: Validate Build Configuration
         run: ./.github/scripts/docker.sh validate-build-config "${{ github.sha }}"
       - name: Calculate SOURCE_DATE_EPOCH
         id: source_date
-        run: ./.github/scripts/docker.sh calculate-source-date-epoch \ "${{ github.event.head_commit.timestamp }}"
-          \ "${{ github.event.repository.created_at }}"
+        run: ./.github/scripts/docker.sh calculate-source-date-epoch "${{ github.event.head_commit.timestamp }}"
+          "${{ github.event.repository.created_at }}"
       - name: Generate Build Date
         id: build_date
         run: echo "date=$(./.github/scripts/docker.sh generate-build-date)" >> "$GITHUB_OUTPUT"
@@ -437,6 +446,13 @@ jobs:
             VERSION=${{ steps.release_version.outputs.version }}
             GIT_SHA=${{ github.sha }}
             BUILD_DATE=${{ steps.build_date.outputs.date }}
+      # Authenticate to Docker Hub (required for Docker Scout when using GHCR)
+      # See: https://docs.docker.com/scout/integrations/ci/gha/
+      - name: Authenticate to Docker Hub
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef  # v3
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PAT }}
       # Validate image before pushing (test-before-push pattern)
       # Run Docker Scout CVE scan to ensure image is safe before pushing to registry
       # Fails the workflow if critical or high-severity vulnerabilities are found
