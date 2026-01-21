@@ -1,35 +1,67 @@
 ---
 title: FAQ
-icon: material/help-circle-outline
+description: Frequently asked questions about Tux.
+hide:
+  - toc
 ---
 
 # Frequently Asked Questions
 
-!!! warning "Work in progress"
-    This section is a work in progress. Please help us by contributing to the documentation.
+Quick answers to common questions about Tux, grouped by audience.
 
-This page contains frequently asked questions and answers about Tux.
+## Categories
 
-## General Questions
+<div class="grid cards" style="grid-template-columns: repeat(2, 1fr);" markdown>
 
-**Q:** Will I be able to invite Tux to my server?
+- :material-information-outline:{ .lg .middle } __General__
 
-**A:** A public bot is planned but for now you can self-host.
+    ---
 
-**Q:** How can I support Tux?
+    Inviting Tux, licensing, support, features, roadmap.
 
-**A:** For code or documentation you can ask in the [Discord](https://discord.gg/gpmSjcjQxg) or financially on [Open Collective](https://opencollective.com/allthingslinux).
+    [:octicons-arrow-right-24: View](general.md){ .md-button .md-button--primary }
 
-**Q:** Will I be able to use Tux inside Direct Messages?
+- :octicons-person-24:{ .lg .middle } __For Users__
 
-**A:** We plan to support this.
+    ---
 
-**Q:** Can you add "X" Feature?
+    Command prefix, slash commands, DMs, User Apps.
 
-**A:** Open a github issue with the "[FEATURE]" or open a pull-request and we'll think about it.
+    [:octicons-arrow-right-24: View](users.md){ .md-button .md-button--primary }
 
-## Support Questions
+- :material-cog:{ .lg .middle } __For Admins__
 
-**Q:** I need help setting up Tux!
+    ---
 
-**A:** Feel free to open a Github issue or ask in the [Discord](https://discord.gg/gpmSjcjQxg).
+    Configuration, prefix changes.
+
+    [:octicons-arrow-right-24: View](admins.md){ .md-button .md-button--primary }
+
+- :material-server:{ .lg .middle } __For Self-Hosters__
+
+    ---
+
+    Requirements, bot token.
+
+    [:octicons-arrow-right-24: View](self-hosters.md){ .md-button .md-button--primary }
+
+- :material-code-tags:{ .lg .middle } __For Developers__
+
+    ---
+
+    Plugins, Docker for development.
+
+    [:octicons-arrow-right-24: View](developers.md){ .md-button .md-button--primary }
+
+- :material-help-circle:{ .lg .middle } __Other__
+
+    ---
+
+    Getting help.
+
+    [:octicons-arrow-right-24: View](other.md){ .md-button .md-button--primary }
+
+</div>
+
+!!! tip "More questions?"
+    We'll add more as they come up. Have a suggestion? [Open an issue](https://github.com/allthingslinux/tux/issues) or say hi in [Discord](https://discord.gg/gpmSjcjQxg).
