@@ -1,6 +1,6 @@
 ---
 title: Changelog
-icon: material/script-text-outline
+icon: lucide/file-clock
 ---
 
 --8<-- "CHANGELOG.md"
