@@ -14,8 +14,8 @@ The main components are:
 - Helper Functions: For adding contextual data to the currently active span.
 """
 
-import asyncio
 import functools
+import inspect
 import time
 import traceback
 from collections.abc import Callable, Coroutine, Generator
@@ -182,7 +182,7 @@ def create_instrumentation_wrapper[**P, R](
     Callable[P, R]
         The wrapped function.
     """
-    if asyncio.iscoroutinefunction(func):
+    if inspect.iscoroutinefunction(func):
 
         @functools.wraps(func)
         async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
