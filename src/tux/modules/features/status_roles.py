@@ -156,14 +156,14 @@ class StatusRoles(BaseCog):
 
                 if matches and not has_role:
                     # Add role if status matches and member doesn't have the role
-                    logger.info(
+                    logger.trace(
                         f"Adding role {role.name} to {member.display_name} (status: '{status_text}' matched '{pattern}')",
                     )
                     await member.add_roles(role)
 
                 elif not matches and has_role:
                     # Remove role if status doesn't match and member has the role
-                    logger.info(
+                    logger.trace(
                         f"Removing role {role.name} from {member.display_name} (status no longer matches)",
                     )
                     await member.remove_roles(role)
