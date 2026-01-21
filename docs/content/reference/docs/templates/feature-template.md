@@ -112,10 +112,13 @@ If options are straightforward, you can skip this subsection.
 - **Effect:** {How changing this affects behavior}
 - **Example:**
 
-  ```toml
-  # config.toml
-  [feature_section]
-  {OPTION_NAME} = value
+  ```json
+  // config.json
+  {
+    "FEATURE_SECTION": {
+      "{OPTION_NAME}": "value"
+    }
+  }
   ```
 
 ### Setup Instructions
@@ -183,12 +186,13 @@ Include configuration examples and usage examples.
 
 ### Example Configuration
 
-```toml
-# config.toml
-[feature_section]
-{OPTION_NAME} = value
-{OPTION_NAME} = value
-{OPTION_NAME} = value
+```json
+// config.json
+{
+  "FEATURE_SECTION": {
+    "{OPTION_NAME}": "value"
+  }
+}
 ```
 
 ### Example Usage
@@ -197,9 +201,13 @@ Include configuration examples and usage examples.
 
 **Configuration:**
 
-```toml
-[feature_section]
-{OPTION_NAME} = example_value
+```json
+// config.json
+{
+  "FEATURE_SECTION": {
+    "{OPTION_NAME}": "example_value"
+  }
+}
 ```
 
 **Result:**
