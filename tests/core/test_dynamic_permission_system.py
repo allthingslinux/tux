@@ -11,7 +11,7 @@ Test Coverage:
 - Support for prefix, app, and hybrid commands
 """
 
-import asyncio
+import inspect
 from unittest.mock import AsyncMock, MagicMock
 
 import discord
@@ -215,7 +215,7 @@ class TestPermissionDecorator:
         # Should be callable
         assert callable(test_command)
         # Should be a coroutine function
-        assert asyncio.iscoroutinefunction(test_command)
+        assert inspect.iscoroutinefunction(test_command)
 
 
 class TestPermissionError:
