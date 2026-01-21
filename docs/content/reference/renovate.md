@@ -145,7 +145,7 @@ Renovate detects security updates via OSV, labels them with `deps: security`, an
 
 | Group Name | Packages | Auto-merge | Labels | Schedule |
 |------------|----------|------------|--------|----------|
-| **dev** | `pre-commit`, `ruff`, `basedpyright`, `yamllint`, `yamlfix`, `pydoclint`, `docstr-coverage`, `pydantic-settings-export` | ✅ Branch | `deps: dev` | Weekly |
+| **dev** | `pre-commit`, `ruff`, `basedpyright`, `yamllint`, `yamlfix`, `pydoclint`, `docstr-coverage` | ✅ Branch | `deps: dev` | Weekly |
 | **test** | All packages in `test` dependency group (pytest, pytest-*, py-pglite) | ✅ Branch | `deps: test` | Weekly |
 | **docs** | `zensical` | 🚩 Manual | `deps: docs`, `deps: needs-review` | Monthly |
 | **types** | `types-*`, `type-*`, `typing-*`, `@types/*`, `*-types`, `*-stub(s)` (e.g. `annotated-types`, `asyncpg-stubs`) | ✅ Branch | `deps: types` | Monthly |
