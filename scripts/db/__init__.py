@@ -7,6 +7,7 @@ Aggregates all database-related operations.
 from scripts.core import create_app
 from scripts.db import (
     check,
+    current,
     dev,
     downgrade,
     health,
@@ -30,6 +31,7 @@ app.add_typer(init.app)
 app.add_typer(dev.app)
 app.add_typer(push.app)
 app.add_typer(status.app)
+app.add_typer(current.app)
 app.add_typer(new.app)
 app.add_typer(history.app)
 app.add_typer(check.app)

@@ -59,8 +59,6 @@ def validate() -> None:
 
         console.print("\n[bold]Configuration Files:[/bold]")
         for file_path in [
-            "config/config.toml",
-            "config/config.yaml",
             "config/config.json",
             ".env",
         ]:
