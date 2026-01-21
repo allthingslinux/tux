@@ -6,6 +6,7 @@ to highlight and celebrate high-quality content.
 """
 
 import contextlib
+from datetime import timedelta
 
 import discord
 from discord.ext import commands
@@ -17,6 +18,10 @@ from tux.core.checks import requires_command_permission
 from tux.core.converters import get_channel_safe
 from tux.services.sentry import capture_exception_safe
 from tux.ui.embeds import EmbedCreator, EmbedType
+
+# TTL for starboard entries: message_expires_at = original_message.created_at + this.
+# Used for future cleanup jobs; must satisfy starboard_message.message_expires_at NOT NULL.
+STARBOARD_MESSAGE_TTL_DAYS = 365
 
 
 class Starboard(BaseCog):
@@ -387,16 +392,21 @@ class Starboard(BaseCog):
 
             await self.db.starboard_message.create_or_update_starboard_message(
                 id=original_message.id,
-                message_content=original_message.content,
+                message_content=original_message.content or "",
                 message_channel_id=original_message.channel.id,
                 message_user_id=original_message.author.id,
                 message_guild_id=original_message.guild.id,
+                message_expires_at=original_message.created_at
+                + timedelta(days=STARBOARD_MESSAGE_TTL_DAYS),
                 star_count=reaction_count,
                 starboard_message_id=starboard_message.id,
             )
 
         except Exception as e:
-            logger.error(f"Error while creating or updating starboard message: {e}")
+            logger.error(
+                "Error while creating or updating starboard message: {}",
+                str(e),
+            )
             capture_exception_safe(
                 e,
                 extra_context={
