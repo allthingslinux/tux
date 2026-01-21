@@ -205,7 +205,7 @@ src/tux/modules/
 | Code with copy button | \`\`\`language | Configuration examples |
 | Optional details | `??? note` | Advanced configuration |
 | Keyboard shortcuts | `++key++` | `++ctrl+shift+r++` |
-| File paths | `backticks` | `config/bot/config.toml` |
+| File paths | `backticks` | `config/config.json` |
 | UI elements | **Bold** | **Submit**, **Save Changes** |
 | Technical terms | _Italics_ | _Dependency injection_ |
 

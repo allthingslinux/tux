@@ -16,7 +16,7 @@ alwaysApply: false
 - **`compose.yaml`** - Docker services (PostgreSQL 17, Adminer, hot reload)
 - **`Containerfile`** - Multi-stage Docker build
 - **`alembic.ini`** - Database migrations config
-- **`config/`** - Config examples (TOML/YAML/JSON from pydantic-settings)
+- **`config/`** - Config examples (JSON; `config generate` creates config.json.example, config.schema.json, .env.example, env.md)
 
 ## Dependencies by Group
 
@@ -36,7 +36,6 @@ alwaysApply: false
 - `pynacl` (Cryptography)
 - `python-dotenv` (Environment variable loading)
 - `pytz` (Timezone handling)
-- `pyyaml` (YAML parsing)
 - `reactionmenu` (Discord reaction menus)
 - `rsa` (RSA encryption)
 - `audioop-lts` (Audio operations)
@@ -55,7 +54,6 @@ alwaysApply: false
 - `pydoclint` (Docstring linting - NumPy style)
 - `yamllint`, `yamlfix` (YAML tools)
 - `docstr-coverage` (Documentation coverage)
-- `pydantic-settings-export[email,regions,toml]` (Config generation)
 
 **Testing:**
 
@@ -68,7 +66,7 @@ alwaysApply: false
 
 **Type Stubs:**
 
-- `types-pytz`, `types-click`, `types-psutil`, `types-pillow`, `types-pyyaml`, `types-aiofiles`, `types-influxdb-client`, `types-jinja2`, `types-mock`
+- `types-pytz`, `types-click`, `types-psutil`, `types-pillow`, `types-aiofiles`, `types-influxdb-client`, `types-jinja2`, `types-mock`
 - `asyncpg-stubs`
 - `annotated-types`
 
@@ -153,7 +151,7 @@ tux/
 # Setup
 uv sync                       # Install all dependencies
 cp .env.example .env          # Configure environment
-cp config/config.toml.example config/config.toml
+cp config/config.json.example config/config.json
 
 # Development
 uv run dev all                # Run all quality checks
@@ -173,8 +171,8 @@ python src/tux/main.py
 
 ## Configuration System
 
-**Multi-format support:** TOML (primary), YAML, JSON, .env
-**Generation:** `pydantic-settings-export` creates examples from code
+**Config file:** JSON only (`config/config.json` or `config.json`)
+**Generation:** `scripts/config generate` produces config.json.example, config.schema.json, .env.example, and env.md from `Config`
 **Validation:** Pydantic models with type safety
 **Environment:** `.env` file + environment variables
 **Regions:** Markdown docs with embedded config sections

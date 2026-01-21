@@ -19,7 +19,7 @@ Set up the Tux project for local development with all required dependencies and 
    - Configure database connection
 
 3. **Configure Application**
-   - Copy `config/config.toml.example` to `config/config.toml`
+   - Copy `config/config.json.example` to `config/config.json`
    - Update configuration as needed
    - Verify configuration is valid
    - Test configuration loading

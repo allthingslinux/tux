@@ -22,7 +22,7 @@ Comprehensive security review for Discord bot operations, database access, and e
    - Audit SQLModel query patterns
    - Review database migration safety
 4. **Configuration Security**
-   - Ensure no secrets in `config.toml`
+   - Ensure no secrets in `config.json`
    - Verify `.env` not committed
    - Check Sentry DSN exposure
    - Review Docker secrets management

@@ -284,11 +284,11 @@ text = ui.TextDisplay("# Header\n**Bold** *italic* `code`", id=100)
 Visual spacing between components.
 
 ```python
-ui.Separator(divider=True, spacing=discord.SeparatorSpacing.large)
+ui.Separator(visible=True, spacing=discord.SeparatorSpacing.large)
 ```
 
-- `divider`: Show line (default True)
-- `spacing`: `.small` (1) or `.large` (2)
+- `visible`: Whether to show the divider line (default True). Discord's API field is `divider`; the library uses `visible`.
+- `spacing`: `.small` (1) or `.large` (2). All constructor args are keyword-only.
 - Top-level only
 
 ## MediaGallery
