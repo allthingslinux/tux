@@ -118,7 +118,18 @@ cleanup() {
 # Set up signal handlers
 trap cleanup SIGTERM SIGINT
 
+# Ensure cache directories exist with proper permissions
+# This handles cases where bind mounts don't include subdirectories
+ensure_cache_dirs() {
+    echo "Ensuring cache directories exist..."
+    mkdir -p /app/.cache/tldr /app/temp
+    # Try to set ownership if we have permission (may fail on bind mounts)
+    chown -R nonroot:nonroot /app/.cache/tldr /app/temp 2>/dev/null || true
+    chmod -R 755 /app/.cache/tldr /app/temp 2>/dev/null || true
+}
+
 # Main execution
+ensure_cache_dirs
 echo "Waiting for database to be ready..."
 wait_for_db
 
