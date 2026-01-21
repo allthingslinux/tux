@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - best-practices
   - sentry
+icon: lucide/text-quote
 ---
 
 # Sentry Integration
