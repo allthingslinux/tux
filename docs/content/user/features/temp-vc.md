@@ -70,16 +70,18 @@ Temp VC is configured through the server's `config.json` file.
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `TEMPVC_CHANNEL_ID` | `string` \| `null` | The ID of the voice channel that acts as the "Join to Create" trigger. |
-| `TEMPVC_CATEGORY_ID` | `string` \| `null` | The ID of the category where temporary channels will be created. |
+| `TEMPVC_CHANNEL_ID` | `integer` \| `null` | The ID of the voice channel that acts as the "Join to Create" trigger. Strings are accepted and coerced to integer. |
+| `TEMPVC_CATEGORY_ID` | `integer` \| `null` | The ID of the category where temporary channels will be created. Strings are accepted and coerced to integer. |
 
 ### Example Configuration
+
+Unquoted integers (recommended) or quoted strings both work:
 
 ```json
 {
   "TEMPVC": {
-    "TEMPVC_CHANNEL_ID": "123456789012345678",
-    "TEMPVC_CATEGORY_ID": "987654321098765432"
+    "TEMPVC_CHANNEL_ID": 123456789012345678,
+    "TEMPVC_CATEGORY_ID": 987654321098765432
   }
 }
 ```

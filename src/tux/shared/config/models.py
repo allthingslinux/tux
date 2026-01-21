@@ -10,6 +10,22 @@ from typing import Annotated, Any, cast
 from pydantic import BaseModel, Field, field_validator
 
 
+def _coerce_snowflake_id(v: Any) -> int | None:
+    """Coerce TEMPVC ID from int, str, or None to int | None.
+
+    Accepts unquoted integers and quoted strings in JSON, and string env vars.
+    """
+    if v is None:
+        return None
+    if isinstance(v, int):
+        return v
+    if isinstance(v, str):
+        s = v.strip()
+        return int(s) if s else None
+    msg = f"TEMPVC ID must be int, str, or null, got {type(v).__name__}"
+    raise ValueError(msg)
+
+
 class BotInfo(BaseModel):
     """Bot information configuration."""
 
@@ -138,24 +154,32 @@ class StatusRoles(BaseModel):
 
 
 class TempVC(BaseModel):
-    """Temporary voice channel configuration."""
+    """Temporary voice channel configuration.
+
+    IDs accept integer or string in JSON (and string from env); both are coerced to int.
+    """
 
     TEMPVC_CHANNEL_ID: Annotated[
-        str | None,
+        int | None,
         Field(
             default=None,
-            description="Temporary VC channel ID",
-            examples=["123456789012345678"],
+            description="Temporary VC channel ID (Join to Create). int or str in JSON.",
+            examples=[123456789012345678],
         ),
     ]
     TEMPVC_CATEGORY_ID: Annotated[
-        str | None,
+        int | None,
         Field(
             default=None,
-            description="Temporary VC category ID",
-            examples=["123456789012345678"],
+            description="Temporary VC category ID. int or str in JSON.",
+            examples=[123456789012345678],
         ),
     ]
+
+    @field_validator("TEMPVC_CHANNEL_ID", "TEMPVC_CATEGORY_ID", mode="before")
+    @classmethod
+    def _coerce_tempvc_id(cls, v: Any) -> int | None:
+        return _coerce_snowflake_id(v)
 
 
 class GifLimiter(BaseModel):

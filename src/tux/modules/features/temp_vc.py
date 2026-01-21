@@ -54,9 +54,9 @@ class TempVc(BaseCog):
         if getattr(self.bot, "maintenance_mode", False):
             return
 
-        # Ensure CONFIGants are set correctly
-        temp_channel_id = int(CONFIG.TEMPVC.TEMPVC_CHANNEL_ID or "0")
-        temp_category_id = int(CONFIG.TEMPVC.TEMPVC_CATEGORY_ID or "0")
+        # Ensure CONFIG is set correctly (IDs are int | None; 0 means disabled)
+        temp_channel_id = CONFIG.TEMPVC.TEMPVC_CHANNEL_ID or 0
+        temp_category_id = CONFIG.TEMPVC.TEMPVC_CATEGORY_ID or 0
         if temp_channel_id == 0 or temp_category_id == 0:
             return
 

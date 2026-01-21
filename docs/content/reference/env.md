@@ -22,12 +22,11 @@ Use **.env** for BOT_TOKEN, Postgres (POSTGRES_*), DATABASE_URL, EXTERNAL_SERVIC
 
 Configuration is loaded from multiple sources in priority order:
 
-1. Init (programmatic overrides)
-2. Environment variables
-3. .env file
-4. config/config.json or config.json file
-5. File secrets (e.g. /run/secrets)
-6. Default values (when no source provides a value)
+1. Environment variables (highest priority)
+2. .env file
+3. config/config.json or config.json file
+4. Default values (lowest priority)
+5. Secrets (file_secret_settings, e.g. /run/secrets)
 
 | Name | Type | Default | Description | Example |
 |------|------|---------|-------------|---------|
@@ -81,12 +80,14 @@ Status roles configuration.
 
 Temporary voice channel configuration.
 
+IDs accept integer or string in JSON (and string from env); both are coerced to int.
+
 **Environment Prefix**: `TEMPVC__`
 
 | Name | Type | Default | Description | Example |
 |------|------|---------|-------------|---------|
-| `TEMPVC__TEMPVC_CHANNEL_ID` | `string \| null` | `null` | Temporary VC channel ID | `"123456789012345678"` |
-| `TEMPVC__TEMPVC_CATEGORY_ID` | `string \| null` | `null` | Temporary VC category ID | `"123456789012345678"` |
+| `TEMPVC__TEMPVC_CHANNEL_ID` | `integer \| null` | `null` | Temporary VC channel ID (Join to Create). int or str in JSON. | `123456789012345678` |
+| `TEMPVC__TEMPVC_CATEGORY_ID` | `integer \| null` | `null` | Temporary VC category ID. int or str in JSON. | `123456789012345678` |
 
 ### GifLimiter
 
