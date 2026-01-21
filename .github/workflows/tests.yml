@@ -7,14 +7,14 @@ on:
       - '**.md'
       - docs/**
       - assets/**
-      - .github/workflows/docs.yml
+      - .github/workflows/**
   pull_request:
     branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
     paths-ignore:
       - '**.md'
       - docs/**
       - assets/**
-      - .github/workflows/docs.yml
+      - .github/workflows/**
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -33,7 +33,8 @@ jobs:
     outputs:
       python: ${{ steps.python_changes.outputs.any_changed }}
       tests: ${{ steps.test_changes.outputs.any_changed }}
-      any: ${{ steps.python_changes.outputs.any_changed == 'true' || steps.test_changes.outputs.any_changed == 'true' }}
+      # Only run tests when Python source code changes (not test files or workflow files)
+      any: ${{ steps.python_changes.outputs.any_changed == 'true' }}
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
