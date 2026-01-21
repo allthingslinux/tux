@@ -255,8 +255,8 @@ Check row counts and verify all tables were migrated successfully.
    
    # Configure new bot (but DON'T start it yet)
    cp .env.example .env
-   cp config/config.toml.example config/config.toml
-   # Edit .env and config/config.toml with new bot settings
+   cp config/config.json.example config/config.json
+   # Edit .env and config/config.json with new bot settings
    ```
 
 2. **Set Up New Database**

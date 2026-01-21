@@ -44,9 +44,10 @@ def truncate_error_message(error: Exception, max_length: int = 3900) -> str:
     str
         Truncated error message.
     """
+    suffix = "... (truncated)"
     error_msg = str(error)
     if len(error_msg) > max_length:
-        error_msg = error_msg[:max_length] + "... (truncated)"
+        error_msg = error_msg[: max_length - len(suffix)] + suffix
     return error_msg
 
 
@@ -136,8 +137,12 @@ class DatabaseMigration(BaseCog):
             self.schema_inspector = SchemaInspector(self.config)
             self.schema_inspector.connect()
 
-            # Generate schema report
-            report = self.schema_inspector.get_schema_report()
+            # Generate schema report in executor to avoid blocking event loop
+            loop = asyncio.get_event_loop()
+            report = await loop.run_in_executor(
+                None,
+                self.schema_inspector.get_schema_report,
+            )
 
             # Format report as embed
             embed = discord.Embed(
