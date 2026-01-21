@@ -240,7 +240,7 @@ with modern Python and best practices.
 
     ---
 
-    Star the repository to stay updated with the latest changes.
+    Star or watch the repository to stay updated with the latest changes.
 
     [:octicons-arrow-right-24: View Repository](https://github.com/allthingslinux/tux){ .md-button .md-button--primary }
 
@@ -248,7 +248,7 @@ with modern Python and best practices.
 
     ---
 
-    Learn how to contribute to Tux and help us make it better.
+    Learn how to contribute to Tux and help us make it better, or report bugs and suggest features.
 
     [:octicons-arrow-right-24: Contributing Guide](developer/contributing.md){ .md-button .md-button--primary }
 
