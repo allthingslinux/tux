@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+* **Config**: Configuration generation with JSON schema, `.env.example`, and `env.md`; `config generate` produces `config.json.example`, `config.schema.json`, `.env.example`, and `env.md`; `config current` for database revision
+* **Docs**: FAQ sections for admins, developers, users, self-hosters, and general inquiries
+* **Sentry**: Environment determination from config file, environment variable, or debug mode; init message includes determined environment
+* **Starboard**: Message expiration (TTL 365 days) for starboard entries; expiration timestamp on creation; clearer error logging on update failures
 * **Jail system**: Jail configuration and re-jail functionality
     * Commands to configure jail channel and role via `/config jail` and the Configuration Dashboard
     * Automatic re-jailing of members who leave and rejoin while jailed
@@ -36,9 +40,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Database logging**: Reduced noise and clearer messages
     * Query: `find_all` execution logged at trace instead of debug
     * CRUD: refresh logging shows ID only when the instance has a singular `id` (avoids "unknown" for composite keys)
+* **Config**: Migrate from TOML and YAML to JSON-only; remove multi-format loaders and TOML/YAML generators; streamline settings; validation and generation focus on JSON and environment files
+* **Dashboard**: Streamline TextDisplay initialization in ConfigDashboard (component ID set at instantiation)
+* **Activity**: Simplify activity data handling in ActivityHandler; remove redundant JSON parsing, clearer naming, default activity fallback
+* **Docs**: Navigation (zensical.toml, Snippets link, FAQ); setup and developer references from `config.toml` to `config.json`; feature, configuration, environment, and template examples TOML→JSON; config doc titles and icons; `.env` and `config.json` loading order
+* **Database migration plugin**: `config.json` in setup and error handling; schema report runs in executor; error message truncation
+* **Docker / env**: Compose and Containerfile comments for required env and `config/config.json`; `.env.example` defaults for Postgres and external services
+* **Dependencies**: `pyyaml` and `types-pyyaml` updates; `pydantic-settings-export` removed from dev and Renovate
 
 ### Fixed
 
+* **Permissions**: Explicit type `list[PermissionRank]` for instances in PermissionRankController
+* **Logging**: `safe_message_filter` escapes curly braces and angle brackets to avoid Loguru format errors and Discord mention misinterpretation
 * **on_ready handlers**: Error handling and startup order
     * Event handler: exception handling for guild registration, waiters unblocked on failure
     * Activity handler: exception handling for activity rotation startup
@@ -47,6 +60,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **TTY roles**: Jailed members are skipped in role assignment on join so the jail role is not overridden by re-jail logic
 * **Rank modals**: Response handling in EditRankModal and CreateRankModal uses defer and followup for modal submissions; streamlined error handling for rank creation and editing
 * **Permission ranks**: Description handling in PermissionRankController: `MISSING` by default, `None` clears, omitting leaves unchanged
+
+### Removed
+
+* **Config**: TOML and YAML configuration formats; `config.toml.example` and `config.yaml.example`; `pydantic-settings-export` and its type stubs
 
 ## [0.1.0] - 2026-01-20
 
