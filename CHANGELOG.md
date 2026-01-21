@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+* **Docker**: Local Docker build script (`docker-build.sh`) with versioning options, auto-detection from git tags, custom tags, and build targets (production/dev)
 * **Config**: Configuration generation with JSON schema, `.env.example`, and `env.md`; `config generate` produces `config.json.example`, `config.schema.json`, `.env.example`, and `env.md`; `config current` for database revision
 * **Docs**: FAQ sections for admins, developers, users, self-hosters, and general inquiries
 * **Sentry**: Environment determination from config file, environment variable, or debug mode; init message includes determined environment
@@ -51,6 +52,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
     * YAML anchors/aliases for deduplication between dev and production services
     * Enhanced `develop.watch` configuration with `initial_sync` for better developer experience
     * Updated all documentation to use profile-based compose commands
+* **Entrypoint**: Streamlined signal handling and cleanup process; simplified entrypoint script with enhanced comments on signal delivery
+* **Docs**: README and AGENTS.md updates
+    * README: Clarified database description (SQLAlchemy and Pydantic), updated project metrics link, added FAQ link
+    * AGENTS.md: Enhanced setup instructions with detailed commands, expanded project structure descriptions, updated development workflow with Docker Compose profiles
 
 ### Fixed
 
@@ -68,6 +73,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Type checking**: Fixed basedpyright deprecation warnings
     * Replaced deprecated `asyncio.iscoroutinefunction` with `inspect.iscoroutinefunction` (Python 3.14 compatibility)
     * Fixed `MappingProxyType` mutation by using `object.__setattr__` instead of direct `__dict__` assignment
+* **Docs**: Clarified Adminer web UI startup instructions in contributing guide; updated database startup instructions in error handling to use profile-based Docker Compose commands
 
 ### Removed
 
