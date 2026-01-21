@@ -24,7 +24,8 @@
     <h1>Tux</h1>
     <p><strong>The all-in-one open source Discord bot</strong></p>
     <p>
-        <a href="https://tux.atl.dev">📚 Documentation</a> •
+        <a href="https://tux.atl.dev">📚 Docs</a> •
+        <a href="https://tux.atl.dev/faq/">❓ FAQ</a> •
         <a href="https://discord.gg/gpmSjcjQxg">💬 Discord</a> •
         <a href="https://github.com/allthingslinux/tux/issues/525">🗺️ Roadmap</a>
     </p>
@@ -72,7 +73,7 @@ Tux is a feature-rich Discord bot originally built for the [All Things Linux](ht
 |-----------|------------|
 | **Runtime** | Python 3.13+ with `discord.py` |
 | **Package Manager** | `uv` for fast dependency management |
-| **Database** | PostgreSQL with `SQLModel` (SQLAlchemy + Pydantic) |
+| **Database** | PostgreSQL with `SQLModel` (`SQLAlchemy` + `Pydantic`) |
 | **Type Safety** | `basedpyright` with strict type hints |
 | **Code Quality** | `ruff` for linting and formatting |
 | **Testing** | `pytest` with async support |
@@ -80,7 +81,7 @@ Tux is a feature-rich Discord bot originally built for the [All Things Linux](ht
 | **Logging** | `loguru` for structured logging |
 | **Monitoring** | `sentry-sdk` for error tracking |
 | **HTTP Client** | `httpx` for async requests |
-| **Configuration** | `pydantic-settings` with multi-format support |
+| **Configuration** | `pydantic-settings` with json/env support |
 | **Containers** | Docker & Docker Compose |
 
 ## Documentation
@@ -109,7 +110,7 @@ Visit **[tux.atl.dev](https://tux.atl.dev)** for complete documentation includin
 
 ## Project Stats
 
-![Metrics](https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg)
+![Metrics](https://repobeats.axiom.co/api/embed/e2782b71a13b2d36f5fcca1c90cd3ab014388ebf.svg)
 
 ## Contributors
 
