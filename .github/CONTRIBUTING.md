@@ -125,12 +125,12 @@ Follow these steps to set up your local development environment. For more compre
     Copy the example configuration file.
 
     ```bash
-    cp config/config.toml.example config/config.toml
+    cp config/config.json.example config/config.json
     ```
 
-    Review `config/config.toml` and customize it as needed.
+    Review `config/config.json` and customize it as needed.
 
-    **Note:** The configuration system supports TOML, YAML, and JSON formats. You can also generate example configs:
+    **Note:** You can regenerate example configs with:
 
     ```bash
     uv run config generate
@@ -232,12 +232,12 @@ Follow these steps to set up your local development environment. For more compre
     Copy the example configuration file.
 
     ```bash
-    cp config/config.toml.example config/config.toml
+    cp config/config.json.example config/config.json
     ```
 
-    Review `config/config.toml` and customize it as needed.
+    Review `config/config.json` and customize it as needed.
 
-    **Note:** The configuration system supports TOML, YAML, and JSON formats. You can also generate example configs:
+    **Note:** You can regenerate example configs with:
 
     ```bash
     uv run config generate
