@@ -22,16 +22,19 @@ generate_pr_version() {
 
 # Generate release version for Docker builds
 generate_release_version() {
-  # Trim whitespace to avoid VERSION= refs/tags/... from multiline run/quoting
-  local github_ref
-  github_ref="$(printf '%s' "${1:-}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-  local sha_prefix_length="${2:-7}"
+  # Trim whitespace (POSIX) to avoid VERSION= refs/tags/... from multiline run/quoting
+  local github_ref="${1:-}"
+  github_ref="${github_ref#"${github_ref%%[![:space:]]*}"}"
+  github_ref="${github_ref%"${github_ref##*[![:space:]]}"}"
 
   # Generate git describe format for release builds to match VERSIONING.md expectations
   # This ensures the VERSION file contains the exact format expected by __init__.py
   local tag_version="${github_ref#refs/tags/}"
   local clean_version="${tag_version#v}" # Remove 'v' prefix if present
   local release_version="${clean_version:-dev}"
+  if [ -z "$clean_version" ]; then
+    echo "Using default version 'dev' (no tag or empty after strip)" >&2
+  fi
   echo "version=$release_version" >> "$GITHUB_OUTPUT"
   echo "Generated release version: $release_version"
 }
