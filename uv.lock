@@ -577,15 +577,6 @@ wheels = [
 ]
 
 [[package]]
-name = "dnspython"
-version = "2.8.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8c/8b/57666417c0f90f08bcafa776861060426765fdb422eb10212086fb811d26/dnspython-2.8.0.tar.gz", hash = "sha256:181d3c6996452cb1189c4046c61599b84a5a86e099562ffde77d26984ff26d0f", size = 368251, upload-time = "2025-09-07T18:58:00.022Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ba/5a/18ad964b0086c6e62e2e7500f7edc89e3faa45033c71c1893d34eed2b2de/dnspython-2.8.0-py3-none-any.whl", hash = "sha256:01d9bbc4a2d76bf0db7c1f729812ded6d912bd318d3b1cf81d30c0f845dbf3af", size = 331094, upload-time = "2025-09-07T18:57:58.071Z" },
-]
-
-[[package]]
 name = "docstr-coverage"
 version = "2.3.2"
 source = { registry = "https://pypi.org/simple" }
@@ -618,19 +609,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c0/1f/924e3caae75f471eae4b26bd13b698f6af2c44279f67af317439c2f4c46a/ecdsa-0.19.1.tar.gz", hash = "sha256:478cba7b62555866fcb3bb3fe985e06decbdb68ef55713c4e5ab98c57d508e61", size = 201793, upload-time = "2025-03-13T11:52:43.25Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cb/a3/460c57f094a4a165c84a1341c373b0a4f5ec6ac244b998d5021aade89b77/ecdsa-0.19.1-py2.py3-none-any.whl", hash = "sha256:30638e27cf77b7e15c4c4cc1973720149e1033827cfd00661ca5c8cc0cdb24c3", size = 150607, upload-time = "2025-03-13T11:52:41.757Z" },
-]
-
-[[package]]
-name = "email-validator"
-version = "2.3.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "dnspython" },
-    { name = "idna" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/f5/22/900cb125c76b7aaa450ce02fd727f452243f2e91a61af068b40adba60ea9/email_validator-2.3.0.tar.gz", hash = "sha256:9fc05c37f2f6cf439ff414f8fc46d917929974a82244c20eb10231ba60c54426", size = 51238, upload-time = "2025-08-26T13:09:06.831Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/de/15/545e2b6cf2e3be84bc1ed85613edd75b8aea69807a71c26f4ca6a9258e82/email_validator-2.3.0-py3-none-any.whl", hash = "sha256:80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4", size = 35604, upload-time = "2025-08-26T13:09:05.858Z" },
 ]
 
 [[package]]
@@ -749,6 +727,7 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/02/2f/28592176381b9ab2cafa12829ba7b472d177f3acc35d8fbcf3673d966fff/greenlet-3.3.0-cp313-cp313-macosx_11_0_universal2.whl", hash = "sha256:a1e41a81c7e2825822f4e068c48cb2196002362619e2d70b148f20a831c00739", size = 275140, upload-time = "2025-12-04T14:23:01.282Z" },
     { url = "https://files.pythonhosted.org/packages/2c/80/fbe937bf81e9fca98c981fe499e59a3f45df2a04da0baa5c2be0dca0d329/greenlet-3.3.0-cp313-cp313-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9f515a47d02da4d30caaa85b69474cec77b7929b2e936ff7fb853d42f4bf8808", size = 599219, upload-time = "2025-12-04T14:50:08.309Z" },
     { url = "https://files.pythonhosted.org/packages/c2/ff/7c985128f0514271b8268476af89aee6866df5eec04ac17dcfbc676213df/greenlet-3.3.0-cp313-cp313-manylinux_2_24_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:7d2d9fd66bfadf230b385fdc90426fcd6eb64db54b40c495b72ac0feb5766c54", size = 610211, upload-time = "2025-12-04T14:57:43.968Z" },
+    { url = "https://files.pythonhosted.org/packages/79/07/c47a82d881319ec18a4510bb30463ed6891f2ad2c1901ed5ec23d3de351f/greenlet-3.3.0-cp313-cp313-manylinux_2_24_s390x.manylinux_2_28_s390x.whl", hash = "sha256:30a6e28487a790417d036088b3bcb3f3ac7d8babaa7d0139edbaddebf3af9492", size = 624311, upload-time = "2025-12-04T15:07:14.697Z" },
     { url = "https://files.pythonhosted.org/packages/fd/8e/424b8c6e78bd9837d14ff7df01a9829fc883ba2ab4ea787d4f848435f23f/greenlet-3.3.0-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:087ea5e004437321508a8d6f20efc4cfec5e3c30118e1417ea96ed1d93950527", size = 612833, upload-time = "2025-12-04T14:26:03.669Z" },
     { url = "https://files.pythonhosted.org/packages/b5/ba/56699ff9b7c76ca12f1cdc27a886d0f81f2189c3455ff9f65246780f713d/greenlet-3.3.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:ab97cf74045343f6c60a39913fa59710e4bd26a536ce7ab2397adf8b27e67c39", size = 1567256, upload-time = "2025-12-04T15:04:25.276Z" },
     { url = "https://files.pythonhosted.org/packages/1e/37/f31136132967982d698c71a281a8901daf1a8fbab935dce7c0cf15f942cc/greenlet-3.3.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:5375d2e23184629112ca1ea89a53389dddbffcf417dad40125713d88eb5f96e8", size = 1636483, upload-time = "2025-12-04T14:27:30.804Z" },
@@ -1498,26 +1477,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pydantic-settings-export"
-version = "1.0.4.dev3+g73a558a32"
-source = { git = "https://github.com/jag-k/pydantic-settings-export.git?rev=73a558a329541954a583001a88151cd8c2355fa0#73a558a329541954a583001a88151cd8c2355fa0" }
-dependencies = [
-    { name = "pydantic" },
-    { name = "pydantic-settings" },
-]
-
-[package.optional-dependencies]
-email = [
-    { name = "email-validator" },
-]
-regions = [
-    { name = "text-region-parser" },
-]
-toml = [
-    { name = "tomlkit" },
-]
-
-[[package]]
 name = "pydoclint"
 version = "0.8.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2106,15 +2065,6 @@ wheels = [
 ]
 
 [[package]]
-name = "text-region-parser"
-version = "0.1.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/2a/d6/7fce2ff3010edf1ffb7fb3684d2f28146c00f7c209ec9525b6068d98dc4a/text_region_parser-0.1.1.tar.gz", hash = "sha256:d7a1f0a6cbe851f37c94552cf41ce011621c1a62623e7215c02624cce05b8436", size = 38337, upload-time = "2025-01-28T12:19:57.502Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bd/e6/7069a798b671ba87fdc0a2bc8c376396cfe17907fa956882d7ba713e0023/text_region_parser-0.1.1-py3-none-any.whl", hash = "sha256:79107987d6c4ffd3b432d612c276c5965c2af9d770088a8437ca4456de548f76", size = 9725, upload-time = "2025-01-28T12:19:56.53Z" },
-]
-
-[[package]]
 name = "tinycss2"
 version = "1.5.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2205,7 +2155,6 @@ dev = [
     { name = "basedpyright" },
     { name = "docstr-coverage" },
     { name = "pre-commit" },
-    { name = "pydantic-settings-export", extra = ["email", "regions", "toml"] },
     { name = "pydoclint" },
     { name = "ruff" },
     { name = "yamlfix" },
@@ -2272,7 +2221,7 @@ requires-dist = [
     { name = "pynacl", specifier = ">=1.5.0" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "pytz", specifier = ">=2025.2" },
-    { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "reactionmenu", specifier = ">=3.1.7" },
     { name = "rich", specifier = ">=14.0.0" },
     { name = "rsa", specifier = ">=4.9" },
@@ -2291,7 +2240,6 @@ dev = [
     { name = "basedpyright", specifier = "==1.37.0" },
     { name = "docstr-coverage", specifier = ">=2.3.2" },
     { name = "pre-commit", specifier = ">=4.3.0" },
-    { name = "pydantic-settings-export", extras = ["email", "regions", "toml"], git = "https://github.com/jag-k/pydantic-settings-export.git?rev=73a558a329541954a583001a88151cd8c2355fa0" },
     { name = "pydoclint", specifier = ">=0.7.3" },
     { name = "ruff", specifier = ">=0.12.4" },
     { name = "yamlfix", specifier = ">=1.18.0" },
@@ -2326,7 +2274,7 @@ types = [
     { name = "types-pillow", specifier = ">=10.2.0.20240822" },
     { name = "types-psutil", specifier = ">=7.0.0.20250401" },
     { name = "types-pytz", specifier = ">=2025.2.0.20250326" },
-    { name = "types-pyyaml", specifier = ">=6.0.12.20250402" },
+    { name = "types-pyyaml", specifier = ">=6.0.12.20250915" },
 ]
 
 [[package]]

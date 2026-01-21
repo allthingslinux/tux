@@ -26,7 +26,6 @@ dependencies = [
     "pynacl>=1.5.0",
     "python-dotenv>=1.0.1",
     "pytz>=2025.2",
-    "pyyaml>=6.0.2",
     "reactionmenu>=3.1.7",
     "rsa>=4.9",
     "sentry-sdk[httpx, loguru]>=2.7.0",
@@ -49,6 +48,7 @@ dependencies = [
     "semver>=3.0.4",
     "tomli-w>=1.0.0",
     "tomlkit>=0.13.3",
+    "pyyaml>=6.0.3",
 ]
 
 [project.urls]
@@ -74,7 +74,6 @@ dev = [
     "yamlfix>=1.18.0",
     "pydoclint>=0.7.3",
     "docstr-coverage>=2.3.2",
-    "pydantic-settings-export[email,regions,toml] @ git+https://github.com/jag-k/pydantic-settings-export.git@73a558a329541954a583001a88151cd8c2355fa0",
 ]
 test = [
     "pytest>=8.4.2",
@@ -133,13 +132,13 @@ types = [
     "types-click>=7.1.8",
     "types-psutil>=7.0.0.20250401",
     "types-pillow>=10.2.0.20240822",
-    "types-pyyaml>=6.0.12.20250402",
     "types-aiofiles>=24.1.0.20250326",
     "types-influxdb-client>=1.45.0.20241221",
     "types-jinja2>=2.11.9",
     "annotated-types>=0.7.0",
     "asyncpg-stubs>=0.30.2",
     "types-mock>=5.2.0.20250924",
+    "types-pyyaml>=6.0.12.20250915",
 ]
 
 [tool.uv]
@@ -404,9 +403,12 @@ addopts = [
     # Import mode (recommended for new projects)
     "--import-mode=importlib",
     # Disable unnecessary built-in plugins for speed
-    "-p", "no:doctest",
-    "-p", "no:pastebin",
-    "-p", "no:nose",
+    "-p",
+    "no:doctest",
+    "-p",
+    "no:pastebin",
+    "-p",
+    "no:nose",
     # Disable socket calls to prevent inadvertent network access
     # Tests that need network access should use @pytest.mark.enable_socket
     # or the socket_enabled fixture, or use httpx_mock for HTTP mocking
@@ -537,37 +539,3 @@ version_locations = ["src/tux/database/migrations/versions"]
 tux = "docs.plugins.mkdocs_tux_plugin:TuxPlugin"
 mkdocs_sbom = "docs.plugins.mkdocs_sbom:SbomPlugin"
 mkdocs_auto_index = "docs.plugins.mkdocs_auto_index:IndexGeneratorPlugin"
-
-# pydantic-settings-export configuration
-[tool.pydantic_settings_export]
-project_dir = "."
-default_settings = ["tux.shared.config.settings:Config"]
-
-[[tool.pydantic_settings_export.generators.dotenv]]
-paths = [".env.example"]
-enabled = true
-
-[[tool.pydantic_settings_export.generators.markdown]]
-paths = ["docs/content/reference/env.md"]
-enabled = true
-table_only = false
-file_prefix = "# Environment Variables\n\n"
-to_upper_case = true
-region = "config"
-
-# Built-in TOML generator (from pydantic-settings-export)
-[[tool.pydantic_settings_export.generators.toml]]
-paths = ["config/config.toml.example"]
-enabled = true
-
-# Custom generators for YAML and JSON (stored in config/ directory)
-
-[[tool.pydantic_settings_export.generators."tux.shared.config.generators:YamlGenerator"]]
-paths = ["config/config.yaml.example"]
-include_comments = true
-enabled = true
-
-[[tool.pydantic_settings_export.generators."tux.shared.config.generators:JsonGenerator"]]
-paths = ["config/config.json.example"]
-indent = 2
-enabled = true
