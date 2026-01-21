@@ -3,13 +3,16 @@
 This module provides the main configuration class and global instance,
 using the extracted models and proper pydantic-settings for environment variable binding.
 
+Use .env for BOT_TOKEN, Postgres (POSTGRES_*), DATABASE_URL, EXTERNAL_SERVICES, DEBUG, LOG_LEVEL, MAINTENANCE_MODE.
+Put all other settings in config.json.
+
 Configuration loading priority (highest to lowest):
-1. Environment variables
-2. .env file
-3. config/config.toml or config.toml file
-4. config/config.yaml or config.yaml file
-5. config/config.json or config.json file
-6. Default values
+1. Init (programmatic overrides)
+2. Environment variables
+3. .env file
+4. config/config.json or config.json file
+5. File secrets (e.g. /run/secrets)
+6. Default values (implicit, applied when no source provides a value)
 """
 
 import base64
@@ -21,13 +24,13 @@ from typing import Annotated
 from pydantic import Field, computed_field
 from pydantic_settings import (
     BaseSettings,
+    JsonConfigSettingsSource,
     PydanticBaseSettingsSource,
     SettingsConfigDict,
 )
 
 from tux.shared.constants import ENCODING_UTF8
 
-from .loaders import JsonConfigSource, TomlConfigSource, YamlConfigSource
 from .models import (
     IRC,
     XP,
@@ -89,23 +92,34 @@ validate_environment()
 
 
 class Config(BaseSettings):
-    """Main Tux configuration using Pydantic Settings with multi-format support.
+    """Main Tux configuration using Pydantic Settings (JSON-only file support).
+
+    Use .env for BOT_TOKEN, Postgres (POSTGRES_*), DATABASE_URL, EXTERNAL_SERVICES, DEBUG, LOG_LEVEL, MAINTENANCE_MODE;
+    put other settings in config.json.
 
     Configuration is loaded from multiple sources in priority order:
-    1. Environment variables (highest priority)
-    2. .env file
-    3. config/config.toml or config.toml file
-    4. config/config.yaml or config.yaml file
-    5. config/config.json or config.json file
-    6. Default values (lowest priority)
+    1. Init (programmatic overrides)
+    2. Environment variables
+    3. .env file
+    4. config/config.json or config.json file
+    5. File secrets (e.g. /run/secrets)
+    6. Default values (when no source provides a value)
     """
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding=ENCODING_UTF8,
+        # Environment variables
+        env_prefix="",  # No prefix, use field names directly
         env_nested_delimiter="__",
         case_sensitive=False,
         extra="ignore",
+        # Dotenv file
+        env_file=".env",
+        env_file_encoding=ENCODING_UTF8,
+        # Config file (JSON only)
+        json_file=["config/config.json", "config.json"],
+        json_file_encoding=ENCODING_UTF8,
+        # Secrets directory (use None when absent to avoid pydantic-settings warning in dev)
+        secrets_dir="/run/secrets" if Path("/run/secrets").exists() else None,
     )
 
     # Core configuration
@@ -232,49 +246,21 @@ class Config(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
-        """Customize settings sources to load from multiple file formats.
+        """Customize settings sources to load from JSON config file.
 
         Priority order (highest to lowest):
         1. Init settings (programmatic overrides)
         2. Environment variables
         3. .env file
-        4. config.toml file
-        5. config.yaml file
-        6. config.json file
-        7. File secret settings (Docker secrets, etc.)
-
-        Parameters
-        ----------
-        settings_cls : type[BaseSettings]
-            The settings class
-        init_settings : PydanticBaseSettingsSource
-            Init settings source
-        env_settings : PydanticBaseSettingsSource
-            Environment settings source
-        dotenv_settings : PydanticBaseSettingsSource
-            .env file settings source
-        file_secret_settings : PydanticBaseSettingsSource
-            File secret settings source
-
-        Returns
-        -------
-        tuple[PydanticBaseSettingsSource, ...]
-            Tuple of settings sources in priority order
-
+        4. JSON config file (config/config.json or config.json)
+        5. File secret settings (Docker secrets, etc.)
+        Default values are applied by pydantic-settings when no source provides a value.
         """
         return (
             init_settings,
             env_settings,
             dotenv_settings,
-            # TOML sources (config/config.toml takes priority over root config.toml)
-            TomlConfigSource(settings_cls, Path("config/config.toml")),
-            TomlConfigSource(settings_cls, Path("config.toml")),
-            # YAML sources
-            YamlConfigSource(settings_cls, Path("config/config.yaml")),
-            YamlConfigSource(settings_cls, Path("config.yaml")),
-            # JSON sources
-            JsonConfigSource(settings_cls, Path("config/config.json")),
-            JsonConfigSource(settings_cls, Path("config.json")),
+            JsonConfigSettingsSource(settings_cls),
             file_secret_settings,
         )
 

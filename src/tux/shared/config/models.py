@@ -5,7 +5,7 @@ extracted from the existing config.py file for better organization.
 """
 
 import json
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -22,67 +22,68 @@ class BotInfo(BaseModel):
         ),
     ]
     ACTIVITIES: Annotated[
-        str,
+        list[dict[str, Any]],
         Field(
-            default="[]",
-            description="Bot activities",
+            default_factory=list,
+            description="Bot activities (Playing, Streaming, etc.). Each item: type, name; streaming also needs url.",
             examples=[
-                '[{"type":"playing","name":"with Linux"}]',
-                '[{"type":"streaming","name":"to commands","url":"https://twitch.tv/example"}]',
+                [{"type": "playing", "name": "with Linux"}],
+                [
+                    {
+                        "type": "streaming",
+                        "name": "to commands",
+                        "url": "https://twitch.tv/example",
+                    },
+                ],
             ],
         ),
     ]
 
     @field_validator("ACTIVITIES", mode="before")
     @classmethod
-    def validate_activities(cls, v: Any) -> str:
-        """Validate and normalize ACTIVITIES to JSON string format.
+    def validate_activities(cls, v: Any) -> list[dict[str, Any]]:
+        """Normalize ACTIVITIES to a list of activity dicts.
 
-        Handles both JSON strings and native Python lists/dicts from config files,
-        ensuring the value is always a valid JSON string.
-
-        Parameters
-        ----------
-        v : Any
-            Input value (string, list, or dict)
+        Accepts: JSON string (from env or legacy config), list, or dict (wrapped as
+        single-item list). Env vars and string config are parsed as JSON.
 
         Returns
         -------
-        str
-            JSON string representation of activities
+        list[dict[str, Any]]
+            List of {type, name, url?} activity objects.
 
         Raises
         ------
         ValueError
-            If value cannot be converted to valid JSON
+            If a string value is not valid JSON or does not decode to a list.
         """
-        if isinstance(v, str):
-            # Already a string - validate it's valid JSON
-            if not v.strip():
-                return "[]"
-            try:
-                # Validate it's parseable JSON
-                json.loads(v)
-            except json.JSONDecodeError as e:
-                error_msg = f"ACTIVITIES must be valid JSON: {e}"
-                raise ValueError(error_msg) from e
-            return v
-        if isinstance(v, (list, dict)):
-            # Convert native Python list/dict to JSON string
-            return json.dumps(v)
         if v is None:
-            return "[]"
-        # Try to convert to string, then validate JSON
-        str_val = str(v)
-        try:
-            json.loads(str_val)
-        except json.JSONDecodeError:
-            type_name = type(v).__name__
-            error_msg = (
-                f"ACTIVITIES must be a JSON string or list/dict, got {type_name}: {v!r}"
+            return []
+        if isinstance(v, list):
+            return cast(list[dict[str, Any]], v)
+        if isinstance(v, dict):
+            return [v]
+        if isinstance(v, str):
+            s = v.strip()
+            if not s:
+                return []
+            try:
+                parsed: Any = json.loads(s)
+            except json.JSONDecodeError as e:
+                msg = f"ACTIVITIES must be valid JSON: {e}"
+                raise ValueError(msg) from e
+            if isinstance(parsed, list):
+                return cast(list[dict[str, Any]], parsed)
+            if isinstance(parsed, dict):
+                return [parsed]
+            msg = (
+                f"ACTIVITIES JSON must be a list or object, got {type(parsed).__name__}"
             )
-            raise ValueError(error_msg) from None
-        return str_val
+            raise ValueError(msg)
+        msg = (
+            f"ACTIVITIES must be a string, list, or dict, got {type(v).__name__}: {v!r}"
+        )
+        raise ValueError(msg)
 
     HIDE_BOT_OWNER: Annotated[
         bool,
@@ -298,6 +299,14 @@ class ExternalServices(BaseModel):
             default="",
             description="Sentry DSN",
             examples=["https://key@o123456.ingest.sentry.io/123456"],
+        ),
+    ]
+    SENTRY_ENVIRONMENT: Annotated[
+        str,
+        Field(
+            default="",
+            description="Sentry environment (development, production, etc.)",
+            examples=["development", "production"],
         ),
     ]
     GITHUB_APP_ID: Annotated[
