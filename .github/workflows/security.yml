@@ -80,7 +80,10 @@ jobs:
   dependencies:
     name: Dependencies
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    # Skip on fork PRs: GITHUB_TOKEN is read-only, so uv-dependency-submission and
+    # dependency-review-action would fail on contents/pull-requests write.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name
+      == github.repository
     permissions:
       contents: write
       pull-requests: write
