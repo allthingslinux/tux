@@ -11,6 +11,7 @@ on:
       - .github/workflows/docs.yml
       - scripts/docs.py
       - zensical.toml
+      - CHANGELOG.md
   pull_request:
     branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
     paths:
@@ -21,6 +22,7 @@ on:
       - .github/workflows/docs.yml
       - scripts/docs.py
       - zensical.toml
+      - CHANGELOG.md
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -53,6 +55,7 @@ jobs:
             zensical.toml
             scripts/docs.py
             .github/workflows/docs.yml
+            CHANGELOG.md
       - name: Check Code
         uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62  # v47
         id: code_changes
