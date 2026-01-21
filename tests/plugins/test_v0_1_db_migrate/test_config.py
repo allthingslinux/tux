@@ -3,10 +3,14 @@
 import os
 from unittest.mock import patch
 
+import pytest
+
 from tux.plugins.v0_1_db_migrate.config import (
     MigrationConfig,
     get_old_database_url,
 )
+
+pytestmark = pytest.mark.unit
 
 
 class TestGetOldDatabaseUrl:
@@ -59,23 +63,34 @@ class TestMigrationConfig:
         assert config.dry_run is True
         assert config.enabled_tables == {"guild", "guild_config"}
 
-    def test_is_table_enabled_all_tables(self) -> None:
-        """Test is_table_enabled when all tables enabled."""
-        config = MigrationConfig(enabled_tables=None)
-        assert config.is_table_enabled("guild") is True
-        assert config.is_table_enabled("cases") is True
-        assert config.is_table_enabled("any_table") is True
-
-    def test_is_table_enabled_specific_tables(self) -> None:
-        """Test is_table_enabled with specific table set."""
-        config = MigrationConfig(enabled_tables={"guild", "cases"})
-        assert config.is_table_enabled("guild") is True
-        assert config.is_table_enabled("cases") is True
-        assert config.is_table_enabled("guild_config") is False
-        assert config.is_table_enabled("other_table") is False
+    @pytest.mark.parametrize(
+        ("enabled_tables", "checks"),
+        [
+            (None, [("guild", True), ("cases", True), ("any_table", True)]),
+            (
+                {"guild", "cases"},
+                [
+                    ("guild", True),
+                    ("cases", True),
+                    ("guild_config", False),
+                    ("other_table", False),
+                ],
+            ),
+        ],
+        ids=["all_tables", "specific_tables"],
+    )
+    def test_is_table_enabled(
+        self,
+        enabled_tables: set[str] | None,
+        checks: list[tuple[str, bool]],
+    ) -> None:
+        """Test is_table_enabled for all-tables (None) and specific set."""
+        config = MigrationConfig(enabled_tables=enabled_tables)
+        for table, expected in checks:
+            assert config.is_table_enabled(table) is expected
 
     def test_to_dict(self) -> None:
-        """Test to_dict method."""
+        """Test to_dict structure and that old_database_url is sanitized."""
         config = MigrationConfig(
             old_database_url="postgresql://user:password@host:5432/db",
             batch_size=500,
@@ -86,15 +101,14 @@ class TestMigrationConfig:
         assert result["batch_size"] == 500
         assert result["dry_run"] is True
         assert result["enabled_tables"] == ["guild"]
-        # URL should be sanitized
         assert "password" not in result["old_database_url"]
         assert "***" in result["old_database_url"]
 
-    def test_to_dict_sanitizes_url(self) -> None:
-        """Test that to_dict sanitizes database URL."""
+    def test_to_dict_enabled_tables_none(self) -> None:
+        """to_dict returns enabled_tables as None when not set."""
         config = MigrationConfig(
-            old_database_url="postgresql://user:secret@host:5432/db",
+            old_database_url="postgresql://u:p@h:5432/db",
+            enabled_tables=None,
         )
         result = config.to_dict()
-        assert "secret" not in result["old_database_url"]
-        assert "***" in result["old_database_url"]
+        assert result["enabled_tables"] is None

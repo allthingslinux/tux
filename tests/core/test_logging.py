@@ -497,6 +497,25 @@ class TestMessageFiltering:
             assert mock_record["message"] == "Test {{key}} value"
 
     @pytest.mark.unit
+    def test_safe_message_filter_escapes_angle_brackets(self) -> None:
+        """Test that safe_message_filter escapes '<' so Discord mentions and tags don't break colorizer."""
+        with _reset_logging_state():
+            configure_logging(level="DEBUG")
+
+            handler = logger._core.handlers[next(iter(logger._core.handlers.keys()))]
+            filter_func = handler._filter
+
+            mock_record = {
+                "message": "User <@&1259555162448724038> and <@1172803065779339304>",
+            }
+            result = filter_func(mock_record)
+
+            assert result is True
+            assert mock_record["message"] == (
+                "User \\<@&1259555162448724038> and \\<@1172803065779339304>"
+            )
+
+    @pytest.mark.unit
     def test_safe_message_filter_handles_non_string_messages(self) -> None:
         """Test that safe_message_filter handles non-string messages."""
         with _reset_logging_state():

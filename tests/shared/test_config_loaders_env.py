@@ -1,7 +1,7 @@
 """
-🚀 Config Loaders Environment Tests - .env File Loading.
+Config environment tests: .env loading and env-over-dotenv priority.
 
-Tests for .env file configuration loading and priority.
+Uses pydantic-settings built-in behavior (env_file, env_nested_delimiter).
 """
 
 from pathlib import Path
@@ -11,32 +11,6 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 pytestmark = pytest.mark.unit
-
-
-@pytest.fixture
-def temp_dotenv_file(tmp_path: Path) -> Path:
-    """Create temporary .env file for testing.
-
-    Parameters
-    ----------
-    tmp_path : Path
-        Pytest temp path fixture
-
-    Returns
-    -------
-    Path
-        Path to .env file
-
-    """
-    dotenv_file = tmp_path / ".env"
-    dotenv_file.write_text("""
-# Test .env file
-DEBUG=true
-NAME=from_dotenv
-PORT=7000
-NESTED__VALUE=dotenv_nested
-""")
-    return dotenv_file
 
 
 def test_dotenv_file_loads(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -198,3 +172,75 @@ PORT=7000
     assert settings.name == "from_environment"
     # But .env file value is used when no ENV var
     assert settings.port == 7000
+
+
+def test_env_ignore_empty_uses_default_for_empty_value(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """With env_ignore_empty=True, empty string in .env is treated as unset and default is used."""
+
+    class DotenvSettings(BaseSettings):
+        model_config = SettingsConfigDict(
+            env_file=".env",
+            env_ignore_empty=True,
+            case_sensitive=False,
+            extra="ignore",
+        )
+        name: str = Field(default="default_name")
+        port: int = Field(default=8000)
+
+    (tmp_path / ".env").write_text("NAME=\nPORT=7000\n")
+    monkeypatch.chdir(tmp_path)
+
+    settings = DotenvSettings()
+    assert settings.name == "default_name"
+    assert settings.port == 7000
+
+
+def test_env_prefix_loads_prefixed_vars(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """With env_prefix, only variables with that prefix are read for field names."""
+
+    class PrefixedSettings(BaseSettings):
+        model_config = SettingsConfigDict(
+            env_file=".env",
+            env_prefix="APP_",
+            case_sensitive=False,
+            extra="ignore",
+        )
+        name: str = Field(default="default")
+        port: int = Field(default=8000)
+
+    (tmp_path / ".env").write_text("APP_NAME=from_prefix\nAPP_PORT=9000\n")
+    monkeypatch.chdir(tmp_path)
+
+    settings = PrefixedSettings()
+    assert settings.name == "from_prefix"
+    assert settings.port == 9000
+
+
+def test_case_insensitive_env_matching(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """With case_sensitive=False, env vars match field names case-insensitively."""
+
+    class CaseSettings(BaseSettings):
+        model_config = SettingsConfigDict(
+            env_file=".env",
+            case_sensitive=False,
+            extra="ignore",
+        )
+        name: str = Field(default="default")
+        port: int = Field(default=8000)
+
+    (tmp_path / ".env").write_text("NAME=from_name\nPORT=7000\n")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("port", "9999")
+
+    settings = CaseSettings()
+    assert settings.name == "from_name"
+    assert settings.port == 9999

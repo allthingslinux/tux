@@ -243,6 +243,9 @@ class TestDatabaseMigrator:
         old_db_engine,
     ) -> None:
         """Test migrating all tables."""
+        # Only migrate guild; old DB has no other tables
+        migrator.config.enabled_tables = {"guild"}
+
         # Setup old database with Guild
         with old_db_engine.connect() as conn:
             conn.execute(
