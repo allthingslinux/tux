@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import signal
 from types import FrameType
 from typing import Any
@@ -27,10 +28,20 @@ def setup() -> None:
 
     logger.info("Initializing Sentry...")
 
+    # Determine Sentry environment with priority order:
+    # 1. Config file setting (EXTERNAL_SERVICES__SENTRY_ENVIRONMENT)
+    # 2. Direct environment variable (SENTRY_ENVIRONMENT)
+    # 3. Debug-based fallback (development/production)
+    sentry_environment = (
+        CONFIG.EXTERNAL_SERVICES.SENTRY_ENVIRONMENT
+        or os.environ.get("SENTRY_ENVIRONMENT")
+        or ("development" if CONFIG.DEBUG else "production")
+    )
+
     sentry_sdk.init(
         dsn=CONFIG.EXTERNAL_SERVICES.SENTRY_DSN,
         release=get_version(),
-        environment="development" if CONFIG.DEBUG else "production",
+        environment=sentry_environment,
         integrations=[
             AsyncioIntegration(),
             LoguruIntegration(
@@ -54,7 +65,9 @@ def setup() -> None:
     signal.signal(signal.SIGTERM, report_signal)
     signal.signal(signal.SIGINT, report_signal)
 
-    logger.success("Sentry initialized successfully.")
+    logger.success(
+        f"Sentry initialized successfully in {sentry_environment} environment.",
+    )
 
 
 def _set_signal_scope_tags(scope: Any, signum: int) -> None:
