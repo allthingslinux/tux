@@ -174,7 +174,7 @@ class PermissionRankController(BaseController[PermissionRank]):
         logger.debug(f"Bulk creating {len(ranks_data)} permission ranks")
         try:
             async with self.db.session() as session:
-                instances = []
+                instances: list[PermissionRank] = []
                 for data in ranks_data:
                     instance = self.model(**data)
                     session.add(instance)
