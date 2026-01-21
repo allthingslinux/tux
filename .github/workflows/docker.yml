@@ -400,6 +400,8 @@ jobs:
         run: ./.github/scripts/docker.sh generate-release-version "${{ github.ref_name }}"
       - name: Validate Build Configuration
         run: ./.github/scripts/docker.sh validate-build-config "${{ github.sha }}"
+      # docker.sh handles empty commit timestamp (e.g. workflow_dispatch has no head_commit)
+      # by using repository.created_at or date +%s as fallback.
       - name: Calculate SOURCE_DATE_EPOCH
         id: source_date
         run: ./.github/scripts/docker.sh calculate-source-date-epoch "${{ github.event.head_commit.timestamp }}"
