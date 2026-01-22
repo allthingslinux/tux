@@ -4,6 +4,7 @@ tags:
   - developer-guide
   - concepts
   - tasks
+icon: lucide/text-quote
 ---
 
 # Tasks
