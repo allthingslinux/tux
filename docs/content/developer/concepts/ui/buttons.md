@@ -5,6 +5,7 @@ tags:
   - concepts
   - ui
   - components
+icon: lucide/arrow-big-up-dash
 ---
 
 # Buttons
