@@ -51,6 +51,9 @@ class Avatar(BaseCog):
         member : discord.Member | None
             The member to get the avatar of. If None, uses the command author.
         """
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         await self.send_avatar(ctx, member)
 
     async def send_avatar(
@@ -76,10 +79,16 @@ class Avatar(BaseCog):
             else:
                 # For DMs or other contexts where author is not a Member
                 logger.debug(f"Avatar command used in DM by {ctx.author.id}")
-                await ctx.send(
-                    "This command can only be used in servers.",
-                    ephemeral=True,
-                )
+                if ctx.interaction:
+                    await ctx.interaction.followup.send(
+                        "This command can only be used in servers.",
+                        ephemeral=True,
+                    )
+                else:
+                    await ctx.send(
+                        "This command can only be used in servers.",
+                        ephemeral=True,
+                    )
                 return
 
         guild_avatar = member.guild_avatar.url if member.guild_avatar else None
@@ -96,7 +105,10 @@ class Avatar(BaseCog):
         ]
 
         if files:
-            await ctx.send(files=files)
+            if ctx.interaction:
+                await ctx.interaction.followup.send(files=files, ephemeral=True)
+            else:
+                await ctx.send(files=files)
             logger.info(
                 f"Avatar sent for {member.name} ({member.id}) - {len(files)} file(s)",
             )
@@ -108,7 +120,10 @@ class Avatar(BaseCog):
             )
             logger.debug(f"No avatar available for {member.id}")
 
-            await ctx.send(content=message, ephemeral=True)
+            if ctx.interaction:
+                await ctx.interaction.followup.send(content=message, ephemeral=True)
+            else:
+                await ctx.send(content=message, ephemeral=True)
 
     @staticmethod
     async def create_avatar_file(url: str) -> discord.File:
