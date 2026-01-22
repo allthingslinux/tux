@@ -5,6 +5,7 @@ tags:
   - concepts
   - database
   - testing
+icon: lucide/test-tube-diagonal
 ---
 
 # Database Testing
