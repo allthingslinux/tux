@@ -10,6 +10,7 @@ from scripts.db import (
     current,
     dev,
     downgrade,
+    fix_sequences,
     health,
     history,
     init,
@@ -44,6 +45,7 @@ app.add_typer(reset.app)
 app.add_typer(downgrade.app)
 app.add_typer(nuke.app)
 app.add_typer(version.app)
+app.add_typer(fix_sequences.app)
 
 
 def main() -> None:
