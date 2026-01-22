@@ -13,6 +13,7 @@ import asyncio
 import inspect
 from typing import TYPE_CHECKING, Any
 
+import discord
 from discord.ext import commands
 from loguru import logger
 
@@ -212,6 +213,86 @@ class BaseCog(commands.Cog):
             return default
         else:
             return value
+
+    async def send_after_defer(
+        self,
+        ctx: commands.Context[Tux],
+        content: str | None = None,
+        *,
+        embed: discord.Embed | None = None,
+        embeds: list[discord.Embed] | None = None,
+        file: discord.File | None = None,
+        files: list[discord.File] | None = None,
+        ephemeral: bool = True,
+        mention_author: bool = False,
+    ) -> discord.Message | None:
+        """
+        Send a message after deferring, handling both slash and prefix commands.
+
+        For slash commands (after deferring), uses `interaction.followup.send()`.
+        For prefix commands, uses `ctx.send()` or `ctx.reply()`.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The command context.
+        content : str | None
+            Message content.
+        embed : discord.Embed | None
+            Single embed to send.
+        embeds : list[discord.Embed] | None
+            Multiple embeds to send.
+        file : discord.File | None
+            Single file to send.
+        files : list[discord.File] | None
+            Multiple files to send.
+        ephemeral : bool
+            Whether the message should be ephemeral (slash commands only).
+        mention_author : bool
+            Whether to mention the author (prefix commands only).
+
+        Returns
+        -------
+        discord.Message | None
+            The sent message, or None if sending failed.
+        """
+        # Build kwargs dict with only non-None values
+        kwargs: dict[str, Any] = {}
+        if content is not None:
+            kwargs["content"] = content
+        if embed is not None:
+            kwargs["embed"] = embed
+        if embeds is not None:
+            kwargs["embeds"] = embeds
+        if file is not None:
+            kwargs["file"] = file
+        if files is not None:
+            kwargs["files"] = files
+
+        # Check if this is a slash command (has interaction)
+        if ctx.interaction:
+            # Slash command - use followup after deferring
+            try:
+                return await ctx.interaction.followup.send(
+                    ephemeral=ephemeral,
+                    wait=True,  # Return the message object
+                    **kwargs,
+                )
+            except discord.HTTPException as e:
+                logger.error(f"Failed to send followup message: {e}")
+                return None
+        else:
+            # Prefix command - use normal send/reply
+            try:
+                if mention_author:
+                    return await ctx.reply(
+                        mention_author=mention_author,
+                        **kwargs,
+                    )
+                return await ctx.send(**kwargs)
+            except discord.HTTPException as e:
+                logger.error(f"Failed to send message: {e}")
+                return None
 
     def __repr__(self) -> str:
         """
