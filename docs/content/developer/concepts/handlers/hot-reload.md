@@ -5,6 +5,7 @@ tags:
   - concepts
   - handlers
   - development
+icon: lucide/list-restart
 ---
 
 # Hot Reload
