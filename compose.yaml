@@ -138,7 +138,6 @@ services:
         - action: sync
           path: ./src
           target: /app/src
-          initial_sync: true
           ignore:
             - __pycache__/
             - '*.pyc'
@@ -150,15 +149,12 @@ services:
         - action: sync
           path: ./config
           target: /app/config
-          initial_sync: true
         - action: sync
           path: ./src/tux/plugins
           target: /app/tux/plugins
-          initial_sync: true
         - action: sync
           path: ./assets
           target: /app/assets
-          initial_sync: true
         - action: rebuild
           path: pyproject.toml
         - action: rebuild
@@ -166,7 +162,6 @@ services:
         - action: sync+restart
           path: .env
           target: /app/.env
-          initial_sync: true
   tux-adminer:
     image: adminer:latest@sha256:b6d3c299d1754368031415e567609d500a4a5a22c17b7812749a8f677d93f066
     container_name: tux-adminer
