@@ -5,6 +5,7 @@ tags:
   - concepts
   - ui
   - components
+icon: lucide/puzzle
 ---
 
 # Components
