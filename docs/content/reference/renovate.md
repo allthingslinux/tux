@@ -416,7 +416,7 @@ Renovate detects and updates version variables in GitHub Actions workflows:
 ```yaml
 env:
   # renovate: datasource=python-version depName=python
-  PYTHON_VERSION: 3.13.8
+  PYTHON_VERSION: 3.13.11
 ```
 
 **Custom Manager for `.python-version`**:

@@ -149,7 +149,7 @@ security_opt:
 
 ### Base image
 
-Uses `python:3.13.8-slim` with pinned digest, minimal packages, and regular security updates.
+Uses `python:3.13.11-slim` with pinned digest, minimal packages, and regular security updates.
 
 ## Related documentation
 
