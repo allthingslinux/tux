@@ -6,6 +6,7 @@ tags:
   - guides
   - ui
   - components
+icon: lucide/component
 ---
 
 # Components V2 Guide
