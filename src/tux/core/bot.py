@@ -92,6 +92,7 @@ class Tux(commands.Bot):
         self.is_shutting_down: bool = False
         self.setup_complete: bool = False
         self.start_time: float | None = None
+        self.first_ready: bool = False  # Track if this is the first on_ready event
 
         # Internal flags to prevent duplicate initialization
         self._emoji_manager_initialized: bool = False
@@ -228,6 +229,12 @@ class Tux(commands.Bot):
         if self.setup_complete:
             logger.debug("Bot setup already complete, skipping setup_hook")
             return
+
+        # Configure HTTP client for high-latency environments
+        # This must be done early, before any REST calls are made
+        from tux.core.http_config import configure_discord_http_client  # noqa: PLC0415
+
+        configure_discord_http_client(self)
 
         # Initialize emoji manager (loads custom emojis, etc.)
         if not self._emoji_manager_initialized:
