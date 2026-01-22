@@ -38,6 +38,14 @@ def requires_command_permission(
     required permission ranks from the database per guild. Commands are
     denied by default if not configured (safe mode).
 
+    For group commands with subcommands, if a subcommand is not configured,
+    the system will fall back to checking parent commands. For example:
+    - "config ranks init" checks: "config ranks init" -> "config ranks" -> "config"
+    - "cases search" checks: "cases search" -> "cases"
+
+    This allows configuring a parent group command (e.g., "config") to protect
+    all subcommands, while still allowing per-subcommand overrides.
+
     Parameters
     ----------
     allow_unconfigured : bool, optional
@@ -137,6 +145,8 @@ def requires_command_permission(
                 command_name = func.__name__
 
             # Get command permission config from database
+            # This will check the command itself, then fall back to parent commands
+            # e.g., "config ranks init" -> "config ranks" -> "config"
             cmd_perm = await permission_system.get_command_permission(
                 guild.id,
                 command_name,

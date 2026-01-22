@@ -184,6 +184,90 @@ class TestPermissionSystem:
         # Should return None for unconfigured commands
         assert result is None
 
+    @pytest.mark.unit
+    async def test_get_command_permission_parent_fallback(
+        self,
+        permission_system: PermissionSystem,
+    ) -> None:
+        """Test that subcommands fall back to parent command permissions."""
+        guild_id = 123456789
+        subcommand_name = "config ranks init"
+
+        # Mock parent permission
+        mock_parent_permission = MagicMock()
+        mock_parent_permission.required_rank = 5
+
+        # Mock database: subcommand not found, parent found
+        async def mock_get_permission(guild: int, cmd: str) -> MagicMock | None:
+            if cmd == subcommand_name:
+                return None  # Subcommand not configured
+            if cmd == "config ranks":
+                return None  # Intermediate parent not configured
+            if cmd == "config":
+                return mock_parent_permission  # Root parent configured
+            return None
+
+        permission_system.db.command_permissions.get_command_permission = AsyncMock(
+            side_effect=mock_get_permission,
+        )
+
+        result = await permission_system.get_command_permission(
+            guild_id,
+            subcommand_name,
+        )
+
+        # Should return parent permission
+        assert result is not None
+        assert result.required_rank == 5
+        # Should have checked subcommand, then intermediate, then root
+        assert (
+            permission_system.db.command_permissions.get_command_permission.call_count
+            == 3
+        )
+
+    @pytest.mark.unit
+    async def test_get_command_permission_subcommand_override(
+        self,
+        permission_system: PermissionSystem,
+    ) -> None:
+        """Test that configured subcommands take precedence over parent."""
+        guild_id = 123456789
+        subcommand_name = "config ranks init"
+
+        # Mock subcommand permission (higher rank)
+        mock_subcommand_permission = MagicMock()
+        mock_subcommand_permission.required_rank = 7
+
+        # Mock parent permission (lower rank)
+        mock_parent_permission = MagicMock()
+        mock_parent_permission.required_rank = 5
+
+        # Mock database: subcommand found first
+        async def mock_get_permission(guild: int, cmd: str) -> MagicMock | None:
+            if cmd == subcommand_name:
+                return mock_subcommand_permission  # Subcommand configured
+            if cmd == "config":
+                return mock_parent_permission  # Parent also configured
+            return None
+
+        permission_system.db.command_permissions.get_command_permission = AsyncMock(
+            side_effect=mock_get_permission,
+        )
+
+        result = await permission_system.get_command_permission(
+            guild_id,
+            subcommand_name,
+        )
+
+        # Should return subcommand permission (not parent)
+        assert result is not None
+        assert result.required_rank == 7
+        # Should only check subcommand (found immediately)
+        assert (
+            permission_system.db.command_permissions.get_command_permission.call_count
+            == 1
+        )
+
 
 class TestPermissionDecorator:
     """🎯 Test @requires_command_permission decorator metadata."""

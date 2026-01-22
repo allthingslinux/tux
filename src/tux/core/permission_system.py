@@ -447,22 +447,49 @@ class PermissionSystem:
         """
         Get command-specific permission requirements for a guild.
 
+        Checks the command itself first, then falls back to parent commands
+        if the subcommand is not configured. For example, if "config ranks init"
+        is not configured, it will check "config ranks", then "config".
+
         Parameters
         ----------
         guild_id : int
             The Discord guild ID.
         command_name : str
-            The command name to look up.
+            The command name to look up (e.g., "config ranks init").
 
         Returns
         -------
         PermissionCommand | None
             The command permission record, or None if no override exists.
         """
-        return await self.db.command_permissions.get_command_permission(
+        # First, try the exact command name
+        cmd_perm = await self.db.command_permissions.get_command_permission(
             guild_id,
             command_name,
         )
+
+        if cmd_perm is not None:
+            return cmd_perm
+
+        # If not found and command has parent(s), check parent commands
+        # e.g., "config ranks init" -> check "config ranks", then "config"
+        parts = command_name.split()
+        if len(parts) > 1:
+            # Try each parent level, from most specific to least
+            for i in range(len(parts) - 1, 0, -1):
+                parent_name = " ".join(parts[:i])
+                parent_perm = await self.db.command_permissions.get_command_permission(
+                    guild_id,
+                    parent_name,
+                )
+                if parent_perm is not None:
+                    logger.debug(
+                        f"Using parent command permission '{parent_name}' for '{command_name}'",
+                    )
+                    return parent_perm
+
+        return None
 
     async def get_guild_permission_ranks(self, guild_id: int) -> list[PermissionRank]:
         """
