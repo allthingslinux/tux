@@ -195,20 +195,20 @@ class TestPermissionSystem:
 
         # Mock parent permission
         mock_parent_permission = MagicMock()
+        mock_parent_permission.command_name = "config"
         mock_parent_permission.required_rank = 5
 
-        # Mock database: subcommand not found, parent found
-        async def mock_get_permission(guild: int, cmd: str) -> MagicMock | None:
-            if cmd == subcommand_name:
-                return None  # Subcommand not configured
-            if cmd == "config ranks":
-                return None  # Intermediate parent not configured
-            if cmd == "config":
-                return mock_parent_permission  # Root parent configured
-            return None
+        # Mock database session and batch query
+        mock_session = MagicMock()
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = [mock_parent_permission]
+        mock_session.execute = AsyncMock(return_value=mock_result)
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=None)
 
-        permission_system.db.command_permissions.get_command_permission = AsyncMock(
-            side_effect=mock_get_permission,
+        # Mock the db.session() context manager
+        permission_system.db.command_permissions.db.session = MagicMock(
+            return_value=mock_session,
         )
 
         result = await permission_system.get_command_permission(
@@ -219,11 +219,7 @@ class TestPermissionSystem:
         # Should return parent permission
         assert result is not None
         assert result.required_rank == 5
-        # Should have checked subcommand, then intermediate, then root
-        assert (
-            permission_system.db.command_permissions.get_command_permission.call_count
-            == 3
-        )
+        assert result.command_name == "config"
 
     @pytest.mark.unit
     async def test_get_command_permission_subcommand_override(
@@ -234,24 +230,31 @@ class TestPermissionSystem:
         guild_id = 123456789
         subcommand_name = "config ranks init"
 
-        # Mock subcommand permission (higher rank)
+        # Mock subcommand permission (higher rank) - should take precedence
         mock_subcommand_permission = MagicMock()
+        mock_subcommand_permission.command_name = subcommand_name
         mock_subcommand_permission.required_rank = 7
 
         # Mock parent permission (lower rank)
         mock_parent_permission = MagicMock()
+        mock_parent_permission.command_name = "config"
         mock_parent_permission.required_rank = 5
 
-        # Mock database: subcommand found first
-        async def mock_get_permission(guild: int, cmd: str) -> MagicMock | None:
-            if cmd == subcommand_name:
-                return mock_subcommand_permission  # Subcommand configured
-            if cmd == "config":
-                return mock_parent_permission  # Parent also configured
-            return None
+        # Mock database session and batch query (returns both, but subcommand should win)
+        mock_session = MagicMock()
+        mock_result = MagicMock()
+        # Return both permissions - subcommand should be selected first
+        mock_result.scalars.return_value.all.return_value = [
+            mock_subcommand_permission,
+            mock_parent_permission,
+        ]
+        mock_session.execute = AsyncMock(return_value=mock_result)
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=None)
 
-        permission_system.db.command_permissions.get_command_permission = AsyncMock(
-            side_effect=mock_get_permission,
+        # Mock the db.session() context manager
+        permission_system.db.command_permissions.db.session = MagicMock(
+            return_value=mock_session,
         )
 
         result = await permission_system.get_command_permission(
@@ -259,14 +262,10 @@ class TestPermissionSystem:
             subcommand_name,
         )
 
-        # Should return subcommand permission (not parent)
+        # Should return subcommand permission (not parent) - takes precedence
         assert result is not None
         assert result.required_rank == 7
-        # Should only check subcommand (found immediately)
-        assert (
-            permission_system.db.command_permissions.get_command_permission.call_count
-            == 1
-        )
+        assert result.command_name == subcommand_name
 
 
 class TestPermissionDecorator:

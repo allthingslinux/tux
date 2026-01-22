@@ -9,7 +9,12 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.core.converters import CaseTypeConverter, TimeConverter, convert_bool
+from tux.core.converters import (
+    CaseTypeConverter,
+    FlexibleUserConverter,
+    TimeConverter,
+    convert_bool,
+)
 from tux.database.models import CaseType
 from tux.shared.constants import DEFAULT_REASON
 
@@ -451,12 +456,14 @@ class CasesViewFlags(
         description="User to view cases for.",
         aliases=["u"],
         default=None,
+        converter=FlexibleUserConverter,
     )
     moderator: discord.User | None = commands.flag(
         name="mod",
         description="Moderator to view cases for.",
         aliases=["m"],
         default=None,
+        converter=FlexibleUserConverter,
     )
 
     def __init__(self, *args: object, **kwargs: object) -> None:

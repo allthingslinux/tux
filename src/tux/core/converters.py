@@ -7,6 +7,7 @@ resolution and boolean conversion.
 
 from __future__ import annotations
 
+import contextlib
 import re
 from typing import TYPE_CHECKING, Any
 
@@ -23,6 +24,7 @@ __all__ = [
     # Converters
     "TimeConverter",
     "CaseTypeConverter",
+    "FlexibleUserConverter",
     # Utility functions
     "get_channel_safe",
     "convert_bool",
@@ -113,6 +115,67 @@ class CaseTypeConverter(commands.Converter[CaseType]):
         except KeyError as e:
             msg = f"Invalid CaseType: {argument}"
             raise commands.BadArgument(msg) from e
+
+
+class FlexibleUserConverter(commands.Converter[discord.User]):
+    """Convert various user representations to discord.User.
+
+    Accepts user mentions, user IDs (snowflakes), and usernames.
+    Tries multiple conversion methods in order:
+    1. Standard UserConverter (handles mentions and username#discriminator)
+    2. Direct user ID lookup (for raw snowflake IDs)
+    """
+
+    async def convert(self, ctx: commands.Context[Any], argument: str) -> discord.User:
+        """
+        Convert a string to a discord.User.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Any]
+            The invocation context.
+        argument : str
+            The user identifier (mention, ID, or username).
+
+        Returns
+        -------
+        discord.User
+            The user object.
+
+        Raises
+        ------
+        commands.BadArgument
+            If the user cannot be found or the argument is invalid.
+        """
+        # First, try the standard UserConverter (handles mentions, username#discriminator)
+        with contextlib.suppress(commands.UserNotFound):
+            return await commands.UserConverter().convert(ctx, argument)
+
+        # If that fails, try treating it as a raw user ID
+        with contextlib.suppress(ValueError):
+            user_id = int(argument)
+            # Validate it's a reasonable Discord snowflake (15-20 digits)
+            if not (15 <= len(argument) <= 20):
+                msg = f"Invalid user ID format: {argument}"
+                raise commands.BadArgument(msg)
+
+            # Try to fetch the user by ID from cache first
+            if user := ctx.bot.get_user(user_id):
+                return user
+
+            # If not in cache, try fetching from Discord
+            try:
+                return await ctx.bot.fetch_user(user_id)
+            except discord.NotFound:
+                msg = f"User with ID {user_id} not found."
+                raise commands.BadArgument(msg) from None
+            except discord.HTTPException as e:
+                msg = f"Error fetching user {user_id}: {e}"
+                raise commands.BadArgument(msg) from e
+
+        # Not a valid integer, so it's not a user ID
+        msg = f"User '{argument}' not found. Try using a mention, user ID, or username#discriminator."
+        raise commands.BadArgument(msg)
 
 
 async def get_channel_safe(

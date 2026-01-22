@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, TypedDict
 import discord
 from discord.ext import commands
 from loguru import logger
+from sqlmodel import select
 
 from tux.database.controllers import DatabaseCoordinator
 from tux.database.models.models import (
@@ -463,31 +464,49 @@ class PermissionSystem:
         PermissionCommand | None
             The command permission record, or None if no override exists.
         """
-        # First, try the exact command name
-        cmd_perm = await self.db.command_permissions.get_command_permission(
-            guild_id,
-            command_name,
-        )
-
-        if cmd_perm is not None:
-            return cmd_perm
-
-        # If not found and command has parent(s), check parent commands
-        # e.g., "config ranks init" -> check "config ranks", then "config"
+        # For single-word commands (no parents), use direct query for efficiency
         parts = command_name.split()
-        if len(parts) > 1:
-            # Try each parent level, from most specific to least
-            for i in range(len(parts) - 1, 0, -1):
-                parent_name = " ".join(parts[:i])
-                parent_perm = await self.db.command_permissions.get_command_permission(
-                    guild_id,
-                    parent_name,
-                )
-                if parent_perm is not None:
-                    logger.debug(
-                        f"Using parent command permission '{parent_name}' for '{command_name}'",
-                    )
-                    return parent_perm
+        if len(parts) == 1:
+            # No parents to check, just query the command directly
+            return await self.db.command_permissions.get_command_permission(
+                guild_id,
+                command_name,
+            )
+
+        # For multi-word commands, build list of all possible command names to check
+        # e.g., "config ranks init" -> ["config ranks init", "config ranks", "config"]
+        command_names_to_check = [command_name]
+
+        # Add all parent command names (most specific to least)
+        for i in range(len(parts) - 1, 0, -1):
+            parent_name = " ".join(parts[:i])
+            command_names_to_check.append(parent_name)
+
+        # Batch query all possible command names at once
+        # This is much faster than sequential queries
+        async with self.db.command_permissions.db.session() as session:
+            stmt = (
+                select(PermissionCommand)
+                .where(PermissionCommand.guild_id == guild_id)
+                .where(PermissionCommand.command_name.in_(command_names_to_check))
+            )
+            result = await session.execute(stmt)
+            found_permissions = list(result.scalars().all())
+
+            # Expunge instances for use outside session
+            for perm in found_permissions:
+                session.expunge(perm)
+
+        # Return the first match in order of specificity (command itself, then parents)
+        # This ensures subcommand overrides take precedence
+        for name in command_names_to_check:
+            for perm in found_permissions:
+                if perm.command_name == name:
+                    if name != command_name:
+                        logger.debug(
+                            f"Using parent command permission '{name}' for '{command_name}'",
+                        )
+                    return perm
 
         return None
 
