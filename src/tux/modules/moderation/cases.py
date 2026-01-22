@@ -339,9 +339,16 @@ class Cases(ModerationCogBase):
             await ctx.send("No cases found.", ephemeral=True)
             return
 
-        total_cases = await self.db.case.get_all_cases(ctx.guild.id)
+        # Use filtered cases count when filters are applied, otherwise get all cases
+        if options:
+            # Filters are applied, use the filtered count
+            total_cases = len(cases)
+        else:
+            # No filters, get total count of all cases
+            all_cases = await self.db.case.get_all_cases(ctx.guild.id)
+            total_cases = len(all_cases)
 
-        await self._handle_case_list_response(ctx, cases, len(total_cases))
+        await self._handle_case_list_response(ctx, cases, total_cases)
 
     async def _update_case(
         self,
