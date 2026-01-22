@@ -147,6 +147,9 @@ class Cases(ModerationCogBase):
 
         Use subcommands to view specific cases or filter by criteria.
         """
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         if case_number is not None:
             await self._view_single_case(ctx, case_number)
         else:
@@ -173,6 +176,9 @@ class Cases(ModerationCogBase):
         case_number : int
             The case number to view (e.g., 123).
         """
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         await self._view_single_case(ctx, case_number)
 
     @cases.command(
@@ -197,6 +203,9 @@ class Cases(ModerationCogBase):
         flags : CasesViewFlags
             Filter criteria (--type, --user, --moderator).
         """
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         await self._view_cases_with_flags(ctx, flags)
 
     @cases.command(
@@ -228,12 +237,21 @@ class Cases(ModerationCogBase):
 
         case = await self.db.case.get_case_by_number(case_number, ctx.guild.id)
         if not case:
-            await ctx.send("Case not found.", ephemeral=True)
+            if ctx.interaction:
+                await ctx.interaction.followup.send("Case not found.", ephemeral=True)
+            else:
+                await ctx.send("Case not found.", ephemeral=True)
             return
 
         # Validate changes
         if not self._has_valid_changes(case, flags):
-            await ctx.send("No valid changes provided.", ephemeral=True)
+            if ctx.interaction:
+                await ctx.interaction.followup.send(
+                    "No valid changes provided.",
+                    ephemeral=True,
+                )
+            else:
+                await ctx.send("No valid changes provided.", ephemeral=True)
             return
 
         await self._update_case(ctx, case, flags)
@@ -277,7 +295,10 @@ class Cases(ModerationCogBase):
         cases = await self.db.case.get_all_cases(ctx.guild.id)
 
         if not cases:
-            await ctx.send("No cases found.", ephemeral=True)
+            if ctx.interaction:
+                await ctx.interaction.followup.send("No cases found.", ephemeral=True)
+            else:
+                await ctx.send("No cases found.", ephemeral=True)
             return
 
         await self._handle_case_list_response(ctx, cases, len(cases))
@@ -301,7 +322,10 @@ class Cases(ModerationCogBase):
 
         case = await self.db.case.get_case_by_number(case_number, ctx.guild.id)
         if not case:
-            await ctx.reply("Case not found.", mention_author=False)
+            if ctx.interaction:
+                await ctx.interaction.followup.send("Case not found.", ephemeral=True)
+            else:
+                await ctx.reply("Case not found.", mention_author=False)
             return
 
         user = await self._resolve_user(case.case_user_id)
@@ -336,7 +360,10 @@ class Cases(ModerationCogBase):
         cases = await self.db.case.get_cases_by_options(ctx.guild.id, options)
 
         if not cases:
-            await ctx.send("No cases found.", ephemeral=True)
+            if ctx.interaction:
+                await ctx.interaction.followup.send("No cases found.", ephemeral=True)
+            else:
+                await ctx.send("No cases found.", ephemeral=True)
             return
 
         # Use filtered cases count when filters are applied, otherwise get all cases
@@ -379,7 +406,13 @@ class Cases(ModerationCogBase):
         )
 
         if not updated_case:
-            await ctx.reply("Failed to update case.", mention_author=False)
+            if ctx.interaction:
+                await ctx.interaction.followup.send(
+                    "Failed to update case.",
+                    ephemeral=True,
+                )
+            else:
+                await ctx.reply("Failed to update case.", mention_author=False)
             return
 
         # Update the mod log embed if it exists
@@ -574,7 +607,10 @@ class Cases(ModerationCogBase):
                 description="Failed to find case.",
                 color=EMBED_COLORS["ERROR"],
             )
-            await ctx.send(embed=embed, ephemeral=True)
+            if ctx.interaction:
+                await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+            else:
+                await ctx.send(embed=embed, ephemeral=True)
             return
 
         moderator = await self._resolve_moderator(case.case_moderator_id)
@@ -594,7 +630,10 @@ class Cases(ModerationCogBase):
         if hasattr(user, "avatar") and user.avatar:
             embed.set_thumbnail(url=user.avatar.url)
 
-        await ctx.send(embed=embed, ephemeral=True)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed, ephemeral=True)
 
     async def _handle_case_list_response(
         self,
@@ -620,7 +659,10 @@ class Cases(ModerationCogBase):
                 title="Cases",
                 description="No cases found.",
             )
-            await ctx.send(embed=embed, ephemeral=True)
+            if ctx.interaction:
+                await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+            else:
+                await ctx.send(embed=embed, ephemeral=True)
             return
 
         # Sort cases (highest case id first)

@@ -63,6 +63,9 @@ class Timeout(ModerationCogBase):
         """
         assert ctx.guild
 
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         # Check if target is a bot
         if member.bot:
             await ctx.send(

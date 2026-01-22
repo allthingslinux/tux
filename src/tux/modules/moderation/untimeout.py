@@ -61,6 +61,9 @@ class Untimeout(ModerationCogBase):
         """
         assert ctx.guild
 
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         # Check if member is timed out
         if not member.is_timed_out():
             await ctx.send(f"{member} is not timed out.", ephemeral=True)

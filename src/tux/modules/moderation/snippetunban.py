@@ -59,9 +59,18 @@ class SnippetUnban(ModerationCogBase):
         """
         assert ctx.guild
 
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         # Check if user is snippet banned
         if not await self.is_snippetbanned(ctx.guild.id, member.id):
-            await ctx.reply("User is not snippet banned.", mention_author=False)
+            if ctx.interaction:
+                await ctx.interaction.followup.send(
+                    "User is not snippet banned.",
+                    ephemeral=True,
+                )
+            else:
+                await ctx.reply("User is not snippet banned.", mention_author=False)
             return
 
         # Execute snippet unban with case creation and DM
