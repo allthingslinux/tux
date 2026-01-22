@@ -375,12 +375,8 @@ class CaseController(BaseController[Case]):
         if "status" in options:
             filters.append(Case.case_status == options["status"])
 
-        # Combine all filters with AND
-        combined_filter = filters[0]
-        for filter_condition in filters[1:]:
-            combined_filter = combined_filter & filter_condition
-
-        return await self.find_all(filters=combined_filter)
+        # Pass filters list directly - build_filters_for_model will combine them with and_()
+        return await self.find_all(filters=filters)
 
     async def update_case_by_number(
         self,
