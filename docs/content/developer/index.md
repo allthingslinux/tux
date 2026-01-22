@@ -4,6 +4,7 @@ icon: material/folder-search-outline
 description: Index of developer documentation—contributing, tutorials, concepts, best practices, and reference.
 tags:
   - developer-guide
+icon: lucide/text-quote
 ---
 
 # Developer Guide
