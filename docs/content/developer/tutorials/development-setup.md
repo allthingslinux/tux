@@ -4,6 +4,7 @@ tags:
   - developer-guide
   - tutorials
   - setup
+icon: lucide/rocket
 ---
 
 # Development Setup
