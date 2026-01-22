@@ -3,6 +3,7 @@ title: Developer Concepts
 tags:
   - developer-guide
   - concepts
+icon: lucide/text-wrap
 ---
 
 # Developer Concepts
