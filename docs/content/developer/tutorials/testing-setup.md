@@ -4,6 +4,7 @@ tags:
   - developer-guide
   - tutorials
   - testing
+icon: lucide/flask-conical
 ---
 
 # Testing Setup
