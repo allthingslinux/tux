@@ -37,6 +37,9 @@ class HelpData:
         self.command_mapping: (
             dict[str, dict[str, commands.Command[Any, Any, Any]]] | None
         ) = None
+        # Cache user's permission rank for the duration of help operations
+        # This avoids repeated database queries when checking multiple commands
+        self._cached_user_rank: int | None = None
 
     async def get_prefix(self, ctx: commands.Context[Any]) -> str:
         """
@@ -216,8 +219,13 @@ class HelpData:
             if cmd_perm is None:
                 return False
 
-            # Get user's permission rank and check if user meets required rank
-            user_rank = await permission_system.get_user_permission_rank(self.ctx)
+            # Get user's permission rank
+            # Note: We don't use the cache here because this method is called
+            # individually from can_run_command. The cache is only used in
+            # batch_can_run_commands for performance optimization.
+            user_rank = await permission_system.get_user_permission_rank(
+                self.ctx,
+            )
             return user_rank >= cmd_perm.required_rank  # noqa: TRY300
         except Exception as e:
             logger.trace(f"Error checking permission rank for {command.name}: {e}")
@@ -244,6 +252,142 @@ class HelpData:
                     return category_commands[command_name]
 
         return None
+
+    def _filter_commands_for_permission_check(
+        self,
+        commands_list: list[commands.Command[Any, Any, Any]],
+    ) -> tuple[
+        dict[commands.Command[Any, Any, Any], bool],
+        list[commands.Command[Any, Any, Any]],
+    ]:
+        """
+        Filter commands into those that need permission checking and those that don't.
+
+        Parameters
+        ----------
+        commands_list : list[commands.Command[Any, Any, Any]]
+            List of commands to filter.
+
+        Returns
+        -------
+        tuple[dict[commands.Command[Any, Any, Any], bool], list[commands.Command[Any, Any, Any]]]
+            Tuple of (results dict for commands that don't need checking, commands that need checking).
+        """
+        results: dict[commands.Command[Any, Any, Any], bool] = {}
+        commands_to_check: list[commands.Command[Any, Any, Any]] = []
+
+        for command in commands_list:
+            # Basic checks: hidden and enabled
+            if command.hidden or not command.enabled:
+                results[command] = False
+                continue
+
+            # If no context provided, show all commands (fallback)
+            # DM context: show all commands (permissions don't apply in DMs)
+            if not self.ctx or not self.ctx.guild:
+                results[command] = True
+                continue
+
+            # Check if command is restricted (owner/sysadmin only)
+            if command.name.lower() in RESTRICTED_COMMANDS:
+                results[command] = self._is_owner_or_sysadmin()
+                continue
+
+            # Check if command uses permission system
+            if self._uses_permission_system(command):
+                commands_to_check.append(command)
+            else:
+                # Commands without permission decorator are visible to all
+                results[command] = True
+
+        return results, commands_to_check
+
+    async def batch_can_run_commands(
+        self,
+        commands_list: list[commands.Command[Any, Any, Any]],
+    ) -> dict[commands.Command[Any, Any, Any], bool]:
+        """
+        Batch check if multiple commands can be run.
+
+        This is much more efficient than calling can_run_command multiple times,
+        as it batches all database queries. Used by the help system to check
+        permissions for multiple subcommands simultaneously.
+
+        Parameters
+        ----------
+        commands_list : list[commands.Command[Any, Any, Any]]
+            List of commands to check permissions for.
+
+        Returns
+        -------
+        dict[commands.Command[Any, Any, Any], bool]
+            Dictionary mapping commands to whether they can be run.
+        """
+        if not commands_list:
+            return {}
+
+        # Reset cached user rank for new batch operation
+        self._cached_user_rank = None
+
+        # Filter commands into those that need permission checking and those that don't
+        results, commands_to_check = self._filter_commands_for_permission_check(
+            commands_list,
+        )
+
+        # If no commands need permission checking, return early
+        if not commands_to_check:
+            return results
+
+        # Fast path: bot owners and sysadmins bypass all permission checks
+        if self.ctx and self._is_owner_or_sysadmin():
+            for command in commands_to_check:
+                results[command] = True
+            return results
+
+        # Fast path: guild owner bypass
+        if (
+            self.ctx
+            and self.ctx.guild
+            and self.ctx.guild.owner_id == self.ctx.author.id
+        ):
+            for command in commands_to_check:
+                results[command] = True
+            return results
+
+        # Batch get all command permissions at once
+        # self.ctx and self.ctx.guild are guaranteed to be non-None here
+        # due to earlier checks, but type checker needs explicit assertion
+        assert self.ctx is not None
+        assert self.ctx.guild is not None
+
+        permission_system = get_permission_system()
+        command_names = [cmd.qualified_name for cmd in commands_to_check]
+        cmd_perms = await permission_system.batch_get_command_permissions(
+            self.ctx.guild.id,
+            command_names,
+        )
+
+        # Get user's permission rank once (cached for subsequent checks)
+        if self._cached_user_rank is None:
+            self._cached_user_rank = await permission_system.get_user_permission_rank(
+                self.ctx,
+            )
+        user_rank = self._cached_user_rank
+
+        # Check each command against its permission requirement
+        for command in commands_to_check:
+            command_name = command.qualified_name
+            cmd_perm = cmd_perms.get(command_name)
+
+            # If not configured, command is hidden (safe default)
+            if cmd_perm is None:
+                results[command] = False
+                continue
+
+            # Check if user meets required rank
+            results[command] = user_rank >= cmd_perm.required_rank
+
+        return results
 
     def find_parent_command(
         self,
