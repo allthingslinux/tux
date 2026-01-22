@@ -4,6 +4,7 @@ tags:
   - developer-guide
   - tutorials
   - database
+icon: lucide/blocks
 ---
 
 # Database Integration
