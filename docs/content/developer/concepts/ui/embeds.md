@@ -5,6 +5,7 @@ tags:
   - concepts
   - ui
   - embeds
+icon: lucide/between-horizontal-start
 ---
 
 # Embeds
