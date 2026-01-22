@@ -4,6 +4,7 @@ tags:
   - developer-guide
   - concepts
   - database
+icon: lucide/text-quote
 ---
 
 # Database Concepts
