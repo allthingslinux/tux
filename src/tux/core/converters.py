@@ -7,7 +7,6 @@ resolution and boolean conversion.
 
 from __future__ import annotations
 
-import contextlib
 import re
 from typing import TYPE_CHECKING, Any
 
@@ -121,9 +120,8 @@ class FlexibleUserConverter(commands.Converter[discord.User]):
     """Convert various user representations to discord.User.
 
     Accepts user mentions, user IDs (snowflakes), and usernames.
-    Tries multiple conversion methods in order:
-    1. Standard UserConverter (handles mentions and username#discriminator)
-    2. Direct user ID lookup (for raw snowflake IDs)
+    Uses discord.py's UserConverter which already supports ID lookup, but provides
+    better error messages and fallback handling.
     """
 
     async def convert(self, ctx: commands.Context[Any], argument: str) -> discord.User:
@@ -147,35 +145,42 @@ class FlexibleUserConverter(commands.Converter[discord.User]):
         commands.BadArgument
             If the user cannot be found or the argument is invalid.
         """
-        # First, try the standard UserConverter (handles mentions, username#discriminator)
-        with contextlib.suppress(commands.UserNotFound):
-            return await commands.UserConverter().convert(ctx, argument)
+        # Strip whitespace from argument
+        argument = argument.strip()
 
-        # If that fails, try treating it as a raw user ID
-        with contextlib.suppress(ValueError):
-            user_id = int(argument)
-            # Validate it's a reasonable Discord snowflake (15-20 digits)
-            if not (15 <= len(argument) <= 20):
-                msg = f"Invalid user ID format: {argument}"
-                raise commands.BadArgument(msg)
+        if not argument:
+            msg = "User argument cannot be empty."
+            raise commands.BadArgument(msg)
 
-            # Try to fetch the user by ID from cache first
-            if user := ctx.bot.get_user(user_id):
-                return user
+        logger.debug(
+            f"FlexibleUserConverter: Converting argument '{argument}' (type: {type(argument)})",
+        )
 
-            # If not in cache, try fetching from Discord
-            try:
-                return await ctx.bot.fetch_user(user_id)
-            except discord.NotFound:
-                msg = f"User with ID {user_id} not found."
-                raise commands.BadArgument(msg) from None
-            except discord.HTTPException as e:
-                msg = f"Error fetching user {user_id}: {e}"
-                raise commands.BadArgument(msg) from e
-
-        # Not a valid integer, so it's not a user ID
-        msg = f"User '{argument}' not found. Try using a mention, user ID, or username#discriminator."
-        raise commands.BadArgument(msg)
+        # UserConverter already supports:
+        # 1. Lookup by ID (first strategy)
+        # 2. Lookup by mention
+        # 3. Lookup by username#discriminator
+        # 4. Lookup by username
+        # 5. Lookup by global name
+        # And it lazily fetches from HTTP APIs if ID is passed and not in cache
+        try:
+            user = await commands.UserConverter().convert(ctx, argument)
+        except commands.UserNotFound as e:
+            # Provide a more helpful error message
+            logger.debug(f"FlexibleUserConverter: UserNotFound for '{argument}': {e}")
+            msg = f"User '{argument}' not found. Try using a mention (@user), user ID, or username."
+            raise commands.BadArgument(msg) from e
+        except Exception as e:
+            logger.error(
+                f"FlexibleUserConverter: Unexpected error converting '{argument}': {e}",
+                exc_info=True,
+            )
+            raise
+        else:
+            logger.debug(
+                f"FlexibleUserConverter: Successfully converted to user {user} (ID: {user.id})",
+            )
+            return user
 
 
 async def get_channel_safe(
