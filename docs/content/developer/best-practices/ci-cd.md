@@ -271,7 +271,7 @@ jobs:
 # Matrix builds for multiple Python versions
 strategy:
   matrix:
-    python-version: [3.13.8]
+    python-version: [3.13.11]
   fail-fast: false
 ```
 
@@ -328,7 +328,7 @@ concurrency:  # Prevent conflicts
 ```yaml
 # Centralized configuration
 env:
-  PYTHON_VERSION: 3.13.8
+  PYTHON_VERSION: 3.13.11
   COVERAGE_THRESHOLD: 80
   REVIEWDOG_LEVEL: warning
 ```

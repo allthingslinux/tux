@@ -202,7 +202,7 @@ docker run --rm \
 ```
 
 !!! note "Utility Container"
-    The `alpine:latest` image is used here as a lightweight utility container for running tar commands. It's not related to the Tux application image, which uses `python:3.13.8-slim` (Debian-based).
+    The `alpine:latest` image is used here as a lightweight utility container for running tar commands. It's not related to the Tux application image, which uses `python:3.13.11-slim` (Debian-based).
 
 **Restore volume:**
 
