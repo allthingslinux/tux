@@ -25,6 +25,7 @@ __all__ = [
     "CaseTypeConverter",
     "FlexibleUserConverter",
     # Utility functions
+    "get_user_safe",
     "get_channel_safe",
     "convert_bool",
 ]
@@ -173,6 +174,39 @@ class FlexibleUserConverter(commands.Converter[discord.User]):
             raise
         else:
             return user
+
+
+async def get_user_safe(bot: Tux, user_id: int) -> discord.User | None:
+    """Get user from cache first, only fetch if needed.
+
+    This utility function optimizes user resolution by checking the bot's
+    internal cache before making a REST API call. This reduces unnecessary
+    REST calls in high-latency environments.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to use for user resolution.
+    user_id : int
+        The ID of the user to resolve.
+
+    Returns
+    -------
+    discord.User | None
+        The user if found, None if not found or if an error occurred.
+    """
+    # Check cache first (fast, no REST call)
+    if user := bot.get_user(user_id):
+        return user
+
+    # If not in cache, fetch from API (slower, REST call)
+    try:
+        return await bot.fetch_user(user_id)
+    except discord.NotFound:
+        return None
+    except Exception as e:
+        logger.opt(exception=e).warning(f"Error fetching user {user_id}")
+        return None
 
 
 async def get_channel_safe(
