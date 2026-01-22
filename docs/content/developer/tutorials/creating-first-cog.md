@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - tutorials
   - cogs
+icon: lucide/settings
 ---
 
 # Creating Your First Cog
