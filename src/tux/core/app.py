@@ -197,11 +197,14 @@ class TuxApp:
         """Create and configure the Tux bot instance."""
         from tux.core.bot import Tux  # noqa: PLC0415
 
+        # Get intents from configuration
+        intents = CONFIG.BOT_INTENTS.to_discord_intents()
+
         return Tux(
             command_prefix=get_prefix,
             strip_after_prefix=True,
             case_insensitive=True,
-            intents=discord.Intents.all(),
+            intents=intents,
             owner_ids=owner_ids,
             allowed_mentions=discord.AllowedMentions(everyone=False, roles=False),
             help_command=TuxHelp(),
