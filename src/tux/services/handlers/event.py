@@ -72,6 +72,12 @@ class EventHandler(BaseCog):
             logger.info(
                 f"Registered {registered_count} guilds, skipped {skipped_count} existing guilds in database",
             )
+
+            # Mark first ready (only on first on_ready event, not reconnects)
+            if not self.bot.first_ready:
+                self.bot.first_ready = True
+                logger.debug("First on_ready event completed")
+
             self._guilds_registered = True
             self.bot.guilds_registered.set()  # Unblock RemindMe, StatusRoles, etc.
         except Exception:

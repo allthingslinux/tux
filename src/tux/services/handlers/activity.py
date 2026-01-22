@@ -158,7 +158,13 @@ class ActivityHandler(commands.Cog):
     async def on_ready(self) -> None:
         """Start activity rotation when bot is ready."""
         try:
+            # Only start activity rotation on first ready, not on every reconnect
+            # The activity loop already waits 5 seconds before first change_presence(),
+            # but we should still guard against starting multiple tasks on reconnects
             if self._activity_task is None or self._activity_task.done():
+                # Wait a bit to ensure bot is fully connected before starting activity rotation
+                # This helps prevent disconnection issues mentioned in Discord.py FAQ
+                await asyncio.sleep(2)
                 logger.info("Starting activity rotation")
                 self._activity_task = asyncio.create_task(self._activity_loop())
         except Exception:
