@@ -1,7 +1,7 @@
 # ============================================================================
 # STAGE 1: Common Setup (shared by base and production stages)
 # ============================================================================
-FROM python:3.13.11-slim@sha256:087a9f3b880e8b2c7688debb9df2a5106e060225ebd18c264d5f1d7a73399db0 AS common
+FROM python:3.13.11-slim AS common
 
 # Common labels (shared across all final images)
 LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
