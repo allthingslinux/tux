@@ -175,8 +175,14 @@ class CaseController(BaseController[Case]):
                 case_data["case_reason"] = case_reason
 
             # Add any extra kwargs (like case_expires_at)
-            logger.debug(f"Additional kwargs for case creation: {kwargs}")
-            case_data.update(kwargs)
+            # Filter out 'id' to prevent manual ID assignment - database should auto-generate it
+            filtered_kwargs = {k: v for k, v in kwargs.items() if k != "id"}
+            if "id" in kwargs:
+                logger.warning(
+                    f"Ignoring 'id' in kwargs (id={kwargs['id']}) - database will auto-generate the ID",
+                )
+            logger.debug(f"Additional kwargs for case creation: {filtered_kwargs}")
+            case_data.update(filtered_kwargs)
 
             # Create the case
             logger.trace(f"Creating Case object with data: {case_data}")
