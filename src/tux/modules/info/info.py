@@ -114,35 +114,19 @@ class Info(BaseCog):
             custom_author_icon_url=author_icon_url,
         )
 
-    @commands.hybrid_group(
-        name="info",
-        aliases=["i"],
-    )
-    @commands.guild_only()
-    async def info(
-        self,
-        ctx: commands.Context[Tux],
-        entity: str | None = None,
-    ) -> None:
-        """Get information about a Discord object by ID or mention.
+    def _build_converters(self, entity: str) -> list[commands.Converter[Any]]:
+        """Build list of converters to try for entity resolution.
 
         Parameters
         ----------
-        ctx : commands.Context[Tux]
-            The context object associated with the command.
-        entity : str | None
-            The entity to get information about (member, user, message, channel, role, emoji, sticker, invite, thread, event, etc.), or None for help.
-        """
-        if entity is None:
-            await ctx.send_help("info")
-            return
+        entity : str
+            The entity string to convert.
 
-        # Try different converters to determine the object type
-        # Note: We try member/user/channel/role/etc FIRST before guild IDs
-        # because member/user IDs are the same length as guild IDs (17-19 digits),
-        # and users are more likely to query members/users than other guilds
-        # Note: InviteConverter is skipped for very short strings that can't be valid invite codes
-        # Discord invite codes are typically 7-8 characters, minimum 6 characters
+        Returns
+        -------
+        list[commands.Converter[Any]]
+            List of converters to try.
+        """
         converters: list[commands.Converter[Any]] = [
             commands.MemberConverter(),
             commands.UserConverter(),
@@ -169,6 +153,29 @@ class Info(BaseCog):
             ],
         )
 
+        return converters
+
+    async def _try_converters(
+        self,
+        ctx: commands.Context[Tux],
+        entity: str,
+    ) -> bool:
+        """Try all converters to find a matching entity handler.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The command context.
+        entity : str
+            The entity string to convert.
+
+        Returns
+        -------
+        bool
+            True if a handler was found and executed, False otherwise.
+        """
+        converters = self._build_converters(entity)
+
         for converter in converters:
             try:
                 converted = await converter.convert(ctx, entity)
@@ -182,29 +189,71 @@ class Info(BaseCog):
                         ):
                             continue
                         await handler(ctx, converted)
-                        return
+                        return True
             except commands.BadArgument:
                 continue
 
+        return False
+
+    async def _try_guild_id(
+        self,
+        ctx: commands.Context[Tux],
+        entity: str,
+    ) -> bool:
+        """Try to resolve entity as a guild ID.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The command context.
+        entity : str
+            The entity string (potentially a guild ID).
+
+        Returns
+        -------
+        bool
+            True if guild was found and info displayed, False otherwise.
+        """
         # Special handling for potential guild IDs (check last to avoid conflicts with member/user IDs)
         # Only check if it looks like a guild ID AND none of the other converters worked
-        if (
-            entity.isdigit() and 15 <= len(entity) <= 20
-        ):  # Guild IDs are typically 17-19 digits
-            with contextlib.suppress(ValueError):
-                guild_id = int(entity)
-                # Check if bot is in this guild
-                guild = self.bot.get_guild(guild_id)
-                if guild is not None:
-                    await self._show_guild_info(ctx, guild)
-                    return  # Exit here, don't try other converters
-                # Valid guild ID format but bot not in guild
-                await ctx.send(
-                    f"❌ I'm not in a server with ID `{entity}`. I can only show information for servers I'm a member of.",
-                )
-                return  # Exit here, don't try other converters
+        if not (entity.isdigit() and 15 <= len(entity) <= 20):
+            return False
 
-        # If no converter worked, show error
+        with contextlib.suppress(ValueError):
+            guild_id = int(entity)
+            # Check if bot is in this guild
+            guild = self.bot.get_guild(guild_id)
+            if guild is not None:
+                await self._show_guild_info(ctx, guild)
+                return True
+
+            # Valid guild ID format but bot not in guild
+            error_msg = (
+                f"❌ I'm not in a server with ID `{entity}`. "
+                "I can only show information for servers I'm a member of."
+            )
+            if ctx.interaction:
+                await ctx.interaction.followup.send(error_msg, ephemeral=True)
+            else:
+                await ctx.send(error_msg)
+            return True
+
+        return False
+
+    async def _send_not_found_error(
+        self,
+        ctx: commands.Context[Tux],
+        entity: str,
+    ) -> None:
+        """Send error message when entity is not found.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The command context.
+        entity : str
+            The entity string that was not found.
+        """
         # Since this is @commands.guild_only(), ctx.guild should never be None at runtime
         # But we need to satisfy the type checker
         guild = ctx.guild
@@ -212,9 +261,56 @@ class Info(BaseCog):
             prefix = await self.bot.prefix_manager.get_prefix(guild.id)
         else:
             prefix = "$"
-        await ctx.send(
-            f"❌ I couldn't find information about '{entity}'. Use `{prefix}info` without arguments to see available options.",
+
+        error_msg = (
+            f"❌ I couldn't find information about '{entity}'. "
+            f"Use `{prefix}info` without arguments to see available options."
         )
+        if ctx.interaction:
+            await ctx.interaction.followup.send(error_msg, ephemeral=True)
+        else:
+            await ctx.send(error_msg)
+
+    @commands.hybrid_group(
+        name="info",
+        aliases=["i"],
+    )
+    @commands.guild_only()
+    async def info(
+        self,
+        ctx: commands.Context[Tux],
+        entity: str | None = None,
+    ) -> None:
+        """Get information about a Discord object by ID or mention.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context object associated with the command.
+        entity : str | None
+            The entity to get information about (member, user, message, channel, role, emoji, sticker, invite, thread, event, etc.), or None for help.
+        """
+        # Defer early to acknowledge interaction before async work
+        # This is needed for both the help case and the entity lookup case
+        await ctx.defer(ephemeral=True)
+
+        if entity is None:
+            await ctx.send_help("info")
+            return
+
+        # Try different converters to determine the object type
+        # Note: We try member/user/channel/role/etc FIRST before guild IDs
+        # because member/user IDs are the same length as guild IDs (17-19 digits),
+        # and users are more likely to query members/users than other guilds
+        if await self._try_converters(ctx, entity):
+            return
+
+        # Special handling for potential guild IDs (check last to avoid conflicts with member/user IDs)
+        if await self._try_guild_id(ctx, entity):
+            return
+
+        # If no converter worked, show error
+        await self._send_not_found_error(ctx, entity)
 
     async def _show_guild_info(
         self,
@@ -258,7 +354,10 @@ class Info(BaseCog):
             )
         )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
     async def _show_member_info(
         self,
@@ -275,13 +374,15 @@ class Info(BaseCog):
         member : discord.Member
             The member to get information about.
         """
-        user = await self.bot.fetch_user(member.id)
+        # Use member.user instead of fetch_user - member already has user data
+        # discord.Member.user is a discord.User attribute (exists at runtime)
+        user: discord.User = member.user  # type: ignore[attr-defined]
         embed = (
             self._create_info_embed(
                 title=member.display_name,
                 description="Here is some information about the member.",
                 thumbnail_url=member.display_avatar.url,
-                image_url=user.banner.url if user.banner else None,
+                image_url=user.banner.url if user.banner else None,  # type: ignore[attr-defined]
             )
             .add_field(name="Bot?", value=self._format_bool(member.bot), inline=False)
             .add_field(name="Username", value=member.name, inline=False)
@@ -305,7 +406,10 @@ class Info(BaseCog):
             )
         )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
     async def _show_user_info(
         self,
@@ -330,7 +434,10 @@ class Info(BaseCog):
             )
         )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
     async def _show_channel_info(
         self,
@@ -402,7 +509,10 @@ class Info(BaseCog):
                 inline=True,
             )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
     async def _show_role_info(
         self,
@@ -463,7 +573,10 @@ class Info(BaseCog):
             )
         )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
     async def _show_emoji_info(
         self,
@@ -509,7 +622,10 @@ class Info(BaseCog):
             )
         )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
     async def _show_sticker_info(
         self,
@@ -541,7 +657,10 @@ class Info(BaseCog):
             )
         )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
     async def _show_message_info(
         self,
@@ -595,7 +714,10 @@ class Info(BaseCog):
             .add_field(name="Reactions", value=len(message.reactions), inline=True)
         )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
     async def _show_invite_info(
         self,
@@ -662,7 +784,10 @@ class Info(BaseCog):
             )
         )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
     async def _show_thread_info(
         self,
@@ -709,7 +834,10 @@ class Info(BaseCog):
             .add_field(name="Message Count", value=thread.message_count, inline=True)
         )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
     async def _show_event_info(
         self,
@@ -760,7 +888,10 @@ class Info(BaseCog):
             .add_field(name="User Count", value=event.user_count, inline=True)
         )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
     async def paginated_embed(
         self,
@@ -798,7 +929,10 @@ class Info(BaseCog):
 
         if not chunks:
             embed.description = "No items available."
-            await ctx.send(embed=embed)
+            if ctx.interaction:
+                await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+            else:
+                await ctx.send(embed=embed)
             return
 
         menu: ViewMenu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed)
