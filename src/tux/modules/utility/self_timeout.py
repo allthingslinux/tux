@@ -126,7 +126,11 @@ class SelfTimeout(BaseCog):
                 ephemeral=True,
             )
         await view.wait()
-        await confirmation_message.delete()
+        try:
+            await confirmation_message.delete()
+        except (discord.NotFound, discord.Forbidden) as e:
+            # Message already deleted or bot lacks permission to delete
+            logger.debug(f"Could not delete confirmation message: {e}")
         return view.value or False
 
     async def _send_timeout_confirmation_dm(

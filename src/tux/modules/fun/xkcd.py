@@ -57,8 +57,6 @@ class Xkcd(BaseCog):
             The ID of the xkcd comic to search for.
         """
         if comic_id:
-            # Defer early to acknowledge interaction before async work
-            await ctx.defer(ephemeral=True)
             await self.specific(ctx, comic_id)
         else:
             await ctx.send_help("xkcd")

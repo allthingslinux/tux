@@ -200,7 +200,7 @@ class RemindMe(BaseCog):
             if ctx.interaction:
                 await ctx.interaction.followup.send(embed=embed, ephemeral=True)
             else:
-                await ctx.reply(embed=embed, ephemeral=True)
+                await ctx.reply(embed=embed)
             return
 
         expires_at = datetime.datetime.now(datetime.UTC) + datetime.timedelta(
@@ -252,7 +252,7 @@ class RemindMe(BaseCog):
         if ctx.interaction:
             await ctx.interaction.followup.send(embed=embed, ephemeral=True)
         else:
-            await ctx.reply(embed=embed, ephemeral=True)
+            await ctx.reply(embed=embed)
 
 
 async def setup(bot: Tux) -> None:

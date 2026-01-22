@@ -7,6 +7,9 @@ including database errors, permission errors, API errors, and validation errors.
 
 from typing import TypeVar
 
+from discord import app_commands
+from discord.ext import commands
+
 from tux.database.models import Case
 
 __all__ = [
@@ -140,8 +143,16 @@ class TuxAppCommandPermissionLevelError(TuxPermissionError):
         super().__init__(f"Missing required permission: {permission}")
 
 
-class TuxPermissionDeniedError(TuxPermissionError):
-    """Raised when a user doesn't have permission to run a command (dynamic system)."""
+class TuxPermissionDeniedError(
+    TuxPermissionError,
+    commands.CheckFailure,
+    app_commands.CheckFailure,
+):
+    """Raised when a user doesn't have permission to run a command (dynamic system).
+
+    Inherits from both commands.CheckFailure and app_commands.CheckFailure to ensure
+    proper error handling for both prefix and app commands in discord.py.
+    """
 
     def __init__(
         self,
@@ -169,7 +180,10 @@ class TuxPermissionDeniedError(TuxPermissionError):
         else:
             message = f"You need permission rank **{required_rank}**. Your rank: **{user_rank}**"
 
-        super().__init__(message)
+        # Initialize all parent classes
+        TuxPermissionError.__init__(self, message)
+        commands.CheckFailure.__init__(self, message)
+        app_commands.CheckFailure.__init__(self, message)
 
 
 # === API Exceptions ===
