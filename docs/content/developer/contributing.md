@@ -4,6 +4,7 @@ description: How to contribute to Tux—setup, workflow, pull requests, and wher
 tags:
   - developer-guide
   - contributing
+icon: lucide/git-pull-request-arrow
 ---
 
 # Contributing to Tux
