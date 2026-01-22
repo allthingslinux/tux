@@ -74,10 +74,19 @@ class StatusRoles(BaseCog):
                     for i in range(0, total_members, chunk_size):
                         chunk = members[i : i + chunk_size]
                         # Use asyncio.gather to batch process chunk
-                        await asyncio.gather(
+                        results = await asyncio.gather(
                             *[self.check_and_update_roles(member) for member in chunk],
                             return_exceptions=True,
                         )
+                        # Log any exceptions that occurred during the batch
+                        for member, result in zip(chunk, results, strict=True):
+                            if isinstance(result, Exception):
+                                logger.error(
+                                    "Error during startup status role sweep for member %s (%s): %r",
+                                    getattr(member, "display_name", member),
+                                    getattr(member, "id", "unknown"),
+                                    result,
+                                )
                         # Small delay between chunks to avoid rate limits
                         if i + chunk_size < total_members:
                             await asyncio.sleep(0.1)

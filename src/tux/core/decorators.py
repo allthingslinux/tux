@@ -101,6 +101,17 @@ def requires_command_permission(
             # Extract context or interaction from args
             ctx, interaction = _extract_context_or_interaction(args)
 
+            # Get command name for logging
+            command_name = None
+            if ctx and ctx.command:
+                command_name = ctx.command.qualified_name
+            elif interaction and interaction.command:
+                command_name = interaction.command.qualified_name
+            else:
+                command_name = func.__name__
+
+            logger.debug(f"Permission check for command: {command_name}")
+
             if ctx is None and interaction is None:
                 logger.error(
                     "Could not find context or interaction in command arguments",
@@ -125,24 +136,22 @@ def requires_command_permission(
                 user_id == CONFIG.USER_IDS.BOT_OWNER_ID
                 or user_id in CONFIG.USER_IDS.SYSADMINS
             ):
-                logger.debug(f"Bot owner/sysadmin {user_id} bypassing permission check")
+                logger.debug(
+                    f"Bot owner/sysadmin {user_id} bypassing permission check for '{command_name}'",
+                )
                 return await func(*args, **kwargs)
 
             # Guild/Server owner bypass
             if guild.owner_id == user_id:
-                logger.debug(f"Guild owner {user_id} bypassing permission check")
+                logger.debug(
+                    f"Guild owner {user_id} bypassing permission check for '{command_name}'",
+                )
                 return await func(*args, **kwargs)
 
             # Get permission system (only if not already bypassed)
             permission_system = get_permission_system()
 
-            # Get command name
-            if ctx and ctx.command:
-                command_name = ctx.command.qualified_name
-            elif interaction and interaction.command:
-                command_name = interaction.command.qualified_name
-            else:
-                command_name = func.__name__
+            # Command name already extracted above for logging
 
             # Get command permission config from database
             # This will check the command itself, then fall back to parent commands

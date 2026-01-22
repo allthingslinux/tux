@@ -69,7 +69,8 @@ class Afk(BaseCog):
         assert isinstance(target, discord.Member)
 
         # Defer early to acknowledge interaction before async work
-        await ctx.defer(ephemeral=True)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         # Check if user is already AFK to prevent duplication
         entry = await self._get_afk_entry(target.id, ctx.guild.id)
@@ -121,7 +122,8 @@ class Afk(BaseCog):
         assert isinstance(target, discord.Member)
 
         # Defer early to acknowledge interaction before async work
-        await ctx.defer(ephemeral=True)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         entry = await self._get_afk_entry(target.id, ctx.guild.id)
         if entry is not None:
@@ -163,7 +165,6 @@ class Afk(BaseCog):
             await ctx.reply(
                 content=content,
                 allowed_mentions=AFK_ALLOWED_MENTIONS,
-                ephemeral=True,
             )
 
     async def _get_afk_entry(self, member_id: int, guild_id: int) -> AFKMODEL | None:
