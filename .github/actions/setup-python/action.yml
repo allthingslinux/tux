@@ -5,7 +5,7 @@ inputs:
   python-version:
     description: Python version to use
     required: false
-    default: 3.13.8
+    default: 3.13.11
   uv-version:
     description: Uv version to install (empty = latest or from pyproject.toml)
     required: false

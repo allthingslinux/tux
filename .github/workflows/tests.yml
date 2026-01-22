@@ -21,7 +21,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
   # renovate: datasource=python-version depName=python
-  PYTHON_VERSION: 3.13.8
+  PYTHON_VERSION: 3.13.11
   COVERAGE_THRESHOLD: 80
   ARTIFACT_RETENTION_DAYS: 7
 jobs:
@@ -76,7 +76,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.13.8]
+        python-version: [3.13.11]
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
