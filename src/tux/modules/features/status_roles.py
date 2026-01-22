@@ -5,6 +5,7 @@ This module automatically assigns roles to users based on their Discord
 custom status messages, supporting regex pattern matching and role management.
 """
 
+import asyncio
 import re
 
 import discord
@@ -51,10 +52,41 @@ class StatusRoles(BaseCog):
             if self.bot.maintenance_mode:
                 return
 
-            logger.info("StatusRoles cog ready, checking all users' statuses")
-            for guild in self.bot.guilds:
-                for member in guild.members:
-                    await self.check_and_update_roles(member)
+            # Only check all members on FIRST on_ready, not on every reconnect
+            # on_ready fires multiple times during reconnects, so checking all members
+            # on every reconnect causes thousands of unnecessary REST calls
+            if not self.bot.first_ready:
+                logger.info(
+                    "StatusRoles cog ready, checking all users' statuses on first startup",
+                )
+                # Batch member checks to avoid overwhelming the event loop
+                # Process members in chunks of 20 to balance performance and rate limits
+                chunk_size = 20
+                for guild in self.bot.guilds:
+                    members = [m for m in guild.members if not m.bot]
+                    total_members = len(members)
+
+                    logger.info(
+                        f"Processing {total_members} members in {guild.name} "
+                        f"in chunks of {chunk_size}",
+                    )
+
+                    for i in range(0, total_members, chunk_size):
+                        chunk = members[i : i + chunk_size]
+                        # Use asyncio.gather to batch process chunk
+                        await asyncio.gather(
+                            *[self.check_and_update_roles(member) for member in chunk],
+                            return_exceptions=True,
+                        )
+                        # Small delay between chunks to avoid rate limits
+                        if i + chunk_size < total_members:
+                            await asyncio.sleep(0.1)
+
+                    logger.info(
+                        f"Completed status role checks for {total_members} members in {guild.name}",
+                    )
+            else:
+                logger.debug("StatusRoles: Skipping member check (not first on_ready)")
         except Exception:
             logger.exception("StatusRoles.on_ready failed (cog=StatusRoles)")
             raise
