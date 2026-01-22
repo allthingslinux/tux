@@ -5,6 +5,7 @@ tags:
   - concepts
   - database
   - models
+icon: lucide/database
 ---
 
 # Database Models
