@@ -197,9 +197,6 @@ class Cases(ModerationCogBase):
         flags : CasesViewFlags
             Filter criteria (--type, --user, --moderator).
         """
-        logger.debug(
-            f"cases_search: flags.user={flags.user}, flags.type={flags.type}, flags.moderator={flags.moderator}",
-        )
         await self._view_cases_with_flags(ctx, flags)
 
     @cases.command(
@@ -332,9 +329,9 @@ class Cases(ModerationCogBase):
         if flags.type:
             options["case_type"] = flags.type
         if flags.user:
-            options["case_user_id"] = flags.user.id
+            options["user_id"] = flags.user.id
         if flags.moderator:
-            options["case_moderator_id"] = flags.moderator.id
+            options["moderator_id"] = flags.moderator.id
 
         cases = await self.db.case.get_cases_by_options(ctx.guild.id, options)
 

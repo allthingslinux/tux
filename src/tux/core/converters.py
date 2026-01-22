@@ -152,10 +152,6 @@ class FlexibleUserConverter(commands.Converter[discord.User]):
             msg = "User argument cannot be empty."
             raise commands.BadArgument(msg)
 
-        logger.debug(
-            f"FlexibleUserConverter: Converting argument '{argument}' (type: {type(argument)})",
-        )
-
         # UserConverter already supports:
         # 1. Lookup by ID (first strategy)
         # 2. Lookup by mention
@@ -167,7 +163,6 @@ class FlexibleUserConverter(commands.Converter[discord.User]):
             user = await commands.UserConverter().convert(ctx, argument)
         except commands.UserNotFound as e:
             # Provide a more helpful error message
-            logger.debug(f"FlexibleUserConverter: UserNotFound for '{argument}': {e}")
             msg = f"User '{argument}' not found. Try using a mention (@user), user ID, or username."
             raise commands.BadArgument(msg) from e
         except Exception as e:
@@ -177,9 +172,6 @@ class FlexibleUserConverter(commands.Converter[discord.User]):
             )
             raise
         else:
-            logger.debug(
-                f"FlexibleUserConverter: Successfully converted to user {user} (ID: {user.id})",
-            )
             return user
 
 
