@@ -57,6 +57,8 @@ class Xkcd(BaseCog):
             The ID of the xkcd comic to search for.
         """
         if comic_id:
+            # Defer early to acknowledge interaction before async work
+            await ctx.defer(ephemeral=True)
             await self.specific(ctx, comic_id)
         else:
             await ctx.send_help("xkcd")
@@ -75,9 +77,21 @@ class Xkcd(BaseCog):
         ctx : commands.Context[Tux]
             The context object for the command.
         """
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         embed, view, ephemeral = await self.get_comic_and_embed(latest=True)
 
-        if view:
+        if ctx.interaction:
+            if view:
+                await ctx.interaction.followup.send(
+                    embed=embed,
+                    view=view,
+                    ephemeral=ephemeral,
+                )
+            else:
+                await ctx.interaction.followup.send(embed=embed, ephemeral=ephemeral)
+        elif view:
             await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
         else:
             await ctx.send(embed=embed, ephemeral=ephemeral)
@@ -96,9 +110,21 @@ class Xkcd(BaseCog):
         ctx : commands.Context[Tux]
             The context object for the
         """
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         embed, view, ephemeral = await self.get_comic_and_embed()
 
-        if view:
+        if ctx.interaction:
+            if view:
+                await ctx.interaction.followup.send(
+                    embed=embed,
+                    view=view,
+                    ephemeral=ephemeral,
+                )
+            else:
+                await ctx.interaction.followup.send(embed=embed, ephemeral=ephemeral)
+        elif view:
             await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
         else:
             await ctx.send(embed=embed, ephemeral=ephemeral)
@@ -119,9 +145,21 @@ class Xkcd(BaseCog):
         comic_id : int
             The ID of the comic to search for.
         """
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         embed, view, ephemeral = await self.get_comic_and_embed(number=comic_id)
 
-        if view:
+        if ctx.interaction:
+            if view:
+                await ctx.interaction.followup.send(
+                    embed=embed,
+                    view=view,
+                    ephemeral=ephemeral,
+                )
+            else:
+                await ctx.interaction.followup.send(embed=embed, ephemeral=ephemeral)
+        elif view:
             await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
         else:
             await ctx.send(embed=embed, ephemeral=ephemeral)
