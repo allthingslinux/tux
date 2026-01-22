@@ -153,11 +153,17 @@ class Wiki(BaseCog):
         query : str
             The search query.
         """
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         title: tuple[str, str] = await self.query_wiki(self.arch_wiki_api_url, query)
 
         embed = self.create_embed(title, ctx)
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
     @wiki.command(
         name="atl",
@@ -173,11 +179,17 @@ class Wiki(BaseCog):
         query : str
             The search query.
         """
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         title: tuple[str, str] = await self.query_wiki(self.atl_wiki_api_url, query)
 
         embed = self.create_embed(title, ctx)
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
 
 async def setup(bot: Tux) -> None:

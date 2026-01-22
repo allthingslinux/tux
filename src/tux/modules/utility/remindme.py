@@ -184,6 +184,9 @@ class RemindMe(BaseCog):
         reminder : str
             The reminder message.
         """
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         seconds = convert_to_seconds(time)
 
         if seconds == 0:
@@ -194,7 +197,10 @@ class RemindMe(BaseCog):
                 user_display_avatar=ctx.author.display_avatar.url,
                 description="Invalid time format. Please use `[number][unit]` (e.g., 1h30m, 2d, 5min).",
             )
-            await ctx.reply(embed=embed, ephemeral=True)
+            if ctx.interaction:
+                await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+            else:
+                await ctx.reply(embed=embed, ephemeral=True)
             return
 
         expires_at = datetime.datetime.now(datetime.UTC) + datetime.timedelta(
@@ -243,7 +249,10 @@ class RemindMe(BaseCog):
 
             logger.error(f"Error creating reminder: {e}")
 
-        await ctx.reply(embed=embed, ephemeral=True)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.reply(embed=embed, ephemeral=True)
 
 
 async def setup(bot: Tux) -> None:
