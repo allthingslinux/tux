@@ -4,10 +4,15 @@ This module contains all the Pydantic models for configuration,
 extracted from the existing config.py file for better organization.
 """
 
+from __future__ import annotations
+
 import json
-from typing import Annotated, Any, cast
+from typing import TYPE_CHECKING, Annotated, Any, cast
 
 from pydantic import BaseModel, Field, field_validator
+
+if TYPE_CHECKING:
+    import discord
 
 
 def _coerce_snowflake_id(v: Any) -> int | None:
@@ -445,6 +450,59 @@ class ExternalServices(BaseModel):
             examples=["my-org"],
         ),
     ]
+
+
+class BotIntents(BaseModel):
+    """Discord bot gateway intents configuration.
+
+    All three privileged intents are required for full bot functionality:
+    - members: Required for on_member_join, on_member_remove, member tracking
+    - presences: Required for on_presence_update, status_roles feature
+    - message_content: Required for message.content access, prefix commands
+
+    Note: Having both members + presences reduces startup chunking time significantly.
+    """
+
+    presences: Annotated[
+        bool,
+        Field(
+            default=True,
+            description="Enable presences intent (required for status_roles)",
+            examples=[True, False],
+        ),
+    ]
+    members: Annotated[
+        bool,
+        Field(
+            default=True,
+            description="Enable members intent (required for jail, tty_roles)",
+            examples=[True, False],
+        ),
+    ]
+    message_content: Annotated[
+        bool,
+        Field(
+            default=True,
+            description="Enable message content intent (required for most features)",
+            examples=[True, False],
+        ),
+    ]
+
+    def to_discord_intents(self) -> discord.Intents:
+        """Convert config to discord.Intents object.
+
+        Returns
+        -------
+        discord.Intents
+            Configured Discord intents object.
+        """
+        import discord as discord_lib  # noqa: PLC0415
+
+        intents = discord_lib.Intents.default()
+        intents.message_content = self.message_content
+        intents.presences = self.presences
+        intents.members = self.members
+        return intents
 
 
 class DatabaseConfig(BaseModel):

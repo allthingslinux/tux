@@ -35,6 +35,7 @@ from .models import (
     IRC,
     XP,
     BotInfo,
+    BotIntents,
     ExternalServices,
     GifLimiter,
     Snippets,
@@ -214,6 +215,9 @@ class Config(BaseSettings):
 
     # Bot info
     BOT_INFO: BotInfo = Field(default_factory=BotInfo)  # type: ignore[arg-type]
+
+    # Bot intents
+    BOT_INTENTS: BotIntents = Field(default_factory=BotIntents)  # type: ignore[arg-type]
 
     # User permissions
     USER_IDS: UserIds = Field(default_factory=UserIds)  # type: ignore[arg-type]
