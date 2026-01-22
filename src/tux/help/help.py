@@ -96,9 +96,10 @@ class TuxHelp(commands.HelpCommand):
         navigation.current_command_obj = group
         navigation.current_command = group.name
 
-        # Filter subcommands based on permissions
+        # Batch check permissions for all subcommands at once (much faster)
+        can_run_map = await data.batch_can_run_commands(list(group.commands))
         filtered_subcommands = [
-            cmd for cmd in group.commands if await data.can_run_command(cmd)
+            cmd for cmd in group.commands if can_run_map.get(cmd, False)
         ]
 
         # For large command groups or JSK, use pagination
