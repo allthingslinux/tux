@@ -5,6 +5,7 @@ tags:
   - commands
   - development
   - guide
+icon: lucide/mouse-pointer-2
 ---
 
 # Guide: Creating Cursor Commands
