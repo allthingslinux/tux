@@ -4,7 +4,7 @@ tags:
   - developer-guide
   - concepts
   - tasks
-icon: lucide/
+icon: lucide/list-todo
 ---
 
 # Task Monitor
