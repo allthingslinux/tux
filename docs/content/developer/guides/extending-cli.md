@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - guides
   - cli
+icon: lucide/square-terminal
 ---
 
 # Extending CLI
