@@ -475,12 +475,10 @@ class PermissionSystem:
 
         # For multi-word commands, build list of all possible command names to check
         # e.g., "config ranks init" -> ["config ranks init", "config ranks", "config"]
-        command_names_to_check = [command_name]
-
-        # Add all parent command names (most specific to least)
-        for i in range(len(parts) - 1, 0, -1):
-            parent_name = " ".join(parts[:i])
-            command_names_to_check.append(parent_name)
+        command_names_to_check = [
+            command_name,
+            *(" ".join(parts[:i]) for i in range(len(parts) - 1, 0, -1)),
+        ]
 
         # Batch query all possible command names at once
         # This is much faster than sequential queries
@@ -488,7 +486,9 @@ class PermissionSystem:
             stmt = (
                 select(PermissionCommand)
                 .where(PermissionCommand.guild_id == guild_id)
-                .where(PermissionCommand.command_name.in_(command_names_to_check))
+                .where(
+                    PermissionCommand.command_name.in_(command_names_to_check),  # type: ignore[attr-defined]
+                )
             )
             result = await session.execute(stmt)
             found_permissions = list(result.scalars().all())
@@ -502,13 +502,97 @@ class PermissionSystem:
         for name in command_names_to_check:
             for perm in found_permissions:
                 if perm.command_name == name:
+                    # Only log at trace level - this is expected behavior when subcommands
+                    # inherit parent permissions, and happens frequently during help system
+                    # permission checks for dropdown filtering
                     if name != command_name:
-                        logger.debug(
+                        logger.trace(
                             f"Using parent command permission '{name}' for '{command_name}'",
                         )
                     return perm
 
         return None
+
+    async def batch_get_command_permissions(
+        self,
+        guild_id: int,
+        command_names: list[str],
+    ) -> dict[str, PermissionCommand | None]:
+        """
+        Batch get command permissions for multiple commands at once.
+
+        This is much more efficient than calling get_command_permission multiple
+        times, as it batches all database queries. Used by the help system to
+        check permissions for multiple subcommands simultaneously.
+
+        Parameters
+        ----------
+        guild_id : int
+            The Discord guild ID.
+        command_names : list[str]
+            List of command names to check (e.g., ["cases view", "cases search", "cases modify"]).
+
+        Returns
+        -------
+        dict[str, PermissionCommand | None]
+            Dictionary mapping command names to their permission records.
+            Commands without permissions will have None values.
+        """
+        if not command_names:
+            return {}
+
+        # Build set of all command names to check (including parents)
+        all_names_to_check: set[str] = set()
+        command_to_parents: dict[str, list[str]] = {}
+
+        for command_name in command_names:
+            parts = command_name.split()
+            command_names_to_check = [command_name]
+
+            # Add all parent command names (most specific to least)
+            for i in range(len(parts) - 1, 0, -1):
+                parent_name = " ".join(parts[:i])
+                command_names_to_check.append(parent_name)
+
+            all_names_to_check.update(command_names_to_check)
+            command_to_parents[command_name] = command_names_to_check
+
+        # Batch query all command permissions at once
+        async with self.db.command_permissions.db.session() as session:
+            stmt = (
+                select(PermissionCommand)
+                .where(PermissionCommand.guild_id == guild_id)
+                .where(
+                    PermissionCommand.command_name.in_(all_names_to_check),  # type: ignore[attr-defined]
+                )
+            )
+            result = await session.execute(stmt)
+            found_permissions = list(result.scalars().all())
+
+            # Expunge instances for use outside session
+            for perm in found_permissions:
+                session.expunge(perm)
+
+        # Create lookup dict for fast access
+        perm_lookup: dict[str, PermissionCommand] = {
+            perm.command_name: perm for perm in found_permissions
+        }
+
+        # Build result dict, checking each command and its parents
+        # Check command itself, then parents in order of specificity
+        result_dict: dict[str, PermissionCommand | None] = {
+            command_name: next(
+                (
+                    perm_lookup[name]
+                    for name in command_to_parents[command_name]
+                    if name in perm_lookup
+                ),
+                None,  # No permission found for this command or its parents
+            )
+            for command_name in command_names
+        }
+
+        return result_dict
 
     async def get_guild_permission_ranks(self, guild_id: int) -> list[PermissionRank]:
         """
