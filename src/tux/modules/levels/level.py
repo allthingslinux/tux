@@ -65,8 +65,17 @@ class Level(BaseCog):
             The member to fetch XP and level for.
         """
         if ctx.guild is None:
-            await ctx.send("This command can only be executed within a guild.")
+            if ctx.interaction:
+                await ctx.interaction.response.send_message(
+                    "This command can only be executed within a guild.",
+                    ephemeral=True,
+                )
+            else:
+                await ctx.send("This command can only be executed within a guild.")
             return
+
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
 
         if member is None:
             member = ctx.author
@@ -118,7 +127,10 @@ class Level(BaseCog):
                 custom_author_icon_url=member.display_avatar.url,
             )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
         logger.info(
             f"📊 Level info sent for {member.name} ({member.id}): Level {level_display}, XP {xp_display}",
         )
