@@ -278,11 +278,14 @@ class HelpNavigation:
             and isinstance(self.current_command_obj, commands.Group)
             and self.current_command_obj.commands
         ):
-            # Filter subcommands based on user permissions
+            # Batch check permissions for all subcommands at once (much faster)
+            can_run_map = await self.data.batch_can_run_commands(
+                list(self.current_command_obj.commands),
+            )
             filtered_cmds = [
                 cmd
                 for cmd in self.current_command_obj.commands
-                if await self.data.can_run_command(cmd)
+                if can_run_map.get(cmd, False)
             ]
             sorted_cmds = sorted(filtered_cmds, key=lambda x: x.name)
 
