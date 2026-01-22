@@ -6,6 +6,7 @@ tags:
   - concepts
   - core
   - logging
+icon: lucide/scroll-text
 ---
 
 # Logging System
