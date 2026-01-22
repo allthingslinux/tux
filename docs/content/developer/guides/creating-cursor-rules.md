@@ -5,6 +5,7 @@ tags:
   - rules
   - development
   - guide
+icon: lucide/mouse-pointer-2
 ---
 
 <!-- markdownlint-disable MD024 -->
