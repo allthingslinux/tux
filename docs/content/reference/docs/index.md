@@ -5,6 +5,7 @@ tags:
   - reference
   - docs
   - documentation
+icon: notepad-text-dashed
 ---
 
 # Documentation
