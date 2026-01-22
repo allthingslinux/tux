@@ -84,6 +84,9 @@ class Levels(BaseCog):
         """
         assert ctx.guild
 
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         old_level: int = await self.db.levels.get_level(member.id, ctx.guild.id)
         old_xp: float = await self.db.levels.get_xp(member.id, ctx.guild.id)
 
@@ -91,7 +94,10 @@ class Levels(BaseCog):
             logger.warning(
                 f"Validation failed: Level {new_level} rejected for {member.name} ({member.id}) - out of valid range",
             )
-            await ctx.send(embed=embed_result)
+            if ctx.interaction:
+                await ctx.interaction.followup.send(embed=embed_result, ephemeral=True)
+            else:
+                await ctx.send(embed=embed_result)
             return
 
         new_xp: float = self.levels_service.calculate_xp_for_level(new_level)
@@ -117,7 +123,10 @@ class Levels(BaseCog):
             custom_color=discord.Color.blurple(),
         )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
     @requires_command_permission()
     @commands.guild_only()
@@ -141,11 +150,17 @@ class Levels(BaseCog):
         """
         assert ctx.guild
 
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         if embed_result := self.levels_service.valid_xplevel_input(xp_amount):
             logger.warning(
                 f"Validation failed: XP amount {xp_amount} rejected for {member.name} ({member.id}) - out of valid range",
             )
-            await ctx.send(embed=embed_result)
+            if ctx.interaction:
+                await ctx.interaction.followup.send(embed=embed_result, ephemeral=True)
+            else:
+                await ctx.send(embed=embed_result)
             return
 
         old_level: int = await self.db.levels.get_level(member.id, ctx.guild.id)
@@ -174,7 +189,10 @@ class Levels(BaseCog):
             custom_color=discord.Color.blurple(),
         )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
     @requires_command_permission()
     @commands.guild_only()
@@ -193,6 +211,9 @@ class Levels(BaseCog):
         """
         assert ctx.guild
 
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         old_xp: float = await self.db.levels.get_xp(member.id, ctx.guild.id)
         await self.db.levels.reset_xp(member.id, ctx.guild.id)
 
@@ -207,7 +228,10 @@ class Levels(BaseCog):
             custom_color=discord.Color.blurple(),
         )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
     @requires_command_permission()
     @commands.guild_only()
@@ -230,6 +254,9 @@ class Levels(BaseCog):
         """
         assert ctx.guild
 
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         state: bool = await self.db.levels.toggle_blacklist(member.id, ctx.guild.id)
 
         logger.info(
@@ -243,7 +270,10 @@ class Levels(BaseCog):
             custom_color=discord.Color.blurple(),
         )
 
-        await ctx.send(embed=embed)
+        if ctx.interaction:
+            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            await ctx.send(embed=embed)
 
 
 async def setup(bot: Tux) -> None:
