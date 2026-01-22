@@ -6,6 +6,7 @@ tags:
   - concepts
   - core
   - modules
+icon: lucide/component
 ---
 
 # Modules
