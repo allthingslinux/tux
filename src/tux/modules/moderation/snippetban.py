@@ -59,9 +59,18 @@ class SnippetBan(ModerationCogBase):
         """
         assert ctx.guild
 
+        # Defer early to acknowledge interaction before async work
+        await ctx.defer(ephemeral=True)
+
         # Check if user is already snippet banned
         if await self.is_snippetbanned(ctx.guild.id, member.id):
-            await ctx.reply("User is already snippet banned.", mention_author=False)
+            if ctx.interaction:
+                await ctx.interaction.followup.send(
+                    "User is already snippet banned.",
+                    ephemeral=True,
+                )
+            else:
+                await ctx.reply("User is already snippet banned.", mention_author=False)
             return
 
         # Permission checks are handled by the @requires_command_permission() decorator
