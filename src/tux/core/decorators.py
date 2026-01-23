@@ -126,6 +126,18 @@ def requires_command_permission(
                 ctx.author.id if ctx else interaction.user.id if interaction else 0
             )
 
+            # For slash commands, defer early to prevent timeout during permission check
+            # This acknowledges the interaction before the potentially slow permission check
+            if interaction and not interaction.response.is_done():
+                try:
+                    await interaction.response.defer(ephemeral=True)
+                    logger.trace(
+                        f"Deferred interaction early for command: {command_name}",
+                    )
+                except Exception as e:
+                    # If defer fails (already responded, etc.), continue anyway
+                    logger.debug(f"Could not defer interaction for {command_name}: {e}")
+
             # Check bypasses first (bot owner, sysadmin, guild owner)
             if _should_bypass_permission_check(user_id, guild, command_name):
                 return await func(*args, **kwargs)

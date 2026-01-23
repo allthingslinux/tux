@@ -9,7 +9,9 @@ permission hierarchy (0-10), "Level" refers to XP/progression.
 
 from __future__ import annotations
 
+import asyncio
 import sys
+import time
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import discord
@@ -681,6 +683,61 @@ class PermissionSystem:
             List of all command permission overrides for the guild.
         """
         return await self.db.command_permissions.get_all_command_permissions(guild_id)
+
+    async def prewarm_cache_for_guild(self, guild_id: int) -> None:
+        """
+        Pre-warm permission caches for a guild to avoid cold-start delays.
+
+        Loads all permission ranks, assignments, and command permissions into cache
+        so the first command doesn't need to hit the database.
+
+        Parameters
+        ----------
+        guild_id : int
+            The Discord guild ID to pre-warm caches for.
+        """
+        logger.debug(f"Pre-warming permission cache for guild {guild_id}")
+        try:
+            # Load ranks, assignments, and command permissions in parallel
+            await asyncio.gather(
+                self.db.permission_ranks.get_permission_ranks_by_guild(guild_id),
+                self.db.permission_assignments.get_assignments_by_guild(guild_id),
+                self.db.command_permissions.get_all_command_permissions(guild_id),
+                return_exceptions=True,
+            )
+            logger.trace(f"Pre-warmed permission cache for guild {guild_id}")
+        except Exception as e:
+            # Don't fail startup if pre-warming fails
+            logger.warning(
+                f"Failed to pre-warm permission cache for guild {guild_id}: {e}",
+            )
+
+    async def prewarm_cache_for_all_guilds(self) -> None:
+        """
+        Pre-warm permission caches for all guilds the bot is in.
+
+        This should be called after bot is ready and guilds are registered
+        to avoid cold-start delays on the first command.
+        """
+        if not self.bot.guilds:
+            logger.debug("No guilds to pre-warm permission cache for")
+            return
+
+        logger.info(
+            f"Pre-warming permission cache for {len(self.bot.guilds)} guilds...",
+        )
+        start_time = time.perf_counter()
+
+        # Pre-warm all guilds in parallel
+        await asyncio.gather(
+            *[self.prewarm_cache_for_guild(guild.id) for guild in self.bot.guilds],
+            return_exceptions=True,
+        )
+
+        elapsed = (time.perf_counter() - start_time) * 1000
+        logger.success(
+            f"Pre-warmed permission cache for {len(self.bot.guilds)} guilds in {elapsed:.2f}ms",
+        )
 
     # ---------- Configuration File Support ----------
 

@@ -6,6 +6,7 @@ from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
+from tux.core.permission_system import get_permission_system
 from tux.shared.config import CONFIG
 
 
@@ -80,6 +81,14 @@ class EventHandler(BaseCog):
             if not self.bot.first_ready:
                 self.bot.first_ready = True
                 logger.debug("First on_ready event completed")
+
+                # Pre-warm permission caches to avoid cold-start delays on first commands
+                try:
+                    permission_system = get_permission_system()
+                    await permission_system.prewarm_cache_for_all_guilds()
+                except Exception as e:
+                    # Don't fail startup if pre-warming fails
+                    logger.warning(f"Failed to pre-warm permission caches: {e}")
 
             self._guilds_registered = True
             self.bot.guilds_registered.set()  # Unblock RemindMe, StatusRoles, etc.
