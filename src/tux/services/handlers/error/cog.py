@@ -221,11 +221,10 @@ class ErrorHandler(commands.Cog):
             )
         else:
             # Build action summary
-            actions = []
+            actions: list[str] = []
             if config.send_embed:
                 actions.append("sending to user")
-            if not config.send_to_sentry:
-                actions.append("not sent to Sentry")
+            actions.append("not sent to Sentry")
             action_summary = f" ({', '.join(actions)})" if actions else ""
 
             log_func(
