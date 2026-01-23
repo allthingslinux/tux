@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 
 from discord.ext import tasks
@@ -62,10 +63,11 @@ class TaskMonitor:
         """
         with start_span("bot.monitor_tasks", "Monitoring async tasks"):
             try:
-                all_tasks = [
+                # Use generator expression since tasks are only iterated once
+                all_tasks = (
                     t for t in asyncio.all_tasks() if t is not asyncio.current_task()
-                ]
-                tasks_by_type = self._categorize_tasks(all_tasks)
+                )
+                tasks_by_type = self._categorize_tasks(list(all_tasks))
 
                 await self._process_finished_tasks(tasks_by_type)
 
@@ -86,12 +88,7 @@ class TaskMonitor:
         dict[str, list[asyncio.Task[Any]]]
             Dictionary mapping task types to their task lists.
         """
-        tasks_by_type: dict[str, list[asyncio.Task[Any]]] = {
-            "SCHEDULED": [],
-            "GATEWAY": [],
-            "SYSTEM": [],
-            "COMMAND": [],
-        }
+        tasks_by_type: dict[str, list[asyncio.Task[Any]]] = defaultdict(list)
 
         for task in tasks_list:
             if task.done():
@@ -108,14 +105,16 @@ class TaskMonitor:
             else:
                 tasks_by_type["SYSTEM"].append(task)
 
-        return tasks_by_type
+        return dict(tasks_by_type)  # Convert back to regular dict for return
 
     async def _process_finished_tasks(
         self,
         tasks_by_type: dict[str, list[asyncio.Task[Any]]],
     ) -> None:
         """Process and clean up finished tasks."""
-        for task_list in tasks_by_type.values():
+        # Cache values() result to avoid repeated dict lookups
+        task_lists = list(tasks_by_type.values())
+        for task_list in task_lists:
             for task in task_list:
                 if task.done():
                     with contextlib.suppress(asyncio.CancelledError):
@@ -127,10 +126,11 @@ class TaskMonitor:
             try:
                 await self._stop_task_loops()
 
-                all_tasks = [
+                # Use generator expression since tasks are only iterated once
+                all_tasks = (
                     t for t in asyncio.all_tasks() if t is not asyncio.current_task()
-                ]
-                tasks_by_type = self._categorize_tasks(all_tasks)
+                )
+                tasks_by_type = self._categorize_tasks(list(all_tasks))
 
                 await self._cancel_tasks(tasks_by_type)
 
