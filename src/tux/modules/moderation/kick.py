@@ -57,7 +57,8 @@ class Kick(ModerationCogBase):
         assert ctx.guild
 
         # Defer early to acknowledge interaction before async work
-        await ctx.defer(ephemeral=True)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         # Permission checks are handled by the @requires_command_permission() decorator
         # Additional validation will be handled by the ModerationCoordinator service
