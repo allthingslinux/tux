@@ -100,11 +100,14 @@ class Wiki(BaseCog):
             "srlimit": 50,  # Get more results to find English ones
         }
 
-        # Pattern to match language codes in parentheses at the start of title or after a slash
+        # Pattern to match known language codes in parentheses at the start of title
         # ArchWiki uses format like "Page Name (Language)/Subpage" for translated pages
-        # Matches patterns like "(Italiano)", "(Español)", "(Français)" etc.
-        # Only matches if it appears early in the title (before first slash or in first 50 chars)
-        language_pattern = re.compile(r"^[^/]*\([^)]+\)")
+        # Only matches known translation language markers to avoid false negatives
+        known_languages = (
+            "Italiano|Español|Français|Deutsch|Português|Русский|日本語|中文|"
+            "한국어|Polski|Türkçe|العربية|فارسی|हिन्दी"
+        )
+        language_pattern = re.compile(rf"^[^/]*\(({known_languages})\)")
 
         try:
             # Send a GET request to the wiki API
@@ -179,8 +182,9 @@ class Wiki(BaseCog):
         query : str
             The search query.
         """
-        # Defer early to acknowledge interaction before async work
-        await ctx.defer(ephemeral=True)
+        # Defer early to acknowledge interaction before async work (slash commands only)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         title: tuple[str, str] = await self.query_wiki(self.arch_wiki_api_url, query)
 
@@ -205,8 +209,9 @@ class Wiki(BaseCog):
         query : str
             The search query.
         """
-        # Defer early to acknowledge interaction before async work
-        await ctx.defer(ephemeral=True)
+        # Defer early to acknowledge interaction before async work (slash commands only)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         title: tuple[str, str] = await self.query_wiki(self.atl_wiki_api_url, query)
 
