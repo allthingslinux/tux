@@ -15,6 +15,8 @@ from .extractors import fallback_format_message
 class ErrorFormatter:
     """Formats errors into user-friendly Discord embeds."""
 
+    __slots__ = ()  # Stateless formatter - no instance attributes
+
     def format_error_embed(
         self,
         error: Exception,
