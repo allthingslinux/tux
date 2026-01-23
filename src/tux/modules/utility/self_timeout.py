@@ -48,7 +48,7 @@ class SelfTimeout(BaseCog):
         if ctx.interaction:
             await ctx.interaction.followup.send(message, ephemeral=True)
         else:
-            await ctx.reply(message, ephemeral=True)
+            await ctx.reply(message)
 
     def _validate_duration(
         self,
@@ -123,7 +123,6 @@ class SelfTimeout(BaseCog):
             confirmation_message = await ctx.reply(
                 message_content,
                 view=view,
-                ephemeral=True,
             )
         await view.wait()
         try:
@@ -252,16 +251,21 @@ class SelfTimeout(BaseCog):
                     ephemeral=True,
                 )
             else:
-                await ctx.send("Command must be run in a guild!", ephemeral=True)
+                await ctx.send("Command must be run in a guild!")
             return
 
         # Defer early to acknowledge interaction before async work
-        await ctx.defer(ephemeral=True)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         member = ctx.guild.get_member(ctx.author.id)
         if member is None:
             logger.warning(
                 f"Member {ctx.author.id} not found in guild {ctx.guild.id} for self-timeout",
+            )
+            await self._send_error_message(
+                ctx,
+                "Could not find your member data. Please try again.",
             )
             return
 
