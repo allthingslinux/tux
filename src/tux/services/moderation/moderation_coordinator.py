@@ -196,6 +196,8 @@ class ModerationCoordinator:
                     f"Failed to execute Discord actions for {case_type.value}: {e}",
                     exc_info=True,
                 )
+                case_task.cancel()
+                raise
 
             # Wait for case creation to complete
             try:
@@ -369,7 +371,12 @@ class ModerationCoordinator:
         """
         results: list[Any] = []
 
-        for idx, (action, _expected_type) in enumerate(actions, 1):
+        for idx, action_tuple in enumerate(actions, 1):
+            # Handle both single-element and two-element tuples
+            # (action,) or (action, _expected_type)
+            action = (
+                action_tuple[0] if isinstance(action_tuple, tuple) else action_tuple
+            )
             operation_type = self._execution.get_operation_type(case_type)
             logger.trace(
                 f"Executing action {idx}/{len(actions)} for {case_type.value} (operation: {operation_type})",
