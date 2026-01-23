@@ -31,6 +31,9 @@ class EventHandler(BaseCog):
             # Check if bot setup has completed
             if not self.bot.setup_complete:
                 logger.warning("on_ready fired before setup_complete")
+                # Mark first ready even if setup incomplete to prevent expensive checks
+                if not self.bot.first_ready:
+                    self.bot.first_ready = True
                 self.bot.guilds_registered.set()  # Unblock waiters so they do not hang
                 return
 
@@ -81,6 +84,9 @@ class EventHandler(BaseCog):
             self._guilds_registered = True
             self.bot.guilds_registered.set()  # Unblock RemindMe, StatusRoles, etc.
         except Exception:
+            # Mark first ready even on failure to prevent expensive checks on retry
+            if not self.bot.first_ready:
+                self.bot.first_ready = True
             self.bot.guilds_registered.set()  # Unblock waiters even on failure
             logger.exception("EventHandler.on_ready failed (cog=EventHandler)")
             raise
