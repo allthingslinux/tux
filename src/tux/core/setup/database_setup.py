@@ -8,7 +8,9 @@ from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from loguru import logger
+from sqlalchemy import text
 from sqlmodel import SQLModel
 
 from tux.core.setup.base import BaseSetupService
@@ -75,6 +77,25 @@ class DatabaseSetupService(BaseSetupService):
 
         return cfg
 
+    async def _get_current_revision(self) -> str | None:
+        """Get current database revision by querying alembic_version table.
+
+        Returns
+        -------
+        str | None
+            Current revision string, or None if no migrations applied.
+        """
+        try:
+            async with self.db_service.session() as session:
+                result = await session.execute(
+                    text("SELECT version_num FROM alembic_version"),
+                )
+                row = result.fetchone()
+                return row[0] if row else None
+        except Exception:
+            # Table doesn't exist or query failed - no migrations applied yet
+            return None
+
     async def _upgrade_head_if_needed(self) -> None:
         """
         Run Alembic upgrade to head on startup.
@@ -92,28 +113,32 @@ class DatabaseSetupService(BaseSetupService):
         cfg = self._build_alembic_config()
         logger.info("Checking database migrations...")
 
+        # Get current revision from database (more reliable than command.current
+        # which can be affected by stdout suppression)
+        current_rev = await self._get_current_revision()
+        logger.debug(f"Current database revision: {current_rev}")
+
+        # Use ScriptDirectory to reliably get head revisions
+        # command.heads() can return None in some cases, but ScriptDirectory is more reliable
+        script_dir = ScriptDirectory.from_config(cfg)
+        head_revs = [rev.revision for rev in script_dir.get_revisions("head")]
+        head_revs_str = ", ".join(head_revs) or "None (no migration files)"
+        logger.debug(f"Head revision(s): {head_revs_str}")
+
         loop = asyncio.get_event_loop()
 
         # Database is available (already connected in setup()),
         # run migrations with a timeout
         def _run_migration_sync():
             try:
-                # Check current revision first (stdout already suppressed via Config)
-                current_rev = command.current(cfg)
-                logger.debug(f"Current database revision: {current_rev}")
-
-                # Check if we need to upgrade
-                head_rev = command.heads(cfg)
-                logger.debug(f"Head revision: {head_rev}")
-
-                # Only run upgrade if we're not already at head
-                if current_rev != head_rev:
-                    logger.info("Running database migrations...")
-                    # Run the upgrade
-                    command.upgrade(cfg, "head")
-                    logger.success("Database migrations completed")
-                else:
-                    logger.success("Database is already up to date")
+                # Alembic's upgrade command is idempotent - it will:
+                # - Create alembic_version table if needed
+                # - Only apply migrations that haven't been applied
+                # - Do nothing if already at head
+                # This matches the pattern used in scripts/db/push.py
+                logger.info("Running database migrations...")
+                command.upgrade(cfg, "head")
+                logger.success("Database migrations completed")
             except Exception as e:
                 error_msg = f"Failed to run database migrations: {e}"
                 logger.exception(error_msg)
