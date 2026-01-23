@@ -256,17 +256,21 @@ class CommunicationService:
         """
         # Check cache first
         cached = self._guild_config_cache.get(guild_id)
-        if cached is not None:
+        # Only return cached values if both keys exist in cache
+        # (even if values are None, that means they were explicitly cached as not configured)
+        if cached is not None and "audit_log_id" in cached and "mod_log_id" in cached:
             logger.trace(f"Cache hit for guild config: {guild_id}")
             return cached.get("audit_log_id"), cached.get("mod_log_id")
 
-        # Cache miss - batch fetch from database (single query)
-        logger.trace(f"Cache miss for guild config: {guild_id}, fetching from DB")
+        # Cache miss or partial cache - batch fetch from database (single query)
+        logger.trace(
+            f"Cache miss/partial for guild config: {guild_id}, fetching from DB",
+        )
         audit_log_id, mod_log_id = await self.bot.db.guild_config.get_log_channel_ids(
             guild_id,
         )
 
-        # Cache the result
+        # Cache the result (get_log_channel_ids already caches, but this ensures consistency)
         self._guild_config_cache.set(guild_id, audit_log_id, mod_log_id)
 
         return audit_log_id, mod_log_id

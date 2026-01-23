@@ -636,18 +636,32 @@ class GuildConfigController(BaseController[GuildConfig]):
         # Check cache first
         cached = GuildConfigCacheManager().get(guild_id)
         if cached is not None:
+            # If cache exists, check if we have the log channel IDs
+            # They might be None (not configured), which is valid
             audit_log_id = cached.get("audit_log_id")
             mod_log_id = cached.get("mod_log_id")
-            # If both are in cache (even if None), return them
+            # Return cached values if both keys exist (even if values are None)
+            # This handles the case where they're explicitly set to None (not configured)
             if "audit_log_id" in cached and "mod_log_id" in cached:
                 return audit_log_id, mod_log_id
 
-        # Cache miss - fetch from database in one query
+        # Cache miss or partial cache - fetch from database in one query
+        # This ensures we always get fresh data from DB when cache is incomplete
         config = await self.get_config_by_guild_id(guild_id)
-        audit_log_id = getattr(config, "audit_log_id", None) if config else None
-        mod_log_id = getattr(config, "mod_log_id", None) if config else None
+        if not config:
+            # No config exists - cache None values and return
+            GuildConfigCacheManager().set(
+                guild_id,
+                audit_log_id=None,
+                mod_log_id=None,
+            )
+            return None, None
 
-        # Update cache with both values
+        # Get values directly from config object
+        audit_log_id = config.audit_log_id
+        mod_log_id = config.mod_log_id
+
+        # Update cache with both values (preserves existing jail fields if any)
         GuildConfigCacheManager().set(
             guild_id,
             audit_log_id=audit_log_id,
