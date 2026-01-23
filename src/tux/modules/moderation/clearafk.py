@@ -59,7 +59,8 @@ class ClearAFK(BaseCog):
         assert ctx.guild
 
         # Defer early to acknowledge interaction before async work
-        await ctx.defer(ephemeral=True)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         if not await self.db.afk.is_afk(member.id, guild_id=ctx.guild.id):
             if ctx.interaction:
@@ -67,10 +68,7 @@ class ClearAFK(BaseCog):
                     f"{member.mention} is not currently AFK.",
                     ephemeral=True,
                 )
-            return await ctx.send(
-                f"{member.mention} is not currently AFK.",
-                ephemeral=True,
-            )
+            return await ctx.send(f"{member.mention} is not currently AFK.")
 
         # Fetch the AFK entry to retrieve the original nickname
         entry = await self.db.afk.get_afk_member(member.id, guild_id=ctx.guild.id)
@@ -93,7 +91,6 @@ class ClearAFK(BaseCog):
             )
         return await ctx.send(
             f"AFK status for {member.mention} has been cleared.",
-            ephemeral=True,
         )
 
 
