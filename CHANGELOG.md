@@ -8,6 +8,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+* **Cache system**: TTLCache for thread-safe caching with automatic expiration; GuildConfigCacheManager for managing guild configuration data
+* **Database**: Performance indexes for cases table (composite indexes for case lookups and expired tempbans); `fix-sequences` command to synchronize PostgreSQL sequences
+* **Bot configuration**: BotIntents model for Discord bot gateway intents configuration; HTTP client configuration for high-latency environments; `first_ready` flag for bot readiness tracking
+* **Commands**: Enhanced case viewing with user or case number arguments; FlexibleUserConverter for enhanced user identification; `get_user_safe` utility function for optimized user resolution
+* **Help system**: Banner image support in help command
+* **Interaction handling**: Early interaction deferral across moderation, utility, level, comic, and avatar commands for improved responsiveness
+* **Permission system**: Batch retrieval for command permissions; parent command fallback for permission checks; pre-warming of permission caches for improved performance
+* **Wiki**: Enhanced search functionality to prioritize English results
+* **Ping**: Detailed system and bot statistics (CPU, RAM usage, uptime, guild/user counts, sharding info, gateway intents)
+
+### Changed
+
+* **Caching**: Guild configuration caching for audit log, mod log, jail role, and jail channel IDs; cache invalidation on config updates; cache pre-warming on bot startup
+* **Performance**: Batch processing for permission checks, member role checks, and subcommand filtering; optimized command category retrieval; parallel execution of Discord actions and case creation in moderation coordinator
+* **Interaction handling**: Improved deferral logic across all moderation commands; enhanced response handling in Info, XKCD, and other modules; `send_after_defer` method for improved message handling
+* **Moderation**: Enhanced case handling with dynamic embed generation; improved case number validation logic; streamlined case filtering and search logging; simplified action execution in unban command
+* **Error handling**: Enhanced error logging with context information (source, guild ID); improved action summary construction; updated `_log_error` method to accept mock source
+* **Sentry**: Enhanced command callback wrapping for instrumentation; improved transaction handling and double-wrapping prevention
+* **Hot reload**: Improved logging verbosity and clarity; trace-level logging for less critical information; better handling of atomic save scenarios
+* **Help navigation**: Subcommand pages always regenerated for filtered commands; optimized subcommand permission filtering with batch processing
+* **Wiki**: Enhanced language code matching to only include known translation markers
+* **Ping**: Converted system stats retrieval to async using `asyncio.to_thread` to prevent blocking
+* **TLDR**: Removed "man" alias to simplify command usage
+* **Database**: Updated sequence handling to store schema-qualified names; enhanced migration handling with ScriptDirectory for head revisions
+* **Docker Compose**: Removed `initial_sync` from sync actions
+* **Python version**: Updated to 3.13.11 across configuration files, workflows, and pre-commit hooks
+
+### Fixed
+
+* **Moderation**: Interaction deferral handling across all moderation modules; improved error handling in slowmode channel conversion; enhanced guild config caching and embed handling in CommunicationService and ExecutionService
+* **Event handling**: First ready state marked even on setup failure to prevent unnecessary expensive checks on retries
+* **Error handling**: Enhanced error logging with context information; improved error handling in moderation coordinator with proper task cancellation
+* **Utility**: Refined message handling and interaction deferral in SelfTimeout module; added keyword-only argument for reminder in RemindMe class
+* **Case creation**: Prevented manual ID assignment during case creation
+* **Cog loader**: Updated logging to correctly use "cog" instead of "extension" for folder names other than "plugins"
+* **Config**: Clarified cache invalidation handling in ConfigDashboard (automatically managed by GuildConfigController.update_config)
+* **Container**: Simplified Python image reference in Containerfile
+
 ## [0.1.1] - 2026-01-21
 
 ### Added
