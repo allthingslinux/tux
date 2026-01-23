@@ -2356,6 +2356,7 @@ class ConfigDashboard(discord.ui.LayoutView):
             if field_name := field_mapping.get(option_key):
                 updates = {field_name: channel_id}
                 await self.bot.db.guild_config.update_config(self.guild.id, **updates)
+                # Cache invalidation is handled automatically by GuildConfigController.update_config
                 logger.info(
                     f"Saved {option_key} for guild {self.guild.id}: {channel_id}",
                 )
