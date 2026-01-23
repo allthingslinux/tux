@@ -210,6 +210,9 @@ class Unjail(ModerationCogBase):
             """Perform the unjail operation with proper error handling."""
             nonlocal ctx, member, jail_role, flags, case
 
+            # Assert case is not None for type checker (already checked above)
+            assert case is not None, "Case should not be None at this point"
+
             # Remove jail role from member
             assert jail_role is not None, "Jail role should not be None at this point"
             await member.remove_roles(jail_role, reason=flags.reason)
