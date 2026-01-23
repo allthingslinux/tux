@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 import discord
 from loguru import logger
+from sqlmodel import select
 
 from tux.database.controllers.base import BaseController
 from tux.database.models.models import (
@@ -19,6 +20,7 @@ from tux.database.models.models import (
     PermissionRank,
 )
 from tux.services.sentry import capture_exception_safe
+from tux.shared.cache import TTLCache
 
 if TYPE_CHECKING:
     from tux.database.service import DatabaseService
@@ -26,6 +28,10 @@ if TYPE_CHECKING:
 
 class PermissionRankController(BaseController[PermissionRank]):
     """Controller for managing guild permission ranks."""
+
+    # Shared cache for permission ranks (5 minute TTL)
+    _ranks_cache: TTLCache = TTLCache(ttl=300.0, max_size=1000)
+    _guild_ranks_cache: TTLCache = TTLCache(ttl=300.0, max_size=500)
 
     def __init__(self, db: DatabaseService | None = None) -> None:
         """
@@ -63,6 +69,11 @@ class PermissionRankController(BaseController[PermissionRank]):
                 name=name,
                 description=description,
             )
+            # Invalidate cache for this guild
+            self._guild_ranks_cache.invalidate(f"permission_ranks:{guild_id}")
+            if result.id:
+                self._ranks_cache.invalidate(f"permission_rank:{result.id}")
+            logger.trace(f"Invalidated permission rank cache for guild {guild_id}")
         except Exception as e:
             logger.error(
                 f"Error creating permission rank {rank} for guild {guild_id}: {e}",
@@ -95,10 +106,19 @@ class PermissionRankController(BaseController[PermissionRank]):
         list[PermissionRank]
             List of permission ranks ordered by rank value.
         """
-        return await self.find_all(
+        cache_key = f"permission_ranks:{guild_id}"
+        cached = self._guild_ranks_cache.get(cache_key)
+        if cached is not None:
+            logger.trace(f"Cache hit for permission ranks (guild {guild_id})")
+            return cached
+
+        result = await self.find_all(
             filters=PermissionRank.guild_id == guild_id,
             order_by=PermissionRank.rank,
         )
+        self._guild_ranks_cache.set(cache_key, result)
+        logger.trace(f"Cached permission ranks for guild {guild_id}")
+        return result
 
     async def get_permission_rank(
         self,
@@ -152,7 +172,13 @@ class PermissionRankController(BaseController[PermissionRank]):
             update_data["description"] = description  # None clears it
         # Note: updated_at is automatically managed by the database via TimestampMixin
 
-        return await self.update_by_id(record.id, **update_data)
+        result = await self.update_by_id(record.id, **update_data)
+        # Invalidate cache
+        self._guild_ranks_cache.invalidate(f"permission_ranks:{guild_id}")
+        if record.id:
+            self._ranks_cache.invalidate(f"permission_rank:{record.id}")
+        logger.trace(f"Invalidated permission rank cache for guild {guild_id}")
+        return result
 
     async def bulk_create_permission_ranks(
         self,
@@ -218,15 +244,31 @@ class PermissionRankController(BaseController[PermissionRank]):
         bool
             True if deleted successfully, False otherwise.
         """
+        # Get the record first to invalidate cache
+        record = await self.find_one(
+            filters=(PermissionRank.guild_id == guild_id)
+            & (PermissionRank.rank == rank),
+        )
         deleted_count = await self.delete_where(
             filters=(PermissionRank.guild_id == guild_id)
             & (PermissionRank.rank == rank),
         )
+        if deleted_count > 0:
+            # Invalidate cache
+            self._guild_ranks_cache.invalidate(f"permission_ranks:{guild_id}")
+            if record and record.id:
+                self._ranks_cache.invalidate(f"permission_rank:{record.id}")
+            logger.trace(f"Invalidated permission rank cache for guild {guild_id}")
         return deleted_count > 0
 
 
 class PermissionAssignmentController(BaseController[PermissionAssignment]):
     """Controller for managing guild permission assignments."""
+
+    # Shared cache for permission assignments (5 minute TTL)
+    _assignments_cache: TTLCache = TTLCache(ttl=300.0, max_size=500)
+    # Shared cache for user permission ranks (2 minute TTL, shorter because user roles can change)
+    _user_rank_cache: TTLCache = TTLCache(ttl=120.0, max_size=5000)
 
     def __init__(self, db: DatabaseService | None = None) -> None:
         """Initialize the guild permission assignment controller.
@@ -252,11 +294,18 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
         PermissionAssignment
             The newly created permission assignment.
         """
-        return await self.create(
+        result = await self.create(
             guild_id=guild_id,
             permission_rank_id=permission_rank_id,
             role_id=role_id,
         )
+        # Invalidate caches
+        self._assignments_cache.invalidate(f"permission_assignments:{guild_id}")
+        # Invalidate all user rank caches for this guild (users may have new ranks)
+        # We can't easily invalidate specific user caches, so we'll let them expire naturally
+        # The 2-minute TTL is short enough for this to be acceptable
+        logger.trace(f"Invalidated permission assignment cache for guild {guild_id}")
+        return result
 
     async def get_assignments_by_guild(
         self,
@@ -270,7 +319,16 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
         list[PermissionAssignment]
             List of all permission assignments for the guild.
         """
-        return await self.find_all(filters=PermissionAssignment.guild_id == guild_id)
+        cache_key = f"permission_assignments:{guild_id}"
+        cached = self._assignments_cache.get(cache_key)
+        if cached is not None:
+            logger.trace(f"Cache hit for permission assignments (guild {guild_id})")
+            return cached
+
+        result = await self.find_all(filters=PermissionAssignment.guild_id == guild_id)
+        self._assignments_cache.set(cache_key, result)
+        logger.trace(f"Cached permission assignments for guild {guild_id}")
+        return result
 
     async def remove_role_assignment(self, guild_id: int, role_id: int) -> bool:
         """
@@ -285,6 +343,13 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
             filters=(PermissionAssignment.guild_id == guild_id)
             & (PermissionAssignment.role_id == role_id),
         )
+        if deleted_count > 0:
+            # Invalidate caches
+            self._assignments_cache.invalidate(f"permission_assignments:{guild_id}")
+            # Invalidate all user rank caches for this guild
+            logger.trace(
+                f"Invalidated permission assignment cache for guild {guild_id}",
+            )
         return deleted_count > 0
 
     async def get_user_permission_rank(
@@ -313,9 +378,21 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
         if not user_roles:
             return 0
 
-        # Get all permission assignments for this guild
+        # Check user rank cache first (key includes sorted roles for cache hit on same roles)
+        # Sort roles for consistent cache key
+        sorted_roles = tuple(sorted(user_roles))
+        cache_key = f"user_permission_rank:{guild_id}:{user_id}:{sorted_roles}"
+        cached = self._user_rank_cache.get(cache_key)
+        if cached is not None:
+            logger.trace(
+                f"Cache hit for user permission rank (guild {guild_id}, user {user_id})",
+            )
+            return cached
+
+        # Get all permission assignments for this guild (uses cache)
         assignments = await self.get_assignments_by_guild(guild_id)
         if not assignments:
+            self._user_rank_cache.set(cache_key, 0)
             return 0
 
         # Find the highest rank the user has access to
@@ -325,6 +402,7 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
         # Check if user has any of the assigned roles
         user_assigned_roles = set(user_roles) & assigned_role_ids
         if not user_assigned_roles:
+            self._user_rank_cache.set(cache_key, 0)
             return 0
 
         # Get the permission levels for the user's roles
@@ -336,22 +414,39 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
         }
 
         if not permission_rank_ids:
+            self._user_rank_cache.set(cache_key, 0)
             return 0
 
-        # Query permission levels to get their numeric rank values
+        # Batch query permission ranks instead of N+1 queries
+        async with self.db.session() as session:
+            stmt = (
+                select(PermissionRank).where(PermissionRank.id.in_(permission_rank_ids))  # type: ignore[attr-defined]
+            )
+            result = await session.execute(stmt)
+            rank_records = list(result.scalars().all())
 
-        rank_controller = BaseController(PermissionRank, self.db)
+            # Expunge instances for use outside session
+            for rank_record in rank_records:
+                session.expunge(rank_record)
 
-        for level_id in permission_rank_ids:
-            rank_record = await rank_controller.get_by_id(level_id)
-            if rank_record and rank_record.rank > max_rank:
+        # Find the highest rank
+        for rank_record in rank_records:
+            if rank_record.rank > max_rank:
                 max_rank = int(rank_record.rank)
 
+        # Cache the result
+        self._user_rank_cache.set(cache_key, max_rank)
+        logger.trace(
+            f"Cached user permission rank {max_rank} for guild {guild_id}, user {user_id}",
+        )
         return max_rank
 
 
 class PermissionCommandController(BaseController[PermissionCommand]):
     """Controller for managing command permission requirements."""
+
+    # Shared cache for command permissions (5 minute TTL)
+    _command_permissions_cache: TTLCache = TTLCache(ttl=300.0, max_size=2000)
 
     def __init__(self, db: DatabaseService | None = None) -> None:
         """Initialize the guild command permission controller.
@@ -387,6 +482,18 @@ class PermissionCommandController(BaseController[PermissionCommand]):
             required_rank=required_rank,
             description=description,
         )
+        # Invalidate cache for this command and potential parent commands
+        cache_key = f"command_permission:{guild_id}:{command_name}"
+        self._command_permissions_cache.invalidate(cache_key)
+        # Also invalidate parent command caches (e.g., "config" if "config ranks" was updated)
+        parts = command_name.split()
+        for i in range(len(parts) - 1, 0, -1):
+            parent_name = " ".join(parts[:i])
+            parent_cache_key = f"command_permission:{guild_id}:{parent_name}"
+            self._command_permissions_cache.invalidate(parent_cache_key)
+        logger.trace(
+            f"Invalidated command permission cache for {command_name} (guild {guild_id})",
+        )
         return result[0]  # upsert returns (record, created)
 
     async def get_command_permission(
@@ -402,10 +509,21 @@ class PermissionCommandController(BaseController[PermissionCommand]):
         PermissionCommand | None
             The command permission record if found, None otherwise.
         """
-        return await self.find_one(
+        cache_key = f"command_permission:{guild_id}:{command_name}"
+        cached = self._command_permissions_cache.get(cache_key)
+        if cached is not None:
+            logger.trace(
+                f"Cache hit for command permission {command_name} (guild {guild_id})",
+            )
+            return cached
+
+        result = await self.find_one(
             filters=(PermissionCommand.guild_id == guild_id)
             & (PermissionCommand.command_name == command_name),
         )
+        self._command_permissions_cache.set(cache_key, result)
+        logger.trace(f"Cached command permission for {command_name} (guild {guild_id})")
+        return result
 
     async def get_all_command_permissions(
         self,

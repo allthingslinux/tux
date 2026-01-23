@@ -372,11 +372,8 @@ class ModerationCoordinator:
         results: list[Any] = []
 
         for idx, action_tuple in enumerate(actions, 1):
-            # Handle both single-element and two-element tuples
-            # (action,) or (action, _expected_type)
-            action = (
-                action_tuple[0] if isinstance(action_tuple, tuple) else action_tuple
-            )
+            # Extract action from tuple (action, expected_type)
+            action = action_tuple[0]
             operation_type = self._execution.get_operation_type(case_type)
             logger.trace(
                 f"Executing action {idx}/{len(actions)} for {case_type.value} (operation: {operation_type})",
@@ -565,15 +562,26 @@ class ModerationCoordinator:
 
         # Add expiration field if applicable
         if case.case_expires_at:
+            # Ensure UTC-aware datetime before getting timestamp
+            expires_at = (
+                case.case_expires_at.replace(tzinfo=UTC)
+                if case.case_expires_at.tzinfo is None
+                else case.case_expires_at
+            )
             embed.add_field(
                 name="Expires",
-                value=f"<t:{int(case.case_expires_at.timestamp())}:R>",
+                value=f"<t:{int(expires_at.timestamp())}:R>",
                 inline=True,
             )
 
         # Set embed timestamp to case creation time
+        # Ensure UTC-aware datetime (database stores as UTC but returns naive)
         if case.created_at:
-            embed.timestamp = case.created_at
+            if case.created_at.tzinfo is None:
+                # Naive datetime from database - treat as UTC
+                embed.timestamp = case.created_at.replace(tzinfo=UTC)
+            else:
+                embed.timestamp = case.created_at
 
         # Send to mod log channel
         return await self._communication.send_mod_log_embed(ctx, embed)

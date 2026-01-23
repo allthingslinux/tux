@@ -5,7 +5,7 @@ This module provides functionality for displaying detailed information
 about existing code snippets in Discord guilds.
 """
 
-from datetime import UTC, datetime
+from datetime import UTC
 
 import discord
 from discord.ext import commands
@@ -74,16 +74,22 @@ class SnippetInfo(SnippetsBaseCog):
         content_field_value = f"{snippet.alias or snippet.snippet_content}"
 
         # Create and populate the info embed
+        # Ensure UTC-aware datetime (database stores as UTC but returns naive)
+        snippet_timestamp = None
+        if snippet.created_at:
+            snippet_timestamp = (
+                snippet.created_at.replace(tzinfo=UTC)
+                if snippet.created_at.tzinfo is None
+                else snippet.created_at
+            )
+
         embed: discord.Embed = EmbedCreator.create_embed(
             bot=self.bot,
             embed_type=EmbedCreator.DEFAULT,
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
             title="Snippet Information",
-            message_timestamp=datetime.fromtimestamp(
-                0,
-                UTC,
-            ),  # Snippet model doesn't have created_at
+            message_timestamp=snippet_timestamp,
         )
 
         embed.add_field(name="Name", value=snippet.snippet_name, inline=True)

@@ -11,6 +11,7 @@ default.
 from __future__ import annotations
 
 import functools
+import time
 from collections.abc import Awaitable, Callable
 from typing import Any, TypeVar, cast
 
@@ -73,7 +74,7 @@ def requires_command_permission(
         """
 
         @functools.wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> Any:  # noqa: PLR0912
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
             """Check permissions and execute the decorated function if allowed.
 
             Performs comprehensive permission checking including bot owner bypass,
@@ -102,13 +103,7 @@ def requires_command_permission(
             ctx, interaction = _extract_context_or_interaction(args)
 
             # Get command name for logging
-            command_name = None
-            if ctx and ctx.command:
-                command_name = ctx.command.qualified_name
-            elif interaction and interaction.command:
-                command_name = interaction.command.qualified_name
-            else:
-                command_name = func.__name__
+            command_name = _get_command_name(ctx, interaction, func)
 
             logger.debug(f"Permission check for command: {command_name}")
 
@@ -131,65 +126,19 @@ def requires_command_permission(
                 ctx.author.id if ctx else interaction.user.id if interaction else 0
             )
 
-            # Bot owners and sysadmins bypass ALL permission checks
-            if (
-                user_id == CONFIG.USER_IDS.BOT_OWNER_ID
-                or user_id in CONFIG.USER_IDS.SYSADMINS
-            ):
-                logger.debug(
-                    f"Bot owner/sysadmin {user_id} bypassing permission check for '{command_name}'",
-                )
+            # Check bypasses first (bot owner, sysadmin, guild owner)
+            if _should_bypass_permission_check(user_id, guild, command_name):
                 return await func(*args, **kwargs)
 
-            # Guild/Server owner bypass
-            if guild.owner_id == user_id:
-                logger.debug(
-                    f"Guild owner {user_id} bypassing permission check for '{command_name}'",
-                )
-                return await func(*args, **kwargs)
-
-            # Get permission system (only if not already bypassed)
-            permission_system = get_permission_system()
-
-            # Get command permission config from database
-            # This will check the command itself, then fall back to parent commands
-            # e.g., "config ranks init" -> "config ranks" -> "config"
-            cmd_perm = await permission_system.get_command_permission(
-                guild.id,
+            # Perform permission check with timing
+            await _check_permissions(
+                ctx,
+                interaction,
+                guild,
+                user_id,
                 command_name,
+                allow_unconfigured,
             )
-
-            # If not configured, check if we should allow or deny
-            if cmd_perm is None:
-                if not allow_unconfigured:
-                    # Safe default: deny unconfigured commands
-                    raise TuxPermissionDeniedError(
-                        required_rank=0,
-                        user_rank=0,
-                        command_name=command_name,
-                    )
-                # Allow unconfigured commands
-                return await func(*args, **kwargs)
-
-            # Get user's permission rank
-            if ctx:
-                user_rank = await permission_system.get_user_permission_rank(ctx)
-            elif interaction:
-                user_rank = await _get_user_rank_from_interaction(
-                    permission_system,
-                    interaction,
-                )
-            else:
-                # This should never happen due to earlier check, but type checker needs it
-                user_rank = 0
-
-            # Check if user meets required rank
-            if user_rank < cmd_perm.required_rank:
-                raise TuxPermissionDeniedError(
-                    cmd_perm.required_rank,
-                    user_rank,
-                    command_name,
-                )
 
             # Permission check passed, execute command
             return await func(*args, **kwargs)
@@ -200,6 +149,126 @@ def requires_command_permission(
         return cast(F, wrapper)
 
     return decorator
+
+
+def _get_command_name(
+    ctx: commands.Context[Any] | None,
+    interaction: discord.Interaction[Any] | None,
+    func: Callable[..., Any],
+) -> str:
+    """Extract command name from context, interaction, or function."""
+    if ctx and ctx.command:
+        return ctx.command.qualified_name
+    if interaction and interaction.command:
+        return interaction.command.qualified_name
+    return func.__name__
+
+
+def _should_bypass_permission_check(
+    user_id: int,
+    guild: discord.Guild | None,
+    command_name: str,
+) -> bool:
+    """Check if user should bypass permission checks (bot owner, sysadmin, guild owner)."""
+    # Bot owners and sysadmins bypass ALL permission checks
+    if user_id == CONFIG.USER_IDS.BOT_OWNER_ID or user_id in CONFIG.USER_IDS.SYSADMINS:
+        logger.debug(
+            f"Bot owner/sysadmin {user_id} bypassing permission check for '{command_name}'",
+        )
+        return True
+
+    # Guild/Server owner bypass
+    if guild and guild.owner_id == user_id:
+        logger.debug(
+            f"Guild owner {user_id} bypassing permission check for '{command_name}'",
+        )
+        return True
+
+    return False
+
+
+async def _check_permissions(
+    ctx: commands.Context[Any] | None,
+    interaction: discord.Interaction[Any] | None,
+    guild: discord.Guild,
+    user_id: int,
+    command_name: str,
+    allow_unconfigured: bool,
+) -> None:
+    """Perform permission check with timing and logging."""
+    permission_system = get_permission_system()
+
+    # Start timing permission check
+    check_start = time.perf_counter()
+
+    # Get command permission config from database
+    cmd_perm_start = time.perf_counter()
+    cmd_perm = await permission_system.get_command_permission(
+        guild.id,
+        command_name,
+    )
+    cmd_perm_time = (time.perf_counter() - cmd_perm_start) * 1000
+
+    # If not configured, check if we should allow or deny
+    if cmd_perm is None:
+        if not allow_unconfigured:
+            total_time = (time.perf_counter() - check_start) * 1000
+            logger.debug(
+                f"Permission check denied (unconfigured) for '{command_name}' "
+                f"(guild {guild.id}, user {user_id}) - "
+                f"cmd_perm: {cmd_perm_time:.2f}ms, total: {total_time:.2f}ms",
+            )
+            raise TuxPermissionDeniedError(
+                required_rank=0,
+                user_rank=0,
+                command_name=command_name,
+            )
+        # Allow unconfigured commands
+        total_time = (time.perf_counter() - check_start) * 1000
+        logger.debug(
+            f"Permission check passed (unconfigured allowed) for '{command_name}' "
+            f"(guild {guild.id}, user {user_id}) - "
+            f"cmd_perm: {cmd_perm_time:.2f}ms, total: {total_time:.2f}ms",
+        )
+        return
+
+    # Get user's permission rank
+    user_rank_start = time.perf_counter()
+    if ctx:
+        user_rank = await permission_system.get_user_permission_rank(ctx)
+    elif interaction:
+        user_rank = await _get_user_rank_from_interaction(
+            permission_system,
+            interaction,
+        )
+    else:
+        user_rank = 0
+    user_rank_time = (time.perf_counter() - user_rank_start) * 1000
+
+    # Check if user meets required rank
+    if user_rank < cmd_perm.required_rank:
+        total_time = (time.perf_counter() - check_start) * 1000
+        logger.debug(
+            f"Permission check denied for '{command_name}' "
+            f"(guild {guild.id}, user {user_id}) - "
+            f"required: {cmd_perm.required_rank}, user: {user_rank} - "
+            f"cmd_perm: {cmd_perm_time:.2f}ms, user_rank: {user_rank_time:.2f}ms, "
+            f"total: {total_time:.2f}ms",
+        )
+        raise TuxPermissionDeniedError(
+            cmd_perm.required_rank,
+            user_rank,
+            command_name,
+        )
+
+    # Permission check passed
+    total_time = (time.perf_counter() - check_start) * 1000
+    logger.debug(
+        f"Permission check passed for '{command_name}' "
+        f"(guild {guild.id}, user {user_id}, rank {user_rank}) - "
+        f"cmd_perm: {cmd_perm_time:.2f}ms, user_rank: {user_rank_time:.2f}ms, "
+        f"total: {total_time:.2f}ms",
+    )
 
 
 async def _get_user_rank_from_interaction(

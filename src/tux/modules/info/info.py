@@ -7,7 +7,7 @@ Each command shows detailed information in an organized embed format.
 """
 
 from collections.abc import Awaitable, Callable, Generator, Iterable, Iterator
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import discord
@@ -76,6 +76,9 @@ class Info(BaseCog):
         if dt is None:
             return "Unknown"
         try:
+            # Ensure UTC-aware datetime (database stores as UTC but returns naive)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=UTC)
             return discord.utils.format_dt(dt, style)
         except (TypeError, ValueError):
             return "Unknown"

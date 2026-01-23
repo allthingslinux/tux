@@ -7,7 +7,7 @@ with consistent styling, colors, and formatting across the bot.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import TYPE_CHECKING
 
@@ -50,7 +50,7 @@ class EmbedCreator:
     INACTIVE_CASE: EmbedType = EmbedType.INACTIVE_CASE
 
     @staticmethod
-    def create_embed(
+    def create_embed(  # noqa: PLR0912
         embed_type: EmbedType,
         bot: Tux | None = None,
         title: str | None = None,
@@ -184,7 +184,14 @@ class EmbedCreator:
                 embed.set_thumbnail(url=thumbnail_url)
 
             if not hide_timestamp:
-                embed.timestamp = message_timestamp or discord.utils.utcnow()
+                # Ensure UTC-aware datetime (database stores as UTC but returns naive)
+                if message_timestamp:
+                    if message_timestamp.tzinfo is None:
+                        embed.timestamp = message_timestamp.replace(tzinfo=UTC)
+                    else:
+                        embed.timestamp = message_timestamp
+                else:
+                    embed.timestamp = discord.utils.utcnow()
 
         except Exception as e:
             logger.debug("Error in create_embed", exc_info=e)

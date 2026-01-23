@@ -270,10 +270,25 @@ class Afk(BaseCog):
                 f"AFK notification: {len(afks_mentioned)} AFK users mentioned in {message.guild.name}",
             )
 
-            msgs: list[str] = [
-                f'{mentioned.mention} is currently AFK {f"until <t:{int(afk.until.timestamp())}:f>" if afk.until is not None else ""}: "{afk.reason}" [<t:{int(afk.since.timestamp())}:R>]'
-                for mentioned, afk in afks_mentioned
-            ]
+            msgs: list[str] = []
+            for mentioned, afk in afks_mentioned:
+                # Ensure UTC-aware datetimes (database stores as UTC but returns naive)
+                since = (
+                    afk.since.replace(tzinfo=UTC)
+                    if afk.since.tzinfo is None
+                    else afk.since
+                )
+                until_str = ""
+                if afk.until is not None:
+                    until = (
+                        afk.until.replace(tzinfo=UTC)
+                        if afk.until.tzinfo is None
+                        else afk.until
+                    )
+                    until_str = f"until <t:{int(until.timestamp())}:f>"
+                msgs.append(
+                    f'{mentioned.mention} is currently AFK {until_str}: "{afk.reason}" [<t:{int(since.timestamp())}:R>]',
+                )
 
             await message.reply(
                 content="\n".join(msgs),

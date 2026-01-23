@@ -23,6 +23,7 @@ from tux.database.models.models import (
     PermissionCommand,
     PermissionRank,
 )
+from tux.shared.cache import TTLCache
 
 if TYPE_CHECKING:
     from tux.core.bot import Tux
@@ -106,6 +107,9 @@ class PermissionSystem:
     _default_ranks : dict[int, RankDefinition]
         Default permission rank hierarchy (0-7).
     """
+
+    # Shared cache for command permissions with parent fallback (5 minute TTL)
+    _command_permission_cache: TTLCache = TTLCache(ttl=300.0, max_size=2000)
 
     def __init__(self, bot: Tux, db: DatabaseCoordinator) -> None:
         """
@@ -426,11 +430,24 @@ class PermissionSystem:
             error_msg = f"Required rank must be between 0 and 10, got {required_rank}"
             raise ValueError(error_msg)
 
-        # Set command permission in database
+        # Set command permission in database (this will invalidate cache)
         command_perm = await self.db.command_permissions.set_command_permission(
             guild_id=guild_id,
             command_name=command_name,
             required_rank=required_rank,
+        )
+
+        # Invalidate cache for this command and potential parent commands
+        cache_key = f"command_permission_fallback:{guild_id}:{command_name}"
+        self._command_permission_cache.invalidate(cache_key)
+        # Also invalidate parent command caches
+        parts = command_name.split()
+        for i in range(len(parts) - 1, 0, -1):
+            parent_name = " ".join(parts[:i])
+            parent_cache_key = f"command_permission_fallback:{guild_id}:{parent_name}"
+            self._command_permission_cache.invalidate(parent_cache_key)
+        logger.trace(
+            f"Invalidated command permission fallback cache for {command_name} (guild {guild_id})",
         )
 
         logger.info(
@@ -464,14 +481,25 @@ class PermissionSystem:
         PermissionCommand | None
             The command permission record, or None if no override exists.
         """
+        # Check cache first
+        cache_key = f"command_permission_fallback:{guild_id}:{command_name}"
+        cached = self._command_permission_cache.get(cache_key)
+        if cached is not None:
+            logger.trace(
+                f"Cache hit for command permission with fallback {command_name} (guild {guild_id})",
+            )
+            return cached
+
         # For single-word commands (no parents), use direct query for efficiency
         parts = command_name.split()
         if len(parts) == 1:
-            # No parents to check, just query the command directly
-            return await self.db.command_permissions.get_command_permission(
+            # No parents to check, just query the command directly (uses cache)
+            result = await self.db.command_permissions.get_command_permission(
                 guild_id,
                 command_name,
             )
+            self._command_permission_cache.set(cache_key, result)
+            return result
 
         # For multi-word commands, build list of all possible command names to check
         # e.g., "config ranks init" -> ["config ranks init", "config ranks", "config"]
@@ -499,6 +527,7 @@ class PermissionSystem:
 
         # Return the first match in order of specificity (command itself, then parents)
         # This ensures subcommand overrides take precedence
+        result = None
         for name in command_names_to_check:
             for perm in found_permissions:
                 if perm.command_name == name:
@@ -509,9 +538,17 @@ class PermissionSystem:
                         logger.trace(
                             f"Using parent command permission '{name}' for '{command_name}'",
                         )
-                    return perm
+                    result = perm
+                    break
+            if result:
+                break
 
-        return None
+        # Cache the result (even if None)
+        self._command_permission_cache.set(cache_key, result)
+        logger.trace(
+            f"Cached command permission with fallback for {command_name} (guild {guild_id})",
+        )
+        return result
 
     async def batch_get_command_permissions(
         self,

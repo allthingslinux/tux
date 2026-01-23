@@ -6,6 +6,7 @@ interactive menus and detailed information display.
 """
 
 import contextlib
+from datetime import UTC
 from types import SimpleNamespace
 from typing import Any, Protocol
 
@@ -541,16 +542,27 @@ class Cases(ModerationCogBase):
             ]
 
             if case.case_expires_at:
+                # Ensure UTC-aware datetime before getting timestamp
+                expires_at = (
+                    case.case_expires_at.replace(tzinfo=UTC)
+                    if case.case_expires_at.tzinfo is None
+                    else case.case_expires_at
+                )
                 fields.append(
-                    ("Expires", f"<t:{int(case.case_expires_at.timestamp())}:R>", True),
+                    ("Expires", f"<t:{int(expires_at.timestamp())}:R>", True),
                 )
 
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
 
             # Set embed timestamp to case creation time
+            # Ensure UTC-aware datetime (database stores as UTC but returns naive)
             if case.created_at:
-                embed.timestamp = case.created_at
+                if case.created_at.tzinfo is None:
+                    # Naive datetime from database - treat as UTC
+                    embed.timestamp = case.created_at.replace(tzinfo=UTC)
+                else:
+                    embed.timestamp = case.created_at
 
             # Add footer indicating this was updated
             embed.set_footer(
@@ -857,11 +869,18 @@ class Cases(ModerationCogBase):
             case_type_and_action = f"{action_emoji}{type_emoji}"
 
             # Format date using created_at timestamp
-            case_date = (
-                discord.utils.format_dt(case.created_at, "R")
-                if hasattr(case, "created_at") and case.created_at
-                else f"{self.bot.emoji_manager.get('tux_error')}"
-            )
+            # Ensure UTC-aware datetime (database stores as UTC but returns naive)
+            if hasattr(case, "created_at") and case.created_at:
+                if case.created_at.tzinfo is None:
+                    # Naive datetime from database - treat as UTC
+                    case_date = discord.utils.format_dt(
+                        case.created_at.replace(tzinfo=UTC),
+                        "R",
+                    )
+                else:
+                    case_date = discord.utils.format_dt(case.created_at, "R")
+            else:
+                case_date = f"{self.bot.emoji_manager.get('tux_error')}"
 
             # Add the line to the embed
             embed.description += f"{status_emoji}`{case_number}`\u2003 {case_type_and_action} \u2003__{case_date}__\n"
