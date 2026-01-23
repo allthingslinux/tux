@@ -669,12 +669,15 @@ def instrument_bot_commands(bot: commands.Bot) -> None:
         # Preserve existing decorators and metadata
         original_callback = cast(Callable[..., Coroutine[Any, Any, None]], cmd.callback)
         txn_name = f"command.{cmd.qualified_name}"
+        # Store the cog instance if this is a cog command
+        cog_instance = cmd.cog
 
         @functools.wraps(original_callback)
         async def wrapped(
             *args: Any,
             __orig_cb: Callable[..., Coroutine[Any, Any, None]] = original_callback,
             __txn_name: str = txn_name,
+            __cog: Any = cog_instance,
             **kwargs: Any,
         ) -> None:
             """
@@ -688,12 +691,20 @@ def instrument_bot_commands(bot: commands.Bot) -> None:
                 Original command callback.
             __txn_name : str
                 Transaction name for Sentry.
+            __cog : Any
+                Cog instance if this is a cog command.
             **kwargs : Any
                 Keyword arguments passed to the command.
             """
             if not sentry_sdk.is_initialized():
+                # If this is a cog command, prepend the cog instance to args
+                if __cog is not None:
+                    return await __orig_cb(__cog, *args, **kwargs)
                 return await __orig_cb(*args, **kwargs)
             with sentry_sdk.start_transaction(op=op, name=__txn_name):
+                # If this is a cog command, prepend the cog instance to args
+                if __cog is not None:
+                    return await __orig_cb(__cog, *args, **kwargs)
                 return await __orig_cb(*args, **kwargs)
 
         cmd.callback = cast(Callable[..., Coroutine[Any, Any, None]], wrapped)
