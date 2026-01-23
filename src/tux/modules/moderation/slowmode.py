@@ -75,30 +75,22 @@ class Slowmode(BaseCog):
         """
         assert ctx.guild
 
-        await ctx.defer(ephemeral=True)
-
-        target_channel = None
-        delay_value = None
+        # Defer early to acknowledge interaction before async work
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         # Try to parse first argument as a channel
-        if channel_or_delay:
-            with suppress(commands.CommandError):
-                # Try GuildChannel converter which handles all types
-                target_channel = await commands.GuildChannelConverter().convert(
-                    ctx,
-                    channel_or_delay,
-                )
+        target_channel = (
+            await self._resolve_channel(ctx, channel_or_delay)
+            if channel_or_delay
+            else None
+        )
 
         # If first argument was a channel, use second argument as delay
-        if target_channel:
-            delay_value = delay
-        # Otherwise, the first argument might be a delay
-        elif channel_or_delay:
-            delay_value = channel_or_delay
+        delay_value = delay if target_channel else channel_or_delay
 
         # If no channel specified, use current channel
-        if not target_channel:
-            target_channel = ctx.channel
+        target_channel = target_channel or ctx.channel
 
         # Ensure target_channel is a type that supports slowmode
         if not isinstance(
@@ -109,9 +101,9 @@ class Slowmode(BaseCog):
             | discord.ForumChannel
             | discord.StageChannel,
         ):
-            await ctx.send(
+            await Slowmode._send_response(
+                ctx,
                 f"Slowmode cannot be set for this type of channel ({type(target_channel).__name__}).",
-                ephemeral=True,
             )
             return
 
@@ -123,6 +115,48 @@ class Slowmode(BaseCog):
         else:
             # Otherwise, set the slowmode
             await self._set_slowmode(ctx, target_channel, delay_value)
+
+    async def _resolve_channel(
+        self,
+        ctx: commands.Context[Tux],
+        value: str,
+    ) -> discord.abc.GuildChannel | discord.Thread | None:
+        """
+        Resolve a channel using fast cached lookups first, then converter fallback.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The command context.
+        value : str
+            The channel identifier (ID, mention, or name).
+
+        Returns
+        -------
+        discord.abc.GuildChannel | discord.Thread | None
+            The resolved channel if found, None otherwise.
+        """
+        assert ctx.guild
+
+        # Fast path: Try cached lookup first for IDs and mentions (no API calls)
+        if value.isdigit():
+            # Channel ID - use cached lookup
+            channel_id = int(value)
+            return ctx.guild.get_channel(channel_id) or ctx.guild.get_thread(channel_id)
+
+        if value.startswith("<#") and value.endswith(">"):
+            # Channel mention - extract ID and use cached lookup
+            with suppress(ValueError):
+                channel_id = int(value[2:-1])
+                return ctx.guild.get_channel(channel_id) or ctx.guild.get_thread(
+                    channel_id,
+                )
+
+        # Fallback to converter if fast path didn't work
+        with suppress(commands.CommandError):
+            return await commands.GuildChannelConverter().convert(ctx, value)
+
+        return None
 
     @staticmethod
     def _channel_supports_slowmode(channel: SlowmodeChannel) -> bool:
@@ -142,6 +176,30 @@ class Slowmode(BaseCog):
         return hasattr(channel, "slowmode_delay") and callable(
             getattr(channel, "edit", None),
         )
+
+    @staticmethod
+    async def _send_response(
+        ctx: commands.Context[Tux],
+        content: str,
+        *,
+        ephemeral: bool = True,
+    ) -> None:
+        """
+        Send a response message, handling both slash and prefix commands.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The command context.
+        content : str
+            The message content to send.
+        ephemeral : bool, optional
+            Whether the message should be ephemeral (slash commands only), by default True.
+        """
+        if ctx.interaction:
+            await ctx.interaction.followup.send(content, ephemeral=ephemeral)
+        else:
+            await ctx.send(content)
 
     @staticmethod
     def _format_slowmode_message(delay: int, channel_mention: str) -> str:
@@ -188,18 +246,18 @@ class Slowmode(BaseCog):
         try:
             # Check if this channel has a slowmode_delay attribute
             if not hasattr(channel, "slowmode_delay"):
-                await ctx.send(
+                await Slowmode._send_response(
+                    ctx,
                     "This channel type doesn't support slowmode.",
-                    ephemeral=True,
                 )
                 return
 
             delay = channel.slowmode_delay
             message = Slowmode._format_slowmode_message(delay, channel.mention)
-            await ctx.send(message, ephemeral=True)
+            await Slowmode._send_response(ctx, message)
         except Exception as error:
             logger.error(f"Failed to get slowmode: {error}")
-            await ctx.send(f"Failed to get slowmode: {error}", ephemeral=True)
+            await Slowmode._send_response(ctx, f"Failed to get slowmode: {error}")
 
     async def _set_slowmode(
         self,
@@ -221,26 +279,26 @@ class Slowmode(BaseCog):
         """
         # Verify this channel supports slowmode
         if not self._channel_supports_slowmode(channel):
-            await ctx.send(
+            await Slowmode._send_response(
+                ctx,
                 "This channel type doesn't support slowmode.",
-                ephemeral=True,
             )
             return
 
         delay_seconds = self._parse_delay(delay)
 
         if delay_seconds is None:
-            await ctx.send(
+            await Slowmode._send_response(
+                ctx,
                 "Invalid delay format. Examples: `5`, `5s`, `2m`",
-                ephemeral=True,
             )
             return
 
         max_slowmode = 21600  # 6 hours, Discord's maximum
         if not (0 <= delay_seconds <= max_slowmode):
-            await ctx.send(
+            await Slowmode._send_response(
+                ctx,
                 f"Slowmode delay must be between 0 and {max_slowmode} seconds (6 hours).",
-                ephemeral=True,
             )
             return
 
@@ -251,17 +309,17 @@ class Slowmode(BaseCog):
             else:
                 prefix = "Slowmode set to"
                 message = f"{prefix} {self._format_slowmode_message(delay_seconds, channel.mention).split('is')[1].strip()}"
-            await ctx.send(message, ephemeral=True)
+            await Slowmode._send_response(ctx, message)
             logger.info(f"{ctx.author} set slowmode to {delay_seconds}s in {channel}")
 
         except discord.Forbidden:
-            await ctx.send(
+            await Slowmode._send_response(
+                ctx,
                 f"I don't have permission to change slowmode in {channel.mention}.",
-                ephemeral=True,
             )
 
         except discord.HTTPException as error:
-            await ctx.send(f"Failed to set slowmode: {error}", ephemeral=True)
+            await Slowmode._send_response(ctx, f"Failed to set slowmode: {error}")
             logger.error(f"Failed to set slowmode: {error}")
 
     @staticmethod
