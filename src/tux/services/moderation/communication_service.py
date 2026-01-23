@@ -259,8 +259,13 @@ class CommunicationService:
         # Only return cached values if both keys exist in cache
         # (even if values are None, that means they were explicitly cached as not configured)
         if cached is not None and "audit_log_id" in cached and "mod_log_id" in cached:
-            logger.trace(f"Cache hit for guild config: {guild_id}")
-            return cached.get("audit_log_id"), cached.get("mod_log_id")
+            audit_log_id = cached.get("audit_log_id")
+            mod_log_id = cached.get("mod_log_id")
+            logger.trace(
+                f"Cache hit for guild config: {guild_id} "
+                f"(audit_log_id={audit_log_id}, mod_log_id={mod_log_id})",
+            )
+            return audit_log_id, mod_log_id
 
         # Cache miss or partial cache - batch fetch from database (single query)
         logger.trace(
@@ -268,6 +273,11 @@ class CommunicationService:
         )
         audit_log_id, mod_log_id = await self.bot.db.guild_config.get_log_channel_ids(
             guild_id,
+        )
+
+        logger.debug(
+            f"_get_guild_log_channels: Fetched from DB for guild {guild_id} "
+            f"(audit_log_id={audit_log_id}, mod_log_id={mod_log_id})",
         )
 
         # Cache the result (get_log_channel_ids already caches, but this ensures consistency)

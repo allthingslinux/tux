@@ -13,6 +13,9 @@ from typing import Any
 
 from loguru import logger
 
+# Sentinel value to indicate a field was not provided
+_MISSING: Any = object()
+
 __all__ = ["TTLCache", "GuildConfigCacheManager", "JailStatusCache"]
 
 
@@ -207,10 +210,10 @@ class GuildConfigCacheManager:
     def set(
         self,
         guild_id: int,
-        audit_log_id: int | None = None,
-        mod_log_id: int | None = None,
-        jail_role_id: int | None = None,
-        jail_channel_id: int | None = None,
+        audit_log_id: int | None = _MISSING,
+        mod_log_id: int | None = _MISSING,
+        jail_role_id: int | None = _MISSING,
+        jail_channel_id: int | None = _MISSING,
     ) -> None:
         """
         Cache guild config for a guild.
@@ -220,32 +223,30 @@ class GuildConfigCacheManager:
         guild_id : int
             The guild ID.
         audit_log_id : int | None, optional
-            The audit log channel ID.
+            The audit log channel ID. Omit to skip updating this field.
         mod_log_id : int | None, optional
-            The mod log channel ID.
+            The mod log channel ID. Omit to skip updating this field.
         jail_role_id : int | None, optional
-            The jail role ID.
+            The jail role ID. Omit to skip updating this field.
         jail_channel_id : int | None, optional
-            The jail channel ID.
+            The jail channel ID. Omit to skip updating this field.
         """
         cache_key = f"guild_config_{guild_id}"
         # Get existing cache or create new dict
         existing = self._cache.get(cache_key) or {}
-        # Update with new values, preserving existing ones if not provided
-        updated = {
-            "audit_log_id": audit_log_id
-            if audit_log_id is not None
-            else existing.get("audit_log_id"),
-            "mod_log_id": mod_log_id
-            if mod_log_id is not None
-            else existing.get("mod_log_id"),
-            "jail_role_id": jail_role_id
-            if jail_role_id is not None
-            else existing.get("jail_role_id"),
-            "jail_channel_id": jail_channel_id
-            if jail_channel_id is not None
-            else existing.get("jail_channel_id"),
-        }
+        # Start with existing values
+        updated = dict(existing)
+
+        # Only update fields that were explicitly provided (not _MISSING)
+        if audit_log_id is not _MISSING:
+            updated["audit_log_id"] = audit_log_id
+        if mod_log_id is not _MISSING:
+            updated["mod_log_id"] = mod_log_id
+        if jail_role_id is not _MISSING:
+            updated["jail_role_id"] = jail_role_id
+        if jail_channel_id is not _MISSING:
+            updated["jail_channel_id"] = jail_channel_id
+
         self._cache.set(cache_key, updated)
 
     def invalidate(self, guild_id: int) -> None:

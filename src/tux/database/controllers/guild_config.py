@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from loguru import logger
+
 from tux.database.controllers.base import BaseController
 from tux.database.models import GuildConfig
 from tux.shared.cache import GuildConfigCacheManager
@@ -314,7 +316,7 @@ class GuildConfigController(BaseController[GuildConfig]):
 
         # Cache miss - fetch from database
         jail_role_id = await self.get_config_field(guild_id, "jail_role_id")
-        # Update cache
+        # Update cache (only jail_role_id, don't touch other fields)
         GuildConfigCacheManager().set(guild_id, jail_role_id=jail_role_id)
         return jail_role_id
 
@@ -348,7 +350,7 @@ class GuildConfigController(BaseController[GuildConfig]):
 
         # Cache miss - fetch from database
         jail_channel_id = await self.get_config_field(guild_id, "jail_channel_id")
-        # Update cache
+        # Update cache (only jail_channel_id, don't touch other fields)
         GuildConfigCacheManager().set(guild_id, jail_channel_id=jail_channel_id)
         return jail_channel_id
 
@@ -643,6 +645,11 @@ class GuildConfigController(BaseController[GuildConfig]):
             # Return cached values if both keys exist (even if values are None)
             # This handles the case where they're explicitly set to None (not configured)
             if "audit_log_id" in cached and "mod_log_id" in cached:
+                logger.debug(
+                    f"get_log_channel_ids: Cache hit for guild {guild_id} "
+                    f"(audit_log_id={audit_log_id}, mod_log_id={mod_log_id}, "
+                    f"cache_keys={list(cached.keys())})",
+                )
                 return audit_log_id, mod_log_id
 
         # Cache miss or partial cache - fetch from database in one query
@@ -660,6 +667,13 @@ class GuildConfigController(BaseController[GuildConfig]):
         # Get values directly from config object
         audit_log_id = config.audit_log_id
         mod_log_id = config.mod_log_id
+
+        # Log for debugging
+        logger.debug(
+            f"get_log_channel_ids: Fetched from DB for guild {guild_id} "
+            f"(audit_log_id={audit_log_id}, mod_log_id={mod_log_id}, "
+            f"config_exists={config is not None})",
+        )
 
         # Update cache with both values (preserves existing jail fields if any)
         GuildConfigCacheManager().set(
