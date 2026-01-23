@@ -86,6 +86,18 @@ class Slowmode(BaseCog):
             else None
         )
 
+        # If delay is provided but channel resolution failed, fail fast with clear error
+        if (
+            delay is not None
+            and channel_or_delay is not None
+            and target_channel is None
+        ):
+            await Slowmode._send_response(
+                ctx,
+                f"Channel not found: {channel_or_delay}",
+            )
+            return
+
         # If first argument was a channel, use second argument as delay
         delay_value = delay if target_channel else channel_or_delay
 
@@ -289,9 +301,12 @@ class Slowmode(BaseCog):
             delay = channel.slowmode_delay
             message = Slowmode._format_slowmode_message(delay, channel.mention)
             await Slowmode._send_response(ctx, message)
-        except Exception as error:
-            logger.error(f"Failed to get slowmode: {error}")
-            await Slowmode._send_response(ctx, f"Failed to get slowmode: {error}")
+        except Exception:
+            logger.exception("Failed to get slowmode")
+            await Slowmode._send_response(
+                ctx,
+                "Failed to get slowmode. Please try again later.",
+            )
 
     async def _set_slowmode(
         self,
@@ -352,9 +367,12 @@ class Slowmode(BaseCog):
                 f"I don't have permission to change slowmode in {channel.mention}.",
             )
 
-        except discord.HTTPException as error:
-            await Slowmode._send_response(ctx, f"Failed to set slowmode: {error}")
-            logger.error(f"Failed to set slowmode: {error}")
+        except discord.HTTPException:
+            logger.exception("Failed to set slowmode")
+            await Slowmode._send_response(
+                ctx,
+                "Failed to set slowmode. Please try again later.",
+            )
 
     @staticmethod
     def _parse_delay(delay: str) -> int | None:
