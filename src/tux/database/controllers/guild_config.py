@@ -671,8 +671,7 @@ class GuildConfigController(BaseController[GuildConfig]):
         # Log for debugging
         logger.debug(
             f"get_log_channel_ids: Fetched from DB for guild {guild_id} "
-            f"(audit_log_id={audit_log_id}, mod_log_id={mod_log_id}, "
-            f"config_exists={config is not None})",
+            f"(audit_log_id={audit_log_id}, mod_log_id={mod_log_id})",
         )
 
         # Update cache with both values (preserves existing jail fields if any)
