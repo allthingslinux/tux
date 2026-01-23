@@ -262,7 +262,7 @@ class Tldr(BaseCog):
             show_both=bool(show_both),
         )
 
-    @commands.command(name="tldr", aliases=["man"])
+    @commands.command(name="tldr")
     @commands.guild_only()
     async def prefix_tldr(
         self,
