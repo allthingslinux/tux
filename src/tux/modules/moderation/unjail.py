@@ -170,7 +170,9 @@ class Unjail(ModerationCogBase):
         """
         assert ctx.guild
 
-        await ctx.defer(ephemeral=True)
+        # Defer early to acknowledge interaction before async work
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         # Get jail role
         jail_role = await self.get_jail_role(ctx.guild)
