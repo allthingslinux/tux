@@ -54,6 +54,7 @@ class Levels(BaseCog):
         aliases=["lvls"],
     )
     @commands.guild_only()
+    @requires_command_permission()
     async def levels(
         self,
         ctx: commands.Context[Tux],
@@ -62,8 +63,8 @@ class Levels(BaseCog):
         if ctx.invoked_subcommand is None:
             await ctx.send_help("levels")
 
-    @requires_command_permission()
     @commands.guild_only()
+    @requires_command_permission()
     @levels.command(name="set", aliases=["s"])
     async def set(
         self,
@@ -85,7 +86,8 @@ class Levels(BaseCog):
         assert ctx.guild
 
         # Defer early to acknowledge interaction before async work
-        await ctx.defer(ephemeral=True)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         old_level: int = await self.db.levels.get_level(member.id, ctx.guild.id)
         old_xp: float = await self.db.levels.get_xp(member.id, ctx.guild.id)
@@ -151,7 +153,8 @@ class Levels(BaseCog):
         assert ctx.guild
 
         # Defer early to acknowledge interaction before async work
-        await ctx.defer(ephemeral=True)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         if embed_result := self.levels_service.valid_xplevel_input(xp_amount):
             logger.warning(
@@ -212,7 +215,8 @@ class Levels(BaseCog):
         assert ctx.guild
 
         # Defer early to acknowledge interaction before async work
-        await ctx.defer(ephemeral=True)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         old_xp: float = await self.db.levels.get_xp(member.id, ctx.guild.id)
         await self.db.levels.reset_xp(member.id, ctx.guild.id)
@@ -255,7 +259,8 @@ class Levels(BaseCog):
         assert ctx.guild
 
         # Defer early to acknowledge interaction before async work
-        await ctx.defer(ephemeral=True)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         state: bool = await self.db.levels.toggle_blacklist(member.id, ctx.guild.id)
 
