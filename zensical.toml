@@ -21,6 +21,7 @@ nav = [
         "user/index.md",
         { "Modules & Commands" = [
             "user/modules/index.md",
+            { "Help" = "user/modules/help/index.md" },
             { "Moderation" = [
                 "user/modules/moderation/index.md",
                 "user/modules/moderation/ban.md",

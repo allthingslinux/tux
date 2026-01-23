@@ -1,6 +1,6 @@
 ---
 title: Help
-description: Get help with Tux commands and features
+description: Get help with Tux commands and features using the interactive help system
 icon: lucide/help-circle
 tags:
   - user-guide
