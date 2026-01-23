@@ -87,17 +87,12 @@ async def get_sequences(session: AsyncSession) -> list[dict[str, Any]]:
         if not sequence_name:
             continue
 
-        # Extract just the sequence name without schema
-        # "public.cases_id_seq" -> "cases_id_seq"
-        seq_name = (
-            sequence_name.split(".")[-1] if "." in sequence_name else sequence_name
-        )
+        # Store schema-qualified sequence name to avoid search_path issues
         sequences.append(
             {
-                "sequence": seq_name,
+                "sequence": sequence_name,
                 "table": table_name,
                 "column": column_name,
-                "full_sequence": sequence_name,
             },
         )
     return sequences
@@ -263,9 +258,7 @@ async def _plan_sequence_fixes(
             )
             continue
 
-        # Create fix plan
-        plan = plan_sequence_fix(seq_status)
-        if plan:
+        if plan := plan_sequence_fix(seq_status):
             plans.append(plan)
             rich_print(
                 f"\n[yellow]⚠ Sequence {plan.sequence} is out of sync:[/yellow]",
