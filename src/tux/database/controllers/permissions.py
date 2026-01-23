@@ -219,6 +219,15 @@ class PermissionRankController(BaseController[PermissionRank]):
                 for instance in instances:
                     session.expunge(instance)
 
+                # Invalidate cache for all affected guilds
+                # Get unique guild_ids from the created ranks
+                affected_guild_ids = {instance.guild_id for instance in instances}
+                for guild_id in affected_guild_ids:
+                    self._guild_ranks_cache.invalidate(f"permission_ranks:{guild_id}")
+                    logger.trace(
+                        f"Invalidated permission ranks cache for guild {guild_id}",
+                    )
+
                 logger.debug(
                     f"Successfully bulk created {len(instances)} permission ranks",
                 )
