@@ -520,8 +520,19 @@ class ModerationCoordinator:
                 ("Reason", f"> {case.case_reason}", False),
             ]
 
+        # Use correct embed type based on case status
+        embed_type = (
+            (
+                EmbedType.ACTIVE_CASE
+                if case and case.case_status
+                else EmbedType.INACTIVE_CASE
+            )
+            if case
+            else EmbedType.ACTIVE_CASE
+        )
+
         embed = EmbedCreator.create_embed(
-            embed_type=EmbedType.ACTIVE_CASE,
+            embed_type=embed_type,
             description="✅ DM sent" if dm_sent else "❌ DM not sent",
             custom_author_text=title,
         )

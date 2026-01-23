@@ -234,18 +234,16 @@ class Unjail(ModerationCogBase):
                     # Shorter wait time for roles to be applied by Discord
                     await asyncio.sleep(0.5)
 
-                    # Verify if all roles were successfully added back
-                    # Check ctx.guild again for safety within this block
-                    if ctx.guild and case.case_user_roles:
-                        # Check for missing roles in a simpler way
+                    # Verify if all roles that were attempted to be restored are actually present
+                    # Only check roles that were actually attempted (exist and are assignable)
+                    # Don't check roles that were skipped (deleted or not assignable)
+                    if ctx.guild and restored_roles:
                         member_role_ids = {role.id for role in member.roles}
-                        missing_roles: list[str] = []
-
-                        for role_id in case.case_user_roles:
-                            if role_id not in member_role_ids:
-                                role = ctx.guild.get_role(role_id)
-                                role_name = role.name if role else str(role_id)
-                                missing_roles.append(role_name)
+                        missing_roles: list[str] = [
+                            role.name
+                            for role in restored_roles
+                            if role.id not in member_role_ids
+                        ]
 
                         if missing_roles:
                             missing_str = ", ".join(missing_roles)

@@ -342,7 +342,7 @@ class Cases(ModerationCogBase):
                 await ctx.send("No cases found.")
             return
 
-        await self._handle_case_list_response(ctx, cases, len(cases))
+        await self._handle_case_list_response(ctx, cases, len(cases), {})
 
     async def _view_single_case(
         self,
@@ -417,7 +417,7 @@ class Cases(ModerationCogBase):
             all_cases = await self.db.case.get_all_cases(ctx.guild.id)
             total_cases = len(all_cases)
 
-        await self._handle_case_list_response(ctx, cases, total_cases)
+        await self._handle_case_list_response(ctx, cases, total_cases, options)
 
     async def _update_case(
         self,
@@ -528,8 +528,13 @@ class Cases(ModerationCogBase):
             user = await self._resolve_user(case.case_user_id)
             moderator = await self._resolve_moderator(case.case_moderator_id)
 
+            # Use correct embed type based on case status
+            embed_type = (
+                EmbedType.ACTIVE_CASE if case.case_status else EmbedType.INACTIVE_CASE
+            )
+
             embed = EmbedCreator.create_embed(
-                embed_type=EmbedType.ACTIVE_CASE,
+                embed_type=embed_type,
                 description="Case Updated",  # Indicate this is an updated case
                 custom_author_text=f"Case #{case.case_number} ({case.case_type.value if case.case_type else 'Unknown'})",
             )
@@ -669,9 +674,14 @@ class Cases(ModerationCogBase):
         moderator = await self._resolve_moderator(case.case_moderator_id)
         fields = self._create_case_fields(moderator, user, reason)
 
-        embed = discord.Embed(
-            title=f"Case #{case.case_number} ({case.case_type.value if case.case_type else 'UNKNOWN'}) {action}",
-            color=EMBED_COLORS["CASE"],
+        # Use correct embed type based on case status
+        embed_type = (
+            EmbedType.ACTIVE_CASE if case.case_status else EmbedType.INACTIVE_CASE
+        )
+
+        embed = EmbedCreator.create_embed(
+            embed_type=embed_type,
+            custom_author_text=f"Case #{case.case_number} ({case.case_type.value if case.case_type else 'UNKNOWN'}) {action}",
         )
 
         # Add fields to embed
@@ -693,6 +703,7 @@ class Cases(ModerationCogBase):
         ctx: commands.Context[Tux],
         cases: list[Case],
         total_cases: int,
+        filters: dict[str, Any],
     ) -> None:
         """
         Handle the response for a case list.
@@ -705,6 +716,8 @@ class Cases(ModerationCogBase):
             The cases to handle the response for.
         total_cases : int
             The total number of cases.
+        filters : dict[str, Any]
+            Dictionary of active filters (user_id, moderator_id, case_type).
         """
         if not cases:
             embed = EmbedCreator.create_embed(
@@ -740,6 +753,7 @@ class Cases(ModerationCogBase):
                 ctx,
                 cases[i : i + cases_per_page],
                 total_cases,
+                filters,
             )
 
             menu.add_page(embed)
@@ -809,6 +823,7 @@ class Cases(ModerationCogBase):
         ctx: commands.Context[Tux],
         cases: list[Case],
         total_cases: int,
+        filters: dict[str, Any],
     ) -> discord.Embed:
         """
         Create the embed for a case list.
@@ -821,6 +836,8 @@ class Cases(ModerationCogBase):
             The cases to create the embed for.
         total_cases : int
             The total number of cases.
+        filters : dict[str, Any]
+            Dictionary of active filters (user_id, moderator_id, case_type).
 
         Returns
         -------
@@ -836,8 +853,42 @@ class Cases(ModerationCogBase):
             user_display_avatar=ctx.author.display_avatar.url,
         )
 
+        # Generate dynamic title based on active filters
+        title_parts: list[str] = []
+        if filters.get("user_id"):
+            user_id = filters["user_id"]
+            # Try to get user name from cache or use ID
+            user = ctx.guild.get_member(user_id) or ctx.bot.get_user(user_id)
+            user_name = user.name if user else f"{user_id}"
+            title_parts.append(f"for User: {user_name}")
+        if filters.get("moderator_id"):
+            moderator_id = filters["moderator_id"]
+            # Try to get moderator name from cache or use ID
+            moderator = ctx.guild.get_member(moderator_id) or ctx.bot.get_user(
+                moderator_id,
+            )
+            moderator_name = moderator.name if moderator else f"{moderator_id}"
+            title_parts.append(f"by Mod: {moderator_name}")
+        if filters.get("case_type"):
+            case_type = filters["case_type"]
+            case_type_value = (
+                case_type.value if hasattr(case_type, "value") else str(case_type)
+            )
+            title_parts.append(f"by Type: {case_type_value}")
+
+        # Build title - join multiple filters with commas for better readability
+        if title_parts:
+            if len(title_parts) > 1:
+                # Multiple filters: "Total Cases for User: X, by Mod: Y, by Type: WARN (2)"
+                title = f"Total Cases {', '.join(title_parts)} ({total_cases})"
+            else:
+                # Single filter: "Total Cases for User: X (2)"
+                title = f"Total Cases {title_parts[0]} ({total_cases})"
+        else:
+            title = f"Total Cases ({total_cases})"
+
         embed = EmbedCreator.create_embed(
-            title=f"Total Cases ({total_cases})",
+            title=title,
             description="",
             embed_type=EmbedType.CASE,
             custom_author_text=ctx.guild.name,
