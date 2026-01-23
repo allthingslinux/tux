@@ -334,6 +334,10 @@ class Starboard(BaseCog):
         """
         assert ctx.guild
 
+        # Defer early to acknowledge interaction before async work
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
+
         try:
             result = await self.db.starboard.delete_starboard_by_guild_id(ctx.guild.id)
 
@@ -357,10 +361,7 @@ class Starboard(BaseCog):
                 )
             )
 
-            if ctx.interaction:
-                await ctx.interaction.followup.send(embed=embed, ephemeral=True)
-            else:
-                await ctx.send(embed=embed)
+            await self._send_embed(ctx, embed)
 
         except Exception as e:
             logger.error(f"Error removing starboard configuration: {e}")
@@ -371,15 +372,15 @@ class Starboard(BaseCog):
                     "guild_id": str(ctx.guild.id) if ctx.guild else None,
                 },
             )
-            if ctx.interaction:
-                await ctx.interaction.followup.send(
-                    f"An error occurred while removing the starboard configuration: {e}",
-                    ephemeral=True,
-                )
-            else:
-                await ctx.send(
-                    f"An error occurred while removing the starboard configuration: {e}",
-                )
+            error_embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                title="Configuration Error",
+                description=f"An error occurred while removing the starboard configuration: {e}",
+            )
+            await self._send_embed(ctx, error_embed)
 
     async def get_existing_starboard_message(
         self,
