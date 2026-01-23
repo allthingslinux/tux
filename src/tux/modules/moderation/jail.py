@@ -180,7 +180,7 @@ class Jail(ModerationCogBase):
     )
     @commands.guild_only()
     @requires_command_permission()
-    async def jail(
+    async def jail(  # noqa: PLR0912
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
@@ -201,23 +201,43 @@ class Jail(ModerationCogBase):
         """
         assert ctx.guild
 
-        await ctx.defer(ephemeral=True)
+        # Defer early to acknowledge interaction before async work
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         # Get jail role
         jail_role = await self.get_jail_role(ctx.guild)
         if not jail_role:
-            await ctx.send("No jail role found.", ephemeral=True)
+            if ctx.interaction:
+                await ctx.interaction.followup.send(
+                    "No jail role found.",
+                    ephemeral=True,
+                )
+            else:
+                await ctx.send("No jail role found.")
             return
 
         # Get jail channel
         jail_channel = await self.get_jail_channel(ctx.guild)
         if not jail_channel:
-            await ctx.send("No jail channel found.", ephemeral=True)
+            if ctx.interaction:
+                await ctx.interaction.followup.send(
+                    "No jail channel found.",
+                    ephemeral=True,
+                )
+            else:
+                await ctx.send("No jail channel found.")
             return
 
         # Check if user is already jailed
         if await self.is_jailed(ctx.guild.id, member.id):
-            await ctx.send("User is already jailed.", ephemeral=True)
+            if ctx.interaction:
+                await ctx.interaction.followup.send(
+                    "User is already jailed.",
+                    ephemeral=True,
+                )
+            else:
+                await ctx.send("User is already jailed.")
             return
 
         # Get roles that can be managed by the bot
