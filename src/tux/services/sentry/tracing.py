@@ -665,37 +665,128 @@ def instrument_bot_commands(bot: commands.Bot) -> None:
     # The operation for commands is standardized as `command.run`
     op = "command.run"
 
-    for cmd in bot.walk_commands():
-        # Preserve existing decorators and metadata
-        original_callback = cast(Callable[..., Coroutine[Any, Any, None]], cmd.callback)
-        txn_name = f"command.{cmd.qualified_name}"
+    def create_wrapper(
+        original_callback: Callable[..., Coroutine[Any, Any, None]],
+        txn_name: str,
+    ) -> Callable[..., Coroutine[Any, Any, None]]:
+        """
+        Create a wrapper function for a command callback.
+
+        Preserves the original function signature so discord.py can properly
+        inspect parameters and converters. Uses functools.wraps to preserve
+        metadata, and explicitly preserves __signature__ for discord.py's
+        introspection.
+
+        Parameters
+        ----------
+        original_callback : Callable[..., Coroutine[Any, Any, None]]
+            The original command callback to wrap.
+
+        txn_name : str
+            The transaction name for Sentry.
+
+        Returns
+        -------
+        Callable[..., Coroutine[Any, Any, None]]
+            The wrapped callback function with preserved signature.
+        """
 
         @functools.wraps(original_callback)
-        async def wrapped(
-            *args: Any,
-            __orig_cb: Callable[..., Coroutine[Any, Any, None]] = original_callback,
-            __txn_name: str = txn_name,
-            **kwargs: Any,
-        ) -> None:
+        async def wrapped(*args: Any, **kwargs: Any) -> None:
             """
             Execute command callback with Sentry transaction instrumentation.
 
             Parameters
             ----------
             *args : Any
+
                 Positional arguments passed to the command.
-            __orig_cb : Callable[..., Coroutine[Any, Any, None]]
-                Original command callback.
-            __txn_name : str
-                Transaction name for Sentry.
+
             **kwargs : Any
+
                 Keyword arguments passed to the command.
+
             """
             if not sentry_sdk.is_initialized():
-                return await __orig_cb(*args, **kwargs)
-            with sentry_sdk.start_transaction(op=op, name=__txn_name):
-                return await __orig_cb(*args, **kwargs)
+                return await original_callback(*args, **kwargs)
 
-        cmd.callback = cast(Callable[..., Coroutine[Any, Any, None]], wrapped)
+            with sentry_sdk.start_transaction(op=op, name=txn_name):
+                # Call the original callback with the same args/kwargs
+                # discord.py ensures ctx.args includes self.cog for bound methods
+                return await original_callback(*args, **kwargs)
+
+        # Ensure __wrapped__ is set explicitly (functools.wraps should do this, but be explicit)
+        # This allows discord.py's unwrap_function() to find the original callback
+        if not hasattr(wrapped, "__wrapped__"):
+            wrapped.__wrapped__ = original_callback
+
+        return wrapped
+
+    for cmd in bot.walk_commands():
+        # Skip if already wrapped by Sentry (check for our wrapper)
+        # Commands may already be wrapped by @requires_command_permission, which is fine
+        if hasattr(cmd.callback, "__wrapped__"):
+            # Check if it's already wrapped by Sentry (double-wrapped = permission + sentry)
+            inner = getattr(cmd.callback, "__wrapped__", None)
+            if inner and hasattr(inner, "__wrapped__"):
+                # Check if the inner wrapper is from Sentry by checking for our transaction
+                # This is a heuristic - if it's already double-wrapped, assume it's done
+                continue
+
+        # Get the callback (may already be wrapped by permission decorator, that's fine)
+        original_callback = cast(Callable[..., Coroutine[Any, Any, None]], cmd.callback)
+        txn_name = f"command.{cmd.qualified_name}"
+
+        # IMPORTANT: Store params and cog BEFORE wrapping
+        # - params were computed with original callback and contain correct converters
+        # - cog is needed for bound methods (discord.py adds it to ctx.args in _parse_arguments)
+        #   See core.py line 868: ctx.args = [ctx] if self.cog is None else [self.cog, ctx]
+        original_params = getattr(cmd, "params", None)
+        original_cog = getattr(cmd, "cog", None)
+
+        # For subcommands, the cog might not be set directly
+        # Try to find it from the parent command if missing
+        if original_cog is None and cmd.parent is not None:
+            parent_cog = getattr(cmd.parent, "cog", None)
+            if parent_cog is not None:
+                original_cog = parent_cog
+                parent_name = getattr(cmd.parent, "qualified_name", "unknown")
+                logger.debug(
+                    f"Command {cmd.qualified_name} inheriting cog from parent {parent_name}",
+                )
+
+        # Debug: Log if cog is still missing (shouldn't happen for cog commands)
+        if original_cog is None and hasattr(cmd, "cog") and cmd.cog is None:
+            logger.debug(
+                f"Command {cmd.qualified_name} has no cog - this is normal for non-cog commands",
+            )
+
+        # Wrap the callback for Sentry instrumentation
+        # functools.wraps preserves __wrapped__ chain so original signature is accessible
+        # discord.py's unwrap_function() will use __wrapped__ to get original signature
+        wrapped_callback = create_wrapper(original_callback, txn_name)
+
+        # Preserve the original callback's __self__ if it's a bound method
+        # This ensures discord.py can still access the cog correctly
+        if hasattr(original_callback, "__self__"):
+            wrapped_callback.__self__ = original_callback.__self__  # type: ignore[attr-defined]
+
+        # Assign the wrapped callback
+        cmd.callback = wrapped_callback
+
+        # CRITICAL: Ensure cog is set - this is essential for bound methods
+        # When cmd.cog is None, discord.py doesn't add self to ctx.args in _parse_arguments
+        # (see core.py line 868: ctx.args = [ctx] if self.cog is None else [self.cog, ctx])
+        # We must set the cog so that ctx.args includes self.cog for bound methods
+        # This is especially important for subcommands which might not have their cog set
+        if original_cog is not None:
+            # Use the property setter to ensure any side effects (like HybridCommand.app_command.binding)
+            # are properly handled
+            cmd.cog = original_cog
+
+        # Ensure params are preserved - they were computed with the original callback
+        # and contain the correct converters. If params were somehow lost, restore them.
+        if original_params is not None:
+            cmd.params = original_params
 
     logger.info(f"Instrumented {len(list(bot.walk_commands()))} commands with Sentry.")
