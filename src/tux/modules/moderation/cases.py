@@ -161,10 +161,18 @@ class Cases(ModerationCogBase):
             return
 
         # Try to parse as case number first
+        # Case numbers are small sequential integers, while Discord user IDs are large (18+ digits)
+        # PostgreSQL INTEGER max is 2,147,483,647, but case numbers are typically < 1,000,000
+        # If the number is > 10,000,000, it's almost certainly a user ID, not a case number
+        max_reasonable_case_number = 10_000_000
+
         with contextlib.suppress(ValueError):
             case_number = int(argument)
-            await self._view_single_case(ctx, case_number)
-            return
+            # Only treat as case number if it's within reasonable range
+            if case_number > 0 and case_number <= max_reasonable_case_number:
+                await self._view_single_case(ctx, case_number)
+                return
+            # If it's a large number, fall through to user conversion
 
         # Try to convert to user/member - if successful, route to search
         try:
