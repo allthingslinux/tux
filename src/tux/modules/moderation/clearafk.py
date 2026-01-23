@@ -40,7 +40,7 @@ class ClearAFK(BaseCog):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
-    ) -> discord.Message | None:
+    ) -> discord.Message:
         """
         Clear a member's AFK status and reset their nickname.
 
@@ -53,8 +53,8 @@ class ClearAFK(BaseCog):
 
         Returns
         -------
-        discord.Message | None
-            The confirmation message sent, or None if sending failed.
+        discord.Message
+            The confirmation message sent. Raises on send failure.
         """
         assert ctx.guild
 
@@ -64,10 +64,12 @@ class ClearAFK(BaseCog):
 
         if not await self.db.afk.is_afk(member.id, guild_id=ctx.guild.id):
             if ctx.interaction:
-                return await ctx.interaction.followup.send(
+                msg = await ctx.interaction.followup.send(
                     f"{member.mention} is not currently AFK.",
                     ephemeral=True,
                 )
+                assert msg is not None  # followup.send always returns Message
+                return msg
             return await ctx.send(f"{member.mention} is not currently AFK.")
 
         # Fetch the AFK entry to retrieve the original nickname
@@ -85,10 +87,12 @@ class ClearAFK(BaseCog):
                 await member.timeout(None, reason="removing self-timeout")
 
         if ctx.interaction:
-            return await ctx.interaction.followup.send(
+            msg = await ctx.interaction.followup.send(
                 f"AFK status for {member.mention} has been cleared.",
                 ephemeral=True,
             )
+            assert msg is not None  # followup.send always returns Message
+            return msg
         return await ctx.send(
             f"AFK status for {member.mention} has been cleared.",
         )
