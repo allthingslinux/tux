@@ -42,7 +42,7 @@ class Timeout(ModerationCogBase):
     )
     @commands.guild_only()
     @requires_command_permission()
-    async def timeout(
+    async def timeout(  # noqa: PLR0912
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
@@ -64,22 +64,29 @@ class Timeout(ModerationCogBase):
         assert ctx.guild
 
         # Defer early to acknowledge interaction before async work
-        await ctx.defer(ephemeral=True)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         # Check if target is a bot
         if member.bot:
-            await ctx.send(
-                "Bots cannot be timed out.",
-                ephemeral=True,
-            )
+            if ctx.interaction:
+                await ctx.interaction.followup.send(
+                    "Bots cannot be timed out.",
+                    ephemeral=True,
+                )
+            else:
+                await ctx.send("Bots cannot be timed out.")
             return
 
         # Check if member is already timed out
         if member.is_timed_out():
-            await ctx.send(
-                f"{member} is already timed out.",
-                ephemeral=True,
-            )
+            if ctx.interaction:
+                await ctx.interaction.followup.send(
+                    f"{member} is already timed out.",
+                    ephemeral=True,
+                )
+            else:
+                await ctx.send(f"{member} is already timed out.")
             return
 
         # Parse and validate duration
@@ -90,20 +97,22 @@ class Timeout(ModerationCogBase):
             max_duration = datetime.timedelta(days=28)
 
             if duration > max_duration:
-                await ctx.send(
-                    "Timeout duration exceeds Discord's maximum of 28 days. Setting timeout to maximum allowed (28 days).",
-                    ephemeral=True,
-                )
+                msg = "Timeout duration exceeds Discord's maximum of 28 days. Setting timeout to maximum allowed (28 days)."
+                if ctx.interaction:
+                    await ctx.interaction.followup.send(msg, ephemeral=True)
+                else:
+                    await ctx.send(msg)
 
                 duration = max_duration
                 # Update the display duration for consistency
                 flags.duration = "28d"
 
         except ValueError as e:
-            await ctx.send(
-                f"Invalid duration format: {e}",
-                ephemeral=True,
-            )
+            msg = f"Invalid duration format: {e}"
+            if ctx.interaction:
+                await ctx.interaction.followup.send(msg, ephemeral=True)
+            else:
+                await ctx.send(msg)
             return
 
         # Execute timeout with case creation and DM
