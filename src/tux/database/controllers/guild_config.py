@@ -621,6 +621,8 @@ class GuildConfigController(BaseController[GuildConfig]):
         This method is more efficient than calling get_audit_log_id and
         get_mod_log_id separately, as it fetches the entire config once.
 
+        Uses cache to avoid database queries when possible.
+
         Parameters
         ----------
         guild_id : int
@@ -631,8 +633,27 @@ class GuildConfigController(BaseController[GuildConfig]):
         tuple[int | None, int | None]
             Tuple of (audit_log_id, mod_log_id).
         """
+        # Check cache first
+        cached = GuildConfigCacheManager().get(guild_id)
+        if cached is not None:
+            audit_log_id = cached.get("audit_log_id")
+            mod_log_id = cached.get("mod_log_id")
+            # If both are in cache (even if None), return them
+            if "audit_log_id" in cached and "mod_log_id" in cached:
+                return audit_log_id, mod_log_id
+
+        # Cache miss - fetch from database in one query
         config = await self.get_config_by_guild_id(guild_id)
-        return (config.audit_log_id, config.mod_log_id) if config else (None, None)
+        audit_log_id = getattr(config, "audit_log_id", None) if config else None
+        mod_log_id = getattr(config, "mod_log_id", None) if config else None
+
+        # Update cache with both values
+        GuildConfigCacheManager().set(
+            guild_id,
+            audit_log_id=audit_log_id,
+            mod_log_id=mod_log_id,
+        )
+        return audit_log_id, mod_log_id
 
     async def get_private_log_id(self, guild_id: int) -> int | None:
         """
