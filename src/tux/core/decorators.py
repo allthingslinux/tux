@@ -151,8 +151,6 @@ def requires_command_permission(
             # Get permission system (only if not already bypassed)
             permission_system = get_permission_system()
 
-            # Command name already extracted above for logging
-
             # Get command permission config from database
             # This will check the command itself, then fall back to parent commands
             # e.g., "config ranks init" -> "config ranks" -> "config"
