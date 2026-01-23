@@ -7,6 +7,7 @@ using proper service composition.
 
 import asyncio
 import time
+from collections import OrderedDict
 from collections.abc import Callable, Coroutine
 from typing import Any
 
@@ -30,6 +31,8 @@ class ExecutionService:
         recovery_timeout: float = 60.0,
         max_retries: int = 3,
         base_delay: float = 1.0,
+        max_circuit_entries: int = 100,
+        circuit_cleanup_interval: float = 300.0,
     ):
         """
         Initialize the execution service.
@@ -44,17 +47,24 @@ class ExecutionService:
             Maximum number of retry attempts for operations, by default 3.
         base_delay : float, optional
             Base delay in seconds for exponential backoff, by default 1.0.
+        max_circuit_entries : int, optional
+            Maximum number of circuit breaker entries before eviction, by default 100.
+        circuit_cleanup_interval : float, optional
+            Interval in seconds for periodic cleanup of old circuit entries, by default 300.0.
         """
-        # Circuit breaker state
-        self._circuit_open: dict[str, bool] = {}
-        self._failure_count: dict[str, int] = {}
-        self._last_failure_time: dict[str, float] = {}
+        # Circuit breaker state (using OrderedDict for LRU eviction)
+        self._circuit_open: OrderedDict[str, bool] = OrderedDict()
+        self._failure_count: OrderedDict[str, int] = OrderedDict()
+        self._last_failure_time: OrderedDict[str, float] = OrderedDict()
 
         # Configuration
         self._failure_threshold = failure_threshold
         self._recovery_timeout = recovery_timeout
         self._max_retries = max_retries
         self._base_delay = base_delay
+        self._max_circuit_entries = max_circuit_entries
+        self._circuit_cleanup_interval = circuit_cleanup_interval
+        self._last_cleanup_time = time.monotonic()
 
     async def execute_with_retry(  # noqa: PLR0912
         self,
@@ -101,9 +111,11 @@ class ExecutionService:
 
         for attempt in range(self._max_retries):
             try:
-                logger.debug(
-                    f"Executing action for {operation_type} (attempt {attempt + 1}/{self._max_retries})",
-                )
+                # Only log on first attempt or last attempt to reduce overhead
+                if attempt == 0 or attempt == self._max_retries - 1:
+                    logger.debug(
+                        f"Executing action for {operation_type} (attempt {attempt + 1}/{self._max_retries})",
+                    )
                 result = await action(*args, **kwargs)
             except discord.RateLimited as e:
                 last_exception = e
@@ -117,8 +129,8 @@ class ExecutionService:
                     self._record_failure(operation_type)
 
             except (discord.Forbidden, discord.NotFound):
-                # Don't retry these errors
-                self._record_failure(operation_type)
+                # Don't retry these errors - don't record as circuit breaker failure
+                # These are expected errors, not system failures
                 raise
 
             except discord.HTTPException as e:
@@ -130,8 +142,7 @@ class ExecutionService:
                     else:
                         self._record_failure(operation_type)
                 else:
-                    # Client errors, don't retry
-                    self._record_failure(operation_type)
+                    # Client errors, don't retry - don't record as circuit breaker failure
                     raise
 
             except Exception as e:
@@ -166,6 +177,9 @@ class ExecutionService:
         bool
             True if circuit is open, False otherwise.
         """
+        # Periodic cleanup of old entries
+        self._maybe_cleanup_circuits()
+
         if not self._circuit_open.get(operation_type, False):
             return False
 
@@ -179,6 +193,44 @@ class ExecutionService:
 
         return True
 
+    def _maybe_cleanup_circuits(self) -> None:
+        """
+        Periodically clean up old circuit breaker entries.
+
+        Removes entries that haven't been accessed recently and are not in
+        an open state. Prevents unbounded memory growth.
+        """
+        now = time.monotonic()
+        if now - self._last_cleanup_time < self._circuit_cleanup_interval:
+            return
+
+        self._last_cleanup_time = now
+
+        # Remove entries that are closed and haven't failed recently
+        cutoff_time = now - (self._recovery_timeout * 2)
+        keys_to_remove = [
+            key
+            for key, last_failure in self._last_failure_time.items()
+            if not self._circuit_open.get(key, False) and last_failure < cutoff_time
+        ]
+
+        for key in keys_to_remove:
+            self._circuit_open.pop(key, None)
+            self._failure_count.pop(key, None)
+            self._last_failure_time.pop(key, None)
+
+        # If still over limit, evict oldest entries (LRU)
+        if len(self._circuit_open) > self._max_circuit_entries:
+            # Evict oldest entries (first in OrderedDict)
+            excess = len(self._circuit_open) - self._max_circuit_entries
+            for _ in range(excess):
+                if self._circuit_open:
+                    oldest_key = next(iter(self._circuit_open))
+                    self._circuit_open.pop(oldest_key, None)
+                    self._failure_count.pop(oldest_key, None)
+                    self._last_failure_time.pop(oldest_key, None)
+                    logger.trace(f"Evicted circuit breaker entry: {oldest_key}")
+
     def _record_success(self, operation_type: str) -> None:
         """
         Record a successful operation.
@@ -188,6 +240,14 @@ class ExecutionService:
         operation_type : str
             The operation type.
         """
+        # Move to end (most recently used) for LRU eviction
+        if operation_type in self._circuit_open:
+            self._circuit_open.move_to_end(operation_type)
+        if operation_type in self._failure_count:
+            self._failure_count.move_to_end(operation_type)
+        if operation_type in self._last_failure_time:
+            self._last_failure_time.move_to_end(operation_type)
+
         self._failure_count[operation_type] = 0
         self._circuit_open[operation_type] = False
 
@@ -200,6 +260,14 @@ class ExecutionService:
         operation_type : str
             The operation type.
         """
+        # Move to end (most recently used) for LRU eviction
+        if operation_type in self._circuit_open:
+            self._circuit_open.move_to_end(operation_type)
+        if operation_type in self._failure_count:
+            self._failure_count.move_to_end(operation_type)
+        if operation_type in self._last_failure_time:
+            self._last_failure_time.move_to_end(operation_type)
+
         self._failure_count[operation_type] = (
             self._failure_count.get(operation_type, 0) + 1
         )

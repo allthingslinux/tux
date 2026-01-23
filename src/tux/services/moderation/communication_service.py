@@ -13,6 +13,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.bot import Tux
+from tux.shared.cache import GuildConfigCacheManager
 from tux.shared.constants import EMBED_COLORS
 
 
@@ -34,6 +35,8 @@ class CommunicationService:
             The Discord bot instance.
         """
         self.bot = bot
+        # Use shared cache manager for guild config (allows invalidation from anywhere)
+        self._guild_config_cache = GuildConfigCacheManager()
 
     async def send_dm(
         self,
@@ -192,6 +195,9 @@ class CommunicationService:
         """
         Send an embed and optionally log it.
 
+        For slash commands (after defer), uses interaction.followup.send().
+        For prefix commands, uses ctx.send().
+
         Parameters
         ----------
         ctx : commands.Context[Tux]
@@ -207,16 +213,20 @@ class CommunicationService:
             The sent message if successful.
         """
         try:
-            # Send the embed as a regular message
-            message = await ctx.send(embed=embed, mention_author=False)
-            logger.debug(f"Embed sent successfully for {log_type} log")
-
-            # Also send as ephemeral followup for slash commands
-            if isinstance(ctx, discord.Interaction):
-                embed_ephemeral = embed.copy()
-                embed_ephemeral.set_footer(text="This is only visible to you")
-                await ctx.followup.send(embed=embed_ephemeral, ephemeral=True)
-                logger.debug("Ephemeral followup sent for slash command")
+            if ctx.interaction:
+                # Slash command - use followup after defer
+                message = await ctx.interaction.followup.send(
+                    embed=embed,
+                    ephemeral=True,
+                    wait=True,  # Return the message object
+                )
+                logger.debug(
+                    f"Ephemeral embed sent successfully for {log_type} log (slash)",
+                )
+            else:
+                # Prefix command - use normal send
+                message = await ctx.send(embed=embed, mention_author=False)
+                logger.debug(f"Embed sent successfully for {log_type} log (prefix)")
 
         except discord.HTTPException as e:
             logger.error(f"Failed to send {log_type} embed: {e}")
@@ -224,6 +234,53 @@ class CommunicationService:
             return None
         else:
             return message
+
+    async def _get_guild_log_channels(
+        self,
+        guild_id: int,
+    ) -> tuple[int | None, int | None]:
+        """
+        Get audit log and mod log channel IDs for a guild with caching.
+
+        Uses batch fetching to get both values in a single database query.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+
+        Returns
+        -------
+        tuple[int | None, int | None]
+            Tuple of (audit_log_id, mod_log_id).
+        """
+        # Check cache first
+        cached = self._guild_config_cache.get(guild_id)
+        if cached is not None:
+            logger.trace(f"Cache hit for guild config: {guild_id}")
+            return cached.get("audit_log_id"), cached.get("mod_log_id")
+
+        # Cache miss - batch fetch from database (single query)
+        logger.trace(f"Cache miss for guild config: {guild_id}, fetching from DB")
+        audit_log_id, mod_log_id = await self.bot.db.guild_config.get_log_channel_ids(
+            guild_id,
+        )
+
+        # Cache the result
+        self._guild_config_cache.set(guild_id, audit_log_id, mod_log_id)
+
+        return audit_log_id, mod_log_id
+
+    def invalidate_guild_config_cache(self, guild_id: int) -> None:
+        """
+        Invalidate cached guild config for a specific guild.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID to invalidate.
+        """
+        self._guild_config_cache.invalidate(guild_id)
 
     async def send_audit_log_embed(  # noqa: PLR0911
         self,
@@ -253,8 +310,8 @@ class CommunicationService:
         audit_channel: discord.TextChannel | None = None
 
         try:
-            # Get audit log channel ID from guild config
-            audit_log_id = await self.bot.db.guild_config.get_audit_log_id(ctx.guild.id)
+            # Get audit log channel ID from guild config (with caching)
+            audit_log_id, _ = await self._get_guild_log_channels(ctx.guild.id)
             if not audit_log_id:
                 logger.debug(
                     f"No audit log channel configured for guild {ctx.guild.id}",
@@ -333,8 +390,8 @@ class CommunicationService:
         mod_channel: discord.TextChannel | None = None
 
         try:
-            # Get mod log channel ID from guild config
-            mod_log_id = await self.bot.db.guild_config.get_mod_log_id(ctx.guild.id)
+            # Get mod log channel ID from guild config (with caching)
+            _, mod_log_id = await self._get_guild_log_channels(ctx.guild.id)
             if not mod_log_id:
                 logger.debug(f"No mod log channel configured for guild {ctx.guild.id}")
                 return None
