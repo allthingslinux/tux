@@ -9,8 +9,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from loguru import logger
-
 from tux.database.controllers.base import BaseController
 from tux.database.models import GuildConfig
 from tux.shared.cache import GuildConfigCacheManager
@@ -84,9 +82,6 @@ class GuildConfigController(BaseController[GuildConfig]):
             )
         ):
             GuildConfigCacheManager().invalidate(guild_id)
-            logger.debug(
-                f"Invalidated guild config cache for guild {guild_id} after config update",
-            )
 
         return result
 
@@ -94,12 +89,17 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         Delete guild configuration.
 
+        Automatically invalidates the guild config cache on successful deletion.
+
         Returns
         -------
         bool
             True if deleted successfully, False otherwise.
         """
-        return await self.delete_by_id(guild_id)
+        result = await self.delete_by_id(guild_id)
+        if result:
+            GuildConfigCacheManager().invalidate(guild_id)
+        return result
 
     async def get_all_configs(self) -> list[GuildConfig]:
         """
