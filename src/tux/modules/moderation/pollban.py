@@ -60,7 +60,8 @@ class PollBan(ModerationCogBase):
         assert ctx.guild
 
         # Defer early to acknowledge interaction before async work
-        await ctx.defer(ephemeral=True)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         # Check if user is already poll banned
         if await self.is_pollbanned(ctx.guild.id, member.id):
