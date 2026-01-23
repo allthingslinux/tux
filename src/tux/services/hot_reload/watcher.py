@@ -68,10 +68,8 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         self.reload_callback = reload_callback
         self.base_dir = base_dir
         self.event_loop = event_loop
+        self.cwd = cwd
         self.hash_tracker = FileHashTracker()
-        logger.debug(
-            f"CogWatcher base_dir: {_shorten_path(base_dir, cwd)} (exists: {base_dir.exists()})",
-        )
 
     def should_process_file(self, file_path: Path) -> bool:
         """
@@ -98,38 +96,30 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
 
     def on_modified(self, event: watchdog.events.FileSystemEvent) -> None:
         """Handle file modification events."""
-        logger.info(
-            f"WATCHDOG EVENT: {event.event_type} for {event.src_path} (is_directory: {event.is_directory})",
-        )
         if event.is_directory:
             return
 
         file_path = Path(str(event.src_path))
-        logger.debug(f"Processing file: {file_path}")
+        short_path = _shorten_path(file_path, self.cwd)
 
         if not self.should_process_file(file_path):
-            logger.info(f"File {file_path} filtered out by should_process_file")
+            # Don't log filtered pyc files (they're expected to be ignored)
+            if file_path.suffix != ".pyc":
+                logger.debug(f"Filtered out: {short_path}")
             return
-
-        logger.info(f"File {file_path} passed filtering")
 
         # Check if file actually changed (avoid duplicate events)
         if not self.hash_tracker.has_changed(file_path):
-            logger.info(f"File {file_path} has not changed")
+            logger.debug(f"Unchanged: {short_path}")
             return
-
-        logger.info(f"File {file_path} has changed, proceeding")
 
         # Validate syntax if enabled
         if self.config.enable_syntax_checking and not validate_python_syntax(file_path):
-            logger.warning(f"Skipping reload due to syntax errors in {file_path}")
+            logger.warning(f"Syntax error, skipping: {short_path}")
             return
 
         # Get extension name
         if extension := get_extension_from_path(file_path, self.base_dir):
-            logger.info(f"Determined extension: {extension}")
-            logger.info(f"Calling reload callback for {extension}")
-
             # If we have an event loop reference, use run_coroutine_threadsafe
             if self.event_loop and self.event_loop.is_running():
                 try:
@@ -144,21 +134,19 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
                         try:
                             self.reload_callback(extension)
                         except Exception as e:
-                            logger.error(
-                                f"Error in reload callback for {extension}: {e}",
-                            )
+                            logger.error(f"Callback error for {extension}: {e}")
 
                     asyncio.run_coroutine_threadsafe(async_callback(), self.event_loop)
                 except Exception as e:
-                    logger.error(f"Failed to schedule reload callback: {e}")
+                    logger.error(f"Failed to schedule callback: {e}")
             else:
                 # Fallback to direct call (may not work in different thread)
                 try:
                     self.reload_callback(extension)
                 except Exception as e:
-                    logger.error(f"Error in reload callback for {extension}: {e}")
+                    logger.error(f"Callback error for {extension}: {e}")
         else:
-            logger.warning(f"Could not determine extension for {file_path}")
+            logger.warning(f"Could not determine extension: {short_path}")
 
     def on_created(self, event: watchdog.events.FileSystemEvent) -> None:
         """Handle file creation events."""
@@ -170,10 +158,11 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             return
 
         file_path = Path(str(event.src_path))
+        short_path = _shorten_path(file_path, self.cwd)
         self.hash_tracker.remove_file(file_path)
 
         if extension := get_extension_from_path(file_path, self.base_dir):
-            logger.info(f"File deleted: {file_path} -> {extension}")
+            logger.debug(f"Deleted: {short_path} -> {extension}")
 
 
 class FileWatcher:
@@ -215,22 +204,12 @@ class FileWatcher:
         try:
             current_dir = Path.cwd()
             logger.trace(f"Current working directory: {current_dir}")
-            logger.debug(
-                "Hot reload watch directories: [%s]",
-                ", ".join(
-                    _shorten_path(p.resolve(), current_dir)
-                    for p in self.config.watch_directories
-                ),
-            )
 
             self.observer = watchdog.observers.Observer()
 
             for watch_dir in self.config.watch_directories:
                 abs_watch_dir = watch_dir.resolve()
                 short = _shorten_path(abs_watch_dir, current_dir)
-                logger.debug(
-                    f"Setting up watch: {short} (exists: {abs_watch_dir.exists()})",
-                )
                 if not abs_watch_dir.exists():
                     logger.warning(f"Watch directory does not exist: {short}")
                     continue
