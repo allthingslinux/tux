@@ -126,7 +126,7 @@ class ErrorHandler(commands.Cog):
             self._set_sentry_context(source, root_error)
 
         # Log error (includes action summary)
-        self._log_error(root_error, config)
+        self._log_error(root_error, config, source)
 
         # Send user response if configured
         if config.send_embed:
@@ -180,18 +180,44 @@ class ErrorHandler(commands.Cog):
         # Default config
         return ErrorHandlerConfig()
 
-    def _log_error(self, error: Exception, config: ErrorHandlerConfig) -> None:
-        """Log error with appropriate level."""
+    def _log_error(
+        self,
+        error: Exception,
+        config: ErrorHandlerConfig,
+        source: commands.Context[Tux] | discord.Interaction,
+    ) -> None:
+        """Log error with appropriate level and context.
+
+        Parameters
+        ----------
+        error : Exception
+            The error to log.
+        config : ErrorHandlerConfig
+            Configuration for error handling.
+        source : commands.Context[Tux] | discord.Interaction
+            The command context or interaction that triggered the error.
+        """
         log_func = getattr(logger, config.log_level.lower())
         error_type = type(error).__name__
         error_msg = str(error)
+
+        # Extract command and guild context for better diagnosability
+        command_name = source.command.qualified_name if source.command else "unknown"
+        guild_id = source.guild.id if source.guild else "unknown"
+        source_type = (
+            "interaction" if isinstance(source, discord.Interaction) else "command"
+        )
+        context = f" ({source_type}={command_name}, guild_id={guild_id})"
 
         if config.send_to_sentry:
             # Include traceback for errors going to Sentry
             tb = "".join(
                 traceback.format_exception(type(error), error, error.__traceback__),
             )
-            log_func(f"Encountered error [{error_type}]: {error_msg}\nTraceback:\n{tb}")
+            log_func(
+                f"Encountered error [{error_type}]{context}: {error_msg}\n"
+                f"Traceback:\n{tb}",
+            )
         else:
             # Build action summary
             actions = []
@@ -201,7 +227,9 @@ class ErrorHandler(commands.Cog):
                 actions.append("not sent to Sentry")
             action_summary = f" ({', '.join(actions)})" if actions else ""
 
-            log_func(f"Encountered error [{error_type}]{action_summary}: {error_msg}")
+            log_func(
+                f"Encountered error [{error_type}]{context}{action_summary}: {error_msg}",
+            )
 
     async def _send_error_response(
         self,
@@ -223,10 +251,7 @@ class ErrorHandler(commands.Cog):
             logger.warning(f"Failed to send error response: {e}")
         except Exception as e:
             # Catch all other exceptions to prevent silent failures
-            logger.error(
-                f"Unexpected error while sending error response: {e}",
-                exc_info=True,
-            )
+            logger.exception("Unexpected error while sending error response: {}", e)
 
     @commands.Cog.listener("on_command_error")
     async def on_command_error(
