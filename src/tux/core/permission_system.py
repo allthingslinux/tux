@@ -580,11 +580,27 @@ class PermissionSystem:
         if not command_names:
             return {}
 
-        # Build set of all command names to check (including parents)
+        # Check cache first for commands that are already cached
+        cached_results: dict[str, PermissionCommand | None] = {}
+        uncached_commands: list[str] = []
+
+        for command_name in command_names:
+            cache_key = f"command_permission_fallback:{guild_id}:{command_name}"
+            cached = self._command_permission_cache.get(cache_key)
+            if cached is not None:
+                cached_results[command_name] = cached
+            else:
+                uncached_commands.append(command_name)
+
+        # If all commands were cached, return early
+        if not uncached_commands:
+            return cached_results
+
+        # Build set of all command names to check (including parents) for uncached commands
         all_names_to_check: set[str] = set()
         command_to_parents: dict[str, list[str]] = {}
 
-        for command_name in command_names:
+        for command_name in uncached_commands:
             parts = command_name.split()
             command_names_to_check = [command_name]
 
@@ -617,10 +633,11 @@ class PermissionSystem:
             perm.command_name: perm for perm in found_permissions
         }
 
-        # Build result dict, checking each command and its parents
+        # Build result dict for uncached commands, checking each command and its parents
         # Check command itself, then parents in order of specificity
-        result_dict: dict[str, PermissionCommand | None] = {
-            command_name: next(
+        for command_name in uncached_commands:
+            # Find the first matching permission (command itself, then parents)
+            result = next(
                 (
                     perm_lookup[name]
                     for name in command_to_parents[command_name]
@@ -628,10 +645,14 @@ class PermissionSystem:
                 ),
                 None,  # No permission found for this command or its parents
             )
-            for command_name in command_names
-        }
+            cached_results[command_name] = result
 
-        return result_dict
+            # Populate the same cache that get_command_permission uses
+            # This ensures both methods benefit from the same cache
+            cache_key = f"command_permission_fallback:{guild_id}:{command_name}"
+            self._command_permission_cache.set(cache_key, result)
+
+        return cached_results
 
     async def get_guild_permission_ranks(self, guild_id: int) -> list[PermissionRank]:
         """
@@ -684,6 +705,36 @@ class PermissionSystem:
         """
         return await self.db.command_permissions.get_all_command_permissions(guild_id)
 
+    def _get_all_command_names(self) -> set[str]:
+        """
+        Get all command names from the bot, including subcommands.
+
+        Returns
+        -------
+        set[str]
+            Set of all command names (e.g., {"ping", "config", "config ranks", "config ranks init"}).
+        """
+        command_names: set[str] = set()
+
+        def collect_commands(
+            cmd: commands.Command[Any, Any, Any],
+            prefix: str = "",
+        ) -> None:
+            """Recursively collect command names including subcommands."""
+            full_name = f"{prefix} {cmd.name}".strip() if prefix else cmd.name
+            command_names.add(full_name)
+
+            # If it's a group, collect subcommands
+            if isinstance(cmd, commands.Group):
+                for subcmd in cmd.commands:
+                    collect_commands(subcmd, full_name)
+
+        # Collect all commands from the bot
+        for command in self.bot.walk_commands():
+            collect_commands(command)
+
+        return command_names
+
     async def prewarm_cache_for_guild(self, guild_id: int) -> None:
         """
         Pre-warm permission caches for a guild to avoid cold-start delays.
@@ -698,13 +749,30 @@ class PermissionSystem:
         """
         logger.debug(f"Pre-warming permission cache for guild {guild_id}")
         try:
-            # Load ranks, assignments, and command permissions in parallel
+            # Load ranks and assignments first (these are needed for command permission lookups)
             await asyncio.gather(
                 self.db.permission_ranks.get_permission_ranks_by_guild(guild_id),
                 self.db.permission_assignments.get_assignments_by_guild(guild_id),
-                self.db.command_permissions.get_all_command_permissions(guild_id),
                 return_exceptions=True,
             )
+
+            # Get all command names and pre-warm command permission cache
+            # This populates the fallback cache used by get_command_permission()
+            all_command_names = self._get_all_command_names()
+            logger.trace(
+                f"Pre-warming command permission cache for {len(all_command_names)} commands",
+            )
+
+            # Pre-warm command permissions in batches to avoid overwhelming the database
+            # Use batch_get_command_permissions for efficiency
+            command_list = list(all_command_names)
+            batch_size = 50  # Process 50 commands at a time
+
+            for i in range(0, len(command_list), batch_size):
+                batch = command_list[i : i + batch_size]
+                # This will populate the cache for all commands in the batch
+                await self.batch_get_command_permissions(guild_id, batch)
+
             logger.trace(f"Pre-warmed permission cache for guild {guild_id}")
         except Exception as e:
             # Don't fail startup if pre-warming fails
