@@ -547,12 +547,18 @@ class ConfigDashboard(discord.ui.LayoutView):
         # Add the container to the view
         self.add_item(container)
 
-    async def build_ranks_mode(self) -> None:  # noqa: PLR0915
-        """Build the ranks management mode (create, delete, view ranks)."""
+    async def build_ranks_mode(self, force_rebuild: bool = False) -> None:  # noqa: PLR0915
+        """Build the ranks management mode (create, delete, view ranks).
+
+        Parameters
+        ----------
+        force_rebuild : bool, optional
+            If True, bypass cache and force a fresh rebuild. Defaults to False.
+        """
         try:
             # Check cache first (invalidate if pagination state changed)
             cache_key = self.get_cache_key("ranks")
-            if cached := self.get_cached_mode(cache_key):
+            if not force_rebuild and (cached := self.get_cached_mode(cache_key)):
                 self.clear_items()
                 self.add_item(cached)
                 return
@@ -2532,9 +2538,23 @@ class ConfigDashboard(discord.ui.LayoutView):
             )
 
             # Invalidate cache and rebuild to show the new ranks
-            self.invalidate_cache()
+            # Clear all caches including ranks data to force fresh fetch
+            self.invalidate_cache()  # Clear all caches
+            self.invalidate_cache(
+                "ranks",
+            )  # Also clear ranks-specific cache and pagination variants
+            self._ranks_data = None  # Explicitly clear ranks data cache
+            # Reset pagination state to ensure fresh fetch
+            if hasattr(self, "ranks_current_page"):
+                self.ranks_current_page = 0
             self.current_mode = "ranks"
-            await self.build_ranks_mode()
+            # Force rebuild by clearing items first and bypassing cache check
+            self.clear_items()
+            # Manually clear the cache key to ensure fresh build
+            cache_key = self.get_cache_key("ranks")
+            self._built_modes.pop(cache_key, None)
+            # Force rebuild by passing force_rebuild=True to bypass cache
+            await self.build_ranks_mode(force_rebuild=True)
             if interaction.message:
                 await interaction.followup.edit_message(
                     message_id=interaction.message.id,
@@ -2627,9 +2647,14 @@ class ConfigDashboard(discord.ui.LayoutView):
         """
         # Invalidate ranks containers and clear data caches that include
         # rank_map / ranks so the next build refetches.
+        # Also clear _roles_data and _commands_data since they display rank names
         self._ranks_data = None
-        self._commands_data = None
+        self._commands_data = None  # Commands view uses rank_map with rank names
+        self._roles_data = None  # Role assignment view uses rank names
+        # Invalidate all view caches that display rank information
         self.invalidate_cache("ranks")
+        self.invalidate_cache("roles")  # Role assignment view
+        self.invalidate_cache("commands")  # Commands view displays rank names
 
     async def refresh_rank_display(self, rank_value: int) -> None:
         """
