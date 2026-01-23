@@ -156,6 +156,8 @@ def reload_module_by_name(module_name: str) -> bool:
 class FileHashTracker:
     """Tracks file hashes to detect changes."""
 
+    __slots__ = ("_hashes",)
+
     def __init__(self) -> None:
         """Initialize the file hash tracker."""
         self._hashes: dict[Path, str] = {}

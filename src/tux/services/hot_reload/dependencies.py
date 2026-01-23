@@ -23,6 +23,8 @@ class DependencyTracker(ABC):
 class ClassDefinitionTracker:
     """Tracks class definitions and their changes."""
 
+    __slots__ = ("_class_signatures",)
+
     def __init__(self) -> None:
         """Initialize the class definition tracker."""
         self._class_signatures: dict[str, dict[str, str]] = {}
