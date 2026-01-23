@@ -153,10 +153,10 @@ class Slowmode(BaseCog):
                 )
 
         # Fallback to converter if fast path didn't work
-        with suppress(commands.CommandError):
+        try:
             return await commands.GuildChannelConverter().convert(ctx, value)
-
-        return None
+        except commands.CommandError:
+            return None
 
     @staticmethod
     def _channel_supports_slowmode(channel: SlowmodeChannel) -> bool:
