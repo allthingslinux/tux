@@ -105,12 +105,12 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         if not self.should_process_file(file_path):
             # Don't log filtered pyc files (they're expected to be ignored)
             if file_path.suffix != ".pyc":
-                logger.debug(f"Filtered out: {short_path}")
+                logger.trace(f"Filtered out: {short_path}")
             return
 
         # Check if file actually changed (avoid duplicate events)
         if not self.hash_tracker.has_changed(file_path):
-            logger.debug(f"Unchanged: {short_path}")
+            logger.trace(f"Unchanged: {short_path}")
             return
 
         # Validate syntax if enabled
@@ -159,10 +159,24 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
 
         file_path = Path(str(event.src_path))
         short_path = _shorten_path(file_path, self.cwd)
+
+        # Check if file still exists (common with atomic saves - file is deleted then recreated)
+        # This happens when editors save files atomically (write to temp, then move over original)
+        file_still_exists = file_path.exists()
+
         self.hash_tracker.remove_file(file_path)
 
         if extension := get_extension_from_path(file_path, self.base_dir):
-            logger.debug(f"Deleted: {short_path} -> {extension}")
+            if file_still_exists:
+                # File was "deleted" but still exists - this is an atomic save, not a real deletion
+                logger.trace(
+                    f"File deletion event detected (atomic save): {short_path} -> {extension}",
+                )
+            else:
+                # File was actually deleted
+                logger.debug(
+                    f"File deleted: {short_path} -> {extension} (will reload if recreated)",
+                )
 
 
 class FileWatcher:

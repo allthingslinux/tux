@@ -131,7 +131,7 @@ class HotReload(commands.Cog):
             # Schedule the debounced reload
             task = loop.create_task(debounced_reload())
             self._pending_reloads[extension] = task
-            logger.debug(f"📁 Reload scheduled: {extension}")
+            logger.debug(f"📁 Hot reload scheduled: {extension}")
 
         except RuntimeError:
             # No event loop running, skip reload during shutdown
