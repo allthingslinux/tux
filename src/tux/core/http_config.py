@@ -25,10 +25,13 @@ but expect failures for read-only properties. Failures are logged as debug messa
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import aiohttp
 from loguru import logger
 
-from tux.core.bot import Tux
+if TYPE_CHECKING:
+    from tux.core.bot import Tux
 
 
 def _try_set_connector_attr(
