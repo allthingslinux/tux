@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, get_type_hints
 
 import discord
@@ -167,6 +168,12 @@ class HelpRenderer:
             )
 
         await self._add_bot_help_fields(embed)
+
+        # Set help banner image
+        banner_path = Path("assets/branding/help_banner.png")
+        if banner_path.exists():
+            embed.set_image(url="attachment://help_banner.png")
+
         return embed
 
     async def _add_bot_help_fields(self, embed: discord.Embed) -> None:
@@ -232,6 +239,9 @@ class HelpRenderer:
 
         embed.set_footer(text="Select a command from the dropdown to see details.")
 
+        # Ensure no image is set on category embeds
+        embed.set_image(url=None)
+
         sorted_commands = sorted(commands_dict.items())
         description = "\n".join(
             f"**`{self.prefix}{cmd}`** | {command_list}"
@@ -272,6 +282,9 @@ class HelpRenderer:
             title=f"{self.prefix}{command.qualified_name}",
             description=help_text,
         )
+
+        # Ensure no image is set on command embeds
+        embed.set_image(url=None)
 
         await self.add_command_help_fields(embed, command)
 
@@ -347,6 +360,9 @@ class HelpRenderer:
             title=f"{self.prefix}{subcommand.qualified_name}",
             description=help_text,
         )
+
+        # Ensure no image is set on subcommand embeds
+        embed.set_image(url=None)
 
         await self.add_command_help_fields(embed, subcommand)
 

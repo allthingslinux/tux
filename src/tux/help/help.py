@@ -7,8 +7,10 @@ This replaces the massive 1,328-line help.py with a clean, focused implementatio
 from __future__ import annotations
 
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
+import discord
 from discord.ext import commands
 from loguru import logger
 
@@ -63,7 +65,13 @@ class TuxHelp(commands.HelpCommand):
         embed = await renderer.create_main_embed(categories)
         view = await navigation.create_main_view()
 
-        await self.context.send(embed=embed, view=view)
+        # Attach help banner image if it exists
+        banner_path = Path("assets/branding/help_banner.png")
+        files: list[discord.File] = []
+        if banner_path.exists():
+            files.append(discord.File(banner_path, filename="help_banner.png"))
+
+        await self.context.send(embed=embed, view=view, files=files)
 
     async def send_cog_help(self, cog: commands.Cog) -> None:
         """Send help for a specific cog."""

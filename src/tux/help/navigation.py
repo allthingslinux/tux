@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum, auto
+from pathlib import Path
 from typing import Any
 
 import discord
@@ -138,10 +139,12 @@ class HelpNavigation:
         """
         if not self.current_command_obj:
             # Create a basic embed if no command object
-            return self.renderer.create_base_embed(
+            embed = self.renderer.create_base_embed(
                 "Help",
                 "No command information available.",
             )
+            embed.set_image(url=None)
+            return embed
 
         if not isinstance(self.current_command_obj, commands.Group):
             # Fallback to regular embed if not a group
@@ -163,6 +166,9 @@ class HelpNavigation:
             title=f"{self.renderer.prefix}{self.current_command_obj.qualified_name}",
             description=help_text,
         )
+
+        # Ensure no image is set on paginated embeds
+        embed.set_image(url=None)
 
         await self.renderer.add_command_help_fields(embed, self.current_command_obj)
 
@@ -385,8 +391,11 @@ class HelpNavigation:
         embed = await self.renderer.create_category_embed(category, commands_dict)
         view = await self.create_category_view(category)
 
+        # Explicitly remove image before editing to prevent Discord from preserving it
+        embed.set_image(url=None)
+
         if interaction.message:
-            await interaction.message.edit(embed=embed, view=view)
+            await interaction.message.edit(embed=embed, view=view, attachments=[])
 
     async def handle_command_select(
         self,
@@ -416,6 +425,9 @@ class HelpNavigation:
             embed = await self.renderer.create_command_embed(command)
         view = await self.create_command_view()
 
+        # Explicitly remove image before editing to prevent Discord from preserving it
+        embed.set_image(url=None)
+
         # Special handling for nested command groups (groups within groups)
         if (
             self.current_command_obj
@@ -430,7 +442,7 @@ class HelpNavigation:
                     )
 
         if interaction.message:
-            await interaction.message.edit(embed=embed, view=view)
+            await interaction.message.edit(embed=embed, view=view, attachments=[])
         else:
             logger.warning("Command selection: No message to update")
 
@@ -447,8 +459,9 @@ class HelpNavigation:
                 description="For a complete list of Jishaku commands, please use:\n`jsk help`",
                 color=0x5865F2,
             )
+            embed.set_image(url=None)
             if interaction.message:
-                await interaction.message.edit(embed=embed)
+                await interaction.message.edit(embed=embed, attachments=[])
             return
 
         # Find the selected subcommand object
@@ -485,8 +498,11 @@ class HelpNavigation:
             embed = await self.renderer.create_command_embed(selected_command)
             view = await self.create_command_view()
 
+            # Explicitly remove image before editing
+            embed.set_image(url=None)
+
             if interaction.message:
-                await interaction.message.edit(embed=embed, view=view)
+                await interaction.message.edit(embed=embed, view=view, attachments=[])
 
             # Use command state so back button logic will work correctly
             self.current_state = HelpState.COMMAND
@@ -500,8 +516,11 @@ class HelpNavigation:
         )
         view = await self.create_subcommand_view()
 
+        # Explicitly remove image before editing
+        embed.set_image(url=None)
+
         if interaction.message:
-            await interaction.message.edit(embed=embed, view=view)
+            await interaction.message.edit(embed=embed, view=view, attachments=[])
         else:
             logger.warning("Subcommand selection: No message to update")
 
@@ -525,7 +544,8 @@ class HelpNavigation:
             self.current_command_obj = command
             embed = await self.renderer.create_command_embed(command)
             view = await self.create_command_view()
-            await interaction.message.edit(embed=embed, view=view)
+            embed.set_image(url=None)
+            await interaction.message.edit(embed=embed, view=view, attachments=[])
             return
 
         if (
@@ -541,7 +561,8 @@ class HelpNavigation:
             self.current_command_obj = parent_obj
             embed = await self.renderer.create_command_embed(parent_obj)
             view = await self.create_command_view()
-            await interaction.message.edit(embed=embed, view=view)
+            embed.set_image(url=None)
+            await interaction.message.edit(embed=embed, view=view, attachments=[])
             return
 
         if self.current_state == HelpState.SUBCOMMAND:
@@ -559,14 +580,21 @@ class HelpNavigation:
                 commands_dict,
             )
             view = await self.create_category_view(self.current_category)
+            embed.set_image(url=None)
+            await interaction.message.edit(embed=embed, view=view, attachments=[])
         else:
             self.current_state = HelpState.MAIN
             self.current_category = None
             categories = await self.data.get_command_categories()
             embed = await self.renderer.create_main_embed(categories)
             view = await self.create_main_view()
-
-        await interaction.message.edit(embed=embed, view=view)
+            # Don't remove image on main page - it should be there
+            # But we need to re-attach the file when going back to main
+            banner_path = Path("assets/branding/help_banner.png")
+            files: list[discord.File] = []
+            if banner_path.exists():
+                files.append(discord.File(banner_path, filename="help_banner.png"))
+            await interaction.message.edit(embed=embed, view=view, attachments=files)
 
     async def handle_next_button(self, interaction: discord.Interaction) -> None:
         """Handle next page navigation."""
@@ -613,6 +641,7 @@ class HelpNavigation:
             if interaction.message:
                 embed = await self._create_paginated_embed()
                 view = await self.create_command_view()
-                await interaction.message.edit(embed=embed, view=view)
+                embed.set_image(url=None)
+                await interaction.message.edit(embed=embed, view=view, attachments=[])
             else:
                 logger.warning("Pagination: No message to update")
