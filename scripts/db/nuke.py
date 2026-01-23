@@ -75,6 +75,35 @@ async def _nuclear_reset(fresh: bool) -> None:
     )
     is_prod_db = any(kw.strip() in db_url.lower() for kw in prod_keywords if kw.strip())
 
+    # Safety check: prevent running against development database in test mode
+    # unless explicitly allowed via TEST_DATABASE_URL or ALLOW_TEST_NUKE
+    is_test = (
+        os.getenv("PYTEST_CURRENT_TEST") is not None
+        or os.getenv("PYTEST") is not None
+        or "pytest" in sys.modules
+    )
+    if is_test:
+        # In test mode, require TEST_DATABASE_URL to be set and match
+        test_db_url = os.getenv("TEST_DATABASE_URL")
+        if test_db_url and db_url != test_db_url:
+            if os.getenv("ALLOW_TEST_NUKE") != "true":
+                print_error(
+                    "CRITICAL: Tests are trying to nuke a database that doesn't match TEST_DATABASE_URL!",
+                )
+                rich_print(
+                    f"[yellow]Current database URL: {db_url}[/yellow]",
+                )
+                rich_print(
+                    f"[yellow]Expected test database URL: {test_db_url}[/yellow]",
+                )
+                rich_print(
+                    "[yellow]If you are absolutely sure, set ALLOW_TEST_NUKE=true environment variable.[/yellow]",
+                )
+                raise Exit(1)
+            print_warning(
+                "ALLOW_TEST_NUKE detected. Proceeding with nuclear reset in test mode...",
+            )
+
     if is_prod or is_prod_db:
         if os.getenv("FORCE_NUKE") != "true":
             print_error(
