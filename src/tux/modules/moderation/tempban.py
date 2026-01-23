@@ -55,7 +55,8 @@ class TempBan(ModerationCogBase):
         assert ctx.guild
 
         # Defer early to acknowledge interaction before async work
-        await ctx.defer(ephemeral=True)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         # Execute tempban with case creation and DM
         await self.moderate_user(
