@@ -385,7 +385,8 @@ class CogLoader(commands.Cog):
                 by_cat[cat] = by_cat.get(cat, 0) + 1
             for cat in sorted(by_cat):
                 n = by_cat[cat]
-                logger.info(f"{n} plugin{'s' if n != 1 else ''} from {cat}")
+                noun = "plugin" if cat == "plugins" else "cog"
+                logger.info(f"{n} {noun}{'s' if n != 1 else ''} from {cat}")
 
         for result, cog in zip(results, cogs, strict=False):
             if isinstance(result, Exception):
@@ -562,7 +563,7 @@ class CogLoader(commands.Cog):
                 k for k in self.load_times if folder_module_prefix in k
             ]
             n = len(folder_extensions)
-            noun = "plugin" if folder_name == "plugins" else "extension"
+            noun = "plugin" if folder_name == "plugins" else "cog"
             logger.info(
                 f"{n} {noun}{'s' if n != 1 else ''} from {folder_name} in {load_time * 1000:.0f}ms",
             )
