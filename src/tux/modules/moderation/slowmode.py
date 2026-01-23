@@ -197,14 +197,60 @@ class Slowmode(BaseCog):
             Whether the message should be ephemeral (slash commands only), by default True.
         """
         if ctx.interaction:
-            await ctx.interaction.followup.send(content, ephemeral=ephemeral)
+            if ctx.interaction.response.is_done():
+                await ctx.interaction.followup.send(content, ephemeral=ephemeral)
+            else:
+                await ctx.interaction.response.send_message(
+                    content,
+                    ephemeral=ephemeral,
+                )
         else:
             await ctx.send(content)
+
+    @staticmethod
+    def _format_duration(delay: int) -> str:
+        """
+        Format delay into a human-readable duration string.
+
+        Parameters
+        ----------
+        delay : int
+            The delay in seconds.
+
+        Returns
+        -------
+        str
+            Human-readable duration string.
+        """
+        if delay == 0:
+            return "disabled"
+        if delay == 1:
+            return "1 second"
+        if delay < 60:
+            return f"{delay} seconds"
+        if delay == 60:
+            return "1 minute"
+
+        minutes, seconds = divmod(delay, 60)
+        if seconds == 0:
+            minute_suffix = "s" if minutes > 1 else ""
+            return f"{minutes} minute{minute_suffix}"
+        minute_suffix = "s" if minutes > 1 else ""
+        second_suffix = "s" if seconds > 1 else ""
+
+        return f"{minutes} minute{minute_suffix} and {seconds} second{second_suffix}"
 
     @staticmethod
     def _format_slowmode_message(delay: int, channel_mention: str) -> str:
         """
         Format slowmode delay into a readable message.
+
+        Parameters
+        ----------
+        delay : int
+            The delay in seconds.
+        channel_mention : str
+            The channel mention string.
 
         Returns
         -------
@@ -213,20 +259,8 @@ class Slowmode(BaseCog):
         """
         if delay == 0:
             return f"Slowmode is disabled in {channel_mention}."
-        if delay == 1:
-            return f"The slowmode in {channel_mention} is 1 second."
-        if delay < 60:
-            return f"The slowmode in {channel_mention} is {delay} seconds."
-        if delay == 60:
-            return f"The slowmode in {channel_mention} is 1 minute."
-
-        minutes, seconds = divmod(delay, 60)
-        if seconds == 0:
-            return f"The slowmode in {channel_mention} is {minutes} minutes."
-        minute_suffix = "s" if minutes > 1 else ""
-        second_suffix = "s" if seconds > 1 else ""
-
-        return f"The slowmode in {channel_mention} is {minutes} minute{minute_suffix} and {seconds} second{second_suffix}."
+        duration = Slowmode._format_duration(delay)
+        return f"The slowmode in {channel_mention} is {duration}."
 
     @staticmethod
     async def _get_slowmode(
@@ -307,8 +341,8 @@ class Slowmode(BaseCog):
             if delay_seconds == 0:
                 message = f"Slowmode has been disabled in {channel.mention}."
             else:
-                prefix = "Slowmode set to"
-                message = f"{prefix} {self._format_slowmode_message(delay_seconds, channel.mention).split('is')[1].strip()}"
+                duration = self._format_duration(delay_seconds)
+                message = f"Slowmode has been set to {duration} in {channel.mention}."
             await Slowmode._send_response(ctx, message)
             logger.info(f"{ctx.author} set slowmode to {delay_seconds}s in {channel}")
 

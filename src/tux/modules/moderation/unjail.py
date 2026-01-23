@@ -33,29 +33,6 @@ class Unjail(ModerationCogBase):
         """
         super().__init__(bot)
 
-    async def _respond(
-        self,
-        ctx: commands.Context[Tux],
-        message: str,
-        *,
-        ephemeral: bool = True,
-    ) -> None:
-        """Send a response message, handling both slash and prefix commands.
-
-        Parameters
-        ----------
-        ctx : commands.Context[Tux]
-            The command context.
-        message : str
-            The message content to send.
-        ephemeral : bool, optional
-            Whether the message should be ephemeral (slash commands only), by default True.
-        """
-        if ctx.interaction:
-            await ctx.interaction.followup.send(message, ephemeral=ephemeral)
-        else:
-            await ctx.reply(message, mention_author=False)
-
     async def get_jail_role(self, guild: discord.Guild) -> discord.Role | None:
         """
         Get the jail role for the guild.

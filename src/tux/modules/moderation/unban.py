@@ -49,7 +49,7 @@ class Unban(ModerationCogBase):
 
         Returns
         -------
-        Optional[discord.User]
+        discord.User | None
             The user if found, None otherwise.
         """
         assert ctx.guild
@@ -141,14 +141,13 @@ class Unban(ModerationCogBase):
             # If that fails, try more flexible ban list matching
             user = await self.resolve_user_from_ban_list(ctx, username_or_id)
             if not user:
-                msg = (
+                await self.send_after_defer(
+                    ctx,
                     f"Could not find '{username_or_id}' in the ban list. "
-                    "Try using the exact username or ID."
+                    "Try using the exact username or ID.",
+                    ephemeral=True,
+                    mention_author=False,
                 )
-                if ctx.interaction:
-                    await ctx.interaction.followup.send(msg, ephemeral=True)
-                else:
-                    await ctx.reply(msg, mention_author=False)
                 return
 
         # Check if the user is banned
@@ -156,11 +155,12 @@ class Unban(ModerationCogBase):
             await ctx.guild.fetch_ban(user)
 
         except discord.NotFound:
-            msg = f"{user} is not banned."
-            if ctx.interaction:
-                await ctx.interaction.followup.send(msg, ephemeral=True)
-            else:
-                await ctx.reply(msg, mention_author=False)
+            await self.send_after_defer(
+                ctx,
+                f"{user} is not banned.",
+                ephemeral=True,
+                mention_author=False,
+            )
             return
 
         final_reason = reason or DEFAULT_REASON

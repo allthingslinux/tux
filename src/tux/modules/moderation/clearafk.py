@@ -81,9 +81,7 @@ class ClearAFK(BaseCog):
             if entry.nickname:
                 with contextlib.suppress(discord.Forbidden):
                     await member.edit(nick=entry.nickname)  # Reset nickname to original
-            if (
-                entry.enforced
-            ):  # untimeout the user if  the afk status is a self-timeout
+            if entry.enforced:  # untimeout the user if the afk status is a self-timeout
                 await member.timeout(None, reason="removing self-timeout")
 
         if ctx.interaction:

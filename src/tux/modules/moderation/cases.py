@@ -5,6 +5,8 @@ moderation, including viewing, modifying, and managing moderation cases with
 interactive menus and detailed information display.
 """
 
+import contextlib
+from types import SimpleNamespace
 from typing import Any, Protocol
 
 import discord
@@ -140,21 +142,52 @@ class Cases(ModerationCogBase):
     async def cases(
         self,
         ctx: commands.Context[Tux],
-        case_number: int | None = None,
+        argument: str | None = None,
     ) -> None:
         """
         View all moderation cases in the server.
 
         Use subcommands to view specific cases or filter by criteria.
+
+        Shortcut: `$cases <user>` automatically runs `$cases search -u <user>`.
         """
         # Defer early to acknowledge interaction before async work
         if ctx.interaction:
             await ctx.defer(ephemeral=True)
 
-        if case_number is not None:
-            await self._view_single_case(ctx, case_number)
-        else:
+        if argument is None:
             await self._view_all_cases(ctx)
+            return
+
+        # Try to parse as case number first
+        with contextlib.suppress(ValueError):
+            case_number = int(argument)
+            await self._view_single_case(ctx, case_number)
+            return
+
+        # Try to convert to user/member - if successful, route to search
+        try:
+            user = await commands.MemberConverter().convert(ctx, argument)
+        except commands.MemberNotFound:
+            # Try UserConverter as fallback (for users not in guild)
+            try:
+                user = await commands.UserConverter().convert(ctx, argument)
+            except commands.UserNotFound:
+                # If neither case number nor user, show error
+                await self._respond(
+                    ctx,
+                    f"Could not find case number or user '{argument}'. Use a case number (e.g., `123`) or mention a user (e.g., `@user`).",
+                )
+                return
+            else:
+                # Route to search with user - create a simple namespace that mimics CasesViewFlags
+                flags = SimpleNamespace(user=user, type=None, moderator=None)
+                await self._view_cases_with_flags(ctx, flags)
+                return
+        else:
+            # Route to search with user - create a simple namespace that mimics CasesViewFlags
+            flags = SimpleNamespace(user=user, type=None, moderator=None)
+            await self._view_cases_with_flags(ctx, flags)
 
     @cases.command(
         name="view",
@@ -341,7 +374,7 @@ class Cases(ModerationCogBase):
     async def _view_cases_with_flags(
         self,
         ctx: commands.Context[Tux],
-        flags: CasesViewFlags,
+        flags: CasesViewFlags | Any,
     ) -> None:
         """
         View cases with the provided flags.
@@ -350,18 +383,19 @@ class Cases(ModerationCogBase):
         ----------
         ctx : commands.Context[Tux]
             The context in which the command is being invoked.
-        flags : CasesViewFlags
+        flags : CasesViewFlags | Any
             The flags for the command. (type, user, moderator)
+            Can be CasesViewFlags or any object with type, user, and moderator attributes.
         """
         assert ctx.guild
 
         options: dict[str, Any] = {}
 
-        if flags.type:
+        if hasattr(flags, "type") and flags.type:
             options["case_type"] = flags.type
-        if flags.user:
+        if hasattr(flags, "user") and flags.user:
             options["user_id"] = flags.user.id
-        if flags.moderator:
+        if hasattr(flags, "moderator") and flags.moderator:
             options["moderator_id"] = flags.moderator.id
 
         cases = await self.db.case.get_cases_by_options(ctx.guild.id, options)
@@ -678,8 +712,10 @@ class Cases(ModerationCogBase):
             reverse=True,
         )
 
+        # Pass interaction directly to ViewMenu if available (after defer)
+        # ViewMenu handles interactions differently than contexts
         menu = ViewMenu(
-            ctx,
+            ctx.interaction or ctx,
             menu_type=ViewMenu.TypeEmbed,
             all_can_click=True,
         )
