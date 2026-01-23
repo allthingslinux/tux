@@ -14,6 +14,7 @@ from typing import Any, Union, get_args, get_origin
 from discord.ext import commands
 
 __all__ = [
+    "clean_reason",
     "convert_to_seconds",
     "docstring_parameter",
     "generate_usage",
@@ -24,6 +25,55 @@ __all__ = [
     "strip_formatting",
     "truncate",
 ]
+
+
+def clean_reason(reason: str) -> str:
+    """Clean a moderation reason by removing common flag-like prefixes.
+
+    Users sometimes accidentally include flag-like prefixes in their reason text
+    (e.g., "?r spam", "-reason breaking rules", "--reason harassment", "!reason spam").
+    This function strips these prefixes to ensure clean reason text.
+
+    Parameters
+    ----------
+    reason : str
+        The reason string to clean.
+
+    Returns
+    -------
+    str
+        The cleaned reason string with flag-like prefixes removed.
+
+    Examples
+    --------
+    >>> clean_reason("?r spam")
+    "spam"
+    >>> clean_reason("-reason breaking rules")
+    "breaking rules"
+    >>> clean_reason("--reason harassment")
+    "harassment"
+    >>> clean_reason("--r spam")
+    "spam"
+    >>> clean_reason("!reason harassment")
+    "harassment"
+    >>> clean_reason("normal reason text")
+    "normal reason text"
+    """
+    # Patterns to match common flag-like prefixes at the start of the string
+    # Matches: ?r, -r, --r, ?reason, -reason, --reason, !reason, etc.
+    # Case-insensitive matching
+    patterns = [
+        r"^[?\-!]r\s+",  # ?r, -r, !r followed by whitespace
+        r"^--r\s+",  # --r followed by whitespace
+        r"^[?\-!]reason\s+",  # ?reason, -reason, !reason followed by whitespace
+        r"^--reason\s+",  # --reason followed by whitespace
+    ]
+
+    cleaned = reason
+    for pattern in patterns:
+        cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE)
+
+    return cleaned.strip()
 
 
 def truncate(text: str, length: int) -> str:

@@ -15,6 +15,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.database.models import CaseType
+from tux.shared.functions import clean_reason
 
 if TYPE_CHECKING:
     from tux.core.bot import Tux
@@ -28,6 +29,7 @@ __all__ = [
     "get_user_safe",
     "get_channel_safe",
     "convert_bool",
+    "convert_reason",
 ]
 
 time_regex = re.compile(r"(\d{1,5}(?:[.,]?\d{1,5})?)([smhd])")
@@ -264,3 +266,26 @@ def convert_bool(x: str | None) -> bool | None:
 
     msg = f"{x} must be a boolean value (e.g. true/false, yes/no)"
     raise commands.BadArgument(msg)
+
+
+def convert_reason(x: str | None) -> str | None:
+    """Clean a moderation reason by removing common flag-like prefixes.
+
+    Users sometimes accidentally include flag-like prefixes in their reason text
+    (e.g., "?r spam", "-reason breaking rules", "!reason harassment"). This function
+    strips these prefixes to ensure clean reason text.
+
+    Parameters
+    ----------
+    x : str | None
+        The reason string to clean.
+
+    Returns
+    -------
+    str | None
+        The cleaned reason string with flag-like prefixes removed, or None if x is None.
+    """
+    if x is None:
+        return None
+
+    return clean_reason(x)
