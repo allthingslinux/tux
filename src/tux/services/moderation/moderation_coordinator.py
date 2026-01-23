@@ -256,26 +256,53 @@ class ModerationCoordinator:
                 self._send_mod_log_embed(ctx, case, user, dm_sent),
             )
 
-            # Wait for both to complete
-            _, mod_log_message = await asyncio.gather(
+            # Wait for both to complete, capturing exceptions
+            response_result, mod_log_result = await asyncio.gather(
                 response_task,
                 mod_log_task,
+                return_exceptions=True,
             )
 
-            # Update case with mod log message ID
-            if mod_log_message and case.id is not None:
-                try:
-                    await self._case_service.update_mod_log_message_id(
-                        case.id,
-                        mod_log_message.id,
-                    )
-                    logger.info(
-                        f"Updated case #{case.case_number} with mod log message ID {mod_log_message.id}",
-                    )
-                except Exception as e:
-                    logger.error(
-                        f"Failed to update mod log message ID for case #{case.case_number}: {e}",
-                    )
+            # Log any exceptions from response embed
+            if isinstance(response_result, Exception):
+                logger.error(
+                    f"Failed to send response embed for {case_type.value}: {response_result}",
+                    exc_info=response_result,
+                )
+
+            # Log any exceptions from mod log embed
+            if isinstance(mod_log_result, Exception):
+                logger.error(
+                    f"Failed to send mod log embed for case #{case.case_number}: {mod_log_result}",
+                    exc_info=mod_log_result,
+                )
+                mod_log_message = None
+            else:
+                mod_log_message = mod_log_result
+
+            # Update case with mod log message ID only if mod log send succeeded
+            if (
+                mod_log_message is not None
+                and not isinstance(mod_log_message, Exception)
+                and case.id is not None
+            ):
+                # Type narrowing: mod_log_message is discord.Message | None at this point
+                # After checking not None and not Exception, it must be discord.Message
+                # Use getattr for safety with mocks in tests
+                message_id: int | None = getattr(mod_log_message, "id", None)
+                if message_id is not None:
+                    try:
+                        await self._case_service.update_mod_log_message_id(
+                            case.id,
+                            message_id,
+                        )
+                        logger.info(
+                            f"Updated case #{case.case_number} with mod log message ID {message_id}",
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"Failed to update mod log message ID for case #{case.case_number}: {e}",
+                        )
         else:
             # Wait for response embed only
             try:
