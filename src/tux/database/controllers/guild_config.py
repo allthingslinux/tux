@@ -9,8 +9,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from loguru import logger
+
 from tux.database.controllers.base import BaseController
 from tux.database.models import GuildConfig
+from tux.shared.cache import GuildConfigCacheManager
 
 if TYPE_CHECKING:
     from tux.database.service import DatabaseService
@@ -59,12 +62,33 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         Update guild configuration.
 
+        Automatically invalidates the guild config cache if log channel IDs are updated.
+
         Returns
         -------
         GuildConfig | None
             The updated configuration, or None if not found.
         """
-        return await self.update_by_id(guild_id, **updates)
+        result = await self.update_by_id(guild_id, **updates)
+
+        # Invalidate cache if log channel IDs were updated
+        if result and any(
+            field in updates
+            for field in (
+                "audit_log_id",
+                "mod_log_id",
+                "join_log_id",
+                "private_log_id",
+                "report_log_id",
+                "dev_log_id",
+            )
+        ):
+            GuildConfigCacheManager().invalidate(guild_id)
+            logger.debug(
+                f"Invalidated guild config cache for guild {guild_id} after config update",
+            )
+
+        return result
 
     async def delete_config(self, guild_id: int) -> bool:
         """
@@ -522,6 +546,29 @@ class GuildConfigController(BaseController[GuildConfig]):
             The mod log channel ID, or None if not configured.
         """
         return await self.get_config_field(guild_id, "mod_log_id")
+
+    async def get_log_channel_ids(
+        self,
+        guild_id: int,
+    ) -> tuple[int | None, int | None]:
+        """
+        Get both audit log and mod log channel IDs in a single query.
+
+        This method is more efficient than calling get_audit_log_id and
+        get_mod_log_id separately, as it fetches the entire config once.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+
+        Returns
+        -------
+        tuple[int | None, int | None]
+            Tuple of (audit_log_id, mod_log_id).
+        """
+        config = await self.get_config_by_guild_id(guild_id)
+        return (config.audit_log_id, config.mod_log_id) if config else (None, None)
 
     async def get_private_log_id(self, guild_id: int) -> int | None:
         """
