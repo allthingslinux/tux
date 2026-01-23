@@ -52,17 +52,25 @@ def _substitute_placeholders(bot: Tux, text: str) -> str:
         return text
 
     with contextlib.suppress(Exception):
+        # Build placeholder map only for placeholders present in text
+        placeholders: dict[str, str] = {}
+
         if "{member_count}" in text:
-            member_count = sum(guild.member_count or 0 for guild in bot.guilds)
-            text = text.replace("{member_count}", str(member_count))
+            placeholders["member_count"] = str(
+                sum(guild.member_count or 0 for guild in bot.guilds),
+            )
         if "{guild_count}" in text:
-            text = text.replace("{guild_count}", str(len(bot.guilds)))
+            placeholders["guild_count"] = str(len(bot.guilds) if bot.guilds else 0)
         if "{bot_name}" in text:
-            text = text.replace("{bot_name}", CONFIG.BOT_INFO.BOT_NAME)
+            placeholders["bot_name"] = CONFIG.BOT_INFO.BOT_NAME
         if "{bot_version}" in text:
-            text = text.replace("{bot_version}", get_version())
+            placeholders["bot_version"] = get_version()
         if "{prefix}" in text:
-            text = text.replace("{prefix}", CONFIG.get_prefix())
+            placeholders["prefix"] = CONFIG.get_prefix()
+
+        # Single-pass substitution using format_map
+        if placeholders:
+            text = text.format_map(placeholders)
     return text
 
 
