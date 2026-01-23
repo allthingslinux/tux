@@ -159,12 +159,27 @@ class TestDatabaseCLICommands:
         command_parts = command.split()
         full_command = ["uv", "run", "db", *command_parts]
 
+        # Set TEST_DATABASE_URL to allow destructive operations in test mode
+        # This ensures tests can only affect the test database
+        params = _get_db_connection_params()
+        test_db_url = (
+            f"postgresql+psycopg://{params['user']}:{params['password']}"
+            f"@{params['host']}:{params['port']}/{params['dbname']}"
+        )
+        env = os.environ.copy()
+        env["TEST_DATABASE_URL"] = test_db_url
+        # Allow test resets/nukes when TEST_DATABASE_URL matches
+        if "reset" in command or "nuke" in command:
+            env["ALLOW_TEST_RESET"] = "true"
+            env["ALLOW_TEST_NUKE"] = "true"
+
         process = subprocess.run(
             full_command,
             check=False,
             capture_output=True,
             text=True,
             cwd=working_dir,
+            env=env,
         )
 
         return process.returncode, process.stdout, process.stderr
