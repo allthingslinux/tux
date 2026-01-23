@@ -97,7 +97,7 @@ class Unban(ModerationCogBase):
             reason=final_reason,
             silent=True,  # No DM for unbans due to user not being in the guild
             dm_action="",  # No DM for unbans
-            actions=[(lambda: guild.unban(user, reason=final_reason), type(None))],
+            actions=[(lambda: guild.unban(user, reason=final_reason),)],
         )
 
     @commands.hybrid_command(
