@@ -695,6 +695,17 @@ class Case(BaseModel, table=True):
         Index("idx_case_expires_at", "case_expires_at"),
         Index("idx_case_number", "case_number"),
         Index("idx_case_processed", "case_processed"),
+        # Composite index for case lookup by guild and case number (common query pattern)
+        Index("idx_case_guild_number", "guild_id", "case_number"),
+        # Composite index for expired tempban queries (guild_id, case_type, case_status, case_expires_at)
+        Index(
+            "idx_case_expired_tempbans",
+            "guild_id",
+            "case_type",
+            "case_status",
+            "case_expires_at",
+            postgresql_where="case_type = 'TEMPBAN' AND case_status = TRUE AND case_processed = FALSE AND case_expires_at IS NOT NULL",
+        ),
         # Partial index for unprocessed temporary cases needing attention
         Index(
             "idx_case_unprocessed_expiring",
