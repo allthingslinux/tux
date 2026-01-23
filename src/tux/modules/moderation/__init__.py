@@ -173,3 +173,26 @@ class ModerationCogBase(BaseCog):
             user_id=user_id,
         )
         return bool(latest_case and latest_case.case_type == DBCaseType.SNIPPETBAN)
+
+    async def _respond(
+        self,
+        ctx: commands.Context[Tux],
+        message: str,
+        *,
+        ephemeral: bool = True,
+    ) -> None:
+        """Send a response message, handling both slash and prefix commands.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The command context.
+        message : str
+            The message content to send.
+        ephemeral : bool, optional
+            Whether the message should be ephemeral (slash commands only), by default True.
+        """
+        if ctx.interaction:
+            await ctx.interaction.followup.send(message, ephemeral=ephemeral)
+        else:
+            await ctx.reply(message, mention_author=False)
