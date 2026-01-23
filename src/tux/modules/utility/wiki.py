@@ -5,7 +5,10 @@ This module provides commands to search and retrieve information from
 Arch Linux Wiki and ATL Wiki, with formatted Discord embeds for results.
 """
 
+import re
+
 import discord
+import httpx
 from discord.ext import commands
 from loguru import logger
 
@@ -73,7 +76,7 @@ class Wiki(BaseCog):
 
     async def query_wiki(self, base_url: str, search_term: str) -> tuple[str, str]:
         """
-        Query a wiki API for a search term and return the title and URL of the first search result.
+        Query a wiki API for a search term and return the title and URL of the first English result.
 
         Parameters
         ----------
@@ -85,39 +88,62 @@ class Wiki(BaseCog):
         Returns
         -------
         tuple[str, str]
-            The title and URL of the first search result.
+            The title and URL of the first English search result.
+            Returns ("error", "error") if no English results are found.
         """
         search_term = search_term.capitalize()
-        params: dict[str, str] = {
+        params: dict[str, str | int] = {
             "action": "query",
             "format": "json",
             "list": "search",
             "srsearch": search_term,
+            "srlimit": 50,  # Get more results to find English ones
         }
+
+        # Pattern to match language codes in parentheses at the start of title or after a slash
+        # ArchWiki uses format like "Page Name (Language)/Subpage" for translated pages
+        # Matches patterns like "(Italiano)", "(Español)", "(Français)" etc.
+        # Only matches if it appears early in the title (before first slash or in first 50 chars)
+        language_pattern = re.compile(r"^[^/]*\([^)]+\)")
 
         try:
             # Send a GET request to the wiki API
             response = await http_client.get(base_url, params=params)
-            logger.info(f"GET request to {base_url} with params {params!r}")
+            logger.debug(f"GET request to {base_url} with params {params!r}")
             response.raise_for_status()
 
             # Parse JSON response
             data = response.json()
-            logger.info(f"Wiki API response: {data!r}")
+            logger.debug(f"Wiki API response received for {base_url}")
 
             if data.get("query") and data["query"].get("search"):
                 search_results = data["query"]["search"]
                 if search_results:
-                    title = search_results[0]["title"]
-                    url_title = title.replace(" ", "_")
-                    if "atl.wiki" in base_url:
-                        url = f"https://atl.wiki/{url_title}"
-                    else:
-                        url = f"https://wiki.archlinux.org/title/{url_title}"
-                    return title, url
+                    # Filter for English results (exclude titles with language codes in parentheses)
+                    for result in search_results:
+                        title = result["title"]
+                        # Check if title contains a language code pattern
+                        # English pages typically don't have language codes in parentheses
+                        if not language_pattern.search(title):
+                            url_title = title.replace(" ", "_")
+                            if "atl.wiki" in base_url:
+                                url = f"https://atl.wiki/{url_title}"
+                            else:
+                                url = f"https://wiki.archlinux.org/title/{url_title}"
+                            return title, url
+        except httpx.HTTPStatusError as e:
+            # Handle HTTP status errors (403, 404, etc.)
+            if e.response.status_code == 403:
+                logger.warning(
+                    f"Wiki API returned 403 Forbidden for {base_url}. "
+                    "The API may be rate-limiting or blocking requests.",
+                )
+            else:
+                logger.error(f"Wiki API returned {e.response.status_code}: {e}")
+            capture_api_error(e, endpoint="wiki_api")
+            return "error", "error"
         except Exception as e:
             logger.error(f"Wiki API request failed: {e}")
-
             capture_api_error(e, endpoint="wiki_api")
             return "error", "error"
 
