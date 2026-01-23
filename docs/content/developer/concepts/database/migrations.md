@@ -202,6 +202,10 @@ uv run db status                 # Show current revision and pending
 uv run db history               # Show full migration history
 uv run db check                 # Validate migration files
 
+# Fix sequence synchronization
+uv run db fix-sequences --dry-run  # Preview what would be fixed
+uv run db fix-sequences           # Fix all sequences
+
 # Troubleshooting
 uv run db reset                 # Reset DB and reapply all migrations
 uv run db nuke                  # Nuclear reset (destroys all data!)
@@ -533,6 +537,27 @@ docker compose exec tux uv run db schema
 docker compose exec tux-postgres pg_dump -U tuxuser tuxdb > backup.sql
 docker compose exec tux uv run db reset
 ```
+
+### Duplicate Key Violations (Sequence Synchronization)
+
+If you encounter duplicate key violations after restoring data from a backup or performing manual database operations, PostgreSQL sequences may be out of sync:
+
+```bash
+# Preview what would be fixed (dry run)
+docker compose exec tux uv run db fix-sequences --dry-run
+
+# Fix all sequences
+docker compose exec tux uv run db fix-sequences
+```
+
+**When to use:**
+
+- After restoring data from a backup
+- After manual database operations that bypass sequences
+- When encountering duplicate key violations on insert
+
+**What it does:**
+Resets all PostgreSQL sequences to match the maximum ID value in their respective tables, preventing duplicate key violations.
 
 ### Migration Files Missing
 

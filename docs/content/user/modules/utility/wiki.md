@@ -83,6 +83,9 @@ When a match is found, the bot returns a rich embed containing:
 
 The embed is formatted to make it easy to quickly identify relevant articles and access the full documentation.
 
+!!! tip "English Results Prioritized"
+    The wiki search automatically prioritizes English results by filtering out articles with language codes in parentheses (e.g., "(es)", "(fr)"). This ensures you get the most relevant English documentation first.
+
 ## Error Handling
 
 ### No Results Found

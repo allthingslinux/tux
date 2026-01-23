@@ -153,6 +153,26 @@ docker compose restart tux
 
 See [Docker Migration Setup](../../developer/concepts/database/migrations.md#-docker-migration-setup) for complete details.
 
+### Fixing Sequence Synchronization
+
+If you encounter duplicate key violations after data restoration or manual database operations, you may need to fix PostgreSQL sequences:
+
+```bash
+# Check what would be fixed (dry run)
+uv run db fix-sequences --dry-run
+
+# Fix all sequences
+uv run db fix-sequences
+```
+
+This command resets all sequences to match the maximum ID value in their respective tables, preventing duplicate key violations.
+
+!!! tip "When to Use"
+    Use `fix-sequences` after:
+    - Restoring data from a backup
+    - Manual database operations that bypass sequences
+    - Encountering duplicate key violations on insert
+
 ### Troubleshooting
 
 #### Migration Fails
@@ -177,6 +197,18 @@ uv run db reset
 # Nuclear option (destroys data!)
 uv run db nuke --force
 uv run db push
+```
+
+#### Sequence Synchronization Issues
+
+If you see duplicate key violations:
+
+```bash
+# Fix sequences
+uv run db fix-sequences
+
+# Verify fixes
+uv run db health
 ```
 
 ## Adminer Web UI

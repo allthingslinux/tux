@@ -31,6 +31,7 @@ The `/wiki` command group provides quick access to specialized documentation wik
 
 | Command | Aliases | Description | Documentation |
 |---------|---------|-------------|---------------|
+| `/help` | `h`, `commands` | Get help with Tux commands and features | [Details](help.md) |
 | `/ping` | `status` | Check bot latency and status | [Details](ping.md) |
 | `/poll` | — | Create a poll with multiple options (Slash only) | [Details](poll.md) |
 | `/remindme` | `remind` | Set a reminder for yourself | [Details](remindme.md) |

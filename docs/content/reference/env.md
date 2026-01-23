@@ -55,6 +55,26 @@ Bot information configuration.
 | `BOT_INFO__HIDE_BOT_OWNER` | `boolean` | `false` | Hide bot owner info | `false`, `true` |
 | `BOT_INFO__PREFIX` | `string` | `"$"` | Command prefix | `"$"`, `"!"`, `"tux."` |
 
+### BotIntents
+
+Discord bot gateway intents configuration.
+
+All three privileged intents are required for full bot functionality:
+
+- members: Required for on_member_join, on_member_remove, member tracking
+- presences: Required for on_presence_update, status_roles feature
+- message_content: Required for message.content access, prefix commands
+
+Note: Having both members + presences reduces startup chunking time significantly.
+
+**Environment Prefix**: `BOT_INTENTS__`
+
+| Name | Type | Default | Description | Example |
+|------|------|---------|-------------|---------|
+| `BOT_INTENTS__presences` | `boolean` | `true` | Enable presences intent (required for status_roles) | `true`, `false` |
+| `BOT_INTENTS__members` | `boolean` | `true` | Enable members intent (required for jail, tty_roles) | `true`, `false` |
+| `BOT_INTENTS__message_content` | `boolean` | `true` | Enable message content intent (required for most features) | `true`, `false` |
+
 ### UserIds
 
 User ID configuration.

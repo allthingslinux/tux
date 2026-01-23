@@ -24,7 +24,9 @@ The permission system provides flexible, guild-specific access control:
 - **Command Permissions** - Set required rank for each command per-guild
 - **Bypass Rules** - Bot owners, sysadmins, and guild owners bypass all permission checks
 - **DM Handling** - Commands bypass permission checks in direct messages
-- **Performance Caching** - Fast permission checks with database caching
+- **Performance Caching** - Fast permission checks with TTL caching and batch retrieval
+- **Cache Pre-warming** - Automatic cache pre-warming on bot startup for improved performance
+- **Parent Command Fallback** - Automatic fallback to parent command permissions for subcommands
 
 ## How It Works
 
@@ -58,11 +60,22 @@ When a user runs a command, Tux:
 1. Checks if they're a bot owner or sysadmin (always allowed)
 2. Checks if they're the guild owner (always allowed)
 3. If in a DM, allows the command (permissions don't apply to DMs)
-4. Gets their highest permission rank from their roles
-5. Looks up the command's required rank
+4. Gets their highest permission rank from their roles (cached for 2 minutes)
+5. Looks up the command's required rank (cached for 5 minutes)
+   - If the command has no configured permission, checks parent command permissions
+   - For example, if `/config ranks` has no permission set, checks `/config` permission
 6. Compares ranks and allows or denies access
 
 This happens automatically—you don't need to write permission checking code in your commands.
+
+### Performance Optimizations
+
+The permission system uses several performance optimizations:
+
+- **TTL Caching** - Permission ranks and command permissions are cached with TTL (2-5 minutes)
+- **Batch Retrieval** - Multiple permission checks are batched to reduce database queries
+- **Cache Pre-warming** - Caches are pre-warmed on bot startup to reduce cold-start delays
+- **Parent Command Fallback** - Subcommands automatically fall back to parent command permissions
 
 ## Using Permissions in Your Code
 
@@ -185,6 +198,41 @@ If users can't access commands they should have:
 4. Check if they're bot owner/sysadmin (these bypass all checks)
 5. Note: Commands work in DMs without permission checks, so DM access isn't the issue
 
+## Performance Features
+
+### Cache Pre-warming
+
+The permission system automatically pre-warms caches on bot startup to improve initial command response times. This happens during the `on_ready` event and reduces cold-start delays.
+
+### Batch Permission Retrieval
+
+For operations that need to check permissions for multiple users or commands, use batch retrieval:
+
+```python
+from tux.core.permission_system import get_permission_system
+
+permission_system = get_permission_system()
+
+# Batch retrieve user ranks
+user_ids = [123, 456, 789]
+ranks = await permission_system.get_user_ranks_batch(guild_id, user_ids)
+
+# Batch retrieve command permissions
+command_names = ["ban", "kick", "timeout"]
+permissions = await permission_system.get_command_permissions_batch(
+    guild_id, command_names
+)
+```
+
+### Parent Command Fallback
+
+If a subcommand doesn't have a configured permission, the system automatically checks the parent command's permission:
+
+- `/config ranks` → checks `/config` permission if `ranks` has no permission set
+- `/cases view` → checks `/cases` permission if `view` has no permission set
+
+This reduces configuration overhead while maintaining security.
+
 ## Resources
 
 - **Source Code**: `src/tux/core/permission_system.py`
@@ -192,3 +240,4 @@ If users can't access commands they should have:
 - **Database Controllers**: `src/tux/database/controllers/permissions.py`
 - **Database Models**: `src/tux/database/models/models.py`
 - **Config Commands**: `src/tux/modules/config/ranks.py`, `roles.py`, `commands.py`
+- **Caching**: See [Caching Best Practices](../../best-practices/caching.md) for cache usage details

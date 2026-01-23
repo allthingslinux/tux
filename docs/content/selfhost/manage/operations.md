@@ -59,8 +59,14 @@ df -h
 #### Bot Metrics
 
 ```text
-/ping                               # API latency, uptime, resources
+$ping                               # API latency, uptime, system stats, bot stats
 ```
+
+The ping command provides:
+
+- API latency and uptime
+- System statistics (CPU, RAM usage)
+- Bot statistics (guild count, user count, sharding info, gateway intents)
 
 ### Alerting
 
@@ -413,6 +419,8 @@ htop
 # Check disk space
 df -h
 
+# Database sequence synchronization (if needed)
+uv run db fix-sequences --dry-run
 ```
 
 ### Troubleshooting Updates

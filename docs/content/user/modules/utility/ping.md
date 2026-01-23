@@ -52,8 +52,14 @@ When executed, the bot returns an informational embed containing:
 
 - **API latency** - The round-trip time in milliseconds for a heartbeat to reach Discord's gateway
 - **Uptime** - How long the bot has been running since its last restart (formatted as human-readable duration)
-- **CPU usage** - The percentage of CPU being utilized by the bot process
-- **RAM usage** - The amount of memory currently consumed by the bot (formatted in MB or GB as appropriate)
+- **System Statistics**:
+  - **CPU usage** - The percentage of CPU being utilized by the bot process
+  - **RAM usage** - The amount of memory currently consumed by the bot (formatted in MB or GB as appropriate)
+- **Bot Statistics**:
+  - **Guild count** - Number of servers the bot is in
+  - **User count** - Total number of users across all servers
+  - **Sharding information** - Current shard and total shards (if sharded)
+  - **Gateway intents** - Enabled Discord gateway intents
 
 ## Permissions
 

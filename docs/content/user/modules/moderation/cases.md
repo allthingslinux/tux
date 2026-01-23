@@ -19,15 +19,15 @@ By maintaining a rigorous record of all actions, `cases` ensures accountability 
 
 ## Base Command
 
-The base `cases` command provides a paginated overview of all moderation cases in the server, or can be used to quickly view a single case by number.
+The base `cases` command provides a paginated overview of all moderation cases in the server, or can be used to quickly view a single case by number or user.
 
 **Syntax:**
 
 ```text
-/cases [case_number]
-$cases [case_number]
-$case [case_number]
-$c [case_number]
+/cases [case_number|user:USER]
+$cases [case_number|@user]
+$case [case_number|@user]
+$c [case_number|@user]
 ```
 
 **Aliases:**
@@ -37,7 +37,16 @@ You can also use these aliases instead of `cases`:
 - `case`
 - `c`
 
-When invoked without a subcommand or case number, Tux opens an interactive menu displaying all cases in descending order (newest first).
+**Parameters:**
+
+- `case_number` (optional) - The unique integer identifying the case
+- `user` (optional) - A user mention or ID to view cases for that user
+
+When invoked without arguments, Tux opens an interactive menu displaying all cases in descending order (newest first).
+
+When provided with a case number, Tux displays the details of that specific case.
+
+When provided with a user, Tux displays all cases for that user.
 
 ## Subcommands
 

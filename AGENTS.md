@@ -99,6 +99,7 @@ tux/
 │   │   └── views/              # View components
 │   ├── shared/                 # Shared utilities
 │   │   ├── config/             # Configuration models
+│   │   ├── cache.py            # TTL cache system (TTLCache, GuildConfigCacheManager, JailStatusCache)
 │   │   ├── constants.py        # Constants
 │   │   ├── exceptions.py       # Custom exceptions
 │   │   └── functions.py        # Utility functions
@@ -205,6 +206,8 @@ uv run db health            # Check database connection
 uv run db tables            # List all database tables
 uv run db schema            # Show database schema
 uv run db queries           # Run custom database queries
+uv run db fix-sequences     # Fix PostgreSQL sequence synchronization issues
+uv run db fix-sequences --dry-run  # Preview sequence fixes
 uv run db reset             # Safe reset (downgrade to base, reapply all)
 uv run db nuke              # Complete wipe (destructive, requires confirmation)
 uv run db nuke --fresh      # Nuclear reset + delete migration files
@@ -373,8 +376,11 @@ refactor(database): optimize query performance
 
 - **Async for I/O** - All database and HTTP operations are async
 - **Connection pooling** - psycopg connection pooling for PostgreSQL
-- **Cache frequently accessed data** - aiocache for caching
+- **TTL caching** - Thread-safe TTL cache system for frequently accessed data (guild config, jail status, permissions)
+- **Batch operations** - Batch retrieval for permission checks and database queries
+- **Cache pre-warming** - Automatic cache pre-warming on bot startup
 - **Optimize queries** - Use database controllers with proper indexing
+- **HTTP client optimization** - Automatic configuration for high-latency environments
 - **Monitor memory** - Sentry integration for performance monitoring
 - **Lazy loading** - Load modules and plugins on demand
 
@@ -392,6 +398,7 @@ refactor(database): optimize query performance
 # Database issues
 uv run db health              # Check database connection
 uv run db status              # Check migration status
+uv run db fix-sequences --dry-run  # Check sequence synchronization issues
 docker compose ps tux-postgres # Check PostgreSQL container
 
 # Import errors
