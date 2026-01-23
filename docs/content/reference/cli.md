@@ -191,7 +191,41 @@ uv run dev docstring-coverage
 
 # Clean build artifacts and caches
 uv run dev clean
+
+# Performance profiling with cProfile
+uv run dev profile <script_path> [--output OUTPUT] [--sort SORT] [--lines LINES]
 ```
+
+### `dev profile`
+
+Profile Python scripts for performance analysis using cProfile. This command helps identify performance bottlenecks and optimize code execution.
+
+**Options:**
+
+- `<script_path>` (required) - Path to the Python script to profile
+- `--output`, `-o` - Save profiling report to a file (default: prints to stdout)
+- `--sort`, `-s` - Sort statistics by column (default: `cumulative`). Options: `cumulative`, `time`, `calls`, `name`
+- `--lines`, `-l` - Number of lines to display (default: 50)
+
+**Examples:**
+
+```bash
+# Profile a script and display results
+uv run dev profile scripts/test_performance.py
+
+# Save profile report to file
+uv run dev profile scripts/test_performance.py --output profile_report.txt
+
+# Sort by time and show top 20 functions
+uv run dev profile scripts/test_performance.py --sort time --lines 20
+```
+
+**When to use:**
+
+- Identifying slow functions in your code
+- Optimizing database queries and API calls
+- Analyzing performance before and after optimizations
+- Debugging performance regressions
 
 ## Documentation Commands
 

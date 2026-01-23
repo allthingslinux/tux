@@ -30,15 +30,7 @@ The `tldr` command can be used in two ways:
 ```text
 $tldr <command> [-platform PLATFORM] [-language LANG] [-short] [-long] [-both]
 $tldr <command> [-p PLATFORM] [-lang LANG] [-l LANG] [-short] [-long] [-both]
-$man <command> [-platform PLATFORM] [-language LANG] [-short] [-long] [-both]
-$man <command> [-p PLATFORM] [-lang LANG] [-l LANG] [-short] [-long] [-both]
 ```
-
-**Aliases:**
-
-You can also use these aliases instead of `tldr`:
-
-- `man`
 
 ## Parameters
 

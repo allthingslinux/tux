@@ -164,7 +164,14 @@ Valid levels: `TRACE`, `DEBUG`, `INFO`, `SUCCESS`, `WARNING`, `ERROR`, `CRITICAL
 
 ### Configure HTTP Client
 
-For high-latency environments, Tux automatically configures the HTTP client with appropriate timeouts and connection settings. No manual configuration needed.
+Tux automatically configures the HTTP client with optimized settings for your environment:
+
+- **High-latency environments**: Automatically detects and adjusts timeouts and connection pooling
+- **Connection pooling**: Reuses connections for better performance
+- **Retry logic**: Handles transient network failures automatically
+- **Timeout management**: Prevents hanging requests
+
+No manual configuration needed. The HTTP client is automatically configured based on your environment and network conditions.
 
 ## Docker-Specific Configuration
 
