@@ -15,6 +15,7 @@ from scripts.dev import (
     lint_docstring,
     lint_fix,
     pre_commit,
+    profile,
     type_check,
 )
 from scripts.dev import (
@@ -31,6 +32,7 @@ app.add_typer(lint_docstring.app)
 app.add_typer(docstring_coverage.app)
 app.add_typer(pre_commit.app)
 app.add_typer(clean.app)
+app.add_typer(profile.app)
 app.add_typer(all_checks.app)
 
 
