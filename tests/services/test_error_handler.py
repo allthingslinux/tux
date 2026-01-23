@@ -91,8 +91,11 @@ class TestErrorHandler:
         """Test _log_error with Sentry enabled."""
         error = ValueError("Test error")
         config = ErrorHandlerConfig(send_to_sentry=True, log_level="ERROR")
+        mock_source = MagicMock()
+        mock_source.command = None
+        mock_source.guild = None
 
-        error_handler._log_error(error, config)
+        error_handler._log_error(error, config, mock_source)
 
         mock_logger.error.assert_called_once()
 
@@ -105,8 +108,11 @@ class TestErrorHandler:
         """Test _log_error with Sentry disabled."""
         error = ValueError("Test error")
         config = ErrorHandlerConfig(send_to_sentry=False, log_level="INFO")
+        mock_source = MagicMock()
+        mock_source.command = None
+        mock_source.guild = None
 
-        error_handler._log_error(error, config)
+        error_handler._log_error(error, config, mock_source)
 
         mock_logger.info.assert_called_once()
 
