@@ -278,7 +278,12 @@ class ModerationCoordinator:
                     )
         else:
             # Wait for response embed only
-            await response_task
+            try:
+                await response_task
+            except Exception as e:
+                logger.error(
+                    f"Failed to send response embed for {case_type.value}: {e}",
+                )
 
         logger.success(
             f"Completed moderation action {case_type.value} on user {user.id}",

@@ -149,12 +149,14 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         Update a specific field in guild configuration.
 
+        Automatically invalidates the guild config cache if log channel IDs are updated.
+
         Returns
         -------
         GuildConfig | None
             The updated configuration, or None if not found.
         """
-        return await self.update_by_id(guild_id, **{field_name: field_value})
+        return await self.update_config(guild_id, **{field_name: field_value})
 
     # Onboarding-specific methods
     async def update_onboarding_stage(

@@ -197,7 +197,8 @@ class ErrorHandler(commands.Cog):
         source : commands.Context[Tux] | discord.Interaction
             The command context or interaction that triggered the error.
         """
-        log_func = getattr(logger, config.log_level.lower())
+        # Use logger.error as safe fallback if log_level is invalid
+        log_func = getattr(logger, config.log_level.lower(), logger.error)
         error_type = type(error).__name__
         error_msg = str(error)
 
