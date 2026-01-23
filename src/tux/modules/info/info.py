@@ -136,13 +136,24 @@ class Info(BaseCog):
             Whether the response should be ephemeral (slash commands only), by default True.
         """
         if ctx.interaction:
-            # Build kwargs dict with only non-None values for type safety
-            kwargs: dict[str, Any] = {"ephemeral": ephemeral}
+            # Build payload with only non-None values for type safety
+            payload: dict[str, Any] = {}
             if content is not None:
-                kwargs["content"] = content
+                payload["content"] = content
             if embed is not None:
-                kwargs["embed"] = embed
-            await ctx.interaction.followup.send(**kwargs)
+                payload["embed"] = embed
+            if not payload:
+                payload["content"] = ""
+            if ctx.interaction.response.is_done():
+                await ctx.interaction.followup.send(
+                    **payload,
+                    ephemeral=ephemeral,
+                )
+            else:
+                await ctx.interaction.response.send_message(
+                    **payload,
+                    ephemeral=ephemeral,
+                )
         elif embed is not None:
             # ctx.send() requires at least one of content or embed
             if content is not None:
@@ -344,7 +355,8 @@ class Info(BaseCog):
         """
         # Defer early to acknowledge interaction before async work
         # This is needed for both the help case and the entity lookup case
-        await ctx.defer(ephemeral=True)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         if entity is None:
             await ctx.send_help("info")
