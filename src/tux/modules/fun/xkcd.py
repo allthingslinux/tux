@@ -6,6 +6,8 @@ latest comic, random comics, and specific comics by ID. Comics are displayed
 with interactive buttons for navigation to the comic's explanation and original page.
 """
 
+from typing import Any
+
 import discord
 from discord.ext import commands
 from loguru import logger
@@ -80,19 +82,13 @@ class Xkcd(BaseCog):
 
         embed, view, ephemeral = await self.get_comic_and_embed(latest=True)
 
-        if ctx.interaction:
-            if view:
-                await ctx.interaction.followup.send(
-                    embed=embed,
-                    view=view,
-                    ephemeral=ephemeral,
-                )
-            else:
-                await ctx.interaction.followup.send(embed=embed, ephemeral=ephemeral)
-        elif view:
-            await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
-        else:
-            await ctx.send(embed=embed, ephemeral=ephemeral)
+        # Build kwargs conditionally for type safety
+        kwargs: dict[str, Any] = {"embed": embed}
+        if view is not None:
+            kwargs["view"] = view
+        if ctx.interaction and ephemeral:
+            kwargs["ephemeral"] = ephemeral
+        await ctx.send(**kwargs)
 
     @xkcd.command(
         name="random",
@@ -113,19 +109,13 @@ class Xkcd(BaseCog):
 
         embed, view, ephemeral = await self.get_comic_and_embed()
 
-        if ctx.interaction:
-            if view:
-                await ctx.interaction.followup.send(
-                    embed=embed,
-                    view=view,
-                    ephemeral=ephemeral,
-                )
-            else:
-                await ctx.interaction.followup.send(embed=embed, ephemeral=ephemeral)
-        elif view:
-            await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
-        else:
-            await ctx.send(embed=embed, ephemeral=ephemeral)
+        # Build kwargs conditionally for type safety
+        kwargs: dict[str, Any] = {"embed": embed}
+        if view is not None:
+            kwargs["view"] = view
+        if ctx.interaction and ephemeral:
+            kwargs["ephemeral"] = ephemeral
+        await ctx.send(**kwargs)
 
     @xkcd.command(
         name="specific",
@@ -148,19 +138,13 @@ class Xkcd(BaseCog):
 
         embed, view, ephemeral = await self.get_comic_and_embed(number=comic_id)
 
-        if ctx.interaction:
-            if view:
-                await ctx.interaction.followup.send(
-                    embed=embed,
-                    view=view,
-                    ephemeral=ephemeral,
-                )
-            else:
-                await ctx.interaction.followup.send(embed=embed, ephemeral=ephemeral)
-        elif view:
-            await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
-        else:
-            await ctx.send(embed=embed, ephemeral=ephemeral)
+        # Build kwargs conditionally for type safety
+        kwargs: dict[str, Any] = {"embed": embed}
+        if view is not None:
+            kwargs["view"] = view
+        if ctx.interaction and ephemeral:
+            kwargs["ephemeral"] = ephemeral
+        await ctx.send(**kwargs)
 
     async def get_comic_and_embed(
         self,
