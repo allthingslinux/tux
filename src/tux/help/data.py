@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 from discord.ext import commands
@@ -71,29 +72,63 @@ class HelpData:
         # Note: We don't cache command categories per user since permissions can vary
         # Rebuilding ensures each user sees only commands they have permission for
 
-        # Create proper mapping for create_cog_category_mapping
-        mapping: dict[commands.Cog | None, list[commands.Command[Any, Any, Any]]] = {}
+        categories_start = time.perf_counter()
 
+        # Collect all commands from all cogs first (before permission checks)
+        collect_start = time.perf_counter()
+        all_commands: list[commands.Command[Any, Any, Any]] = []
+        cog_to_commands: dict[
+            commands.Cog | None,
+            list[commands.Command[Any, Any, Any]],
+        ] = {}
+
+        # Collect commands from cogs
         for cog in self.bot.cogs.values():
-            cog_commands = [
-                cmd for cmd in cog.get_commands() if await self.can_run_command(cmd)
-            ]
+            cog_commands = list(cog.get_commands())
             if cog_commands:
-                mapping[cog] = cog_commands
+                cog_to_commands[cog] = cog_commands
+                all_commands.extend(cog_commands)
 
-        # Add commands without cogs
-        no_cog_commands = [
-            cmd
-            for cmd in self.bot.commands
-            if cmd.cog is None and await self.can_run_command(cmd)
-        ]
+        # Collect commands without cogs
+        no_cog_commands = [cmd for cmd in self.bot.commands if cmd.cog is None]
         if no_cog_commands:
-            mapping[None] = no_cog_commands
+            cog_to_commands[None] = no_cog_commands
+            all_commands.extend(no_cog_commands)
+
+        collect_time = (time.perf_counter() - collect_start) * 1000
+
+        # Batch check permissions for ALL commands at once (much faster than sequential)
+        batch_start = time.perf_counter()
+        can_run_map = await self.batch_can_run_commands(all_commands)
+        batch_time = (time.perf_counter() - batch_start) * 1000
+
+        # Filter commands by permission and group back by cog
+        filter_start = time.perf_counter()
+        mapping: dict[commands.Cog | None, list[commands.Command[Any, Any, Any]]] = {}
+        for cog, cog_commands in cog_to_commands.items():
+            filtered_commands = [
+                cmd for cmd in cog_commands if can_run_map.get(cmd, False)
+            ]
+            if filtered_commands:
+                mapping[cog] = filtered_commands
+        filter_time = (time.perf_counter() - filter_start) * 1000
 
         # Store both category cache and command mapping
         self._category_cache, self.command_mapping = create_cog_category_mapping(
             mapping,
         )
+
+        total_time = (time.perf_counter() - categories_start) * 1000
+        guild_id = self.ctx.guild.id if self.ctx and self.ctx.guild else None
+        user_id = self.ctx.author.id if self.ctx and self.ctx.author else 0
+
+        logger.debug(
+            f"Help get_command_categories completed "
+            f"(guild {guild_id}, user {user_id}) - "
+            f"collect: {collect_time:.2f}ms, batch_perms: {batch_time:.2f}ms, "
+            f"filter: {filter_time:.2f}ms, total: {total_time:.2f}ms",
+        )
+
         return self._category_cache
 
     async def can_run_command(self, command: commands.Command[Any, Any, Any]) -> bool:
@@ -323,6 +358,8 @@ class HelpData:
         dict[commands.Command[Any, Any, Any], bool]
             Dictionary mapping commands to whether they can be run.
         """
+        batch_start = time.perf_counter()
+
         if not commands_list:
             return {}
 
@@ -330,18 +367,30 @@ class HelpData:
         self._cached_user_rank = None
 
         # Filter commands into those that need permission checking and those that don't
+        filter_start = time.perf_counter()
         results, commands_to_check = self._filter_commands_for_permission_check(
             commands_list,
         )
+        filter_time = (time.perf_counter() - filter_start) * 1000
 
         # If no commands need permission checking, return early
         if not commands_to_check:
+            total_time = (time.perf_counter() - batch_start) * 1000
+            logger.trace(
+                f"Help batch_can_run_commands completed (no checks needed) - "
+                f"filter: {filter_time:.2f}ms, total: {total_time:.2f}ms",
+            )
             return results
 
         # Fast path: bot owners and sysadmins bypass all permission checks
         if self.ctx and self._is_owner_or_sysadmin():
             for command in commands_to_check:
                 results[command] = True
+            total_time = (time.perf_counter() - batch_start) * 1000
+            logger.trace(
+                f"Help batch_can_run_commands completed (owner bypass) - "
+                f"filter: {filter_time:.2f}ms, total: {total_time:.2f}ms",
+            )
             return results
 
         # Fast path: guild owner bypass
@@ -352,6 +401,11 @@ class HelpData:
         ):
             for command in commands_to_check:
                 results[command] = True
+            total_time = (time.perf_counter() - batch_start) * 1000
+            logger.trace(
+                f"Help batch_can_run_commands completed (guild owner bypass) - "
+                f"filter: {filter_time:.2f}ms, total: {total_time:.2f}ms",
+            )
             return results
 
         # Batch get all command permissions at once
@@ -362,17 +416,23 @@ class HelpData:
 
         permission_system = get_permission_system()
         command_names = [cmd.qualified_name for cmd in commands_to_check]
+
+        # Time command permission lookup
+        cmd_perms_start = time.perf_counter()
         cmd_perms = await permission_system.batch_get_command_permissions(
             self.ctx.guild.id,
             command_names,
         )
+        cmd_perms_time = (time.perf_counter() - cmd_perms_start) * 1000
 
         # Get user's permission rank once (cached for subsequent checks)
+        user_rank_start = time.perf_counter()
         if self._cached_user_rank is None:
             self._cached_user_rank = await permission_system.get_user_permission_rank(
                 self.ctx,
             )
         user_rank = self._cached_user_rank
+        user_rank_time = (time.perf_counter() - user_rank_start) * 1000
 
         # Check each command against its permission requirement
         for command in commands_to_check:
@@ -386,6 +446,17 @@ class HelpData:
 
             # Check if user meets required rank
             results[command] = user_rank >= cmd_perm.required_rank
+
+        total_time = (time.perf_counter() - batch_start) * 1000
+        guild_id = self.ctx.guild.id if self.ctx.guild else None
+        user_id = self.ctx.author.id if self.ctx.author else 0
+
+        logger.debug(
+            f"Help batch_can_run_commands completed for {len(commands_to_check)} commands "
+            f"(guild {guild_id}, user {user_id}) - "
+            f"filter: {filter_time:.2f}ms, cmd_perms: {cmd_perms_time:.2f}ms, "
+            f"user_rank: {user_rank_time:.2f}ms, total: {total_time:.2f}ms",
+        )
 
         return results
 

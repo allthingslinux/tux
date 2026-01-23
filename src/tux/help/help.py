@@ -6,6 +6,7 @@ This replaces the massive 1,328-line help.py with a clean, focused implementatio
 
 from __future__ import annotations
 
+import time
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -59,9 +60,14 @@ class TuxHelp(commands.HelpCommand):
         mapping: Mapping[commands.Cog | None, list[commands.Command[Any, ..., Any]]],
     ) -> None:
         """Send the main help menu."""
+        help_start = time.perf_counter()
         data, renderer, navigation = await self._setup_components()
 
+        # Time the command categories lookup (this is the main bottleneck)
+        categories_start = time.perf_counter()
         categories = await data.get_command_categories()
+        categories_time = (time.perf_counter() - categories_start) * 1000
+
         embed = await renderer.create_main_embed(categories)
         view = await navigation.create_main_view()
 
@@ -70,6 +76,16 @@ class TuxHelp(commands.HelpCommand):
         files: list[discord.File] = []
         if banner_path.exists():
             files.append(discord.File(banner_path, filename="help_banner.png"))
+
+        total_time = (time.perf_counter() - help_start) * 1000
+        guild_id = self.context.guild.id if self.context.guild else None
+        user_id = self.context.author.id if self.context.author else 0
+
+        logger.debug(
+            f"Help command 'bot_help' completed "
+            f"(guild {guild_id}, user {user_id}) - "
+            f"categories: {categories_time:.2f}ms, total: {total_time:.2f}ms",
+        )
 
         await self.context.send(embed=embed, view=view, files=files)
 
@@ -99,13 +115,17 @@ class TuxHelp(commands.HelpCommand):
 
     async def send_group_help(self, group: commands.Group[Any, Any, Any]) -> None:
         """Send help for a command group."""
+        help_start = time.perf_counter()
         data, renderer, navigation = await self._setup_components()
 
         navigation.current_command_obj = group
         navigation.current_command = group.name
 
         # Batch check permissions for all subcommands at once (much faster)
+        batch_start = time.perf_counter()
         can_run_map = await data.batch_can_run_commands(list(group.commands))
+        batch_time = (time.perf_counter() - batch_start) * 1000
+
         filtered_subcommands = [
             cmd for cmd in group.commands if can_run_map.get(cmd, False)
         ]
@@ -123,6 +143,16 @@ class TuxHelp(commands.HelpCommand):
         else:
             embed = await renderer.create_command_embed(group)
             view = await navigation.create_command_view()
+
+        total_time = (time.perf_counter() - help_start) * 1000
+        guild_id = self.context.guild.id if self.context.guild else None
+        user_id = self.context.author.id if self.context.author else 0
+
+        logger.debug(
+            f"Help command 'group_help' for '{group.name}' completed "
+            f"(guild {guild_id}, user {user_id}) - "
+            f"batch_perms: {batch_time:.2f}ms, total: {total_time:.2f}ms",
+        )
 
         await self.context.send(embed=embed, view=view)
 
