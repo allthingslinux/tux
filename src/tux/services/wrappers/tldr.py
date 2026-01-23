@@ -12,6 +12,7 @@ import re
 import shutil
 import time
 import zipfile
+from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 from urllib.error import HTTPError, URLError
@@ -21,9 +22,7 @@ from urllib.request import Request, urlopen
 # Resolve relative paths to absolute to avoid permission issues
 _cache_dir = os.getenv("TLDR_CACHE_DIR", ".cache/tldr")
 CACHE_DIR: Path = (
-    Path(_cache_dir).resolve()
-    if not Path(_cache_dir).is_absolute()
-    else Path(_cache_dir)
+    Path(_cache_dir) if Path(_cache_dir).is_absolute() else Path(_cache_dir).resolve()
 )
 MAX_CACHE_AGE_HOURS: int = int(os.getenv("TLDR_CACHE_AGE_HOURS", "168"))
 REQUEST_TIMEOUT_SECONDS: int = int(os.getenv("TLDR_REQUEST_TIMEOUT", "10"))
@@ -343,6 +342,7 @@ class TldrClient:
         return None
 
     @staticmethod
+    @lru_cache(maxsize=128)
     def list_tldr_commands(
         language: str = "en",
         platform_filter: str | None = "linux",
