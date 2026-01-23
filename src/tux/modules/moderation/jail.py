@@ -20,6 +20,7 @@ from tux.core.bot import Tux
 from tux.core.checks import requires_command_permission
 from tux.core.flags import JailFlags
 from tux.database.models import CaseType
+from tux.shared.cache import JailStatusCache
 
 from . import ModerationCogBase
 
@@ -126,6 +127,8 @@ class Jail(ModerationCogBase):
         logger.info(
             f"Re-jailed {member} on rejoin in guild {member.guild.id} ({member.guild.name})",
         )
+        # Invalidate jail status cache (should already be True, but ensure consistency)
+        JailStatusCache().set(member.guild.id, member.id, True)
         # Strip roles added by other on_member_join handlers (e.g. TTY roles ~5s)
         asyncio.create_task(  # noqa: RUF006
             self._delayed_rejail_cleanup(member.guild.id, member.id),
@@ -205,20 +208,35 @@ class Jail(ModerationCogBase):
         if ctx.interaction:
             await ctx.defer(ephemeral=True)
 
-        # Get jail role
-        jail_role = await self.get_jail_role(ctx.guild)
+        # Parallelize independent database queries
+        jail_role_id_task = self.db.guild_config.get_jail_role_id(ctx.guild.id)
+        jail_channel_id_task = self.db.guild_config.get_jail_channel_id(ctx.guild.id)
+        is_jailed_task = self.is_jailed(ctx.guild.id, member.id)
+
+        # Wait for all queries to complete
+        jail_role_id, jail_channel_id, is_jailed_result = await asyncio.gather(
+            jail_role_id_task,
+            jail_channel_id_task,
+            is_jailed_task,
+        )
+
+        # Get Discord objects (these are synchronous lookups)
+        jail_role = None if jail_role_id is None else ctx.guild.get_role(jail_role_id)
         if not jail_role:
             await self._respond(ctx, "No jail role found.")
             return
 
-        # Get jail channel
-        jail_channel = await self.get_jail_channel(ctx.guild)
-        if not jail_channel:
+        jail_channel = (
+            ctx.guild.get_channel(jail_channel_id)
+            if jail_channel_id is not None
+            else None
+        )
+        if not jail_channel or not isinstance(jail_channel, discord.TextChannel):
             await self._respond(ctx, "No jail channel found.")
             return
 
         # Check if user is already jailed
-        if await self.is_jailed(ctx.guild.id, member.id):
+        if is_jailed_result:
             await self._respond(ctx, "User is already jailed.")
             return
 
@@ -243,6 +261,9 @@ class Jail(ModerationCogBase):
             duration=None,
             case_user_roles=user_role_ids,  # Store roles for unjail
         )
+
+        # Invalidate jail status cache after jailing
+        JailStatusCache().invalidate(ctx.guild.id, member.id)
 
         # Remove old roles in the background after sending the response
         # Use graceful degradation - if some roles fail, continue with others

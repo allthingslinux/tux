@@ -18,6 +18,7 @@ from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.database.models import CaseType as DBCaseType
 from tux.services.moderation import ModerationServiceFactory
+from tux.shared.cache import JailStatusCache
 
 if TYPE_CHECKING:
     from tux.services.moderation import ModerationCoordinator
@@ -114,6 +115,8 @@ class ModerationCogBase(BaseCog):
         Only JAIL and UNJAIL cases are considered; other types (e.g. WARN) are
         ignored so intervening moderation does not change jail status.
 
+        Uses cache to reduce database queries.
+
         Parameters
         ----------
         guild_id : int
@@ -126,11 +129,22 @@ class ModerationCogBase(BaseCog):
         bool
             True if user is jailed, False otherwise
         """
+        # Check cache first
+        cache = JailStatusCache()
+        cached_status = cache.get(guild_id, user_id)
+        if cached_status is not None:
+            return cached_status
+
+        # Cache miss - fetch from database
         latest = await self.db.case.get_latest_jail_or_unjail_case(
             user_id=user_id,
             guild_id=guild_id,
         )
-        return bool(latest and latest.case_type == DBCaseType.JAIL)
+        is_jailed = bool(latest and latest.case_type == DBCaseType.JAIL)
+
+        # Cache the result
+        cache.set(guild_id, user_id, is_jailed)
+        return is_jailed
 
     async def is_pollbanned(self, guild_id: int, user_id: int) -> bool:
         """Check if a user is poll banned.

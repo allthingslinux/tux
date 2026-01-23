@@ -69,7 +69,7 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         result = await self.update_by_id(guild_id, **updates)
 
-        # Invalidate cache if log channel IDs were updated
+        # Invalidate cache if log channel IDs or jail config were updated
         if result and any(
             field in updates
             for field in (
@@ -79,6 +79,8 @@ class GuildConfigController(BaseController[GuildConfig]):
                 "private_log_id",
                 "report_log_id",
                 "dev_log_id",
+                "jail_role_id",
+                "jail_channel_id",
             )
         ):
             GuildConfigCacheManager().invalidate(guild_id)
@@ -298,12 +300,23 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         Get jail role ID for a guild.
 
+        Uses cache to avoid database queries when possible.
+
         Returns
         -------
         int | None
             The jail role ID, or None if not configured.
         """
-        return await self.get_config_field(guild_id, "jail_role_id")
+        # Check cache first
+        cached = GuildConfigCacheManager().get(guild_id)
+        if cached is not None and "jail_role_id" in cached:
+            return cached["jail_role_id"]
+
+        # Cache miss - fetch from database
+        jail_role_id = await self.get_config_field(guild_id, "jail_role_id")
+        # Update cache
+        GuildConfigCacheManager().set(guild_id, jail_role_id=jail_role_id)
+        return jail_role_id
 
     # TODO: Remove/rename after investigation of use
     async def get_perm_level_role(self, guild_id: int, perm_level: str) -> int | None:
@@ -321,12 +334,61 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         Get jail channel ID for a guild.
 
+        Uses cache to avoid database queries when possible.
+
         Returns
         -------
         int | None
             The jail channel ID, or None if not configured.
         """
-        return await self.get_config_field(guild_id, "jail_channel_id")
+        # Check cache first
+        cached = GuildConfigCacheManager().get(guild_id)
+        if cached is not None and "jail_channel_id" in cached:
+            return cached["jail_channel_id"]
+
+        # Cache miss - fetch from database
+        jail_channel_id = await self.get_config_field(guild_id, "jail_channel_id")
+        # Update cache
+        GuildConfigCacheManager().set(guild_id, jail_channel_id=jail_channel_id)
+        return jail_channel_id
+
+    async def get_jail_config(self, guild_id: int) -> tuple[int | None, int | None]:
+        """
+        Get both jail role ID and jail channel ID in one query.
+
+        Uses cache to avoid database queries when possible.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+
+        Returns
+        -------
+        tuple[int | None, int | None]
+            A tuple of (jail_role_id, jail_channel_id).
+        """
+        # Check cache first
+        cached = GuildConfigCacheManager().get(guild_id)
+        if cached is not None:
+            jail_role_id = cached.get("jail_role_id")
+            jail_channel_id = cached.get("jail_channel_id")
+            # If both are in cache (even if None), return them
+            if "jail_role_id" in cached and "jail_channel_id" in cached:
+                return jail_role_id, jail_channel_id
+
+        # Cache miss - fetch from database in one query
+        config = await self.get_config_by_guild_id(guild_id)
+        jail_role_id = getattr(config, "jail_role_id", None) if config else None
+        jail_channel_id = getattr(config, "jail_channel_id", None) if config else None
+
+        # Update cache with both values
+        GuildConfigCacheManager().set(
+            guild_id,
+            jail_role_id=jail_role_id,
+            jail_channel_id=jail_channel_id,
+        )
+        return jail_role_id, jail_channel_id
 
     # Channel update methods for UI compatibility
     async def update_private_log_id(

@@ -16,6 +16,7 @@ from tux.core.checks import requires_command_permission
 from tux.core.flags import UnjailFlags
 from tux.database.models import Case
 from tux.database.models import CaseType as DBCaseType
+from tux.shared.cache import JailStatusCache
 
 from . import ModerationCogBase
 
@@ -174,15 +175,31 @@ class Unjail(ModerationCogBase):
         if ctx.interaction:
             await ctx.defer(ephemeral=True)
 
-        # Get jail role
-        jail_role = await self.get_jail_role(ctx.guild)
+        # Parallelize independent database queries
+        jail_role_id_task = self.db.guild_config.get_jail_role_id(ctx.guild.id)
+        is_jailed_task = self.is_jailed(ctx.guild.id, member.id)
+        latest_jail_case_task = self.get_latest_jail_case(ctx.guild.id, member.id)
+
+        # Wait for all queries to complete
+        jail_role_id, is_jailed_result, case = await asyncio.gather(
+            jail_role_id_task,
+            is_jailed_task,
+            latest_jail_case_task,
+        )
+
+        # Get Discord role object (synchronous lookup)
+        jail_role = None if jail_role_id is None else ctx.guild.get_role(jail_role_id)
         if not jail_role:
             await self._respond(ctx, "No jail role found.")
             return
 
         # Check if user is jailed
-        if not await self.is_jailed(ctx.guild.id, member.id):
+        if not is_jailed_result:
             await self._respond(ctx, "User is not jailed.")
+            return
+
+        if not case:
+            await self._respond(ctx, "No jail case found.")
             return
 
         # Permission checks are handled by the @requires_command_permission() decorator
@@ -191,17 +208,7 @@ class Unjail(ModerationCogBase):
         # Use lock to prevent race conditions
         async def perform_unjail() -> None:
             """Perform the unjail operation with proper error handling."""
-            nonlocal ctx, member, jail_role, flags
-
-            # Re-assert guild is not None inside the nested function for type safety
-            assert ctx.guild is not None, "Guild context should exist here"
-            guild_id = ctx.guild.id
-
-            # Get latest jail case *before* modifying roles
-            case = await self.get_latest_jail_case(guild_id, member.id)
-            if not case:
-                await self._respond(ctx, "No jail case found.")
-                return
+            nonlocal ctx, member, jail_role, flags, case
 
             # Remove jail role from member
             assert jail_role is not None, "Jail role should not be None at this point"
@@ -229,34 +236,18 @@ class Unjail(ModerationCogBase):
                 )
                 if success and restored_roles:
                     logger.info(f"Restored {len(restored_roles)} roles to {member}")
-
-                    # Restore the role verification logic here
-                    # Shorter wait time for roles to be applied by Discord
-                    await asyncio.sleep(0.5)
-
-                    # Verify if all roles that were attempted to be restored are actually present
-                    # Only check roles that were actually attempted (exist and are assignable)
-                    # Don't check roles that were skipped (deleted or not assignable)
-                    if ctx.guild and restored_roles:
-                        member_role_ids = {role.id for role in member.roles}
-                        missing_roles: list[str] = [
-                            role.name
-                            for role in restored_roles
-                            if role.id not in member_role_ids
-                        ]
-
-                        if missing_roles:
-                            missing_str = ", ".join(missing_roles)
-                            logger.warning(
-                                f"Failed to restore roles for {member}: {missing_str}",
-                            )
-                            # Optionally notify moderator/user if roles failed to restore
-                            # Example: await ctx.send(f"Note: Some roles couldn't be restored: {missing_str}", ephemeral=True)
+                    # Note: Discord API is eventually consistent, so we don't verify roles
+                    # immediately. If verification is needed, it should be done in a background
+                    # task with a delay, not blocking the command response.
 
                 elif not restored_roles:
                     logger.warning(
                         f"No roles to restore for {member} or restore action failed partially/completely.",
                     )
+
+            # Invalidate jail status cache after unjailing
+            assert ctx.guild is not None
+            JailStatusCache().invalidate(ctx.guild.id, member.id)
 
         # Execute the action (removed lock since moderation service handles concurrency)
         await perform_unjail()

@@ -364,7 +364,7 @@ def create_jail_channel_callback(dashboard: ConfigDashboard) -> Any:
 
     async def callback(interaction: discord.Interaction) -> None:
         # Defer immediately since database operations may take time
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.defer()
 
         if not await validate_author(
             interaction,
@@ -395,21 +395,16 @@ def create_jail_channel_callback(dashboard: ConfigDashboard) -> Any:
                 jail_channel_id=channel_id,
             )
 
-            await interaction.followup.send(
-                f"✅ Jail channel set to {selected.mention}"
-                if selected
-                else "✅ Jail channel cleared",
-                ephemeral=True,
-            )
+            # Don't send success message - UI reflects the change automatically
+            # Users can see the updated jail channel in the view itself
 
-            dashboard.invalidate_cache()
-            dashboard.current_mode = "jail"
-            await dashboard.build_jail_mode()
-            if interaction.message:
-                await interaction.followup.edit_message(
-                    message_id=interaction.message.id,
-                    view=dashboard,
-                )
+            # Invalidate cache and rebuild to show updated configuration
+            await invalidate_and_rebuild(
+                dashboard,
+                "jail",
+                dashboard.build_jail_mode,
+                interaction,
+            )
         except Exception as e:
             await handle_callback_error(
                 interaction,
@@ -426,7 +421,7 @@ def create_jail_role_callback(dashboard: ConfigDashboard) -> Any:
 
     async def callback(interaction: discord.Interaction) -> None:
         # Defer immediately since database operations may take time
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.defer()
 
         if not await validate_author(
             interaction,
@@ -447,14 +442,13 @@ def create_jail_role_callback(dashboard: ConfigDashboard) -> Any:
             # Don't send success message - UI reflects the change automatically
             # Users can see the updated role in the view itself
 
-            dashboard.invalidate_cache()
-            dashboard.current_mode = "jail"
-            await dashboard.build_jail_mode()
-            if interaction.message:
-                await interaction.followup.edit_message(
-                    message_id=interaction.message.id,
-                    view=dashboard,
-                )
+            # Invalidate cache and rebuild to show updated configuration
+            await invalidate_and_rebuild(
+                dashboard,
+                "jail",
+                dashboard.build_jail_mode,
+                interaction,
+            )
         except Exception as e:
             await handle_callback_error(
                 interaction,

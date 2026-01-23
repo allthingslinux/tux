@@ -718,6 +718,15 @@ class Case(BaseModel, table=True):
             "guild_id",
             postgresql_where="case_status = TRUE",
         ),
+        # Composite partial index for jail/unjail case lookups (optimizes is_jailed checks)
+        Index(
+            "idx_case_jail_unjail",
+            "guild_id",
+            "case_user_id",
+            "case_type",
+            "id",
+            postgresql_where="case_type IN ('JAIL', 'UNJAIL')",
+        ),
         UniqueConstraint("guild_id", "case_number", name="uq_case_guild_case_number"),
     )
 

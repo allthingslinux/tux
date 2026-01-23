@@ -13,7 +13,7 @@ from typing import Any
 
 from loguru import logger
 
-__all__ = ["TTLCache", "GuildConfigCacheManager"]
+__all__ = ["TTLCache", "GuildConfigCacheManager", "JailStatusCache"]
 
 
 class TTLCache:
@@ -198,7 +198,8 @@ class GuildConfigCacheManager:
         Returns
         -------
         dict[str, int | None] | None
-            Cached config dict with audit_log_id and mod_log_id, or None if not cached.
+            Cached config dict with audit_log_id, mod_log_id, jail_role_id,
+            and jail_channel_id, or None if not cached.
         """
         cache_key = f"guild_config_{guild_id}"
         return self._cache.get(cache_key)
@@ -206,8 +207,10 @@ class GuildConfigCacheManager:
     def set(
         self,
         guild_id: int,
-        audit_log_id: int | None,
-        mod_log_id: int | None,
+        audit_log_id: int | None = None,
+        mod_log_id: int | None = None,
+        jail_role_id: int | None = None,
+        jail_channel_id: int | None = None,
     ) -> None:
         """
         Cache guild config for a guild.
@@ -216,16 +219,34 @@ class GuildConfigCacheManager:
         ----------
         guild_id : int
             The guild ID.
-        audit_log_id : int | None
+        audit_log_id : int | None, optional
             The audit log channel ID.
-        mod_log_id : int | None
+        mod_log_id : int | None, optional
             The mod log channel ID.
+        jail_role_id : int | None, optional
+            The jail role ID.
+        jail_channel_id : int | None, optional
+            The jail channel ID.
         """
         cache_key = f"guild_config_{guild_id}"
-        self._cache.set(
-            cache_key,
-            {"audit_log_id": audit_log_id, "mod_log_id": mod_log_id},
-        )
+        # Get existing cache or create new dict
+        existing = self._cache.get(cache_key) or {}
+        # Update with new values, preserving existing ones if not provided
+        updated = {
+            "audit_log_id": audit_log_id
+            if audit_log_id is not None
+            else existing.get("audit_log_id"),
+            "mod_log_id": mod_log_id
+            if mod_log_id is not None
+            else existing.get("mod_log_id"),
+            "jail_role_id": jail_role_id
+            if jail_role_id is not None
+            else existing.get("jail_role_id"),
+            "jail_channel_id": jail_channel_id
+            if jail_channel_id is not None
+            else existing.get("jail_channel_id"),
+        }
+        self._cache.set(cache_key, updated)
 
     def invalidate(self, guild_id: int) -> None:
         """
@@ -244,3 +265,101 @@ class GuildConfigCacheManager:
         """Clear all cached guild config entries."""
         self._cache.clear()
         logger.debug("Cleared all guild config cache entries")
+
+
+class JailStatusCache:
+    """
+    Cache manager for jail status checks.
+
+    Provides a singleton instance that caches jail status per (guild_id, user_id)
+    tuple to reduce database queries for frequently checked jail status.
+    """
+
+    _instance: JailStatusCache | None = None
+    _cache: TTLCache
+
+    def __new__(cls) -> JailStatusCache:
+        """Create or return the singleton instance."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            # 60 second TTL - jail status changes infrequently
+            cls._instance._cache = TTLCache(ttl=60.0, max_size=5000)
+        return cls._instance
+
+    def _get_key(self, guild_id: int, user_id: int) -> str:
+        """Generate cache key for guild_id and user_id."""
+        return f"jail_status_{guild_id}_{user_id}"
+
+    def get(self, guild_id: int, user_id: int) -> bool | None:
+        """
+        Get cached jail status for a user.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+        user_id : int
+            The user ID.
+
+        Returns
+        -------
+        bool | None
+            True if jailed, False if not jailed, None if not cached.
+        """
+        cache_key = self._get_key(guild_id, user_id)
+        return self._cache.get(cache_key)
+
+    def set(self, guild_id: int, user_id: int, is_jailed: bool) -> None:
+        """
+        Cache jail status for a user.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+        user_id : int
+            The user ID.
+        is_jailed : bool
+            Whether the user is jailed.
+        """
+        cache_key = self._get_key(guild_id, user_id)
+        self._cache.set(cache_key, is_jailed)
+
+    def invalidate(self, guild_id: int, user_id: int) -> None:
+        """
+        Invalidate cached jail status for a user.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+        user_id : int
+            The user ID.
+        """
+        cache_key = self._get_key(guild_id, user_id)
+        self._cache.invalidate(cache_key)
+        logger.debug(
+            f"Invalidated jail status cache for guild {guild_id}, user {user_id}",
+        )
+
+    def invalidate_guild(self, guild_id: int) -> None:
+        """
+        Invalidate all jail status cache entries for a guild.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+        """
+        # Note: This is a simple implementation. For better performance with many entries,
+        # we could maintain a reverse index, but for now we'll just clear all entries.
+        # The TTL will naturally expire entries anyway.
+        self._cache.clear()
+        logger.debug(
+            f"Cleared all jail status cache entries (guild {guild_id} invalidation)",
+        )
+
+    def clear_all(self) -> None:
+        """Clear all cached jail status entries."""
+        self._cache.clear()
+        logger.debug("Cleared all jail status cache entries")
