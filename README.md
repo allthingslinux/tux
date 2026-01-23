@@ -27,7 +27,7 @@
         <a href="https://tux.atl.dev">📚 Docs</a> •
         <a href="https://tux.atl.dev/faq/">❓ FAQ</a> •
         <a href="https://discord.gg/gpmSjcjQxg">💬 Discord</a> •
-        <a href="https://github.com/allthingslinux/tux/issues/525">🗺️ Roadmap</a>
+        <a href="https://github.com/orgs/allthingslinux/projects/13">🗺️ Roadmap</a>
     </p>
 </div>
 

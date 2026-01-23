@@ -27,4 +27,4 @@ Open a [GitHub issue](https://github.com/allthingslinux/tux/issues) with the `[F
 
 ## Where can I see the roadmap?
 
-The [roadmap](https://github.com/allthingslinux/tux/issues/525) is tracked in GitHub. It outlines planned features and the path to v0.1.0.
+The [roadmap](https://github.com/orgs/allthingslinux/projects/13) is tracked in GitHub. It outlines planned features and the path to v0.1.0.
