@@ -300,8 +300,8 @@ class HelpNavigation:
                 self.current_command_obj.name in {"jsk", "jishaku"}
                 or len(sorted_cmds) > 15
             ):
-                if not self.subcommand_pages:
-                    self._paginate_subcommands(sorted_cmds, preserve_page=True)
+                # Always regenerate pages from filtered commands to ensure users only see commands they can run
+                self._paginate_subcommands(sorted_cmds, preserve_page=True)
 
                 if len(self.subcommand_pages) > 1:
                     view.add_item(PrevButton(self))
