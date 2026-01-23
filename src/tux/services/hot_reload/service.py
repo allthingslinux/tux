@@ -100,9 +100,8 @@ class HotReload(commands.Cog):
 
     def _handle_file_change(self, extension: str) -> None:
         """Handle file change events."""
-        logger.info(f"📁 Hot reload: File change detected for extension {extension}")
         if not self._is_enabled:
-            logger.warning("Hot reload: System disabled, ignoring file change")
+            logger.warning("Hot reload disabled, ignoring change")
             return
 
         # Schedule async reload with debouncing
@@ -127,13 +126,12 @@ class HotReload(commands.Cog):
                 await asyncio.sleep(self.config.debounce_delay)
                 if extension in self._pending_reloads:
                     del self._pending_reloads[extension]
-                logger.info(f"Hot reload: Executing debounced reload for {extension}")
                 await self._reload_extension_async(extension)
 
             # Schedule the debounced reload
             task = loop.create_task(debounced_reload())
             self._pending_reloads[extension] = task
-            logger.info(f"Hot reload: Scheduled debounced reload for {extension}")
+            logger.debug(f"📁 Reload scheduled: {extension}")
 
         except RuntimeError:
             # No event loop running, skip reload during shutdown
@@ -142,7 +140,6 @@ class HotReload(commands.Cog):
 
     async def _reload_extension_async(self, extension: str) -> None:
         """Asynchronously reload an extension."""
-        logger.info(f"Hot reload: Starting reload of {extension}")
         async with self._reload_lock:
             await self._reload_extension_with_monitoring(extension)
 
@@ -162,14 +159,14 @@ class HotReload(commands.Cog):
 
             if success:
                 self._reload_stats["successful_reloads"] += 1
-                logger.success(f"Successfully reloaded {extension}")
+                logger.success(f"✅ Reloaded {extension}")
             else:
                 self._reload_stats["failed_reloads"] += 1
-                logger.error(f"Failed to reload {extension}")
+                logger.error(f"❌ Failed to reload {extension}")
 
         except Exception as e:
             self._reload_stats["failed_reloads"] += 1
-            logger.error(f"Error reloading {extension}: {e}")
+            logger.error(f"❌ Error reloading {extension}: {e}")
             capture_exception_safe(e)
 
         finally:
@@ -198,7 +195,7 @@ class HotReload(commands.Cog):
         try:
             # Check if extension is loaded
             if extension not in self.bot.extensions:
-                logger.info(f"Extension {extension} not loaded, attempting to load")
+                logger.debug(f"Loading {extension} (not currently loaded)")
                 await self.bot.load_extension(extension)
                 return True
 
@@ -206,17 +203,17 @@ class HotReload(commands.Cog):
             await self.bot.reload_extension(extension)
 
         except commands.ExtensionNotLoaded:
-            logger.warning(f"Extension {extension} not loaded, attempting to load")
+            logger.debug(f"Loading {extension} (not currently loaded)")
             try:
                 await self.bot.load_extension(extension)
             except Exception as e:
-                logger.error(f"Failed to load extension {extension}: {e}")
+                logger.error(f"Failed to load {extension}: {e}")
                 return False
             else:
                 return True
 
         except Exception as e:
-            logger.error(f"Failed to reload extension {extension}: {e}")
+            logger.error(f"Failed to reload {extension}: {e}")
             if not self.config.continue_on_error:
                 msg = f"Failed to reload {extension}"
                 raise ModuleReloadError(msg) from e
