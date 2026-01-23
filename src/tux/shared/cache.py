@@ -34,6 +34,8 @@ class TTLCache:
         Maximum number of entries. If None, no limit.
     """
 
+    __slots__ = ("_cache", "_max_size", "_ttl")
+
     def __init__(self, ttl: float = 300.0, max_size: int | None = None) -> None:
         """
         Initialize the TTL cache.
@@ -179,6 +181,7 @@ class GuildConfigCacheManager:
     when config is updated from multiple sources.
     """
 
+    __slots__ = ("_cache",)
     _instance: GuildConfigCacheManager | None = None
     _cache: TTLCache
 
@@ -233,9 +236,9 @@ class GuildConfigCacheManager:
         """
         cache_key = f"guild_config_{guild_id}"
         # Get existing cache or create new dict
-        existing = self._cache.get(cache_key) or {}
+        existing: dict[str, int | None] = self._cache.get(cache_key) or {}
         # Start with existing values
-        updated = dict(existing)
+        updated: dict[str, int | None] = dict(existing)
 
         # Only update fields that were explicitly provided (not _MISSING)
         if audit_log_id is not _MISSING:
@@ -276,6 +279,7 @@ class JailStatusCache:
     tuple to reduce database queries for frequently checked jail status.
     """
 
+    __slots__ = ("_cache",)
     _instance: JailStatusCache | None = None
     _cache: TTLCache
 
