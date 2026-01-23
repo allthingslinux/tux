@@ -5,6 +5,7 @@ This module provides commands to check the bot's latency, uptime, and system
 resource usage information for monitoring bot health and performance.
 """
 
+import asyncio
 import sys
 from datetime import UTC, datetime, timedelta
 
@@ -59,7 +60,7 @@ class Ping(BaseCog):
         ]
         return " ".join(part for part in bot_uptime_parts if part).strip()
 
-    def _get_system_stats(self) -> tuple[float, str, str, int | str, int | str]:
+    async def _get_system_stats(self) -> tuple[float, str, str, int | str, int | str]:
         """Get system resource statistics.
 
         Returns
@@ -67,9 +68,10 @@ class Ping(BaseCog):
         tuple[float, str, str, int | str, int | str]
             Tuple of (cpu_usage, ram_formatted, vms_formatted, pid, thread_count).
         """
-        cpu_usage = self._process.cpu_percent(interval=None)
+        # Run blocking cpu_percent calls in thread pool to avoid blocking event loop
+        cpu_usage = await asyncio.to_thread(self._process.cpu_percent, interval=None)
         if cpu_usage == 0.0:
-            cpu_usage = self._process.cpu_percent(interval=0.3)
+            cpu_usage = await asyncio.to_thread(self._process.cpu_percent, interval=0.3)
 
         mem_info = self._process.memory_info()
         ram_amount_in_mb = mem_info.rss / (1024 * 1024)
@@ -246,7 +248,9 @@ class Ping(BaseCog):
         ctx : commands.Context[Tux]
             The discord context object.
         """
-        await ctx.defer(ephemeral=True)
+        # Defer early to acknowledge interaction before async work (slash commands only)
+        if ctx.interaction:
+            await ctx.defer(ephemeral=True)
 
         discord_ping = round(self.bot.latency * 1000)
 
@@ -255,9 +259,13 @@ class Ping(BaseCog):
         bot_uptime_readable = self._format_uptime(uptime_delta)
 
         try:
-            cpu_usage, ram_formatted, vms_formatted, pid, thread_count = (
-                self._get_system_stats()
-            )
+            (
+                cpu_usage,
+                ram_formatted,
+                vms_formatted,
+                pid,
+                thread_count,
+            ) = await self._get_system_stats()
         except (OSError, ValueError) as e:
             logger.warning(f"Failed to get system stats: {e}")
             cpu_usage = 0.0
