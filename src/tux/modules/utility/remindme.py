@@ -170,6 +170,7 @@ class RemindMe(BaseCog):
         self,
         ctx: commands.Context[Tux],
         time: str,
+        *,
         reminder: str,
     ) -> None:
         """
