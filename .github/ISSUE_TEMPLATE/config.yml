@@ -1,12 +1,18 @@
 ---
-blank_issues_enabled: false
+blank_issues_enabled: true
 contact_links:
-  - name: Discord Community Support
+  - name: Discord
     url: https://discord.gg/gpmSjcjQxg
-    about: Get help from the community in real-time
+    about: Get help from the community in real-time and discuss the project
+  - name: Frequently Asked Questions
+    url: https://tux.atl.dev/faq
+    about: Check the FAQ for answers to common questions
   - name: Documentation
     url: https://tux.atl.dev
-    about: Check the documentation for guides and API reference
-  - name: Feature Requests
-    url: https://github.com/allthingslinux/tux/issues/new?template=feature_request.md
-    about: Suggest a new feature or enhancement
+    about: Explore the docs fo more in depth information and technical references
+  - name: Roadmap
+    url: https://github.com/orgs/allthingslinux/projects/13
+    about: Check the roadmap for an overview of the project's direction
+  - name: Changelog
+    url: https://tux.atl.dev/changelog/
+    about: View the changelog for the latest updates and improvements

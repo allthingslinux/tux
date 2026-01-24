@@ -1,9 +1,7 @@
 ---
 name: Question
 about: Ask a question about Tux
-labels: "type: question"
 assignees: ''
-
 ---
 
 # Question

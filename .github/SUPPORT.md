@@ -1,54 +1,39 @@
-# Support for Tux
+# Support
 
-Thank you for your interest in Tux, the all-in-one Discord bot for the All Things Linux Discord server. This guide will help you find the support you need to utilize Tux effectively.
+**Tux** is the all-in-one open source Discord bot for the [All Things Linux](https://allthingslinux.org) community. Use the resources below to get help, report issues, or contribute.
 
-## Table of Contents
+## Getting help
 
-- [Support for Tux](#support-for-tux)
-  - [Table of Contents](#table-of-contents)
-  - [Getting Started](#getting-started)
-  - [Frequently Asked Questions (FAQs)](#frequently-asked-questions-faqs)
-    - [1. How do I install and set up Tux?](#1-how-do-i-install-and-set-up-tux)
-    - [2. Where can I find the development guide?](#2-where-can-i-find-the-development-guide)
-  - [Bug Reports and Feature Requests](#bug-reports-and-feature-requests)
-  - [Contributing](#contributing)
-  - [Contact Information](#contact-information)
+- **[Documentation](https://tux.atl.dev)** — User and admin guides, self-hosting, developer docs, CLI reference
+- **[FAQ](https://tux.atl.dev/faq/)** — Common questions about usage, self-hosting, and development
+- **[Support section](https://tux.atl.dev/support/)** — Feedback, bug reports, and community channels
+- **[Discord](https://discord.gg/gpmSjcjQxg)** — Real-time help; use `#tux-support` or `/ticket` for sensitive issues
 
-## Getting Started
+## Bugs and feature requests
 
-If you're just getting started with Tux, please refer to the [README.md](README.md) file in the repository for installation instructions, prerequisites, and a high-level overview of the project.
+1. **Search [existing issues](https://github.com/allthingslinux/tux/issues)** to see if your bug or idea is already reported.
+2. **Open a new issue** and use the right template:
+   - [Bug report](https://github.com/allthingslinux/tux/issues/new?template=bug_report.md)
+   - [Feature request](https://github.com/allthingslinux/tux/issues/new?template=feature_request.md)
+3. Include steps to reproduce (for bugs), your environment, and any logs or screenshots that help.
 
-## Frequently Asked Questions (FAQs)
+## Security
 
-Here are some commonly asked questions about Tux:
+**Do not report security vulnerabilities in public issues.**
 
-### 1. How do I install and set up Tux?
-
-Refer to the [README](README.md) section "Installation" for detailed instructions on how to install and set up the bot.
-
-### 2. Where can I find the development guide?
-
-You can find the development guide in the `docs` directory at [docs/development.md](docs/development.md).
-
-## Bug Reports and Feature Requests
-
-If you encounter any bugs or have feature requests, please follow these steps:
-
-1. **Search Existing Issues**: Before creating a new issue, please search the existing [issues](https://github.com/allthingslinux/tux/issues) to check if your concern has already been addressed.
-
-2. **Create a New Issue**: If you can't find a relevant issue, you can create a new one. Ensure you provide detailed info, including steps to reproduce the issue, expected behavior & any relevant logs or screenshots.
+See the [Security Policy](SECURITY.md) and report issues according to [the policy](https://allthingslinux.org/security).
 
 ## Contributing
 
-We appreciate and welcome contributions to Tux! If you're interested in contributing, please check out our [Contributing Guide](CONTRIBUTING.md) which provides guidelines on how to get started.
+See [CONTRIBUTING.md](CONTRIBUTING.md). The full contributing guide (setup, workflow, PRs) is in the [developer docs](https://tux.atl.dev/developer/contributing/).
 
-## Contact Information
+## Links
 
-For additional help or questions that you can't find answers to, feel free to reach out to us through:
-
-- **Discord Support Server**: [atl.dev](https://discord.gg/gpmSjcjQxg)
-- **GitHub Issues**: [Tux Issues](https://github.com/allthingslinux/tux/issues)
-
-We aim to respond to all queries as quickly as possible.
-
-Thank you for using Tux and being a part of our community!
+| Resource | Link |
+|----------|------|
+| Docs | [tux.atl.dev](https://tux.atl.dev) |
+| FAQ | [tux.atl.dev/faq](https://tux.atl.dev/faq/) |
+| Roadmap | [GitHub Project](https://github.com/orgs/allthingslinux/projects/13) |
+| Changelog | [tux.atl.dev/changelog](https://tux.atl.dev/changelog/) |
+| Discord | [discord.gg/gpmSjcjQxg](https://discord.gg/gpmSjcjQxg) |
+| Issues | [github.com/allthingslinux/tux/issues](https://github.com/allthingslinux/tux/issues) |
