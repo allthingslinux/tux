@@ -6,7 +6,7 @@ interactive menus and detailed information display.
 """
 
 import contextlib
-from datetime import UTC
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any, Protocol
 
@@ -689,9 +689,20 @@ class Cases(ModerationCogBase):
             EmbedType.ACTIVE_CASE if case.case_status else EmbedType.INACTIVE_CASE
         )
 
+        # Set embed timestamp to case creation time
+        # Ensure UTC-aware datetime (database stores as UTC but returns naive)
+        case_timestamp: datetime | None = None
+        if case.created_at:
+            case_timestamp = (
+                case.created_at.replace(tzinfo=UTC)
+                if case.created_at.tzinfo is None
+                else case.created_at
+            )
+
         embed = EmbedCreator.create_embed(
             embed_type=embed_type,
             custom_author_text=f"Case #{case.case_number} ({case.case_type.value if case.case_type else 'UNKNOWN'}) {action}",
+            message_timestamp=case_timestamp,
         )
 
         # Add fields to embed
