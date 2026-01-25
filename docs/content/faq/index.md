@@ -3,7 +3,7 @@ title: FAQ
 description: Frequently asked questions about Tux.
 hide:
   - toc
-icon: lucide/text-quote
+icon: lucide/circle-help
 ---
 
 # Frequently Asked Questions

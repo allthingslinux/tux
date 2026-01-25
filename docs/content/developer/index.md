@@ -3,7 +3,7 @@ title: Developer Guide
 description: Index of developer documentation—contributing, tutorials, concepts, best practices, and reference.
 tags:
   - developer-guide
-icon: lucide/text-quote
+icon: lucide/code-2
 ---
 
 # Developer Guide

@@ -1,6 +1,6 @@
 ---
 title: API Reference
-icon: material/code-tags
+icon: lucide/code-2
 tags:
   - reference
   - api

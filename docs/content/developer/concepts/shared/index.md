@@ -4,7 +4,7 @@ tags:
   - developer-guide
   - concepts
   - shared
-icon: lucide/text-quote
+icon: lucide/share-2
 ---
 
 # Shared

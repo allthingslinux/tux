@@ -4,7 +4,7 @@ tags:
   - developer-guide
   - concepts
   - ui
-icon: lucide/text-quote
+icon: lucide/layout
 ---
 
 # UI Concepts

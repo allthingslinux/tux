@@ -4,6 +4,7 @@ tags:
   - selfhost
   - configuration
   - environment
+icon: lucide/variable
 ---
 
 # Environment Configuration

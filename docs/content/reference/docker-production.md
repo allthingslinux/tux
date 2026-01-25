@@ -4,6 +4,7 @@ tags:
   - reference
   - docker
   - production
+icon: lucide/container
 ---
 
 # Docker Production Deployment

@@ -3,6 +3,7 @@ title: System Operations
 tags:
   - selfhost
   - operations
+icon: lucide/activity
 ---
 
 # System Operations

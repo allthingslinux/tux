@@ -4,6 +4,7 @@ tags:
   - support
   - troubleshooting
   - selfhost
+icon: lucide/server
 ---
 
 # Self-Host Troubleshooting

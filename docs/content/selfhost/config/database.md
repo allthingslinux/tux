@@ -4,6 +4,7 @@ tags:
   - selfhost
   - configuration
   - database
+icon: lucide/database
 ---
 
 # Database Configuration

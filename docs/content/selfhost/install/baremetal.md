@@ -6,6 +6,7 @@ tags:
   - baremetal
   - systemd
   - postgresql
+icon: lucide/hard-drive
 ---
 
 # Bare Metal Installation

@@ -2,7 +2,7 @@
 title: Self-Hoster Guide
 tags:
   - selfhost
-icon: material/server-outline
+icon: lucide/server
 ---
 
 # Self-Hoster Guide

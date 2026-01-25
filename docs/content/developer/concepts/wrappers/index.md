@@ -4,7 +4,7 @@ tags:
   - developer-guide
   - concepts
   - wrappers
-icon: lucide/text-quote
+icon: lucide/package
 ---
 
 # Wrappers

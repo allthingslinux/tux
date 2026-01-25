@@ -5,6 +5,7 @@ tags:
   - user-guide
   - features
   - FEATURE_TAG
+icon: lucide/sparkles
 ---
 
 # FEATURE_NAME

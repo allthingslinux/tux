@@ -3,7 +3,7 @@ title: Developer Tutorials
 tags:
   - developer-guide
   - tutorials
-icon: lucide/text-quote
+icon: lucide/graduation-cap
 ---
 
 # Developer Tutorials

@@ -10,6 +10,7 @@ tags:
   - pydantic-settings
   - dotenv
   - env-variables
+icon: lucide/variable
 ---
 <!-- region:config -->
 # Environment Variables

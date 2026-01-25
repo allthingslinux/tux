@@ -4,7 +4,7 @@ tags:
   - developer-guide
   - best-practices
   - testing
-icon: lucide/text-quote
+icon: lucide/flask-conical
 ---
 
 # Testing

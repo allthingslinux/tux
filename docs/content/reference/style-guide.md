@@ -4,6 +4,7 @@ tags:
   - style-guide
   - docs
   - css
+icon: lucide/type
 ---
 
 # Style Guide

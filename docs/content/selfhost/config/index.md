@@ -3,6 +3,7 @@ title: Self-Host Configuration
 tags:
   - selfhost
   - configuration
+icon: lucide/cog
 ---
 
 # Self-Host Configuration

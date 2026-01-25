@@ -4,7 +4,7 @@ tags:
   - developer-guide
   - concepts
   - handlers
-icon: lucide/text-quote
+icon: lucide/zap
 ---
 
 # Handlers

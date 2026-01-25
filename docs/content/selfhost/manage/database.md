@@ -4,6 +4,7 @@ tags:
   - selfhost
   - operations
   - database
+icon: lucide/database
 ---
 
 # Database Management

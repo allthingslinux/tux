@@ -5,6 +5,7 @@ tags:
   - user-guide
   - modules
   - MODULE_TAG
+icon: lucide/component
 ---
 
 # {MODULE_NAME}

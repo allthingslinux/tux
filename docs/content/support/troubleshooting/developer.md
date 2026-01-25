@@ -4,6 +4,7 @@ tags:
   - support
   - troubleshooting
   - developer
+icon: lucide/bug
 ---
 
 # Developer Troubleshooting

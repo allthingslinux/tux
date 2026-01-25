@@ -4,7 +4,7 @@ tags:
   - developer-guide
   - concepts
   - core
-icon: lucide/text-quote
+icon: lucide/cpu
 ---
 
 # Core Concepts

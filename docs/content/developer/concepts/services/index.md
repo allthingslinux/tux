@@ -4,7 +4,7 @@ tags:
   - developer-guide
   - concepts
   - services
-icon: lucide/text-quote
+icon: lucide/server
 ---
 
 # Services

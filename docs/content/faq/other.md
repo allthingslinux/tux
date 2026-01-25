@@ -2,7 +2,7 @@
 title: Other
 description: Other frequently asked questions about Tux.
 parent: FAQ
-icon: material/help-circle-outline
+icon: lucide/circle-help
 ---
 
 # Other
