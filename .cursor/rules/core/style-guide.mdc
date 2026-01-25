@@ -1,0 +1,1032 @@
+---
+description: Python code style guide and best practices for Tux project (naming, type hints, comprehensions, file operations)
+alwaysApply: true
+---
+
+# Python Code Style Guide
+
+## Overview
+
+Python code style standards for Tux. Ruff enforces most rules automatically. Max 1600 lines per file. Use absolute imports (relative allowed within same module).
+
+## Naming Conventions
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Variables/Functions/Methods | `snake_case` | `calculate_total()`, `user_id` |
+| Classes/Exceptions | `PascalCase` | `UserProfile`, `ValidationError` |
+| Constants | `UPPER_SNAKE_CASE` | `MAX_RETRIES`, `DEFAULT_TIMEOUT` |
+| Protected | `_single_underscore` | `_internal_helper()` |
+| Private | `__double_underscore` | `__private_method()` |
+
+**Guidelines:**
+
+- Avoid one-letter vars (except short loops: `for item in items`)
+- Prefer reverse notation: `elements`, `elements_active` (not `active_elements`)
+- Avoid redundant prefixes: `core = audio.Core()` (not `audio_core`)
+
+## Type Hints
+
+**Modern syntax (Python 3.13+):**
+
+- ✅ `Type | None` (not `Optional[Type]`)
+- ✅ `dict[str, int]` (not `Dict[str, int]`)
+- ✅ `list[str]` (not `List[str]`)
+- ✅ Always include type hints for params/returns
+
+```python
+# ✅ GOOD
+def get_user(user_id: int) -> User | None:
+    return db.users.find_by_id(user_id)
+
+# ❌ BAD
+from typing import Optional
+def get_user(user_id: int) -> Optional[User]: ...
+```
+
+## Comparisons
+
+- ✅ `if attr:` / `if not attr:` (truthiness)
+- ✅ `if attr is None:` / `if attr is not None:`
+- ❌ `if attr == True:` / `if attr == False:` / `if attr == None:`
+
+**Exception:** SQLModel queries may need `== True/False` with `# noqa: E712`
+
+## Comprehensions & Collections
+
+**Prefer comprehensions:**
+
+```python
+# ✅ GOOD
+evens = [n for n in numbers if n % 2 == 0]
+squares = {x: x * x for x in range(10)}
+unique = {x for x in items if x > 5}
+
+# ❌ BAD
+evens = []
+for n in numbers:
+    if n % 2 == 0:
+        evens.append(n)
+```
+
+**Set operations:**
+
+```python
+# ✅ GOOD
+platforms_to_try.extend(set(SUPPORTED) - set(platforms_to_try))
+
+# ❌ BAD
+for p in SUPPORTED:
+    if p not in platforms_to_try:
+        platforms_to_try.append(p)
+```
+
+## File Operations
+
+**Always use `with` statements:**
+
+```python
+# ✅ GOOD
+with open("file.txt") as f:
+    content = f.read()
+with file_path.open("rb") as f:
+    data = f.read()
+async with aiofiles.open(path, encoding="utf-8") as f:
+    content = await f.read()
+
+# ❌ BAD
+f = open("file.txt")
+content = f.read()
+f.close()
+```
+
+## Imports
+
+**Organization (3 groups, blank lines between):**
+
+1. **stdlib** (alphabetical)
+2. **third-party** (alphabetical)
+3. **local** (alphabetical)
+
+```python
+# ✅ GOOD
+import asyncio
+from datetime import UTC, datetime
+from typing import Any
+
+import discord
+from loguru import logger
+
+from tux.core.bot import Tux
+from tux.database.models import Case
+
+from .case_service import CaseService
+```
+
+**Ruff auto-fixes:** `uv run ruff check --fix .`
+
+## Documentation
+
+**NumPy-style docstrings:**
+
+```python
+def process_data(data: dict[str, Any], validate: bool = True) -> dict[str, Any]:
+    """Process data with optional validation.
+
+    Parameters
+    ----
+    data : dict[str, Any]
+        Data to process.
+    validate : bool, optional
+        Whether to validate, by default True.
+
+    Returns
+    ----
+    dict[str, Any]
+        Processed data.
+    """
+    ...
+```
+
+**Docstring guidelines:**
+
+- Use action words ("Return", "Process") rather than descriptions ("Returns", "Processes")
+- Document `__init__` methods in the class docstring:
+
+```python
+class Person:
+    """A simple representation of a human being.
+
+    Parameters
+    ----
+    name : str
+        The person's name.
+    age : int
+        The person's age.
+    """
+
+    def __init__(self, name: str, age: int) -> None:
+        self.name = name
+        self.age = age
+```
+
+**Comments:** Use sparingly. Prefer readable code. Small methods are more effective than comments.
+
+**Line lengths:** 80-100 characters is fine. Don't stress over it. Use parentheses for line continuations.
+
+## Python Idioms & Best Practices
+
+### Explicit Code
+
+Prefer explicit and straightforward code over "magic":
+
+```python
+# ✅ GOOD - Explicit
+def make_complex(x: int, y: int) -> dict[str, int]:
+    return {"x": x, "y": y}
+
+# ❌ BAD - Implicit/magical
+def make_complex(*args):
+    x, y = args
+    return dict(**locals())
+```
+
+### Function Arguments
+
+**Guidelines:**
+
+1. **Positional args**: For 1-2 mandatory args with natural order (`send(message, recipient)`)
+2. **Keyword args**: For optional params with defaults (`send(message, to, cc=None)`)
+3. **`*args`**: Use sparingly - prefer explicit list parameter when possible
+4. **`**kwargs`**: Use only when truly undetermined named args needed
+
+```python
+# ✅ GOOD - Clear signature
+def send(message: str, to: str, cc: str | None = None, bcc: str | None = None) -> None:
+    ...
+
+# ❌ BAD - Unclear *args
+def send(message: str, *args) -> None:  # What are the args?
+    ...
+```
+
+### Returning Values
+
+**Early returns for errors, single exit point for normal flow:**
+
+```python
+# ✅ GOOD
+def process_data(data: dict[str, Any]) -> dict[str, Any] | None:
+    if not data:
+        return None  # Early return for error case
+    if not validate(data):
+        return None  # Early return for error case
+
+    # Single exit point for normal flow
+    result = transform(data)
+    return result
+```
+
+### Unpacking
+
+```python
+# ✅ GOOD
+for index, item in enumerate(items):
+    process(index, item)
+
+a, b = b, a  # Swap
+a, (b, c) = 1, (2, 3)  # Nested unpacking
+a, *rest = [1, 2, 3]  # Extended unpacking (Python 3+)
+```
+
+### Ignored Variables
+
+**Use `__` (double underscore) for intentionally ignored variables:**
+
+```python
+# ✅ GOOD
+filename = "file.txt"
+basename, __, ext = filename.rpartition(".")
+
+# Note: Many guides use `_`, but `__` avoids conflicts with gettext() and interactive prompt
+```
+
+### List Creation Patterns
+
+```python
+# ✅ GOOD - Same thing repeated
+four_nones = [None] * 4
+
+# ✅ GOOD - List of lists (use comprehension, not * operator)
+four_lists = [[] for __ in range(4)]  # Creates 4 separate lists
+
+# ❌ BAD - All reference same list
+four_lists = [[]] * 4  # All elements reference same list object!
+```
+
+### String from List
+
+```python
+# ✅ GOOD
+letters = ["s", "p", "a", "m"]
+word = "".join(letters)  # "spam"
+
+# ❌ BAD
+word = ""
+for letter in letters:
+    word += letter  # Inefficient
+```
+
+### Set vs List for Lookups
+
+**Use sets/dicts for frequent lookups (O(1) vs O(n)):**
+
+```python
+# ✅ GOOD - Set for frequent lookups
+valid_ids = {1, 2, 3, 4, 5}
+if user_id in valid_ids:  # O(1) lookup
+    process(user_id)
+
+# ❌ BAD - List for frequent lookups
+valid_ids = [1, 2, 3, 4, 5]
+if user_id in valid_ids:  # O(n) lookup
+    process(user_id)
+```
+
+**Use sets when:**
+
+- Collection has many items
+- Repeatedly searching for items
+- No duplicates needed
+
+### Dictionary Access
+
+```python
+# ✅ GOOD
+value = data.get("key", "default")  # With default
+if "key" in data:
+    value = data["key"]  # Direct access when key exists
+
+# ❌ BAD
+if data.has_key("key"):  # Deprecated method
+    value = data["key"]
+```
+
+### Filtering Lists
+
+**Never modify list while iterating:**
+
+```python
+# ✅ GOOD - Create new list
+filtered = [x for x in items if x > 0]
+
+# ✅ GOOD - Generator when just iterating
+filtered = (x for x in items if x > 0)
+
+# ❌ BAD - Modifying while iterating
+for item in items:
+    if item <= 0:
+        items.remove(item)  # Dangerous!
+```
+
+### Modifying List Values
+
+```python
+# ✅ GOOD - Create new list
+a = [3, 4, 5]
+a = [x + 3 for x in a]  # New list object
+
+# ✅ GOOD - Use enumerate
+for i, item in enumerate(a):
+    print(i, item)
+
+# ❌ BAD - Modifying shared reference
+a = [3, 4, 5]
+b = a
+for i in range(len(a)):
+    a[i] += 3  # Also modifies b!
+```
+
+### Line Continuations
+
+**Use parentheses, not backslashes:**
+
+```python
+# ✅ GOOD
+long_string = (
+    "First part of the string "
+    "second part of the string"
+)
+
+from some.deep.module import (
+    function_one,
+    function_two,
+    function_three,
+)
+
+# ❌ BAD
+long_string = "First part " \
+    "second part"  # Fragile - whitespace breaks it
+```
+
+### One Statement Per Line
+
+```python
+# ✅ GOOD
+print("one")
+print("two")
+
+if x == 1:
+    print("one")
+
+# ❌ BAD
+print("one"); print("two")
+if x == 1: print("one")
+```
+
+### Generator Expressions vs List Comprehensions
+
+**Use generators when just iterating (saves memory):**
+
+```python
+# ✅ GOOD - Generator (no list created)
+max_value = max((student.gpa for student in graduates))
+
+# ✅ GOOD - List comprehension (when need list)
+top_students = [(s.gpa, s.name) for s in graduates if s.gpa > 3.5]
+# Use list if result needed multiple times
+
+# ❌ BAD - Unnecessary list allocation
+max_value = max([(student.gpa, student.name) for student in graduates])
+```
+
+**Never use comprehension for side effects:**
+
+```python
+# ❌ BAD
+[print(x) for x in sequence]
+
+# ✅ GOOD
+for x in sequence:
+    print(x)
+```
+
+## Async Python Patterns
+
+### Core Concepts
+
+- **Event Loop**: Single-threaded cooperative multitasking, manages coroutines
+- **Coroutines**: Functions with `async def` that can be paused/resumed
+- **Tasks**: Scheduled coroutines running concurrently
+- **Always await coroutines** - they don't execute without `await`
+
+### Basic Patterns
+
+**Entry point (Python 3.7+):**
+
+```python
+# ✅ GOOD
+async def main():
+    result = await fetch_data()
+    return result
+
+asyncio.run(main())
+```
+
+**Concurrent execution with `gather()`:**
+
+```python
+# ✅ GOOD - Run multiple tasks concurrently
+async def fetch_all_users(user_ids: list[int]) -> list[dict]:
+    tasks = [fetch_user(uid) for uid in user_ids]
+    results = await asyncio.gather(*tasks)
+    return results
+
+# ✅ GOOD - With error handling
+results = await asyncio.gather(*tasks, return_exceptions=True)
+successful = [r for r in results if not isinstance(r, Exception)]
+```
+
+**Task creation and management:**
+
+```python
+# ✅ GOOD - Create tasks for background work
+task1 = asyncio.create_task(background_work("Task 1"))
+task2 = asyncio.create_task(background_work("Task 2"))
+
+# Do other work
+await do_something_else()
+
+# Wait for tasks
+result1 = await task1
+result2 = await task2
+```
+
+**Error handling:**
+
+```python
+# ✅ GOOD - Try/except in async functions
+async def safe_operation(item_id: int) -> dict | None:
+    try:
+        return await risky_operation(item_id)
+    except ValueError as e:
+        logger.error(f"Error: {e}")
+        return None
+```
+
+**Timeouts:**
+
+```python
+# ✅ GOOD - Prevent hanging operations
+try:
+    result = await asyncio.wait_for(slow_operation(), timeout=5.0)
+except asyncio.TimeoutError:
+    logger.error("Operation timed out")
+```
+
+### Advanced Patterns
+
+**Async context managers:**
+
+```python
+# ✅ GOOD
+class AsyncDatabaseConnection:
+    async def __aenter__(self):
+        await self.connect()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
+
+async def query_db():
+    async with AsyncDatabaseConnection() as db:
+        return await db.execute("SELECT * FROM users")
+```
+
+**Async iterators:**
+
+```python
+# ✅ GOOD - Async generator
+async def fetch_pages(url: str, max_pages: int) -> AsyncIterator[dict]:
+    for page in range(1, max_pages + 1):
+        data = await fetch_page(url, page)
+        yield data
+
+# ✅ GOOD - Consume async iterator
+async for page_data in fetch_pages("https://api.example.com", 10):
+    process(page_data)
+```
+
+**Producer-Consumer with Queue:**
+
+```python
+# ✅ GOOD
+async def producer(queue: asyncio.Queue, items: list[str]):
+    for item in items:
+        await queue.put(item)
+    await queue.put(None)  # Signal completion
+
+async def consumer(queue: asyncio.Queue):
+    while True:
+        item = await queue.get()
+        if item is None:
+            break
+        await process(item)
+        queue.task_done()
+```
+
+**Rate limiting with Semaphore:**
+
+```python
+# ✅ GOOD - Limit concurrent operations
+async def api_call(url: str, semaphore: asyncio.Semaphore) -> dict:
+    async with semaphore:  # Limits concurrent calls
+        return await fetch(url)
+
+async def rate_limited_requests(urls: list[str], max_concurrent: int = 5):
+    semaphore = asyncio.Semaphore(max_concurrent)
+    tasks = [api_call(url, semaphore) for url in urls]
+    return await asyncio.gather(*tasks)
+```
+
+**Async locks for synchronization:**
+
+```python
+# ✅ GOOD - Thread-safe async counter
+class AsyncCounter:
+    def __init__(self):
+        self.value = 0
+        self.lock = asyncio.Lock()
+
+    async def increment(self):
+        async with self.lock:
+            self.value += 1
+```
+
+### Real-World Patterns
+
+**HTTP requests (aiohttp):**
+
+```python
+# ✅ GOOD - Use connection pool
+async def fetch_urls(urls: list[str]) -> list[dict]:
+    connector = aiohttp.TCPConnector(limit=100, limit_per_host=10)
+    async with aiohttp.ClientSession(connector=connector) as session:
+        tasks = [fetch_url(session, url) for url in urls]
+        return await asyncio.gather(*tasks)
+```
+
+**Database operations:**
+
+```python
+# ✅ GOOD - Concurrent queries
+async def get_user_data(db: AsyncDB, user_id: int) -> dict:
+    user_task = db.fetch_one(f"SELECT * FROM users WHERE id = {user_id}")
+    orders_task = db.execute(f"SELECT * FROM orders WHERE user_id = {user_id}")
+    profile_task = db.fetch_one(f"SELECT * FROM profiles WHERE user_id = {user_id}")
+
+    user, orders, profile = await asyncio.gather(user_task, orders_task, profile_task)
+    return {"user": user, "orders": orders, "profile": profile}
+```
+
+**Batch processing:**
+
+```python
+# ✅ GOOD - Process in batches
+async def batch_process(items: list[str], batch_size: int = 10):
+    for i in range(0, len(items), batch_size):
+        batch = items[i:i + batch_size]
+        tasks = [process_item(item) for item in batch]
+        await asyncio.gather(*tasks)
+```
+
+**Blocking operations in executor:**
+
+```python
+# ✅ GOOD - Run CPU-intensive work in thread pool
+async def run_blocking(data: Any) -> Any:
+    loop = asyncio.get_event_loop()
+    with concurrent.futures.ThreadPoolExecutor() as pool:
+        return await loop.run_in_executor(pool, blocking_function, data)
+```
+
+### Common Pitfalls
+
+```python
+# ❌ BAD - Forgetting await (returns coroutine object)
+result = async_function()  # Wrong!
+
+# ✅ GOOD
+result = await async_function()
+
+# ❌ BAD - Blocking event loop
+async def bad():
+    time.sleep(1)  # Blocks!
+
+# ✅ GOOD
+async def good():
+    await asyncio.sleep(1)  # Non-blocking
+
+# ❌ BAD - Not handling cancellation
+async def task():
+    while True:
+        await asyncio.sleep(1)
+
+# ✅ GOOD - Handle cancellation
+async def task():
+    try:
+        while True:
+            await asyncio.sleep(1)
+    except asyncio.CancelledError:
+        # Cleanup
+        raise  # Re-raise to propagate
+```
+
+### Testing Async Code
+
+```python
+# ✅ GOOD - Use pytest-asyncio
+@pytest.mark.asyncio
+async def test_async_function():
+    result = await fetch_data("https://api.example.com")
+    assert result is not None
+
+@pytest.mark.asyncio
+async def test_with_timeout():
+    with pytest.raises(asyncio.TimeoutError):
+        await asyncio.wait_for(slow_operation(5), timeout=1.0)
+```
+
+### Testing Best Practices
+
+**General guidelines:**
+
+- Use long, descriptive test names (often obviates need for docstrings)
+- Tests should be isolated - don't interact with real database or network
+- Use separate test database or mock objects
+- Prefer factories over fixtures for test data
+- Never let incomplete tests pass - use `assert False, "TODO: finish me"` as placeholder
+- Strive for 100% coverage, but don't obsess over the score
+
+**Unit tests:**
+
+- Focus on one tiny bit of functionality
+- Should be fast, but slow test is better than no test
+- One testcase class per class/model often makes sense
+
+```python
+# ✅ GOOD - Descriptive name, isolated test
+def test_user_has_correct_age_in_dog_years():
+    user = UserFactory(age=14)
+    assert user.dog_years == 2
+```
+
+**Functional tests:**
+
+- Write tests as scenarios
+- Testcase and test method names should read like scenario description
+- Use comments to write out stories before writing test code
+
+```python
+# ✅ GOOD - Reads like scenario
+class TestAUser:
+    def test_can_write_a_blog_post(self):
+        # Goes to her dashboard
+        ...
+        # Clicks "New Post"
+        ...
+        # Fills out the post form
+        ...
+        # Clicks "Submit"
+        ...
+        # Can see the new post
+        ...
+```
+
+## Key Ruff Rules (Quick Reference)
+
+### Pycodestyle (E)
+
+- **E101-E117**: 4 spaces, no tabs, consistent indentation
+- **E301-E306**: 2 blank lines before top-level, 1 between methods
+- **E401**: One import per line
+- **E713/E714**: Use `not in` / `is not` (not `not ... in` / `not ... is`)
+- **E722**: Never bare `except:` (use `except Exception:`)
+- **E731**: No lambda assignment (use `def`)
+- **E225-E228**: Whitespace around operators (`a + b`, not `a+b`)
+
+### Pyflakes (F)
+
+- **F401**: Remove unused imports
+- **F403/F405/F406**: No `from module import *`
+- **F404**: `from __future__ import` at top
+- **F541**: Remove f-string if no placeholders
+- **F601/F602**: No duplicate dict keys
+- **F631**: No tuple in assert
+- **F632**: Use `==` for values, `is` for None/True/False
+- **F841**: Remove unused vars (or prefix with `_`)
+
+### Perflint (PERF)
+
+- **PERF101**: Don't cast to list before iterating
+- **PERF102**: Use `.keys()`, `.values()`, `.items()` explicitly
+- **PERF203**: Avoid try-except in loops
+- **PERF401**: Use list comprehension (not loop+append)
+- **PERF402**: Use `.copy()` or `list()` for copies
+- **PERF403**: Use dict comprehension (not loop)
+
+### PEP 8 Naming (N)
+
+- **N801**: Classes PascalCase
+- **N802**: Functions snake_case
+- **N803**: Args snake_case
+- **N804/N805**: Use `self`/`cls` correctly
+- **N806**: Variables snake_case
+- **N818**: Exceptions end with `Error`
+
+### Tryceratops (TRY)
+
+- **TRY002**: Use custom exceptions (not built-ins directly)
+- **TRY003**: Keep exception messages concise
+- **TRY200**: Use `raise ... from e` for chaining
+- **TRY201**: Use bare `raise` when re-raising
+- **TRY203**: Remove useless try-except
+- **TRY300**: Use `else` block when appropriate
+- **TRY400**: Use `logger.exception()` in except blocks
+- **TRY401**: Don't include exception object in `logger.exception()` call
+
+### Pyupgrade (UP)
+
+- **UP006/UP007/UP037/UP038/UP045**: Modern types (`list[str]`, `str | None`)
+- **UP008**: `super()` without args
+- **UP004/UP039/UP050**: No `(object)`, no unnecessary parens
+- **UP030/UP031/UP032**: Use f-strings
+- **UP015/UP020/UP021**: Remove unnecessary file mode args
+- **UP017**: Use `datetime.UTC` (not `timezone.utc`)
+- **UP011/UP033**: Use `@cache` instead of `@lru_cache(maxsize=None)`
+
+### Refurb (FURB)
+
+- **FURB101/FURB103**: Use `Path.read_text()` / `Path.write_text()`
+- **FURB110/FURB136**: Use `or` operator, `min()`/`max()`
+- **FURB113/FURB131/FURB145**: Use `.clear()`, `.copy()`, `reversed()`
+- **FURB132/FURB142**: Use `.discard()`, set operations
+- **FURB116/FURB188**: Use f-strings, `.removeprefix()`/`.removesuffix()`
+- **FURB152/FURB161/FURB163**: Use `math` constants, `.bit_count()`, `math.log2()`
+- **FURB168/FURB169**: Use `is`/`is not` for None checks
+
+### Pylint (PL)
+
+- **PLC**: Import aliases, string comparisons, dict iteration
+- **PLE**: Special method signatures, await outside async, logging format
+- **PLR**: Too many args/methods/statements, comparison simplifications
+- **PLW**: Useless else on loop, self-assignment, NaN comparison
+
+### Flake8-Bugbear (B)
+
+- **B006/B039**: No mutable defaults (`[]`, `{}`) - use `None` + check
+- **B008**: No function calls in defaults
+- **B007**: Prefix unused loop vars with `_`
+- **B011**: Use `raise AssertionError()` (not `assert False`)
+- **B012**: No return/break/continue in finally
+- **B013**: Remove parens around single exception
+- **B019**: No `@lru_cache` on instance methods
+- **B905**: Use `zip(..., strict=True)`
+- **B909**: Don't modify iterable while iterating
+
+### Flake8-Simplify (SIM)
+
+- **SIM101**: Merge multiple `isinstance()` calls
+- **SIM102**: Collapse nested if statements
+- **SIM103**: Return condition directly (not `if x: return True else False`)
+- **SIM105**: Use `contextlib.suppress()` instead of try-except-pass
+- **SIM108**: Use ternary operator for simple assignments
+- **SIM109**: Use `in` with tuple (not multiple `==`)
+- **SIM110**: Use built-ins (`all()`, `any()`) instead of reimplementing
+- **SIM113**: Use `enumerate()` for index
+- **SIM114**: Combine if branches with `or`
+- **SIM116**: Use dict lookup instead of if-else chain
+- **SIM117**: Single `with` statement for multiple contexts
+- **SIM118**: Use `key in dict` (not `key in dict.keys()`)
+- **SIM201/SIM202**: Use `!=` / `==` (not `not ==` / `not !=`)
+- **SIM300**: Don't use Yoda conditions
+- **SIM401**: Use `.get()` instead of if-else
+
+### Flake8-Async (ASYNC)
+
+- **ASYNC210/ASYNC212**: Use `httpx.AsyncClient` (not `requests` or `httpx.Client`)
+- **ASYNC230/ASYNC240**: Use `aiofiles` (not blocking `open()`)
+- **ASYNC251**: Use `asyncio.sleep()` (not `time.sleep()`)
+- **ASYNC220-ASYNC222**: Use `asyncio.create_subprocess_exec()` (not `subprocess.run()`)
+- **ASYNC250**: No `input()` in async functions
+- **ASYNC109**: Use timeout context manager (not timeout parameter)
+- **ASYNC110**: Use `asyncio.Event` (not busy wait with sleep)
+
+### Flake8-Builtins (A)
+
+- **A001-A006**: Don't shadow builtins (`list`, `dict`, `str`, `id`, `type`, `input`, `print`, etc.)
+- Use descriptive names: `items` (not `list`), `user_id` (not `id`), `text` (not `str`)
+
+### Flake8-Comprehensions (C4)
+
+- **C400-C402**: Use list/set/dict directly (not generator passed to constructor)
+- **C403/C404**: Use set/dict comprehension (not list comprehension)
+- **C405/C406**: Use set/dict literal (not list/tuple passed to constructor)
+- **C408**: Use literal (not constructor with no args): `[]`, `{}`, `set()`
+- **C409-C418**: Remove outer call when passing literal
+- **C411**: Remove unnecessary `list()` call
+- **C413**: Remove wrapper around `sorted()`
+- **C416**: Use constructor directly when comprehension just iterates
+- **C417**: Use comprehension instead of `map()`
+
+### Flake8-Datetimez (DTZ)
+
+- **DTZ001-DTZ007**: Always use timezone-aware datetimes
+- ✅ `datetime.now(UTC)` (not `datetime.now()` or `datetime.utcnow()`)
+- ✅ `datetime.fromtimestamp(ts, tz=UTC)` (not `datetime.utcfromtimestamp()`)
+- ✅ `datetime(2024, 1, 1, tzinfo=UTC)` (not naive datetime)
+- Use `datetime.UTC` (not `timezone.utc`)
+
+### Flake8-Errmsg (EM)
+
+- **EM101-EM103**: Assign exception messages to variables first
+
+```python
+# ✅ GOOD
+message = f"User {user_id} not found"
+raise ValueError(message)
+
+# ❌ BAD
+raise ValueError(f"User {user_id} not found")
+```
+
+### Flake8-Pie (PIE)
+
+- **PIE790**: Remove unnecessary `pass`
+- **PIE794**: No duplicate class fields
+- **PIE796**: Enum values must be unique
+- **PIE800**: Remove unnecessary `**` spread
+- **PIE808**: Remove unnecessary range start (when 0)
+- **PIE810**: Use `startswith()`/`endswith()` with tuple
+
+### Flake8-Print (T20)
+
+- **T201/T203**: Never use `print()`/`pprint()` - use `logger` from loguru
+
+```python
+# ✅ GOOD
+from loguru import logger
+logger.info("Processing data")
+logger.error(f"Error: {e}", exc_info=True)
+
+# ❌ BAD
+print("Processing data")
+```
+
+### Flake8-Quotes (Q)
+
+- **Q000-Q004**: Use double quotes `"` for all strings
+- Use single quotes inside double-quoted strings to avoid escaping
+
+### Flake8-Return (RET)
+
+- **RET501**: Don't explicitly return None if it's the only possible return
+- **RET502/RET503**: Add explicit return when function can return non-None
+- **RET504**: Return directly (not assign then return)
+- **RET505-RET508**: Remove unnecessary else after return/raise/continue/break
+
+### Flake8-Use-Pathlib (PTH)
+
+- **PTH100-PTH123**: Use `pathlib.Path` instead of `os.path`
+- ✅ `Path("file.txt").read_text()` (not `open().read()`)
+- ✅ `Path("file.txt").write_text("content")` (not `open().write()`)
+- ✅ `file_path.exists()` (not `os.path.exists()`)
+- ✅ `base_path / "sub" / "file.txt"` (not `os.path.join()`)
+- ✅ `file_path.suffix` / `.stem` / `.name` / `.parent` (not `os.path.splitext()`)
+
+### Flake8-No-PEP420 (INP)
+
+- **INP001**: All packages must have `__init__.py` (no implicit namespace packages)
+
+### Flake8-Raise (RSE)
+
+- **RSE102**: Remove unnecessary parentheses when raising without arguments
+- ✅ `raise ValueError` (not `raise (ValueError)`)
+- ✅ `raise ValueError("message")` (parentheses required with args)
+
+### Flake8-Import-Conventions (ICN)
+
+- **ICN001-ICN003**: Use conventional aliases (`numpy as np`, `pandas as pd`)
+- Use built-in types (not `typing.Dict`, `typing.List` in Python 3.9+)
+
+### Flake8-Pytest-Style (PT)
+
+- **PT001-PT025**: Fixture rules (use `@pytest.fixture()`, `yield` for teardown)
+- **PT006-PT014**: Parametrize rules (use list/tuple of strings, list/tuple of tuples)
+- **PT009-PT027**: Use `assert` (not unittest), `pytest.raises()` (not try-except)
+- **PT010-PT012**: `pytest.raises()` must have exception, be specific, single statement
+- **PT013**: Use `import pytest` (not `from pytest import`)
+
+### Pydocstyle (D)
+
+- **D100-D107/D417/D419**: All public modules/classes/functions need docstrings
+- **D200-D215**: Formatting (one-line vs multi-line, blank lines, indentation)
+- **D300-D301**: Use triple double quotes `"""` (not `'''`)
+- **D400/D415**: First line ends with period
+- **D401**: Imperative mood ("Process" not "Processes")
+- **D402**: Don't include function signature in docstring
+- **D403/D404**: First word capitalized, not "This"
+- **D405-D416**: NumPy-style sections (Parameters, Returns, etc.) with proper formatting
+
+### Ruff-Specific (RUF)
+
+- **RUF005**: Use collection literals (not concatenation)
+- **RUF006**: Store reference to `asyncio.create_task()` return value
+- **RUF007**: Use `itertools.pairwise()` for successive pairs
+- **RUF008/RUF009**: Use `field(default_factory=...)` for dataclass defaults
+- **RUF012**: Annotate mutable class attributes with `ClassVar`
+- **RUF013**: Use explicit `Type | None` (not implicit Optional)
+- **RUF015**: Use `next(iter(items))` (not `list(items)[0]`)
+- **RUF017**: Use `list.extend()` (not quadratic summation)
+- **RUF019**: Remove unnecessary key check before dict access
+- **RUF024**: Use dict comprehension (not `dict.fromkeys()` with mutable value)
+- **RUF029**: Remove `async` if function doesn't use async features
+- **RUF036**: Put `None` at end of union type
+- **RUF043**: Escape or use raw string for pytest.raises pattern
+- **RUF051**: Use `.pop()` instead of `key in dict` + `del`
+- **RUF100-RUF104**: Fix unused/invalid/redirected noqa comments
+
+## Zen of Python (PEP 20)
+
+Core principles guiding Python design:
+
+- **Explicit is better than implicit**
+- **Simple is better than complex**
+- **Complex is better than complicated**
+- **Readability counts**
+- **There should be one obvious way to do it**
+- **Errors should never pass silently**
+- **If the implementation is hard to explain, it's a bad idea**
+
+## Anti-Patterns
+
+❌ `Optional[Type]` → ✅ `Type | None`
+❌ `if attr == True` → ✅ `if attr:`
+❌ Loop with append → ✅ List comprehension
+❌ File ops without `with` → ✅ Always use `with`
+❌ One-letter vars in long contexts → ✅ Descriptive names
+❌ Missing type hints → ✅ Always include
+❌ Redundant prefixes → ✅ Avoid duplication
+
+## Examples
+
+```python
+"""User authentication service."""
+
+from datetime import UTC, datetime
+from typing import Any
+
+import discord
+from loguru import logger
+
+from tux.database.models import User
+from tux.shared.exceptions import TuxValidationError
+
+
+class AuthService:
+    """Service for user authentication operations."""
+
+    MAX_LOGIN_ATTEMPTS: int = 5
+
+    async def authenticate_user(
+        self,
+        username: str,
+        password: str,
+    ) -> User | None:
+        """Authenticate user with username and password.
+
+        Parameters
+        ----
+        username : str
+            Username to authenticate.
+        password : str
+            Password to verify.
+
+        Returns
+        ----
+        User | None
+            Authenticated user if successful, None otherwise.
+        """
+        if not username or not password:
+            return None
+
+        user = await self.db.users.find_by_username(username)
+        if user is None:
+            return None
+
+        if await self._verify_password(user, password):
+            logger.info(f"User {username} authenticated successfully")
+            return user
+
+        return None
+```

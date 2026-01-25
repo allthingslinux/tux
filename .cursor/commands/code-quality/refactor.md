@@ -53,6 +53,6 @@ During refactoring:
 ## See Also
 
 - Related command: `/lint`
-- Related command: `/write-unit-tests`
+- Related command: `/write-tests`
 - Related rule: @modules/cogs.mdc
 - Related rule: @database/controllers.mdc

@@ -1,6 +1,6 @@
 ---
 description: Pytest fixture patterns, fixture scopes, fixture organization, and fixture usage for Tux
-globs: tests/**/*.py
+globs: tests/**/*.py, scripts/test/*.py
 alwaysApply: false
 ---
 
@@ -16,7 +16,7 @@ Tux uses pytest fixtures organized in `tests/fixtures/` for database setup, test
 
 Fixtures are organized by category:
 
-```
+```text
 tests/fixtures/
 ├── database_fixtures.py    # Database and PGlite fixtures
 ├── test_data_fixtures.py   # Sample data and constants
@@ -199,6 +199,7 @@ async def db_service(pglite_engine):
 
 ## See Also
 
+- @testing/test-quality.mdc - Test quality philosophy and best practices
 - @testing/pytest.mdc - Pytest configuration
 - @testing/markers.mdc - Test markers
 - @testing/async.mdc - Async fixture patterns

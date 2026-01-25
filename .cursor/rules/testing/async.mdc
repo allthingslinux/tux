@@ -1,6 +1,6 @@
 ---
 description: Async testing patterns, async fixtures, async test execution, and asyncio testing for Tux
-globs: tests/**/*.py
+globs: tests/**/*.py, scripts/test/*.py
 alwaysApply: false
 ---
 
@@ -152,6 +152,7 @@ async def test_with_timeout(db_service: DatabaseService) -> None:
 
 ## See Also
 
+- @testing/test-quality.mdc - Test quality philosophy and best practices
 - @testing/pytest.mdc - Pytest configuration
 - @testing/fixtures.mdc - Fixture patterns
 - @testing/markers.mdc - Test markers

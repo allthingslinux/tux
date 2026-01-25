@@ -1,0 +1,498 @@
+---
+description: Test quality philosophy, behavior-driven testing, ACT pattern, and meaningful test design for Tux
+globs: tests/**/*.py, scripts/test/*.py, pyproject.toml
+alwaysApply: false
+---
+
+# Test Quality & Philosophy
+
+## Overview
+
+Tests should verify that code behaves correctly according to business logic and requirements, not just that it runs without errors. This rule focuses on writing meaningful tests that validate behavior, follow the Arrange-Act-Assert (ACT) pattern, and avoid pointless or implementation-focused testing.
+
+## Core Principles
+
+### Test Behavior, Not Implementation
+
+Tests should verify **what** the code does (behavior) and **why** it matters (business value), not **how** it does it (implementation details).
+
+```python
+# ✅ GOOD: Tests business logic behavior
+@pytest.mark.unit
+async def test_user_ban_creates_case_record(
+    moderation_coordinator: ModerationCoordinator,
+    mock_ctx: commands.Context[Tux],
+    db_service: DatabaseService,
+) -> None:
+    """Test that banning a user creates a case record in the database."""
+    # Arrange
+    user = MockMember(id=12345)
+    reason = "Spam and harassment"
+
+    # Act
+    await moderation_coordinator.execute_moderation_action(
+        ctx=mock_ctx,
+        case_type=DBCaseType.BAN,
+        user=user,
+        reason=reason,
+        actions=[(mock_ban_action, type(None))],
+    )
+
+    # Assert - Verify business outcome
+    async with db_service.session() as session:
+        case = await session.get(Case, (TEST_GUILD_ID, 1))
+        assert case is not None
+        assert case.case_type == DBCaseType.BAN
+        assert case.case_reason == reason
+        assert case.case_user_id == user.id
+```
+
+```python
+# ❌ BAD: Tests implementation details
+@pytest.mark.unit
+async def test_moderation_coordinator_calls_case_service_create(
+    moderation_coordinator: ModerationCoordinator,
+    mock_case_service: CaseService,
+) -> None:
+    """Test that coordinator calls case_service.create() method."""
+    # This tests HOW it works, not WHAT it does
+    await moderation_coordinator.execute_moderation_action(...)
+
+    # Asserting internal method calls is fragile and pointless
+    mock_case_service.create.assert_called_once()  # Implementation detail!
+```
+
+### Test Business Logic, Not Trivial Code
+
+Focus on tests that validate meaningful business rules and edge cases, not trivial getters/setters or simple assignments.
+
+```python
+# ✅ GOOD: Tests meaningful business logic
+@pytest.mark.unit
+async def test_permission_system_denies_access_when_user_lacks_role(
+    permission_system: PermissionSystem,
+    mock_ctx: commands.Context[Tux],
+) -> None:
+    """Test that users without required roles are denied access."""
+    # Arrange
+    mock_ctx.author.roles = []  # User has no roles
+
+    # Act & Assert
+    with pytest.raises(TuxPermissionDeniedError):
+        await permission_system.check_command_permission(
+            ctx=mock_ctx,
+            command_name="mod.ban",
+        )
+```
+
+```python
+# ❌ BAD: Tests trivial code
+@pytest.mark.unit
+def test_guild_id_getter(guild: Guild) -> None:
+    """Test that guild.id returns the id."""
+    # This is pointless - testing a simple attribute access
+    assert guild.id == TEST_GUILD_ID  # Trivial, no business value
+```
+
+### Test Requirements, Not Coverage Metrics
+
+Write tests to verify requirements and specifications, not to achieve arbitrary coverage percentages.
+
+```python
+# ✅ GOOD: Tests specification/requirement
+@pytest.mark.integration
+async def test_specification_user_state_changes_must_be_handled_gracefully(
+    moderation_coordinator: ModerationCoordinator,
+    mock_ctx: commands.Context[Tux],
+) -> None:
+    """
+    🔴 SPECIFICATION TEST: User state changes during execution MUST be handled gracefully.
+
+    This test defines the CORRECT behavior: System should handle race conditions gracefully.
+    If this test FAILS, it means the current implementation has critical race condition issues.
+    """
+    # Arrange - Simulate race condition
+    mock_member = MockMember()
+    mock_ban_action = AsyncMock(
+        side_effect=discord.NotFound(MagicMock(), "Member not found"),
+    )
+
+    # Act - Should handle gracefully
+    await moderation_coordinator.execute_moderation_action(
+        ctx=mock_ctx,
+        case_type=DBCaseType.BAN,
+        user=cast(discord.Member, mock_member),
+        reason="User state change test",
+        actions=[(mock_ban_action, type(None))],
+    )
+
+    # Assert - System should not crash, should handle error appropriately
+    # (Implementation depends on requirements)
+```
+
+```python
+# ❌ BAD: Test written just for coverage
+@pytest.mark.unit
+def test_every_line_executed():
+    """Test to increase coverage percentage."""
+    # Testing every branch just to hit 100% coverage
+    # No clear business value or requirement being validated
+    pass
+```
+
+## Arrange-Act-Assert-Cleanup Pattern
+
+Tests follow four phases: **Arrange** (setup), **Act** (execute), **Assert** (verify), **Cleanup** (teardown). Behavior exists between **Act** and **Assert** - this is what we're testing.
+
+> **Note:** In pytest, cleanup is typically handled by fixtures using `yield` statements, so explicit cleanup in test functions is often unnecessary. See [pytest fixtures documentation](https://docs.pytest.org/en/stable/explanation/anatomy.html) for details.
+
+```python
+# ✅ GOOD: Clear ACT structure (cleanup handled by fixtures)
+@pytest.mark.unit
+async def test_guild_config_creation_sets_default_values(
+    guild_controller: GuildController,
+    guild_config_controller: GuildConfigController,
+) -> None:
+    """Test that creating guild config sets appropriate defaults."""
+    # Arrange - Set up preconditions
+    guild_id = 123456789
+    await guild_controller.get_or_create_guild(guild_id)
+
+    # Act - Execute code under test (behavior happens here)
+    config = await guild_config_controller.get_or_create_config(
+        guild_id=guild_id,
+        prefix="!",
+        mod_log_id=987654321,
+    )
+
+    # Assert - Verify business outcomes (check the behavior's result)
+    assert config.id == guild_id
+    assert config.prefix == "!"
+    assert config.case_count == 0  # Default value
+
+    # Cleanup - Handled automatically by fixtures (db_service, etc.)
+```
+
+```python
+# ❌ BAD: Mixed phases, unclear structure
+@pytest.mark.unit
+async def test_something(db_service: DatabaseService) -> None:
+    """Test something."""
+    # Where did this data come from? (Missing Arrange)
+    result = await some_function()  # Magic data
+    assert result  # Vague assertion - what behavior are we verifying?
+
+    # Multiple actions mixed with assertions
+    guild = await create_guild()
+    assert guild is not None  # Assertion in middle of Act phase
+    # Behavior is unclear - what are we actually testing?
+```
+
+### The Four Phases Explained
+
+1. **Arrange**: Prepare everything for the test (objects, services, data, mocks). Line up the dominoes so the act can do its thing in one state-changing step.
+
+2. **Act**: The singular, state-changing action that kicks off the behavior we want to test. This is where the system under test (SUT) changes state.
+
+3. **Assert**: Look at the resulting state and check if it aligns with expectations. Gather evidence to judge whether the behavior matches what we expect. **Behavior exists between Act and Assert.**
+
+4. **Cleanup**: Pick up after the test so other tests aren't influenced. In pytest, this is typically handled by fixtures using `yield` statements.
+
+## Meaningful Test Names
+
+Test names should clearly describe what behavior is being tested and under what conditions.
+
+```python
+# ✅ GOOD: Descriptive test names that read like specifications
+@pytest.mark.unit
+async def test_permission_system_denies_access_when_user_lacks_required_role(
+    permission_system: PermissionSystem,
+    mock_ctx: commands.Context[Tux],
+) -> None:
+    """Test that users without required roles are denied access."""
+    # Test name clearly states: WHAT (denies access) WHEN (user lacks role)
+    pass
+
+@pytest.mark.integration
+async def test_moderation_action_handles_user_leaving_guild_during_execution(
+    moderation_coordinator: ModerationCoordinator,
+    mock_ctx: commands.Context[Tux],
+) -> None:
+    """Test race condition: user leaves guild during action execution."""
+    # Test name describes the scenario being tested
+    pass
+```
+
+```python
+# ❌ BAD: Vague or generic test names
+@pytest.mark.unit
+async def test_permission_system(permission_system: PermissionSystem) -> None:
+    """Test permission system."""  # What about it?
+    pass
+
+@pytest.mark.unit
+async def test_works(db_service: DatabaseService) -> None:
+    """Test that it works."""  # What works? Under what conditions?
+    pass
+```
+
+## Simple Tests: One Feature, One Assertion
+
+Each test should focus on one feature at a time with a single assertion (or related assertions for one concept).
+
+```python
+# ✅ GOOD: One feature per test
+@pytest.mark.unit
+def test_make_dict_returns_expected() -> None:
+    """Test that make_a_dict returns the expected dictionary."""
+    assert make_a_dict(2, 3) == {"a": 2, "b": 3, "result": 5}
+
+@pytest.mark.unit
+def test_make_dict_raises_error_with_negative() -> None:
+    """Test that make_a_dict raises ValueError with negative values."""
+    with pytest.raises(ValueError):
+        make_a_dict(-1, -1)
+```
+
+```python
+# ❌ BAD: Multiple features in one test
+@pytest.mark.unit
+def test_dict() -> None:
+    assert make_a_dict(2, 3) == {"a": 2, "b": 3, "result": 5}
+    with pytest.raises(ValueError):
+        make_a_dict(-1, -1)  # Should be separate test
+```
+
+## Mocking and Isolation
+
+Mock dependencies you don't want to test, and use `spec=` or `autospec=True` for type safety.
+
+```python
+# ✅ GOOD: Mock with autospec for type safety
+@pytest.mark.unit
+def test_with_mocked_dependency(mocker) -> None:
+    """Test with mocked dependency."""
+    mocker.patch("module.some_function", return_value=5, autospec=True)
+    result = function_under_test()
+    assert result == expected
+
+# ✅ GOOD: Use spec= in MagicMock
+@pytest.fixture
+def mock_ctx() -> commands.Context[Tux]:
+    """Create mock context with spec for type safety."""
+    return MagicMock(spec=commands.Context)  # Type-safe mock
+```
+
+```python
+# ❌ BAD: Unspecified mocks defeat type checking
+mock_service = MagicMock()  # No spec - accepts any attribute!
+```
+
+## DRY: Don't Repeat Yourself
+
+Use `@pytest.mark.parametrize` for multiple inputs/outputs, and fixtures for shared setup.
+
+```python
+# ✅ GOOD: Use parametrize for multiple test cases
+@pytest.mark.parametrize("a, b, expected", [(2, 3, 5), (-10, 5, -5), (0, 0, 0)])
+@pytest.mark.unit
+def test_add_numbers(a: int, b: int, expected: int) -> None:
+    """Test add_numbers with various inputs."""
+    assert add_numbers(a, b) == expected
+
+# ✅ GOOD: Use fixtures for shared setup
+@pytest.fixture
+def person() -> Person:
+    """Shared person fixture."""
+    return Person("Emi")
+```
+
+```python
+# ❌ BAD: Repeated setup code
+def test_person_is_adult() -> None:
+    person = Person("Emi")  # Repeated in every test
+    person.age = 19
+    assert person.is_adult()
+```
+
+## Testing Edge Cases & Error Conditions
+
+Tests should verify that the system handles edge cases and errors gracefully according to business requirements.
+
+```python
+# ✅ GOOD: Tests error handling and edge cases
+@pytest.mark.unit
+async def test_moderation_action_handles_discord_not_found_error_gracefully(
+    moderation_coordinator: ModerationCoordinator,
+    mock_ctx: commands.Context[Tux],
+) -> None:
+    """Test that NotFound errors from Discord API are handled gracefully."""
+    # Arrange - Simulate Discord API error
+    mock_action = AsyncMock(side_effect=discord.NotFound(MagicMock(), "Member not found"))
+
+    # Act & Assert - Should not raise unhandled exception
+    await moderation_coordinator.execute_moderation_action(
+        ctx=mock_ctx,
+        case_type=DBCaseType.BAN,
+        user=MockMember(),
+        reason="Test",
+        actions=[(mock_action, type(None))],
+    )
+    # System should handle error appropriately (specific assertion depends on requirements)
+```
+
+```python
+# ❌ BAD: Only tests happy path
+@pytest.mark.unit
+async def test_moderation_action_works(
+    moderation_coordinator: ModerationCoordinator,
+    mock_ctx: commands.Context[Tux],
+) -> None:
+    """Test that moderation action works."""
+    # Only tests happy path - missing error conditions and edge cases
+    await moderation_coordinator.execute_moderation_action(...)
+```
+
+## Testing Integration Points
+
+Integration tests should verify that components work together correctly to achieve business goals.
+
+```python
+# ✅ GOOD: Tests integration for business outcome
+@pytest.mark.integration
+async def test_moderation_workflow_creates_case_and_executes_action(
+    moderation_coordinator: ModerationCoordinator,
+    db_service: DatabaseService,
+    mock_ctx: commands.Context[Tux],
+) -> None:
+    """Test complete moderation workflow: case creation + action execution."""
+    # Arrange
+    user = MockMember(id=12345)
+    reason = "Violation of rules"
+
+    # Act
+    await moderation_coordinator.execute_moderation_action(
+        ctx=mock_ctx,
+        case_type=DBCaseType.BAN,
+        user=user,
+        reason=reason,
+        actions=[(mock_ban_action, type(None))],
+    )
+
+    # Assert - Verify business outcome
+    async with db_service.session() as session:
+        case = await session.get(Case, (TEST_GUILD_ID, 1))
+        assert case is not None
+        assert case.case_type == DBCaseType.BAN
+        assert case.case_reason == reason
+```
+
+```python
+# ❌ BAD: Tests implementation details
+@pytest.mark.integration
+async def test_coordinator_calls_service_methods_in_order(
+    moderation_coordinator: ModerationCoordinator,
+    mock_case_service: CaseService,
+) -> None:
+    """Test that coordinator calls services in correct order."""
+    await moderation_coordinator.execute_moderation_action(...)
+    # Verifying call order is an implementation detail, not business behavior
+    mock_case_service.create.assert_called_before(...)
+```
+
+## Best Practices
+
+1. **Test behavior, not implementation** - Verify what the code does, not how it does it. Behavior exists between Act and Assert.
+2. **Follow ACT pattern** - Clear Arrange-Act-Assert-Cleanup structure in every test (cleanup via fixtures)
+3. **Use descriptive names** - Test names should read like specifications describing the behavior being tested
+4. **Test business logic** - Focus on meaningful business rules and requirements, not trivial code
+5. **Test edge cases** - Verify error handling and boundary conditions according to requirements
+6. **Test integration outcomes** - Verify components work together to achieve business goals
+7. **One feature per test** - Test one feature at a time with a single assertion (or related assertions for one concept)
+8. **Test requirements** - Write tests to verify specifications, not just for coverage metrics
+9. **Isolate tests** - Tests should not depend on each other or external state
+10. **Use fixtures for cleanup** - Leverage pytest fixtures with `yield` for automatic cleanup, not manual teardown
+11. **Mock to isolate** - Mock dependencies you don't want to test, use `spec=` or `autospec=True` for type safety
+12. **DRY with parametrize** - Use `@pytest.mark.parametrize` for testing multiple inputs/outputs, use fixtures for shared setup
+
+## Anti-Patterns
+
+1. ❌ **Testing implementation details** - Don't test internal method calls or private attributes
+2. ❌ **Testing trivial code** - Don't test simple getters, setters, or attribute access
+3. ❌ **Testing for coverage** - Don't write tests just to hit coverage metrics
+4. ❌ **Vague test names** - Don't use generic names like `test_works` or `test_function`
+5. ❌ **Missing ACT structure** - Don't mix arrangement, action, and assertion phases
+6. ❌ **Only happy path** - Don't ignore error conditions and edge cases
+7. ❌ **Testing framework code** - Don't test library/framework functionality (e.g., SQLModel, discord.py)
+8. ❌ **Over-mocking** - Don't mock everything; use real objects when possible
+9. ❌ **Test interdependencies** - Don't write tests that depend on execution order
+10. ❌ **Asserting implementation** - Don't assert on internal state that users don't care about
+11. ❌ **Manual cleanup in tests** - Don't manually clean up when fixtures can handle it automatically
+12. ❌ **Multiple features per test** - Don't test multiple features in one test; split into separate tests
+13. ❌ **Unspecified mocks** - Don't use `MagicMock()` without `spec=` or `autospec=True`; it defeats type checking
+14. ❌ **Repeated test code** - Don't duplicate test setup; use fixtures or parametrize instead
+
+## Examples
+
+### Good Test: Business Logic Validation
+
+```python
+@pytest.mark.unit
+async def test_permission_check_validates_user_has_required_role_rank(
+    permission_system: PermissionSystem,
+    mock_ctx: commands.Context[Tux],
+) -> None:
+    """Test that permission check validates user has role with sufficient rank."""
+    role = await create_test_role(rank=5)
+    mock_ctx.author.roles = [role]
+    has_permission = await permission_system.check_command_permission(
+        ctx=mock_ctx,
+        command_name="mod.ban",
+    )
+    assert has_permission is True  # User has sufficient rank
+```
+
+### Good Test: Error Handling
+
+```python
+@pytest.mark.unit
+async def test_moderation_action_raises_permission_error_when_moderator_lacks_permissions(
+    moderation_coordinator: ModerationCoordinator,
+    mock_ctx: commands.Context[Tux],
+) -> None:
+    """Test that moderation action fails when moderator lacks required permissions."""
+    mock_ctx.author.guild_permissions.ban_members = False
+    with pytest.raises(TuxPermissionDeniedError, match="ban members"):
+        await moderation_coordinator.execute_moderation_action(
+            ctx=mock_ctx,
+            case_type=DBCaseType.BAN,
+            user=MockMember(),
+            reason="Test",
+            actions=[(mock_ban_action, type(None))],
+        )
+```
+
+### Bad Test: Implementation Detail
+
+```python
+# ❌ BAD: Tests how it works, not what it does
+@pytest.mark.unit
+async def test_coordinator_calls_internal_method(
+    moderation_coordinator: ModerationCoordinator,
+) -> None:
+    """Test that coordinator calls _validate_permissions method."""
+    with patch.object(moderation_coordinator, "_validate_permissions") as mock_validate:
+        await moderation_coordinator.execute_moderation_action(...)
+        mock_validate.assert_called_once()  # Implementation detail!
+```
+
+## See Also
+
+- [pytest: Anatomy of a test](https://docs.pytest.org/en/stable/explanation/anatomy.html) - Official pytest documentation on test structure
+- @testing/pytest.mdc - Pytest configuration and structure
+- @testing/fixtures.mdc - Fixture patterns for test setup and cleanup
+- @testing/markers.mdc - Test marker conventions
+- @testing/coverage.mdc - Coverage requirements (but remember: test for behavior, not coverage)
+- @testing/async.mdc - Async testing patterns
+- @AGENTS.md - General coding standards
+- @.cursor/rules/rules.mdc - Complete catalog of all rules and commands

@@ -53,5 +53,5 @@ If review finds issues:
 
 - Related command: `/lint`
 - Related command: `/refactor`
-- Related command: `/write-unit-tests`
+- Related command: `/write-tests`
 - Related rule: @AGENTS.md

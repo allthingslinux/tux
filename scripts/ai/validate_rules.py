@@ -18,7 +18,7 @@ from scripts.ui import console
 app = create_app()
 
 # Files exempt from the 500-line limit
-LARGE_FILE_EXCEPTIONS: set[str] = {"**/ui/cv2.mdc"}
+LARGE_FILE_EXCEPTIONS: set[str] = {"**/ui/cv2.mdc", "**/core/style-guide.mdc"}
 
 
 def _check_rule_frontmatter(

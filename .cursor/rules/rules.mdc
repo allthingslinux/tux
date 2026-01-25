@@ -11,6 +11,7 @@ Complete catalog of all rules and commands in the Tux project.
 ### Core Rules
 
 - `core/tech-stack.mdc` - Tech stack, dependencies, project structure
+- `core/style-guide.mdc` - Python code style guide and best practices
 
 ### Database Rules
 
@@ -35,6 +36,7 @@ Complete catalog of all rules and commands in the Tux project.
 - `testing/markers.mdc` - Test marker conventions
 - `testing/coverage.mdc` - Coverage requirements
 - `testing/async.mdc` - Async testing patterns
+- `testing/test-quality.mdc` - Test quality philosophy, behavior-driven testing, and ACT pattern
 
 ### Security Rules
 
@@ -75,13 +77,14 @@ Complete catalog of all rules and commands in the Tux project.
 - `code-quality/lint.md` - Lint and fix code
 - `code-quality/refactor.md` - Refactor code
 - `code-quality/review-existing-diffs.md` - Review git diffs
+- `code-quality/validate-style.md` - Validate file(s) against style guide
 
 ### Testing Commands
 
-- `testing/write-unit-tests.md` - Write unit tests
-- `testing/run-all-tests-and-fix.md` - Run all tests and fix failures
+- `testing/write-tests.md` - Write tests (unit, integration, etc.)
+- `testing/run-tests.md` - Run tests (all, related, by marker, or specific files) and fix failures
 - `testing/test-coverage.md` - Generate and review coverage
-- `testing/integration-tests.md` - Run integration tests
+- `testing/audit-and-fix-tests.md` - Audit and automatically fix tests for compliance with style guide and testing rules
 
 ### Database Commands
 

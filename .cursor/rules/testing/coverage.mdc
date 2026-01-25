@@ -1,6 +1,6 @@
 ---
 description: Test coverage requirements, coverage reporting, coverage goals, and coverage best practices for Tux
-globs: tests/**/*.py, pyproject.toml
+globs: tests/**/*.py, pyproject.toml, scripts/test/*.py
 alwaysApply: false
 ---
 
@@ -77,6 +77,7 @@ uv run test html
 4. **Review coverage** - Regularly review coverage reports
 5. **Improve gradually** - Improve coverage on legacy code over time
 6. **Use branch coverage** - Enable --cov-branch for branch coverage
+7. **Test for behavior, not coverage** - Write tests to verify requirements, not just hit metrics (see @testing/test-quality.mdc)
 
 ## Coverage Exclusions
 
@@ -128,6 +129,7 @@ uv run test html
 
 ## See Also
 
+- @testing/test-quality.mdc - Test quality philosophy (test for behavior, not coverage)
 - @testing/pytest.mdc - Pytest configuration
 - @testing/fixtures.mdc - Fixture patterns
 - @AGENTS.md - General coding standards

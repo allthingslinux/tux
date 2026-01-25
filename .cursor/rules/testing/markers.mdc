@@ -1,6 +1,6 @@
 ---
 description: Pytest test markers, marker conventions, marker usage, and test categorization for Tux
-globs: tests/**/*.py
+globs: tests/**/*.py, scripts/test/*.py
 alwaysApply: false
 ---
 
@@ -191,6 +191,7 @@ uv run pytest -m "unit and database"  # Unit tests with database
 
 ## See Also
 
+- @testing/test-quality.mdc - Test quality philosophy and best practices
 - @testing/pytest.mdc - Pytest configuration
 - @testing/fixtures.mdc - Fixture patterns
 - @testing/async.mdc - Async testing patterns

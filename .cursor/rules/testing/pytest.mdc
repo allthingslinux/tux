@@ -1,6 +1,6 @@
 ---
 description: Pytest configuration, test structure, test organization, and pytest patterns for Tux
-globs: tests/**/*.py
+globs: tests/**/*.py, scripts/test/*.py, pyproject.toml
 alwaysApply: false
 ---
 
@@ -35,9 +35,10 @@ async def test_my_function(db_service: DatabaseService) -> None:
 
     # Assert
     assert result == expected
+    # Cleanup - Handled automatically by fixtures
 ```
 
-✅ **GOOD:** Proper marker, type hints, docstring, Arrange-Act-Assert pattern
+✅ **GOOD:** Proper marker, type hints, docstring, Arrange-Act-Assert-Cleanup pattern (see @testing/test-quality.mdc)
 
 ❌ **BAD:** Missing marker, no type hints, no docstring
 
@@ -73,7 +74,7 @@ class TestMyFeature:
 
 ### Directory Structure
 
-```
+```text
 tests/
 ├── conftest.py           # Pytest configuration and fixtures
 ├── fixtures/             # Shared fixtures
@@ -171,10 +172,11 @@ Coverage is automatically generated:
 1. **Use markers** - Always mark tests (unit, integration, etc.)
 2. **Type hints** - Type all test function parameters
 3. **Docstrings** - Document what each test does
-4. **Arrange-Act-Assert** - Follow AAA pattern
+4. **Arrange-Act-Assert-Cleanup** - Follow ACT pattern (see @testing/test-quality.mdc)
 5. **Descriptive names** - Test names should describe what they test
 6. **Isolated tests** - Tests should not depend on each other
 7. **Use fixtures** - Use fixtures for setup/teardown
+8. **Test behavior, not implementation** - Focus on business logic (see @testing/test-quality.mdc)
 
 ## Anti-Patterns
 
@@ -187,6 +189,7 @@ Coverage is automatically generated:
 
 ## See Also
 
+- @testing/test-quality.mdc - Test quality philosophy, behavior-driven testing, and ACT pattern
 - @testing/fixtures.mdc - Fixture patterns
 - @testing/markers.mdc - Test marker conventions
 - @testing/coverage.mdc - Coverage requirements
