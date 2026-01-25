@@ -7,8 +7,9 @@ guild configuration and other data that changes infrequently.
 
 from __future__ import annotations
 
+import asyncio
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from typing import Any
 
 from loguru import logger
@@ -67,6 +68,13 @@ class TTLCache:
         -------
         Any | None
             The cached value, or None if not found or expired.
+
+        Notes
+        -----
+        This method is safe for concurrent async access. In Python's async model
+        (single-threaded event loop), dict operations are atomic. The check-then-act
+        pattern here has no await points, so no other coroutine can run between
+        the check and the access, making it race-condition safe.
         """
         if key not in self._cache:
             return None
@@ -181,16 +189,24 @@ class GuildConfigCacheManager:
     when config is updated from multiple sources.
     """
 
-    __slots__ = ("_cache",)
+    __slots__ = ("_cache", "_locks")
     _instance: GuildConfigCacheManager | None = None
     _cache: TTLCache
+    _locks: dict[int, asyncio.Lock]
 
     def __new__(cls) -> GuildConfigCacheManager:
         """Create or return the singleton instance."""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._cache = TTLCache(ttl=300.0, max_size=1000)
+            cls._instance._locks = {}  # Per-guild locks for cache updates
         return cls._instance
+
+    def _get_lock(self, guild_id: int) -> asyncio.Lock:
+        """Get or create a lock for a specific guild."""
+        if guild_id not in self._locks:
+            self._locks[guild_id] = asyncio.Lock()
+        return self._locks[guild_id]
 
     def get(self, guild_id: int) -> dict[str, int | None] | None:
         """
@@ -221,6 +237,9 @@ class GuildConfigCacheManager:
         """
         Cache guild config for a guild.
 
+        This method is safe for concurrent access. Multiple coroutines can
+        call this with partial updates without losing data.
+
         Parameters
         ----------
         guild_id : int
@@ -233,6 +252,12 @@ class GuildConfigCacheManager:
             The jail role ID. Omit to skip updating this field.
         jail_channel_id : int | None, optional
             The jail channel ID. Omit to skip updating this field.
+
+        Notes
+        -----
+        This method is synchronous and has no await points, making it atomic
+        in Python's async model. However, when called from async code that
+        has await points between cache check and set, use async_set() instead.
         """
         cache_key = f"guild_config_{guild_id}"
         # Get existing cache or create new dict
@@ -251,6 +276,53 @@ class GuildConfigCacheManager:
             updated["jail_channel_id"] = jail_channel_id
 
         self._cache.set(cache_key, updated)
+
+    async def async_set(
+        self,
+        guild_id: int,
+        audit_log_id: int | None = _MISSING,
+        mod_log_id: int | None = _MISSING,
+        jail_role_id: int | None = _MISSING,
+        jail_channel_id: int | None = _MISSING,
+    ) -> None:
+        """
+        Cache guild config for a guild with async locking.
+
+        Use this method when called from async code that has await points
+        between cache check and set, to prevent race conditions with concurrent
+        partial updates.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+        audit_log_id : int | None, optional
+            The audit log channel ID. Omit to skip updating this field.
+        mod_log_id : int | None, optional
+            The mod log channel ID. Omit to skip updating this field.
+        jail_role_id : int | None, optional
+            The jail role ID. Omit to skip updating this field.
+        jail_channel_id : int | None, optional
+            The jail channel ID. Omit to skip updating this field.
+        """
+        lock = self._get_lock(guild_id)
+        async with lock:
+            # Re-check cache after acquiring lock (another coroutine may have updated it)
+            cache_key = f"guild_config_{guild_id}"
+            existing: dict[str, int | None] = self._cache.get(cache_key) or {}
+            updated: dict[str, int | None] = dict(existing)
+
+            # Only update fields that were explicitly provided (not _MISSING)
+            if audit_log_id is not _MISSING:
+                updated["audit_log_id"] = audit_log_id
+            if mod_log_id is not _MISSING:
+                updated["mod_log_id"] = mod_log_id
+            if jail_role_id is not _MISSING:
+                updated["jail_role_id"] = jail_role_id
+            if jail_channel_id is not _MISSING:
+                updated["jail_channel_id"] = jail_channel_id
+
+            self._cache.set(cache_key, updated)
 
     def invalidate(self, guild_id: int) -> None:
         """
@@ -279,9 +351,11 @@ class JailStatusCache:
     tuple to reduce database queries for frequently checked jail status.
     """
 
-    __slots__ = ("_cache",)
+    __slots__ = ("_cache", "_locks", "_locks_lock")
     _instance: JailStatusCache | None = None
     _cache: TTLCache
+    _locks: dict[tuple[int, int], asyncio.Lock]
+    _locks_lock: asyncio.Lock
 
     def __new__(cls) -> JailStatusCache:
         """Create or return the singleton instance."""
@@ -289,7 +363,70 @@ class JailStatusCache:
             cls._instance = super().__new__(cls)
             # 60 second TTL - jail status changes infrequently
             cls._instance._cache = TTLCache(ttl=60.0, max_size=5000)
+            cls._instance._locks = {}  # Per (guild_id, user_id) locks for cache updates
+            cls._instance._locks_lock = (
+                asyncio.Lock()
+            )  # Lock for managing the locks dict
         return cls._instance
+
+    def _get_lock_key(self, guild_id: int, user_id: int) -> tuple[int, int]:
+        """Generate lock key for guild_id and user_id."""
+        return (guild_id, user_id)
+
+    async def _get_lock(self, guild_id: int, user_id: int) -> asyncio.Lock:
+        """Get or create a lock for a specific (guild_id, user_id) pair."""
+        lock_key = self._get_lock_key(guild_id, user_id)
+        async with self._locks_lock:
+            if lock_key not in self._locks:
+                self._locks[lock_key] = asyncio.Lock()
+        return self._locks[lock_key]
+
+    async def get_or_fetch(
+        self,
+        guild_id: int,
+        user_id: int,
+        fetch_func: Callable[[], Coroutine[Any, Any, bool]],
+    ) -> bool:
+        """
+        Get cached value or fetch and cache with async locking.
+
+        Prevents cache stampede when multiple coroutines miss the cache
+        simultaneously. Only one coroutine will fetch, others will wait
+        and use the cached result.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+        user_id : int
+            The user ID.
+        fetch_func : Callable[[], Coroutine[Any, Any, bool]]
+            Async function to fetch the value if not cached.
+
+        Returns
+        -------
+        bool
+            The cached or fetched jail status.
+        """
+        # Check cache first (fast path)
+        cached_status = self.get(guild_id, user_id)
+        if cached_status is not None:
+            return cached_status
+
+        # Cache miss - acquire lock to prevent stampede
+        lock = await self._get_lock(guild_id, user_id)
+        async with lock:
+            # Re-check cache after acquiring lock
+            cached_status = self.get(guild_id, user_id)
+            if cached_status is not None:
+                return cached_status
+
+            # Still a cache miss - fetch from database
+            is_jailed = await fetch_func()
+
+            # Cache the result (atomic operation, no await points)
+            self.set(guild_id, user_id, is_jailed)
+            return is_jailed
 
     def _get_key(self, guild_id: int, user_id: int) -> str:
         """Generate cache key for guild_id and user_id."""
@@ -318,6 +455,35 @@ class JailStatusCache:
         """
         Cache jail status for a user.
 
+        This method is safe for concurrent access. Multiple coroutines can
+        call this without losing data.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+        user_id : int
+            The user ID.
+        is_jailed : bool
+            Whether the user is jailed.
+
+        Notes
+        -----
+        This method is synchronous and has no await points, making it atomic
+        in Python's async model. However, when called from async code that
+        has await points between cache check and set, use async_set() instead.
+        """
+        cache_key = self._get_key(guild_id, user_id)
+        self._cache.set(cache_key, is_jailed)
+
+    async def async_set(self, guild_id: int, user_id: int, is_jailed: bool) -> None:
+        """
+        Cache jail status for a user with async locking.
+
+        Use this method when called from async code that has await points
+        between cache check and set, to prevent cache stampede when multiple
+        coroutines miss the cache simultaneously.
+
         Parameters
         ----------
         guild_id : int
@@ -327,8 +493,15 @@ class JailStatusCache:
         is_jailed : bool
             Whether the user is jailed.
         """
-        cache_key = self._get_key(guild_id, user_id)
-        self._cache.set(cache_key, is_jailed)
+        lock = await self._get_lock(guild_id, user_id)
+        async with lock:
+            # Re-check cache after acquiring lock (another coroutine may have updated it)
+            cache_key = self._get_key(guild_id, user_id)
+            cached = self._cache.get(cache_key)
+            if cached is not None:
+                # Another coroutine already cached the value, no need to set again
+                return
+            self._cache.set(cache_key, is_jailed)
 
     def invalidate(self, guild_id: int, user_id: int) -> None:
         """
