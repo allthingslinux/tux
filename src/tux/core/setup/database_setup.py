@@ -96,6 +96,87 @@ class DatabaseSetupService(BaseSetupService):
             # Table doesn't exist or query failed - no migrations applied yet
             return None
 
+    async def _check_tables_exist(self) -> bool:
+        """Check if any application tables exist in the database.
+
+        Returns
+        -------
+        bool
+            True if tables exist, False otherwise.
+        """
+        try:
+            async with self.db_service.session() as session:
+                result = await session.execute(
+                    text(
+                        """
+                        SELECT COUNT(*) FROM information_schema.tables
+                        WHERE table_schema = 'public'
+                          AND table_type = 'BASE TABLE'
+                          AND table_name != 'alembic_version'
+                        """,
+                    ),
+                )
+                count = result.scalar() or 0
+                return count > 0
+        except Exception:
+            # If query fails, assume no tables exist
+            return False
+
+    async def _stamp_database_if_needed(self) -> None:
+        """Stamp database with head revision if tables exist but no Alembic version.
+
+        This handles the case where tables were created manually (e.g., via
+        SQLModel.metadata.create_all) but Alembic version tracking is missing.
+        """
+        current_rev = await self._get_current_revision()
+        tables_exist = await self._check_tables_exist()
+
+        # If tables exist but no Alembic version, we need to stamp the database
+        if tables_exist and current_rev is None:
+            logger.warning(
+                "Database has tables but no Alembic version. "
+                "Stamping database with head revision...",
+            )
+
+            cfg = self._build_alembic_config()
+            script_dir = ScriptDirectory.from_config(cfg)
+            head_revs = [rev.revision for rev in script_dir.get_revisions("head")]
+
+            if not head_revs:
+                logger.error("No head revisions found. Cannot stamp database.")
+                msg = "Cannot stamp database: no migration head found"
+                raise TuxDatabaseMigrationError(msg)
+
+            # Use the first head revision (or comma-separated if multiple)
+            head_rev = ",".join(head_revs) if len(head_revs) > 1 else head_revs[0]
+
+            loop = asyncio.get_event_loop()
+
+            def _stamp_sync():
+                try:
+                    command.stamp(cfg, head_rev)
+                    logger.success(f"Database stamped with revision: {head_rev}")
+                except Exception as e:
+                    error_msg = f"Failed to stamp database: {e}"
+                    logger.exception(error_msg)
+                    raise TuxDatabaseMigrationError(error_msg) from e
+
+            try:
+                await asyncio.wait_for(
+                    loop.run_in_executor(None, _stamp_sync),
+                    timeout=10.0,
+                )
+            except TimeoutError as e:
+                error_msg = "Database stamping timed out after 10 seconds"
+                logger.exception(error_msg)
+                raise TuxDatabaseMigrationError(error_msg) from e
+            except TuxDatabaseMigrationError:
+                raise
+            except Exception as e:
+                error_msg = f"Unexpected error during database stamping: {e}"
+                logger.exception(error_msg)
+                raise TuxDatabaseMigrationError(error_msg) from e
+
     async def _upgrade_head_if_needed(self) -> None:
         """
         Run Alembic upgrade to head on startup.
@@ -195,12 +276,22 @@ class DatabaseSetupService(BaseSetupService):
             raise TuxDatabaseConnectionError(error_msg) from e
 
         logger.success("Database connected successfully")
-        await self._create_tables()
+        # Check if we need to stamp the database (tables exist but no Alembic version)
+        # This handles the case where tables were created manually but Alembic
+        # version tracking is missing. Once stamped, Alembic will manage everything.
+        await self._stamp_database_if_needed()
+        # Run migrations to ensure database is up to date
+        # Migrations will create tables if they don't exist, or apply pending changes
         await self._upgrade_head_if_needed()
         await self._validate_schema()
 
     async def _create_tables(self) -> None:
-        """Create database tables if they don't exist."""
+        """Create database tables if they don't exist.
+
+        Note: This method is deprecated in favor of Alembic migrations.
+        It's kept for backward compatibility but should not be called
+        when Alembic is managing the database schema.
+        """
         try:
             if engine := self.db_service.engine:
                 logger.info("Creating database tables...")
