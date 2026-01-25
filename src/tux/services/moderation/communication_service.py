@@ -281,7 +281,8 @@ class CommunicationService:
         )
 
         # Cache the result (get_log_channel_ids already caches, but this ensures consistency)
-        self._guild_config_cache.set(guild_id, audit_log_id, mod_log_id)
+        # Use async_set to prevent race conditions when multiple coroutines update cache concurrently
+        await self._guild_config_cache.async_set(guild_id, audit_log_id, mod_log_id)
 
         return audit_log_id, mod_log_id
 
