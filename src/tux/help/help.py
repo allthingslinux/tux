@@ -8,10 +8,8 @@ from __future__ import annotations
 
 import time
 from collections.abc import Mapping
-from pathlib import Path
 from typing import Any
 
-import discord
 from discord.ext import commands
 from loguru import logger
 
@@ -71,12 +69,6 @@ class TuxHelp(commands.HelpCommand):
         embed = await renderer.create_main_embed(categories)
         view = await navigation.create_main_view()
 
-        # Attach help banner image if it exists
-        banner_path = Path("assets/branding/help_banner.png")
-        files: list[discord.File] = []
-        if banner_path.exists():
-            files.append(discord.File(banner_path, filename="help_banner.png"))
-
         total_time = (time.perf_counter() - help_start) * 1000
         guild_id = self.context.guild.id if self.context.guild else None
         user_id = self.context.author.id if self.context.author else 0
@@ -87,7 +79,7 @@ class TuxHelp(commands.HelpCommand):
             f"categories: {categories_time:.2f}ms, total: {total_time:.2f}ms",
         )
 
-        await self.context.send(embed=embed, view=view, files=files)
+        await self.context.send(embed=embed, view=view)
 
     async def send_cog_help(self, cog: commands.Cog) -> None:
         """Send help for a specific cog."""

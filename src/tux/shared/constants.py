@@ -121,6 +121,11 @@ EMBED_ICONS: Final[dict[str, str]] = {
     "WARN": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/warn.avif?raw=true",
 }
 
+# Help banner URL (cached via GitHub CDN)
+HELP_BANNER_URL: Final[str] = (
+    "https://github.com/allthingslinux/tux/blob/main/assets/branding/help_banner.png?raw=true"
+)
+
 # Embed limit constants
 EMBED_MAX_NAME_LENGTH: Final[int] = 256
 EMBED_MAX_DESC_LENGTH: Final[int] = 4096

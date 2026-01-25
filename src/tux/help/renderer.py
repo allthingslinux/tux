@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any, get_type_hints
 
 import discord
@@ -10,7 +9,7 @@ from discord import SelectOption
 from discord.ext import commands
 
 from tux.shared.config import CONFIG
-from tux.shared.constants import EMBED_COLORS
+from tux.shared.constants import EMBED_COLORS, HELP_BANNER_URL
 from tux.shared.version import get_version
 
 from .utils import format_multiline_description, truncate_description
@@ -169,10 +168,8 @@ class HelpRenderer:
 
         await self._add_bot_help_fields(embed)
 
-        # Set help banner image
-        banner_path = Path("assets/branding/help_banner.png")
-        if banner_path.exists():
-            embed.set_image(url="attachment://help_banner.png")
+        # Set help banner image (using cached remote URL instead of attachment)
+        embed.set_image(url=HELP_BANNER_URL)
 
         return embed
 
