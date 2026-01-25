@@ -117,10 +117,10 @@ class EmojiManager:
         ----------
         bot : commands.Bot
             The discord bot instance.
-        emojis_path : Optional[Path], optional
+        emojis_path : Path | None, optional
             Path to the directory containing local emoji files.
             Defaults to DEFAULT_EMOJI_ASSETS_PATH.
-        create_delay : Optional[float], optional
+        create_delay : float | None, optional
             Delay in seconds before creating an emoji to mitigate rate limits.
             Defaults to DEFAULT_EMOJI_CREATE_DELAY.
         """
@@ -485,7 +485,7 @@ class EmojiManager:
 
         Returns
         -------
-        Optional[discord.Emoji]
+        discord.Emoji | None
             The newly created emoji if successful, otherwise None.
         """
         logger.info(f"Starting resync process for emoji: '{name}'...")
