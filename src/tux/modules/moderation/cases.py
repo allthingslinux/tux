@@ -505,7 +505,9 @@ class Cases(ModerationCogBase):
 
         try:
             # Get mod log channel ID from guild config
-            mod_log_id = await self.bot.db.guild_config.get_mod_log_id(ctx.guild.id)
+            _, mod_log_id = await self.bot.db.guild_config.get_log_channel_ids(
+                ctx.guild.id,
+            )
             if not mod_log_id:
                 logger.debug(f"No mod log channel configured for guild {ctx.guild.id}")
                 return
@@ -658,7 +660,7 @@ class Cases(ModerationCogBase):
         ----------
         ctx : commands.Context[Tux]
             The context in which the command is being invoked.
-        case : Optional[Case]
+        case : Case | None
             The case to send the response for.
         action : str
             The action being performed on the case.
