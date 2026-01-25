@@ -123,7 +123,7 @@ class Unban(ModerationCogBase):
             The context object for the command.
         username_or_id : str
             The username or ID of the user to unban.
-        reason : Optional[str]
+        reason : str | None
             The reason for the unban.
         flags : UnbanFlags
             The flags for the command.
