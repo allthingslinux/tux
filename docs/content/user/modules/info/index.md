@@ -20,18 +20,16 @@ This module includes the following command groups:
 
 ### Info
 
-The `/info` command group provides a unified interface for viewing detailed information about any Discord entity by ID or mention.
+The `/info` command group provides subcommands for viewing detailed information about specific Discord entity types.
 
-**Supported Entities:**
+**Available Subcommands:**
 
-- Users and Members
-- Messages
-- Channels and Threads
-- Guilds (Servers)
-- Roles
-- Emojis and Stickers
-- Invites
-- Scheduled Events
+- `info server` - Server/guild information
+- `info user` / `info member` - User and member information
+- `info emoji` - Emoji information
+- `info role` - Role information
+- `info channel` - Channel and thread information
+- `info invite` - Invite information
 
 ## Commands
 
@@ -49,14 +47,15 @@ Get detailed information about server members or users, including IDs, join date
 
 **Steps:**
 
-1. Use the `/info` command followed by a user mention or ID.
+1. Use the `/info user` or `/info member` command followed by a user mention or ID.
 2. Review the rich embed containing user and server-specific details.
 
 **Example:**
 
 ```text
-/info entity:@user
-/info entity:123456789012345678
+/info user @user
+/info member 123456789012345678
+$info user @User#1234
 ```
 
 ### Viewing Avatars
