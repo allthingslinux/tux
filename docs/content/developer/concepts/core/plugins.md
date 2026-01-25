@@ -6,6 +6,7 @@ tags:
   - concepts
   - core
   - plugins
+icon: lucide/unplug
 ---
 
 # Plugin System

@@ -2,7 +2,7 @@
 title: General
 description: General frequently asked questions about Tux.
 parent: FAQ
-icon: material/help-circle-outline
+icon: lucide/info
 ---
 
 # General

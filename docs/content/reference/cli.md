@@ -6,6 +6,7 @@ tags:
   - typer
   - commands
   - terminal
+icon: lucide/square-terminal
 ---
 
 # CLI Reference

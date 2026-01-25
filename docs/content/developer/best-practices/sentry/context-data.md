@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - best-practices
   - sentry
+icon: lucide/chart-bar-stacked
 ---
 
 # Context and Data

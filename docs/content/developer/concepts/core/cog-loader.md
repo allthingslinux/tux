@@ -6,6 +6,7 @@ tags:
   - concepts
   - core
   - cogs
+icon: lucide/folder-cog
 ---
 
 # Cog Loader

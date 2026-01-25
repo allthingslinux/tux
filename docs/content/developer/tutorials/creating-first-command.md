@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - tutorials
   - commands
+icon: lucide/square-terminal
 ---
 
 # Creating Your First Command

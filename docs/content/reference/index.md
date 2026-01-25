@@ -1,5 +1,6 @@
 ---
 title: Reference
+icon: lucide/book-open
 ---
 
 # Reference

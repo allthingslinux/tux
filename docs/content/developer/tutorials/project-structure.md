@@ -4,6 +4,7 @@ tags:
   - developer-guide
   - tutorials
   - architecture
+icon: lucide/table-of-contents
 ---
 
 # Project Structure

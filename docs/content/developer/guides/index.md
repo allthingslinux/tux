@@ -3,6 +3,7 @@ title: Developer Guides
 tags:
   - developer-guide
   - guides
+icon: lucide/book-open
 ---
 
 # Developer Guides

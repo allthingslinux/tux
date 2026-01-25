@@ -2,7 +2,7 @@
 title: For Developers
 description: Frequently asked questions for Tux developers.
 parent: FAQ
-icon: material/help-circle-outline
+icon: lucide/code-2
 ---
 
 # For Developers

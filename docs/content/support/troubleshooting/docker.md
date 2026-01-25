@@ -4,6 +4,7 @@ tags:
   - support
   - troubleshooting
   - docker
+icon: lucide/container
 ---
 
 # Docker Troubleshooting

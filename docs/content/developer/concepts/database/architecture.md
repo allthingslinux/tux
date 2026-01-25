@@ -5,6 +5,7 @@ tags:
   - concepts
   - database
   - architecture
+icon: lucide/rows-3
 ---
 
 # Database Architecture

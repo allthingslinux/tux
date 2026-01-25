@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - best-practices
   - ci-cd
+icon: lucide/infinity
 ---
 
 # CI/CD Best Practices

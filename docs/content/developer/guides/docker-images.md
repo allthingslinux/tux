@@ -4,6 +4,7 @@ tags:
   - developer
   - docker
   - guides
+icon: lucide/vault
 ---
 
 # Building Docker Images

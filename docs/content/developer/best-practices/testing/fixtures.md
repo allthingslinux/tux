@@ -4,6 +4,7 @@ tags:
   - developer-guide
   - best-practices
   - testing
+icon: lucide/book-open-check
 ---
 
 # Test Fixtures

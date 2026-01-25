@@ -6,6 +6,7 @@ tags:
   - commands
   - command-groups
   - COMMAND_GROUP_TAG
+icon: lucide/folder-tree
 ---
 
 # {COMMAND_GROUP_NAME}

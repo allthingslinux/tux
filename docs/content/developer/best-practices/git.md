@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - best-practices
   - git
+icon: lucide/github
 ---
 
 # Git Best Practices

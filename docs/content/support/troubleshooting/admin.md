@@ -4,6 +4,7 @@ tags:
   - support
   - troubleshooting
   - admin
+icon: lucide/shield
 ---
 
 # Admin Troubleshooting

@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - best-practices
   - logging
+icon: lucide/logs
 ---
 
 # Logging Best Practices

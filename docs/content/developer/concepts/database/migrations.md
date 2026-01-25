@@ -5,6 +5,7 @@ tags:
   - concepts
   - database
   - migrations
+icon: lucide/arrow-left-right
 ---
 
 # Database Migrations

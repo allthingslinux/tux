@@ -2,7 +2,7 @@
 title: For Admins
 description: Frequently asked questions for server admins.
 parent: FAQ
-icon: material/help-circle-outline
+icon: lucide/user-star
 ---
 
 # For Admins

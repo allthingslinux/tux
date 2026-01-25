@@ -2,7 +2,7 @@
 title: For Self-Hosters
 description: Frequently asked questions for self-hosting Tux.
 parent: FAQ
-icon: material/help-circle-outline
+icon: lucide/server
 ---
 
 # For Self-Hosters

@@ -3,6 +3,7 @@ title: Troubleshooting
 tags:
   - support
   - troubleshooting
+icon: lucide/wrench
 ---
 
 # Troubleshooting

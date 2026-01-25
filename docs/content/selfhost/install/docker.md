@@ -4,6 +4,7 @@ tags:
   - selfhost
   - installation
   - docker
+icon: lucide/container
 ---
 
 # Docker Installation

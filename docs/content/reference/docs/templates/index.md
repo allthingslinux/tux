@@ -5,6 +5,7 @@ tags:
   - documentation
   - templates
   - developer
+icon: lucide/layout-template
 ---
 
 # Documentation Templates

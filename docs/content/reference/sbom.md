@@ -6,6 +6,7 @@ tags:
   - reference
   - sbom
   - dependencies
+icon: lucide/package
 ---
 ---
 

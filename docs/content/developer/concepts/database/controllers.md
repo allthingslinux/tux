@@ -5,6 +5,7 @@ tags:
   - concepts
   - database
   - controllers
+icon: lucide/gamepad-directional
 ---
 
 # Database Controllers

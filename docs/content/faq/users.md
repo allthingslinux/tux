@@ -2,7 +2,7 @@
 title: For Users
 description: Frequently asked questions for Tux users.
 parent: FAQ
-icon: material/help-circle-outline
+icon: lucide/users
 ---
 
 # For Users

@@ -4,6 +4,7 @@ tags:
   - developer-guide
   - best-practices
   - git
+icon: lucide/git-branch
 ---
 
 # Branch Naming Conventions

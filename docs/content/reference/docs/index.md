@@ -5,6 +5,7 @@ tags:
   - reference
   - docs
   - documentation
+icon: lucide/notepad-text-dashed
 ---
 
 # Documentation

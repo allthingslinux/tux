@@ -1,6 +1,6 @@
 ---
 title: Support
-icon: material/forum-outline
+icon: lucide/life-buoy
 tags:
   - support
 ---

@@ -3,6 +3,7 @@ title: Self-Host Management
 tags:
   - selfhost
   - operations
+icon: lucide/sliders-horizontal
 ---
 
 # Self-Host Management

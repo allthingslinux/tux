@@ -5,6 +5,7 @@ tags:
   - tutorials
   - database
   - migrations
+icon: lucide/arrow-up-down
 ---
 
 # Creating Your First Migration

@@ -4,6 +4,7 @@ tags:
   - renovate
   - dependencies
   - ci-cd
+icon: lucide/refresh-cw
 ---
 
 # Renovate Configuration

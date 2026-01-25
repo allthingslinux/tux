@@ -8,6 +8,7 @@ tags:
   - codecov
   - pytest
   - coverage
+icon: lucide/chart-bar
 ---
 
 # Coverage

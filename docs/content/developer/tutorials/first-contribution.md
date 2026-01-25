@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - tutorials
   - contributing
+icon: lucide/merge
 ---
 
 # First Contribution

@@ -4,7 +4,7 @@ tags:
   - admin-guide
   - configuration
   - commands
-icon: lucide/command
+icon: lucide/square-terminal
 ---
 
 # Commands Configuration

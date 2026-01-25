@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - best-practices
   - caching
+icon: lucide/database
 ---
 
 # Caching Best Practices

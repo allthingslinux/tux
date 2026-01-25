@@ -3,6 +3,7 @@ title: Developer Concepts
 tags:
   - developer-guide
   - concepts
+icon: lucide/layers
 ---
 
 # Developer Concepts

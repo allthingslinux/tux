@@ -6,6 +6,7 @@ tags:
   - versioning
   - release-process
   - git-tags
+icon: lucide/arrow-up-1-0
 ---
 
 # Versioning System

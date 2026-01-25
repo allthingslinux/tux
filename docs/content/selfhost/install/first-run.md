@@ -4,6 +4,7 @@ tags:
   - selfhost
   - installation
   - setup
+icon: lucide/rocket
 ---
 
 # First Run Instructions

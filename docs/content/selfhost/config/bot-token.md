@@ -4,6 +4,7 @@ tags:
   - selfhost
   - configuration
   - bot-token
+icon: lucide/key-round
 ---
 
 # Bot Token Configuration

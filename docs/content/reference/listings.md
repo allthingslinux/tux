@@ -5,6 +5,7 @@ hide:
 tags:
   - reference
   - code-snippets
+icon: lucide/list-ordered
 ---
 ---
 

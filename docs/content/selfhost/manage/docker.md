@@ -4,6 +4,7 @@ tags:
   - selfhost
   - operations
   - docker
+icon: lucide/container
 ---
 
 # Docker Operations

@@ -5,6 +5,7 @@ tags:
   - user-guide
   - commands
   - COMMAND_TAG
+icon: lucide/terminal
 ---
 
 # {COMMAND_NAME}

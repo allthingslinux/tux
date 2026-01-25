@@ -6,6 +6,7 @@ tags:
   - concepts
   - core
   - lifecycle
+icon: lucide/refresh-ccw
 ---
 
 # Lifecycle Orchestration

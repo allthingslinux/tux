@@ -6,6 +6,7 @@ tags:
   - concepts
   - core
   - permissions
+icon: lucide/key-round
 ---
 
 # Permission System

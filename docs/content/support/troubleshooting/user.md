@@ -4,6 +4,7 @@ tags:
   - support
   - troubleshooting
   - user
+icon: lucide/user
 ---
 
 # User Troubleshooting

@@ -5,6 +5,7 @@ tags:
   - developer-guide
   - best-practices
   - debugging
+icon: lucide/bug-off
 ---
 
 # Debugging Best Practices
