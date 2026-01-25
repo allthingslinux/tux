@@ -58,9 +58,9 @@ class Slowmode(BaseCog):
         ----------
         ctx : commands.Context[Tux]
             The context of the command.
-        channel_or_delay : Optional[str]
+        channel_or_delay : str | None
             Either a channel mention/ID or a delay value.
-        delay : Optional[str]
+        delay : str | None
             A delay value if channel_or_delay was a channel.
 
         Examples
@@ -386,7 +386,7 @@ class Slowmode(BaseCog):
 
         Returns
         -------
-        Optional[int]
+        int | None
             The delay in seconds, or None if invalid format
         """
         try:
