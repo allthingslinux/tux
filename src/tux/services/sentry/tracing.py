@@ -289,7 +289,7 @@ def transaction(
     ----------
     op : str
         The operation name for the transaction (e.g., 'db.query').
-    name : Optional[str]
+    name : str | None
         The name for the transaction. Defaults to the function's qualified name.
 
     Returns
@@ -356,7 +356,7 @@ def span(
     ----------
     op : str
         The operation name for the span (e.g., 'db.query.fetch').
-    description : Optional[str]
+    description : str | None
         A description of what the span is doing. Defaults to the function's name.
 
     Returns
