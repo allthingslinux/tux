@@ -10,6 +10,7 @@ default.
 
 from __future__ import annotations
 
+import asyncio
 import functools
 import time
 from collections.abc import Awaitable, Callable
@@ -213,12 +214,33 @@ async def _check_permissions(
     # Start timing permission check
     check_start = time.perf_counter()
 
-    # Get command permission config from database
+    # Run command permission and user rank lookups in parallel since they're independent
+    # This can significantly reduce total time when both need database queries.
+    # Race condition safety: Both operations are read-only, use separate cache keys,
+    # and use separate database sessions, so parallel execution is safe.
+    cmd_perm_task = permission_system.get_command_permission(guild.id, command_name)
+
+    # Prepare user rank lookup task
+    if ctx:
+        user_rank_task = permission_system.get_user_permission_rank(ctx)
+    elif interaction:
+        user_rank_task = _get_user_rank_from_interaction(
+            permission_system,
+            interaction,
+        )
+    else:
+        user_rank_task = None
+
+    # Execute both lookups in parallel
     cmd_perm_start = time.perf_counter()
-    cmd_perm = await permission_system.get_command_permission(
-        guild.id,
-        command_name,
-    )
+    if user_rank_task is not None:
+        cmd_perm, user_rank = await asyncio.gather(
+            cmd_perm_task,
+            user_rank_task,
+        )
+    else:
+        cmd_perm = await cmd_perm_task
+        user_rank = 0
     cmd_perm_time = (time.perf_counter() - cmd_perm_start) * 1000
 
     # If not configured, check if we should allow or deny
@@ -244,19 +266,6 @@ async def _check_permissions(
         )
         return
 
-    # Get user's permission rank
-    user_rank_start = time.perf_counter()
-    if ctx:
-        user_rank = await permission_system.get_user_permission_rank(ctx)
-    elif interaction:
-        user_rank = await _get_user_rank_from_interaction(
-            permission_system,
-            interaction,
-        )
-    else:
-        user_rank = 0
-    user_rank_time = (time.perf_counter() - user_rank_start) * 1000
-
     # Check if user meets required rank
     if user_rank < cmd_perm.required_rank:
         total_time = (time.perf_counter() - check_start) * 1000
@@ -264,8 +273,7 @@ async def _check_permissions(
             f"Permission check denied for '{command_name}' "
             f"(guild {guild.id}, user {user_id}) - "
             f"required: {cmd_perm.required_rank}, user: {user_rank} - "
-            f"cmd_perm: {cmd_perm_time:.2f}ms, user_rank: {user_rank_time:.2f}ms, "
-            f"total: {total_time:.2f}ms",
+            f"cmd_perm: {cmd_perm_time:.2f}ms (parallel), total: {total_time:.2f}ms",
         )
         raise TuxPermissionDeniedError(
             cmd_perm.required_rank,
@@ -278,8 +286,7 @@ async def _check_permissions(
     logger.debug(
         f"Permission check passed for '{command_name}' "
         f"(guild {guild.id}, user {user_id}, rank {user_rank}) - "
-        f"cmd_perm: {cmd_perm_time:.2f}ms, user_rank: {user_rank_time:.2f}ms, "
-        f"total: {total_time:.2f}ms",
+        f"cmd_perm: {cmd_perm_time:.2f}ms (parallel), total: {total_time:.2f}ms",
     )
 
 
@@ -290,8 +297,9 @@ async def _get_user_rank_from_interaction(
     """
     Get user permission rank from an interaction (for app commands).
 
-    Uses discord.py's built-in Context.from_interaction() to create a proper
-    context, then queries the permission system for the user's rank.
+    Optimized version that extracts roles directly from the interaction
+    without creating a slow Context object. This avoids the expensive
+    Context.from_interaction() call which can take several seconds.
 
     Parameters
     ----------
@@ -305,9 +313,40 @@ async def _get_user_rank_from_interaction(
     int
         The user permission rank.
     """
-    ctx: commands.Context[Any] = await commands.Context.from_interaction(interaction)  # type: ignore[reportUnknownMemberType]
+    if not interaction.guild_id:
+        return 0
 
-    return await permission_system.get_user_permission_rank(ctx)
+    # Extract user ID
+    user_id = interaction.user.id if interaction.user else 0
+
+    # Extract role IDs from member if available, otherwise fetch member
+    user_roles: list[int] = []
+    if isinstance(interaction.user, discord.Member):
+        # Member object already has roles
+        user_roles = [role.id for role in interaction.user.roles]
+    elif interaction.guild:
+        # Try to get member from guild cache (fast)
+        member = interaction.guild.get_member(user_id)
+        if not member:
+            # Fallback: fetch member (slower, but rare)
+            # This should be avoided if possible - member should be in cache
+            try:
+                member = await interaction.guild.fetch_member(user_id)
+            except Exception as e:
+                logger.debug(
+                    f"Could not fetch member {user_id} for permission check: {e}",
+                )
+                # If we can't get member, return 0 (no permissions)
+                return 0
+        if member:
+            user_roles = [role.id for role in member.roles]
+
+    # Use optimized method that doesn't require Context
+    return await permission_system.get_user_permission_rank_from_interaction(
+        interaction.guild_id,
+        user_id,
+        user_roles,
+    )
 
 
 def _extract_context_or_interaction(
