@@ -115,7 +115,8 @@ class ModerationCogBase(BaseCog):
         Only JAIL and UNJAIL cases are considered; other types (e.g. WARN) are
         ignored so intervening moderation does not change jail status.
 
-        Uses cache to reduce database queries.
+        Uses cache to reduce database queries. Prevents cache stampede with
+        async locking when multiple coroutines miss the cache simultaneously.
 
         Parameters
         ----------
@@ -129,22 +130,17 @@ class ModerationCogBase(BaseCog):
         bool
             True if user is jailed, False otherwise
         """
-        # Check cache first
         cache = JailStatusCache()
-        cached_status = cache.get(guild_id, user_id)
-        if cached_status is not None:
-            return cached_status
 
-        # Cache miss - fetch from database
-        latest = await self.db.case.get_latest_jail_or_unjail_case(
-            user_id=user_id,
-            guild_id=guild_id,
-        )
-        is_jailed = bool(latest and latest.case_type == DBCaseType.JAIL)
+        async def fetch_jail_status() -> bool:
+            """Fetch jail status from database."""
+            latest = await self.db.case.get_latest_jail_or_unjail_case(
+                user_id=user_id,
+                guild_id=guild_id,
+            )
+            return bool(latest and latest.case_type == DBCaseType.JAIL)
 
-        # Cache the result
-        cache.set(guild_id, user_id, is_jailed)
-        return is_jailed
+        return await cache.get_or_fetch(guild_id, user_id, fetch_jail_status)
 
     async def is_pollbanned(self, guild_id: int, user_id: int) -> bool:
         """Check if a user is poll banned.
