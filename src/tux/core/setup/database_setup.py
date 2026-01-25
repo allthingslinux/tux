@@ -150,7 +150,8 @@ class DatabaseSetupService(BaseSetupService):
                         f"Migration failed: {e}\n\n"
                         "The database appears to be in an inconsistent state. "
                         "This can happen if a previous migration attempt partially succeeded.\n"
-                        "To fix this, reset the database with: uv run db reset\n"
+                        "First, try rerunning migrations with: uv run db push\n"
+                        "If this persists and data loss is acceptable, reset with: uv run db reset\n"
                         "Or manually clean up the conflicting objects and try again."
                     )
                 else:

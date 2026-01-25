@@ -47,13 +47,19 @@ async def send_error(
     ephemeral : bool, optional
         Whether the response should be ephemeral (slash commands only), by default True.
     """
+    allowed_mentions = discord.AllowedMentions.none()
     if ctx.interaction:
         if ctx.interaction.response.is_done():
-            await ctx.interaction.followup.send(content=error_msg, ephemeral=ephemeral)
+            await ctx.interaction.followup.send(
+                content=error_msg,
+                ephemeral=ephemeral,
+                allowed_mentions=allowed_mentions,
+            )
         else:
             await ctx.interaction.response.send_message(
                 content=error_msg,
                 ephemeral=ephemeral,
+                allowed_mentions=allowed_mentions,
             )
     else:
-        await ctx.send(content=error_msg)
+        await ctx.send(content=error_msg, allowed_mentions=allowed_mentions)

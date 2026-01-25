@@ -84,7 +84,9 @@ class Info(BaseCog):
 
         if guild_input is None:
             guild = ctx.guild
-            assert guild  # guild_only ensures this
+            if guild is None:
+                await send_error(ctx, "This command can only be used in a server.")
+                return
             view = await build_guild_view(guild)
             await send_view(ctx, view)
             return
@@ -104,7 +106,6 @@ class Info(BaseCog):
         if (
             "discord.gg/" in invite_input_lower
             or "discord.com/invite/" in invite_input_lower
-            or len(guild_input) >= 6  # Minimum invite code length
         ):
             with suppress(commands.BadArgument):
                 extracted_code = extract_invite_code(guild_input)

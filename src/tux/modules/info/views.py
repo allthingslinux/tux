@@ -1,6 +1,7 @@
 """Components V2 views for info command displays."""
 
 from collections.abc import Iterable
+from contextlib import suppress
 
 import discord
 
@@ -16,6 +17,13 @@ class InfoPaginatorView(discord.ui.LayoutView):
     # Component IDs for dynamic updates
     CONTENT_ID = 1000
     PAGE_INFO_ID = 1001
+
+    items: list[str]
+    chunks_list: list[list[str]]
+    current_page: int
+    title: str
+    list_type: str
+    guild_name: str
 
     def __init__(
         self,
@@ -43,6 +51,9 @@ class InfoPaginatorView(discord.ui.LayoutView):
         timeout : float, optional
             View timeout in seconds, by default 300.0.
         """
+        if chunk_size < 1:
+            error_msg = "chunk_size must be >= 1"
+            raise ValueError(error_msg)
         super().__init__(timeout=timeout)
         self.items = list(items)
         self.chunks_list: list[list[str]] = list(chunks(iter(self.items), chunk_size))
@@ -206,7 +217,8 @@ class InfoPaginatorView(discord.ui.LayoutView):
     async def _handle_close(self, interaction: discord.Interaction) -> None:
         """Handle close button click."""
         await interaction.response.defer()
-        if interaction.message:
+        with suppress(discord.NotFound):
+            # Message may have already been deleted
             await interaction.delete_original_response()
 
     async def _update_page(self, interaction: discord.Interaction) -> None:

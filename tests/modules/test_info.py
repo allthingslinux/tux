@@ -5,6 +5,7 @@
 
 from datetime import UTC, datetime
 
+import discord
 import pytest
 
 from tux.modules.info.helpers import (
@@ -13,6 +14,7 @@ from tux.modules.info.helpers import (
     format_bool,
     format_date_long,
     format_datetime,
+    format_permissions,
 )
 
 pytestmark = pytest.mark.unit
@@ -38,7 +40,7 @@ def test_format_datetime_aware_returns_discord_timestamp() -> None:
 
 
 def test_format_datetime_naive_uses_utc() -> None:
-    dt = datetime(2025, 1, 25, 12, 0, 0, tzinfo=UTC)
+    dt = datetime(2025, 1, 25, 12, 0, 0, tzinfo=None)  # Naive datetime  # noqa: DTZ001
     result = format_datetime(dt)
     assert result != "Unknown"
 
@@ -97,3 +99,26 @@ def test_chunks_single_large_chunk() -> None:
     it = iter(["a", "b", "c"])
     result = list(chunks(it, 10))
     assert result == [["a", "b", "c"]]
+
+
+def test_format_permissions_no_enabled_permissions() -> None:
+    """format_permissions should return 'None' when there are no enabled permissions."""
+    perms = discord.Permissions.none()
+    assert format_permissions(perms) == "None"
+
+
+def test_format_permissions_truncates_long_permission_list() -> None:
+    """format_permissions should truncate long permission lists and add an ellipsis."""
+    # Create permissions with many enabled flags to exceed 1024 characters
+    perms = discord.Permissions.all()
+    result = format_permissions(perms)
+
+    # Ensure we actually hit the truncation logic (if permissions list is long enough)
+    assert len(result) <= 1024
+
+    # If truncated, should end with ellipsis
+    if len(result) == 1024:
+        assert result.endswith("...")
+
+    # Should not be empty
+    assert result != ""

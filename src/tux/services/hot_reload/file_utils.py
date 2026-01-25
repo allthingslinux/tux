@@ -86,10 +86,10 @@ def get_extension_from_path(file_path: Path, base_dir: Path) -> str | None:  # n
 
         # Try {parent_dir_name}.py in parent directory (e.g., info.py for info module)
         with suppress(ImportError, AttributeError):
-            module_file = importlib.import_module(
+            dir_named_module = importlib.import_module(
                 f"{parent_module_name}.{parent_dir_name}",
             )
-            if hasattr(module_file, "setup") and callable(module_file.setup):
+            if hasattr(dir_named_module, "setup") and callable(dir_named_module.setup):
                 logger.trace(
                     f"Found {parent_dir_name}.py: {parent_module_name}.{parent_dir_name}",
                 )
