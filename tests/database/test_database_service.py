@@ -7,8 +7,8 @@ This test suite uses py-pglite for all tests:
 - Full PostgreSQL feature support
 
 Test Categories:
-- @pytest.mark.unit: Fast tests using db_session fixture (py-pglite)
-- @pytest.mark.integration: Full async tests using async_db_service fixture (py-pglite)
+- @pytest.mark.integration: All tests use real database (py-pglite) via db_session or db_service fixtures
+- Note: Even "unit" tests in this file use real database, so they are integration tests
 
 Run modes:
 - pytest tests/database/test_database_service.py             # All tests
@@ -28,14 +28,16 @@ from tux.database.models.models import Guild, GuildConfig
 from tux.database.service import DatabaseService
 
 # =============================================================================
-# UNIT TESTS - Fast Sync SQLModel + py-pglite
+# INTEGRATION TESTS - Fast SQLModel + py-pglite (Real Database)
 # =============================================================================
 
 
-class TestDatabaseModelsUnit:
-    """🏃‍♂️ Unit tests for database models using sync SQLModel + py-pglite."""
+class TestDatabaseModelsIntegration:
+    """🌐 Integration tests for database models using SQLModel + py-pglite (real database)."""
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_guild_model_creation(self, db_service: DatabaseService) -> None:
         """Test Guild model creation and basic operations."""
         async with db_service.session() as session:
@@ -87,7 +89,9 @@ class TestDatabaseModelsUnit:
         assert guild_from_config is not None
         assert guild_from_config.id == guild.id
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_model_serialization(self, db_session: AsyncSession) -> None:
         """Test model to_dict serialization."""
         guild = Guild(id=123456789, case_count=5)
@@ -101,7 +105,9 @@ class TestDatabaseModelsUnit:
         assert guild_dict["id"] == 123456789
         assert guild_dict["case_count"] == 5
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_multiple_guilds_query(self, db_session: AsyncSession) -> None:
         """Test querying multiple guilds."""
         # Create multiple guilds
@@ -126,7 +132,9 @@ class TestDatabaseModelsUnit:
         assert results[0].case_count == 1
         assert results[2].case_count == 3
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_database_constraints(self, db_session: AsyncSession) -> None:
         """Test database constraints and validation."""
         # Test unique guild_id constraint
@@ -147,7 +155,9 @@ class TestDatabaseModelsUnit:
         # Rollback the session to clean state after the expected error
         await db_session.rollback()
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_raw_sql_execution(self, db_session: AsyncSession) -> None:
         """Test raw SQL execution with py-pglite."""
         # Test basic query
@@ -298,9 +308,11 @@ class TestDatabaseServiceIntegration:
 class TestPerformanceComparison:
     """⚡ Compare performance between unit tests (py-pglite) and integration tests."""
 
-    @pytest.mark.unit
-    async def test_unit_test_performance(self, db_session: AsyncSession) -> None:
-        """Test unit test performance with py-pglite."""
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
+    async def test_performance_pglite(self, db_session: AsyncSession) -> None:
+        """Unit test performance with py-pglite."""
 
         async def create_guild():
             # Use random guild ID to avoid duplicate key conflicts
@@ -318,11 +330,11 @@ class TestPerformanceComparison:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_integration_test_performance(
+    async def test_performance_integration(
         self,
         db_service: DatabaseService,
     ) -> None:
-        """Test integration test performance with PostgreSQL."""
+        """Integration test performance with PostgreSQL."""
 
         async def create_guild_async():
             async with db_service.session() as session:
@@ -344,8 +356,10 @@ class TestPerformanceComparison:
 class TestMixedScenarios:
     """🔄 Tests that demonstrate the hybrid approach benefits."""
 
-    @pytest.mark.unit
-    async def test_complex_query_unit(self, db_session: AsyncSession) -> None:
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
+    async def test_complex_query_integration(self, db_session: AsyncSession) -> None:
         """Complex query test using fast unit testing."""
         # Create test data quickly with py-pglite
         guilds = [Guild(id=100000 + i, case_count=i) for i in range(10)]

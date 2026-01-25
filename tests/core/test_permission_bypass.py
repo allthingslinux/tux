@@ -1,4 +1,4 @@
-"""Unit tests for bot owner/sysadmin permission bypass."""
+"""Bot owner, sysadmin, and guild-owner permission bypass unit tests."""
 
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -22,101 +22,100 @@ GUILD_OWNER_ID = 444444444
 
 
 class TestPermissionBypass:
-    """Test bot owner and sysadmin permission bypass functionality."""
+    """Bot owner, sysadmin, and guild owner bypass behavior."""
 
     @pytest.fixture
     def mock_ctx(self) -> commands.Context[Tux]:
         """Create a mock command context."""
         ctx = MagicMock(spec=commands.Context)
-        ctx.guild = MagicMock()
+        ctx.guild = MagicMock(spec=discord.Guild)
         ctx.guild.id = 123456789
-        ctx.author = MagicMock()
-        ctx.author.id = REGULAR_USER_ID  # Regular user
+        ctx.author = MagicMock(spec=discord.Member)
+        ctx.author.id = REGULAR_USER_ID
         ctx.command = MagicMock()
         ctx.command.qualified_name = "test_command"
         return ctx
 
     @pytest.mark.asyncio
-    async def test_bot_owner_bypasses_permission(
+    async def test_bot_owner_bypasses_permission_check(
         self,
         mock_ctx: commands.Context[Tux],
     ) -> None:
-        """Test that bot owner bypasses permission checks."""
-        # Set up bot owner ID
+        """Bot owner can run protected commands without permission check."""
+        # Arrange
         with patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", BOT_OWNER_ID):
-            mock_ctx.author.id = BOT_OWNER_ID  # User is bot owner
+            mock_ctx.author.id = BOT_OWNER_ID
 
-            # Create a simple command with permission requirement
             @requires_command_permission()
             async def test_command(ctx: commands.Context[Tux]) -> str:
                 return "success"
 
-            # Execute command - should bypass permission check entirely
+            # Act
             result = await test_command(mock_ctx)
 
+            # Assert
             assert result == "success"
 
     @pytest.mark.asyncio
-    async def test_sysadmin_bypasses_permission(
+    async def test_sysadmin_bypasses_permission_check(
         self,
         mock_ctx: commands.Context[Tux],
     ) -> None:
-        """Test that sysadmin bypasses permission checks."""
-        # Set up sysadmin list
+        """Sysadmin can run protected commands without permission check."""
+        # Arrange
         with patch.object(
             CONFIG.USER_IDS,
             "SYSADMINS",
             [SYSADMIN_ID, SECOND_SYSADMIN_ID],
         ):
-            mock_ctx.author.id = SYSADMIN_ID  # User is sysadmin
+            mock_ctx.author.id = SYSADMIN_ID
 
-            # Create a simple command with permission requirement
             @requires_command_permission()
             async def test_command(ctx: commands.Context[Tux]) -> str:
                 return "success"
 
-            # Execute command - should bypass permission check entirely
+            # Act
             result = await test_command(mock_ctx)
 
+            # Assert
             assert result == "success"
 
     @pytest.mark.asyncio
-    async def test_regular_user_checked_for_permission(
+    async def test_regular_user_raises_permission_denied_for_unconfigured_command(
         self,
         mock_ctx: commands.Context[Tux],
     ) -> None:
-        """Test that regular users are subject to permission checks."""
-        # Ensure user is neither bot owner nor sysadmin
+        """Regular user (not owner/sysadmin) raises when command has no permission."""
+        # Arrange
+        mock_perm_system = AsyncMock()
+        mock_perm_system.get_command_permission = AsyncMock(return_value=None)
         with (
             patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", BOT_OWNER_ID),
             patch.object(CONFIG.USER_IDS, "SYSADMINS", [SYSADMIN_ID]),
+            patch(
+                "tux.core.decorators.get_permission_system",
+                return_value=mock_perm_system,
+                autospec=True,
+            ),
         ):
-            mock_ctx.author.id = REGULAR_USER_ID  # Regular user
+            mock_ctx.author.id = REGULAR_USER_ID
 
-            # Create a command with permission requirement
             @requires_command_permission()
             async def test_command(ctx: commands.Context[Tux]) -> str:
                 return "success"
 
-            # Mock the permission system to return None (unconfigured command)
-            with patch("tux.core.decorators.get_permission_system") as mock_get_perm:
-                mock_perm_system = AsyncMock()
-                mock_perm_system.get_command_permission = AsyncMock(return_value=None)
-                mock_get_perm.return_value = mock_perm_system
-
-                # Should raise permission denied for unconfigured command
-                with pytest.raises(TuxPermissionDeniedError):
-                    await test_command(mock_ctx)
+            # Act & Assert
+            with pytest.raises(TuxPermissionDeniedError):
+                await test_command(mock_ctx)
 
     @pytest.mark.asyncio
-    async def test_dm_bypass_still_works(
+    async def test_dm_context_bypasses_permission_check(
         self,
         mock_ctx: commands.Context[Tux],
     ) -> None:
-        """Test that DMs still bypass permission checks (no guild)."""
-        mock_ctx.guild = None  # DM context
-
-        # User is regular user (not owner/sysadmin)
+        """DM context (no guild) bypasses permission check for any user."""
+        # Arrange
+        mock_ctx.guild = None
         with (
             patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", BOT_OWNER_ID),
             patch.object(CONFIG.USER_IDS, "SYSADMINS", [SYSADMIN_ID]),
@@ -127,22 +126,22 @@ class TestPermissionBypass:
             async def test_command(ctx: commands.Context[Tux]) -> str:
                 return "success"
 
-            # DMs should bypass without checking permissions
+            # Act
             result = await test_command(mock_ctx)
+
+            # Assert
             assert result == "success"
 
     @pytest.mark.asyncio
-    async def test_guild_owner_bypasses_permission(
+    async def test_guild_owner_bypasses_permission_check(
         self,
         mock_ctx: commands.Context[Tux],
     ) -> None:
-        """Test that guild owner bypasses permission checks."""
-        # Set up guild owner
+        """Guild owner can run protected commands without permission check."""
+        # Arrange
         guild = cast(discord.Guild, mock_ctx.guild)
         guild.owner_id = GUILD_OWNER_ID
-        mock_ctx.author.id = GUILD_OWNER_ID  # User is guild owner
-
-        # Ensure user is not bot owner or sysadmin
+        mock_ctx.author.id = GUILD_OWNER_ID
         with (
             patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", BOT_OWNER_ID),
             patch.object(CONFIG.USER_IDS, "SYSADMINS", [SYSADMIN_ID]),
@@ -152,58 +151,68 @@ class TestPermissionBypass:
             async def test_command(ctx: commands.Context[Tux]) -> str:
                 return "success"
 
-            # Execute command - should bypass permission check entirely
+            # Act
             result = await test_command(mock_ctx)
 
+            # Assert
             assert result == "success"
 
     @pytest.mark.asyncio
-    async def test_bypass_logs_debug_message(
+    async def test_bot_owner_bypass_logs_debug_message(
         self,
         mock_ctx: commands.Context[Tux],
     ) -> None:
-        """Test that owner/sysadmin bypass logs a debug message."""
+        """Bot owner bypass emits a debug log containing bypass and user id."""
+        # Arrange
         with (
             patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", BOT_OWNER_ID),
-            patch("tux.core.decorators.logger") as mock_logger,
+            patch(
+                "tux.core.decorators.logger",
+                autospec=True,
+            ) as mock_logger,
         ):
-            mock_ctx.author.id = BOT_OWNER_ID  # Bot owner
+            mock_ctx.author.id = BOT_OWNER_ID
 
             @requires_command_permission()
             async def test_command(ctx: commands.Context[Tux]) -> str:
                 return "success"
 
+            # Act
             await test_command(mock_ctx)
 
-            # Verify debug log was called
+            # Assert
             mock_logger.debug.assert_called()
             call_args = mock_logger.debug.call_args[0][0]
             assert "bypassing permission check" in call_args
-        assert str(BOT_OWNER_ID) in call_args
+            assert str(BOT_OWNER_ID) in call_args
 
     @pytest.mark.asyncio
     async def test_guild_owner_bypass_logs_debug_message(
         self,
         mock_ctx: commands.Context[Tux],
     ) -> None:
-        """Test that guild owner bypass logs a debug message."""
+        """Guild owner bypass emits a debug log with guild owner and user id."""
+        # Arrange
         guild = cast(discord.Guild, mock_ctx.guild)
         guild.owner_id = GUILD_OWNER_ID
-        mock_ctx.author.id = GUILD_OWNER_ID  # User is guild owner
-
+        mock_ctx.author.id = GUILD_OWNER_ID
         with (
             patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", BOT_OWNER_ID),
             patch.object(CONFIG.USER_IDS, "SYSADMINS", [SYSADMIN_ID]),
-            patch("tux.core.decorators.logger") as mock_logger,
+            patch(
+                "tux.core.decorators.logger",
+                autospec=True,
+            ) as mock_logger,
         ):
 
             @requires_command_permission()
             async def test_command(ctx: commands.Context[Tux]) -> str:
                 return "success"
 
+            # Act
             await test_command(mock_ctx)
 
-            # Verify debug log was called
+            # Assert
             mock_logger.debug.assert_called()
             call_args = mock_logger.debug.call_args[0][0]
             assert "Guild owner" in call_args

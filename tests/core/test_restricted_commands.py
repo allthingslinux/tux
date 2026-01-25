@@ -1,30 +1,31 @@
-"""
-🔒 Restricted Commands Unit Tests.
+"""Restricted commands unit tests.
 
-Tests for commands that are restricted from being assigned to permission ranks.
-Restricted commands (eval, jsk, jishaku) are owner/sysadmin only and must not
-be configurable via the permission system.
+Commands in RESTRICTED_COMMANDS (eval, e, jsk, jishaku) cannot be assigned to
+permission ranks; they remain owner/sysadmin only.
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from tux.core.bot import Tux
 from tux.core.permission_system import RESTRICTED_COMMANDS, PermissionSystem
+from tux.database.controllers import DatabaseCoordinator
+from tux.database.models import PermissionCommand
 
 
 class TestRestrictedCommands:
-    """🔒 Test restricted commands functionality."""
+    """Restricted commands constant and permission-system behavior."""
 
     @pytest.fixture
-    def mock_bot(self) -> MagicMock:
+    def mock_bot(self) -> Tux:
         """Create a mock bot instance."""
-        return MagicMock()
+        return MagicMock(spec=Tux)
 
     @pytest.fixture
     def mock_db_coordinator(self) -> MagicMock:
         """Create a mock database coordinator."""
-        db_coordinator = MagicMock()
+        db_coordinator = MagicMock(spec=DatabaseCoordinator)
         db_coordinator.permission_ranks = MagicMock()
         db_coordinator.command_permissions = MagicMock()
         return db_coordinator
@@ -32,169 +33,166 @@ class TestRestrictedCommands:
     @pytest.fixture
     def permission_system(
         self,
-        mock_bot: MagicMock,
+        mock_bot: Tux,
         mock_db_coordinator: MagicMock,
     ) -> PermissionSystem:
         """Create a PermissionSystem instance for testing."""
+        PermissionSystem._command_permission_cache.clear()
         return PermissionSystem(mock_bot, mock_db_coordinator)
 
     @pytest.mark.unit
-    def test_restricted_commands_constant(self) -> None:
-        """Test that RESTRICTED_COMMANDS contains expected commands."""
+    def test_restricted_commands_contains_eval_e_jsk_jishaku(self) -> None:
+        """RESTRICTED_COMMANDS includes eval, e, jsk, and jishaku."""
+        # Act & Assert
         assert "eval" in RESTRICTED_COMMANDS
-        assert "e" in RESTRICTED_COMMANDS  # eval alias
+        assert "e" in RESTRICTED_COMMANDS
         assert "jsk" in RESTRICTED_COMMANDS
         assert "jishaku" in RESTRICTED_COMMANDS
 
     @pytest.mark.unit
-    def test_restricted_commands_is_frozen(self) -> None:
-        """Test that RESTRICTED_COMMANDS is immutable."""
-        # Should be a frozenset
+    def test_restricted_commands_is_immutable_frozenset(self) -> None:
+        """RESTRICTED_COMMANDS is a frozenset; add raises AttributeError."""
+        # Act & Assert
         assert isinstance(RESTRICTED_COMMANDS, frozenset)
-        # Attempting to add should raise AttributeError
         with pytest.raises(AttributeError):
             RESTRICTED_COMMANDS.add("test")
 
-    @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_set_command_permission_blocks_restricted_commands(
+    @pytest.mark.parametrize("command_name", list(RESTRICTED_COMMANDS))
+    @pytest.mark.unit
+    async def test_set_command_permission_raises_for_restricted_command(
         self,
         permission_system: PermissionSystem,
+        command_name: str,
     ) -> None:
-        """Test that setting permission for restricted commands raises ValueError."""
+        """Setting permission for a restricted command raises ValueError."""
+        # Arrange
         guild_id = 123456789
 
-        # Try to set permission for each restricted command
-        for cmd_name in RESTRICTED_COMMANDS:
-            with pytest.raises(ValueError, match="restricted"):
-                await permission_system.set_command_permission(
-                    guild_id=guild_id,
-                    command_name=cmd_name,
-                    required_rank=3,
-                )
+        # Act & Assert
+        with pytest.raises(ValueError, match="restricted"):
+            await permission_system.set_command_permission(
+                guild_id=guild_id,
+                command_name=command_name,
+                required_rank=3,
+            )
 
-    @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_set_command_permission_allows_normal_commands(
+    @pytest.mark.unit
+    async def test_set_command_permission_returns_permission_for_normal_command(
         self,
         permission_system: PermissionSystem,
     ) -> None:
-        """Test that non-restricted commands can be assigned permissions."""
+        """Non-restricted commands can be assigned permissions; returns permission."""
+        # Arrange
         guild_id = 123456789
         command_name = "ban"
-
-        # Mock the database controller to return a permission
-        mock_permission = MagicMock()
+        mock_permission = MagicMock(spec=PermissionCommand)
         mock_permission.guild_id = guild_id
         mock_permission.command_name = command_name
         mock_permission.required_rank = 3
-
         permission_system.db.command_permissions.set_command_permission = AsyncMock(
             return_value=mock_permission,
         )
 
-        # Should succeed for non-restricted command
+        # Act
         result = await permission_system.set_command_permission(
             guild_id=guild_id,
             command_name=command_name,
             required_rank=3,
         )
 
+        # Assert
         assert result is not None
         assert result.command_name == command_name
-        permission_system.db.command_permissions.set_command_permission.assert_called_once()
+        assert result.required_rank == 3
 
-    @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_set_command_permission_case_insensitive(
+    @pytest.mark.parametrize(
+        "command_name",
+        ["EVAL", "Eval", "JSK", "Jsk", "Jishaku", "JISHAKU"],
+    )
+    @pytest.mark.unit
+    async def test_set_command_permission_restricted_check_case_insensitive(
         self,
         permission_system: PermissionSystem,
+        command_name: str,
     ) -> None:
-        """Test that restricted command checks are case-insensitive."""
+        """Restricted command check is case-insensitive."""
+        # Arrange
         guild_id = 123456789
 
-        # Try uppercase and mixed case
-        test_cases = ["EVAL", "Eval", "JSK", "Jsk", "Jishaku", "JISHAKU"]
-
-        for cmd_name in test_cases:
-            with pytest.raises(ValueError, match="restricted"):
-                await permission_system.set_command_permission(
-                    guild_id=guild_id,
-                    command_name=cmd_name,
-                    required_rank=3,
-                )
-
-    @pytest.mark.unit
-    @pytest.mark.asyncio
-    async def test_load_from_config_skips_restricted_commands(
-        self,
-        permission_system: PermissionSystem,
-    ) -> None:
-        """Test that loading from config skips restricted commands."""
-        guild_id = 123456789
-
-        # Create a config with both normal and restricted commands
-        config = {
-            "command_permissions": [
-                {"command": "ban", "rank": 3},
-                {"command": "eval", "rank": 2},  # Restricted - should be skipped
-                {"command": "kick", "rank": 2},
-                {"command": "jsk", "rank": 5},  # Restricted - should be skipped
-            ],
-        }
-
-        # Mock the database controller
-        mock_permission = MagicMock()
-        permission_system.db.command_permissions.set_command_permission = AsyncMock(
-            return_value=mock_permission,
-        )
-
-        # Mock logger to check for warning messages
-        with patch("tux.core.permission_system.logger") as mock_logger:
-            await permission_system.load_from_config(guild_id, config)
-
-            # Should only call set_command_permission for non-restricted commands (ban, kick)
-            assert (
-                permission_system.db.command_permissions.set_command_permission.call_count
-                == 2
+        # Act & Assert
+        with pytest.raises(ValueError, match="restricted"):
+            await permission_system.set_command_permission(
+                guild_id=guild_id,
+                command_name=command_name,
+                required_rank=3,
             )
 
-            # Should log warnings for restricted commands
-            warning_calls = [call[0][0] for call in mock_logger.warning.call_args_list]
-            assert any("eval" in str(call).lower() for call in warning_calls)
-            assert any("jsk" in str(call).lower() for call in warning_calls)
-
-    @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_load_from_config_processes_normal_commands(
+    @pytest.mark.unit
+    async def test_load_from_config_skips_restricted_and_processes_others(
         self,
         permission_system: PermissionSystem,
     ) -> None:
-        """Test that loading from config processes normal commands correctly."""
+        """load_from_config processes only non-restricted commands and logs skip warnings."""
+        # Arrange
         guild_id = 123456789
+        config = {
+            "command_permissions": [
+                {"command": "ban", "rank": 3},
+                {"command": "eval", "rank": 2},
+                {"command": "kick", "rank": 2},
+                {"command": "jsk", "rank": 5},
+            ],
+        }
+        mock_permission = MagicMock(spec=PermissionCommand)
+        permission_system.db.command_permissions.set_command_permission = AsyncMock(
+            return_value=mock_permission,
+        )
 
+        # Act
+        with patch(
+            "tux.core.permission_system.logger",
+            autospec=True,
+        ) as mock_logger:
+            await permission_system.load_from_config(guild_id, config)
+
+            # Assert - only ban and kick processed
+            calls = permission_system.db.command_permissions.set_command_permission.call_args_list
+            command_names = [c[1]["command_name"] for c in calls]
+            assert set(command_names) == {"ban", "kick"}
+
+            # Assert - warnings logged for restricted commands
+            warning_calls = [c[0][0] for c in mock_logger.warning.call_args_list]
+            assert any("eval" in str(m).lower() for m in warning_calls)
+            assert any("jsk" in str(m).lower() for m in warning_calls)
+
+    @pytest.mark.asyncio
+    @pytest.mark.unit
+    async def test_load_from_config_processes_all_normal_commands(
+        self,
+        permission_system: PermissionSystem,
+    ) -> None:
+        """load_from_config processes all commands when none are restricted."""
+        # Arrange
+        guild_id = 123456789
         config = {
             "command_permissions": [
                 {"command": "ban", "rank": 3},
                 {"command": "kick", "rank": 2},
             ],
         }
-
-        mock_permission = MagicMock()
+        mock_permission = MagicMock(spec=PermissionCommand)
         permission_system.db.command_permissions.set_command_permission = AsyncMock(
             return_value=mock_permission,
         )
 
+        # Act
         await permission_system.load_from_config(guild_id, config)
 
-        # Should process both commands
-        assert (
-            permission_system.db.command_permissions.set_command_permission.call_count
-            == 2
-        )
-
-        # Verify correct calls
+        # Assert
         calls = permission_system.db.command_permissions.set_command_permission.call_args_list
-        command_names = [call[1]["command_name"] for call in calls]
-        assert "ban" in command_names
-        assert "kick" in command_names
+        command_names = [c[1]["command_name"] for c in calls]
+        assert set(command_names) == {"ban", "kick"}

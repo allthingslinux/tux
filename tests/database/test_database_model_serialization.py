@@ -1,7 +1,8 @@
 """
-🚀 Database Model Serialization Tests - SQLModel + py-pglite Unit Testing.
+🚀 Database Model Serialization Tests - SQLModel + py-pglite Integration Testing.
 
-Tests for model serialization and data conversion.
+Tests for model serialization and data conversion using real database (py-pglite).
+These are integration tests because they use a real PostgreSQL database.
 """
 
 import pytest
@@ -16,6 +17,7 @@ class TestModelSerialization:
 
     @pytest.mark.unit
     def test_guild_serialization(self, sample_guild: Guild) -> None:
+        """Test Guild model serialization to dict (no database, pure unit test)."""
         """Test Guild model serialization to dict."""
         guild_dict = sample_guild.to_dict()
 
@@ -29,7 +31,9 @@ class TestModelSerialization:
         assert guild_dict["id"] == sample_guild.id
         assert guild_dict["case_count"] == sample_guild.case_count
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_config_serialization(self, db_service: DatabaseService) -> None:
         """Test GuildConfig model serialization to dict."""
         async with db_service.session() as session:
@@ -58,7 +62,9 @@ class TestModelSerialization:
             assert config_dict["id"] == sample_guild_config.id
             assert config_dict["prefix"] == sample_guild_config.prefix
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_enum_serialization(self, db_service: DatabaseService) -> None:
         """Test enum field serialization in Case model."""
         async with db_service.session() as session:

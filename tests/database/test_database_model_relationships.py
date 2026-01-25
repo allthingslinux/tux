@@ -1,7 +1,8 @@
 """
-🚀 Database Model Relationships Tests - SQLModel + py-pglite Unit Testing.
+🚀 Database Model Relationships Tests - SQLModel + py-pglite Integration Testing.
 
-Tests for model relationships and database constraints.
+Tests for model relationships and database constraints using real database (py-pglite).
+These are integration tests because they use a real PostgreSQL database.
 """
 
 import pytest
@@ -20,7 +21,9 @@ from tux.database.service import DatabaseService
 class TestModelRelationships:
     """🔗 Test model relationships and database constraints."""
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_guild_to_config_relationship(
         self,
         db_service: DatabaseService,
@@ -52,7 +55,9 @@ class TestModelRelationships:
             assert config_from_db is not None
             assert guild_from_db.id == config_from_db.id
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_foreign_key_constraints(self, db_service: DatabaseService) -> None:
         """Test foreign key constraints are enforced."""
         async with db_service.session() as session:
@@ -78,7 +83,9 @@ class TestModelRelationships:
             # Rollback the session for cleanup
             await session.rollback()
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_unique_constraints(self, db_service: DatabaseService) -> None:
         """Test unique constraints are enforced."""
         async with db_service.session() as session:
@@ -102,7 +109,9 @@ class TestModelRelationships:
             # Rollback the session for cleanup
             await session.rollback()
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_cascade_behavior(self, db_service: DatabaseService) -> None:
         """Test cascade behavior with related models."""
         async with db_service.session() as session:

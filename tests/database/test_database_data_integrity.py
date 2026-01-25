@@ -1,7 +1,8 @@
 """
-🚀 Database Data Integrity Tests - SQLModel + py-pglite Unit Testing.
+🚀 Database Data Integrity Tests - SQLModel + py-pglite Integration Testing.
 
-Tests for data integrity and validation rules.
+Tests for data integrity and validation rules using real database (py-pglite).
+These are integration tests because they use a real PostgreSQL database.
 """
 
 import pytest
@@ -14,7 +15,9 @@ from tux.database.service import DatabaseService
 class TestDataIntegrity:
     """🛡️ Test data integrity and validation rules."""
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_required_fields(self, db_service: DatabaseService) -> None:
         """Test required field validation."""
         async with db_service.session() as session:
@@ -26,7 +29,9 @@ class TestDataIntegrity:
             # Verify guild was created successfully
             assert guild.id == TEST_GUILD_ID
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_data_types(self, db_service: DatabaseService) -> None:
         """Test data type enforcement."""
         async with db_service.session() as session:
@@ -39,7 +44,9 @@ class TestDataIntegrity:
             assert isinstance(guild.id, int)
             assert isinstance(guild.case_count, int)
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_null_handling(self, db_service: DatabaseService) -> None:
         """Test NULL value handling for optional fields."""
         async with db_service.session() as session:
@@ -59,7 +66,9 @@ class TestDataIntegrity:
             assert config.prefix == "$"  # Default value, not None
             assert config.mod_log_id is None  # Optional field
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_transaction_rollback(self, db_service: DatabaseService) -> None:
         """Test transaction rollback behavior."""
         async with db_service.session() as session:

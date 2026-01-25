@@ -1,7 +1,8 @@
 """
-🚀 Database Model Query Tests - SQLModel + py-pglite Unit Testing.
+🚀 Database Model Query Tests - SQLModel + py-pglite Integration Testing.
 
-Tests for complex queries and database operations.
+Tests for complex queries and database operations using real database (py-pglite).
+These are integration tests because they use a real PostgreSQL database.
 """
 
 import pytest
@@ -16,7 +17,9 @@ from tux.database.service import DatabaseService
 class TestModelQueries:
     """🔍 Test complex queries and database operations."""
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_basic_queries(self, db_service: DatabaseService) -> None:
         """Test basic SQLModel queries."""
         async with db_service.session() as session:
@@ -32,7 +35,9 @@ class TestModelQueries:
                 assert guild.id == TEST_GUILD_ID + i
                 assert guild.case_count == i
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_complex_queries(self, db_service: DatabaseService) -> None:
         """Test complex SQLModel queries with filtering and ordering."""
         async with db_service.session() as session:
@@ -63,7 +68,9 @@ class TestModelQueries:
             count = result.scalar()
             assert count == 10
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_join_queries(self, db_service: DatabaseService) -> None:
         """Test join queries between related models."""
         async with db_service.session() as session:

@@ -2,6 +2,8 @@
 🚀 Error Extractors Integration Tests - Integration Testing with Real Errors.
 
 Tests for extractors with actual Discord.py/httpx error objects.
+These are integration tests because they test extractors with real error objects,
+verifying integration between extractors and actual error types.
 """
 
 import httpx
@@ -9,7 +11,7 @@ import pytest
 
 from tux.services.handlers.error.extractors import extract_httpx_status_details
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.integration
 
 
 class TestExtractorsWithRealErrors:

@@ -1,7 +1,8 @@
 """
-🚀 Database Model Creation Tests - SQLModel + py-pglite Unit Testing.
+🚀 Database Model Creation Tests - SQLModel + py-pglite Integration Testing.
 
-Tests for basic model creation and validation.
+Tests for basic model creation and validation using real database (py-pglite).
+These are integration tests because they use a real PostgreSQL database.
 """
 
 from datetime import datetime
@@ -21,7 +22,9 @@ from tux.database.service import DatabaseService
 class TestModelCreation:
     """🏗️ Test basic model creation and validation."""
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_guild_model_creation(self, db_service: DatabaseService) -> None:
         """Test Guild model creation with all fields."""
         # Create guild using the async service pattern
@@ -42,7 +45,9 @@ class TestModelCreation:
             assert isinstance(guild.guild_joined_at, datetime)
             assert validate_guild_structure(guild)
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_guild_config_model_creation(
         self,
         db_service: DatabaseService,
@@ -81,7 +86,9 @@ class TestModelCreation:
             assert config.dev_log_id == TEST_CHANNEL_ID + 5
             assert validate_guild_config_structure(config)
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_case_model_creation(self, db_service: DatabaseService) -> None:
         """Test Case model creation with enum types."""
         async with db_service.session() as session:

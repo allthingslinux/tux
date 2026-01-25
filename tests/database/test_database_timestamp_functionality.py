@@ -1,7 +1,8 @@
 """
-🚀 Database Timestamp Functionality Tests - SQLModel + py-pglite Unit Testing.
+🚀 Database Timestamp Functionality Tests - SQLModel + py-pglite Integration Testing.
 
 Tests for timestamp mixin and automatic timestamp functionality.
+Some tests are unit tests (no database), others are integration tests (with database).
 """
 
 from typing import get_type_hints
@@ -122,7 +123,9 @@ class TestTimestampFunctionality:
         assert data["created_at"] is None
         assert data["updated_at"] is None
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_timestamp_database_operations(
         self,
         db_service: DatabaseService,

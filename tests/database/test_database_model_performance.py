@@ -1,7 +1,8 @@
 """
-🚀 Database Model Performance Tests - SQLModel + py-pglite Unit Testing.
+🚀 Database Model Performance Tests - SQLModel + py-pglite Integration Testing.
 
-Tests for model performance characteristics.
+Tests for model performance characteristics using real database (py-pglite).
+These are integration tests because they use a real PostgreSQL database.
 """
 
 import pytest
@@ -15,7 +16,9 @@ from tux.database.service import DatabaseService
 class TestModelPerformance:
     """⚡ Test model performance characteristics."""
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_bulk_operations(self, db_service: DatabaseService) -> None:
         """Test bulk model operations."""
         async with db_service.session() as session:
@@ -34,7 +37,9 @@ class TestModelPerformance:
             results = (await session.execute(statement)).scalars().unique().all()
             assert len(results) == 10
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_query_performance(self, db_service: DatabaseService) -> None:
         """Test query performance with filtering and ordering."""
         async with db_service.session() as session:
@@ -56,7 +61,9 @@ class TestModelPerformance:
             assert len(results) == 5
             assert results[0].case_count == 19
 
-    @pytest.mark.unit
+    @pytest.mark.integration
+    @pytest.mark.database
+    @pytest.mark.asyncio
     async def test_serialization_performance(self, db_service: DatabaseService) -> None:
         """Test serialization performance."""
         async with db_service.session() as session:
