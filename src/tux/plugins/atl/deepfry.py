@@ -158,13 +158,17 @@ class Deepfry(BaseCog):
         image = ImageEnhance.Sharpness(image).enhance(100.0)
 
         # Extract red channel and enhance
-        r = image.split()[0]
-        r = ImageEnhance.Contrast(r).enhance(2.0)
-        r = ImageEnhance.Brightness(r).enhance(1.5)
+        red_channel = image.split()[0]
+        red_channel = ImageEnhance.Contrast(red_channel).enhance(2.0)
+        red_channel = ImageEnhance.Brightness(red_channel).enhance(1.5)
 
         # Colorize with deepfry colors
-        r = ImageOps.colorize(r, "#fe0002", "#ffff0f")  # (254, 0, 2) and (255, 255, 15)
-        image = Image.blend(image, r, 0.75)
+        red_channel = ImageOps.colorize(
+            red_channel,
+            "#fe0002",
+            "#ffff0f",
+        )  # (254, 0, 2) and (255, 255, 15)
+        image = Image.blend(image, red_channel, 0.75)
 
         # Upscale back to original size
         return image.resize(original_size, Image.Resampling.LANCZOS)
