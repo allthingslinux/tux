@@ -249,6 +249,39 @@ class PermissionSystem:
             user_roles,
         )
 
+    async def get_user_permission_rank_from_interaction(
+        self,
+        guild_id: int,
+        user_id: int,
+        user_roles: list[int],
+    ) -> int:
+        """
+        Get the highest permission rank a user has directly from interaction data.
+
+        This is an optimized version that avoids creating a Context object,
+        which can be slow for interactions. Use this when you already have
+        the guild_id, user_id, and role IDs from an interaction.
+
+        Parameters
+        ----------
+        guild_id : int
+            The Discord guild ID.
+        user_id : int
+            The Discord user ID.
+        user_roles : list[int]
+            List of role IDs the user has in the guild.
+
+        Returns
+        -------
+        int
+            The highest permission rank (0-10) the user has, or 0 if none.
+        """
+        return await self.db.permission_assignments.get_user_permission_rank(
+            guild_id,
+            user_id,
+            user_roles,
+        )
+
     # ---------- Role Assignment Management ----------
 
     async def assign_permission_rank(
