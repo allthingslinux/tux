@@ -262,7 +262,7 @@ with modern Python and best practices.
 
     Latest project activity and metrics.
 
-    [![Repository Metrics](https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg)](https://github.com/allthingslinux/tux/pulse)
+    [![Repository Metrics](https://repobeats.axiom.co/api/embed/e2782b71a13b2d36f5fcca1c90cd3ab014388ebf.svg)](https://github.com/allthingslinux/tux/pulse)
 
 - ## Contributors
 
