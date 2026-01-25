@@ -225,18 +225,18 @@ def convert_to_seconds(time_str: str) -> int:
     # Match (number)(unit) pairs: e.g. 1wks, 2h, 30m, 1h30m
     pattern = re.compile(r"^(\d+)([a-zA-Z]+)")
     while rest:
-        m = pattern.match(rest)
-        if not m:
+        match = pattern.match(rest)
+        if not match:
             return 0
-        value = int(m[1])
-        unit = m[2].lower()
+        value = int(match[1])
+        unit = match[2].lower()
         mult = time_units.get(unit)
         if mult is None:
             return 0
         if value == 0:
             return 0
         total_seconds += value * mult
-        rest = rest[m.end() :].lstrip()
+        rest = rest[match.end() :].lstrip()
     return total_seconds
 
 
