@@ -38,15 +38,15 @@ Setup sentry sdk for metrics
 
 Set permission errors to not be sent to sentry
 
-Translate command
-Invite tracking
-Define data expiration policy for guilds
-Help command slash support
-Redesign atl rolecount plugin for global use
-Audit logging system
-Use one function to parse all times #420
-Block emoji reactions being used if emoji name contains blacklisted word
-Refactor moderation commands for "greedy conversion" of target arg
+- [ ] Translate command
+- [ ] Invite tracking
+- [ ] Define data expiration policy for guilds
+- [ ] Help command slash support
+- [ ] Redesign alt rolecount plugin for global use
+- [ ] Audit logging system
+- [ ] Use one function to parse all times #420
+- [ ] Block emoji reactions being used if emoji name contains blacklisted word
+- [ ] Refactor moderation commands for "greedy conversion" of target arg
 
 ## Error Handling System Improvements
 

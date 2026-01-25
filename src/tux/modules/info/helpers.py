@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 
 import discord
 from discord.utils import TimestampStyle
+from loguru import logger
 
 from tux.core.bot import Tux
 from tux.shared.constants import BANS_LIMIT
@@ -271,7 +272,7 @@ def extract_invite_code(invite_input: str) -> str:
 # ---- Guild ----
 
 
-async def count_guild_members(guild: discord.Guild) -> tuple[int, int]:
+def count_guild_members(guild: discord.Guild) -> tuple[int, int]:
     """Count humans and bots in guild.
 
     Parameters
@@ -736,7 +737,7 @@ def add_text_channel_info(
     if hasattr(channel, "default_auto_archive_duration"):
         duration = channel.default_auto_archive_duration
         parts.append(
-            f"**Default Archive Duration:** {duration // 60 // 60}h"
+            f"**Default Archive Duration:** {duration // 60}h"
             if duration
             else "**Default Archive Duration:** None",
         )
@@ -831,7 +832,7 @@ def add_forum_channel_info(
     if hasattr(channel, "default_auto_archive_duration"):
         duration = channel.default_auto_archive_duration
         parts.append(
-            f"**Default Archive Duration:** {duration // 60 // 60}h"
+            f"**Default Archive Duration:** {duration // 60}h"
             if duration
             else "**Default Archive Duration:** None",
         )
@@ -1010,15 +1011,9 @@ async def get_member_banner(member: discord.Member, bot: Tux) -> str | None:
                 if url := banner.url:
                     return url
     except discord.NotFound:
-        pass
-    except Exception:
-        # Fallback to cached user if fetch fails
-        if user := bot.get_user(member.id):
-            banner = getattr(user, "banner", None)
-            if banner is not None and hasattr(banner, "url"):
-                with suppress(AttributeError, TypeError):
-                    if url := banner.url:
-                        return url
+        logger.debug(f"User {member.id} not found when fetching banner")
+    except discord.HTTPException as e:
+        logger.warning(f"Failed to fetch user {member.id} for banner: {e}")
 
     return None
 
@@ -1026,24 +1021,24 @@ async def get_member_banner(member: discord.Member, bot: Tux) -> str | None:
 # ---- Misc ----
 
 
-def chunks(it: Iterator[str], size: int) -> Generator[list[str]]:
+def chunks[T](it: Iterator[T], size: int) -> Generator[list[T]]:
     """Split an iterator into chunks of a specified size.
 
     Parameters
     ----------
-    it : Iterator[str]
+    it : Iterator[T]
         The input iterator to be split into chunks.
     size : int
         The size of each chunk.
 
     Yields
     ------
-    list[str]
+    list[T]
         A list containing a chunk of elements from the input iterator. The last
         list may contain fewer elements if there are not enough remaining to fill
         a complete chunk.
     """
-    chunk: list[str] = []
+    chunk: list[T] = []
     for item in it:
         chunk.append(item)
         if len(chunk) == size:

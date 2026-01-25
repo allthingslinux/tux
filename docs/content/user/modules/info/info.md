@@ -80,7 +80,7 @@ Get information about a user or member.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `entity` | USER/MEMBER | Yes | The user or member to get information about (mention or ID). |
+| `entity` | STRING | Yes | The user or member to get information about (mention or ID). |
 
 **Examples:**
 

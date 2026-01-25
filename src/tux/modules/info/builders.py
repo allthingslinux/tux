@@ -37,7 +37,6 @@ from .helpers import (
     format_invite_max_age,
     format_invite_uses,
     format_permissions,
-    get_member_banner,
     get_role_flags_info,
     get_role_tags_info,
     get_role_type_info,
@@ -89,7 +88,7 @@ async def build_guild_view(guild: discord.Guild) -> discord.ui.LayoutView:
         The built view.
     """
     # Gather data
-    humans, bots = await count_guild_members(guild)
+    humans, bots = count_guild_members(guild)
     ban_count = await count_guild_bans(guild)
 
     # Format settings
@@ -141,7 +140,8 @@ async def build_member_view(member: discord.Member, bot: Tux) -> discord.ui.Layo
     discord.ui.LayoutView
         The built view.
     """
-    banner_url = await get_member_banner(member, bot)  # noqa: F841  # pyright: ignore[reportUnusedVariable]
+    # TODO: Fetch banner when MediaGallery implementation is ready
+    # banner_url = await get_member_banner(member, bot)
 
     # Build username display
     global_name = getattr(member, "global_name", None)
@@ -331,8 +331,9 @@ def build_channel_view(
 
     view, container = _create_info_view()
 
+    # Use channel name directly - Discord will format text channels appropriately
     container.add_item(
-        discord.ui.TextDisplay(f"# #{channel.name}\n\n{description}"),
+        discord.ui.TextDisplay(f"# {channel.name}\n\n{description}"),
     )
     container.add_item(discord.ui.Separator(spacing=discord.SeparatorSpacing.small))
 
@@ -644,10 +645,10 @@ def build_thread_view(thread: discord.Thread) -> discord.ui.LayoutView:
     """
     view, container = _create_info_view()
 
-    topic = getattr(thread, "topic", None) or "No topic available."
-
+    # Threads don't have a topic attribute (that's for TextChannel)
+    # Use the thread name as the title
     container.add_item(
-        discord.ui.TextDisplay(f"# Thread: {thread.name}\n\n{topic}"),
+        discord.ui.TextDisplay(f"# Thread: {thread.name}"),
     )
     container.add_item(discord.ui.Separator(spacing=discord.SeparatorSpacing.small))
 
