@@ -29,7 +29,7 @@ def path_from_extension(extension: str, *, base_dir: Path | None = None) -> Path
     return base_dir / Path(*parts[1:]) / f"{parts[-1]}.py"
 
 
-def get_extension_from_path(file_path: Path, base_dir: Path) -> str | None:
+def get_extension_from_path(file_path: Path, base_dir: Path) -> str | None:  # noqa: PLR0911
     """
     Convert file path to extension name.
 
@@ -68,6 +68,7 @@ def get_extension_from_path(file_path: Path, base_dir: Path) -> str | None:
     # Check parent directory for cog (for supporting files in subdirs)
     if len(parts) > 1:
         parent_module_name = "tux." + ".".join(parts[:-1])
+        parent_dir_name = parts[-2]  # Name of the parent directory
 
         # Try parent's __init__.py for setup
         with suppress(ImportError, AttributeError):
@@ -82,6 +83,17 @@ def get_extension_from_path(file_path: Path, base_dir: Path) -> str | None:
             if hasattr(cog_module, "setup") and callable(cog_module.setup):
                 logger.trace(f"Found cog.py: {parent_module_name}.cog")
                 return f"{parent_module_name}.cog"
+
+        # Try {parent_dir_name}.py in parent directory (e.g., info.py for info module)
+        with suppress(ImportError, AttributeError):
+            module_file = importlib.import_module(
+                f"{parent_module_name}.{parent_dir_name}",
+            )
+            if hasattr(module_file, "setup") and callable(module_file.setup):
+                logger.trace(
+                    f"Found {parent_dir_name}.py: {parent_module_name}.{parent_dir_name}",
+                )
+                return f"{parent_module_name}.{parent_dir_name}"
 
     logger.trace(f"Not a loadable extension: {module_name}")
     return None
