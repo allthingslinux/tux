@@ -273,9 +273,7 @@ class TldrClient:
             platforms_to_try.append("common")
 
         # Add all other platforms as final fallback per TLDR spec
-        for platform in SUPPORTED_PLATFORMS:
-            if platform not in platforms_to_try:
-                platforms_to_try.append(platform)
+        platforms_to_try.extend(set(SUPPORTED_PLATFORMS) - set(platforms_to_try))
 
         return platforms_to_try
 
@@ -620,9 +618,9 @@ class TldrClient:
         lines = md.splitlines()
         formatted: list[str] = []
         i = 0
-        n = len(lines)
+        line_count = len(lines)
 
-        while i < n:
+        while i < line_count:
             line = lines[i].rstrip()
             if line.startswith("# "):
                 i += 1
@@ -639,7 +637,7 @@ class TldrClient:
         if description_lines:
             formatted.append("> " + "\n> ".join(description_lines))
 
-        if i < n and lines[i].strip():
+        if i < line_count and lines[i].strip():
             i += 1
 
         command_formatted, _ = TldrClient._process_command_examples(
