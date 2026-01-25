@@ -334,10 +334,10 @@ def _add_console_handler(log_level: str) -> None:
             Always True to allow the log message through.
         """
         if isinstance(record["message"], str):
-            s = record["message"]
-            s = s.replace("{", "{{").replace("}", "}}")
-            s = s.replace("<", "\\<")
-            record["message"] = s
+            message = record["message"]
+            message = message.replace("{", "{{").replace("}", "}}")
+            message = message.replace("<", "\\<")
+            record["message"] = message
         return True
 
     logger.add(
