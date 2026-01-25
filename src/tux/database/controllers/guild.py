@@ -9,6 +9,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from sqlalchemy import select
+from sqlalchemy.orm import noload
+
 from tux.database.controllers.base import BaseController
 from tux.database.models import Guild, GuildConfig
 
@@ -113,6 +116,9 @@ class GuildController(BaseController[Guild]):
         """
         Update guild configuration.
 
+        Uses row-level locking to prevent race conditions when multiple
+        coroutines update different fields concurrently.
+
         Returns
         -------
         GuildConfig
@@ -120,7 +126,7 @@ class GuildController(BaseController[Guild]):
         """
 
         async def _op(session: AsyncSession) -> GuildConfig:
-            """Update or create guild configuration.
+            """Update or create guild configuration with locking.
 
             Parameters
             ----------
@@ -132,11 +138,21 @@ class GuildController(BaseController[Guild]):
             GuildConfig
                 The updated or created guild configuration.
             """
-            config = await session.get(GuildConfig, guild_id)
+            # Lock the row to prevent concurrent updates from overwriting each other
+            stmt = (
+                select(GuildConfig)
+                .where(GuildConfig.id == guild_id)  # type: ignore[arg-type]
+                .options(noload("*"))  # Don't load any relationships
+                .with_for_update()
+            )
+            result = await session.execute(stmt)
+            config = result.scalar_one_or_none()
+
             if config is None:
                 config = GuildConfig(id=guild_id, **data)
                 session.add(config)
             else:
+                # Update only the fields provided in data
                 for key, value in data.items():
                     setattr(config, key, value)
             await session.flush()
