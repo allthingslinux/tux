@@ -191,12 +191,112 @@ class ModerationCoordinator:
                 logger.success(
                     f"Successfully executed Discord actions for {case_type.value}",
                 )
+            except (discord.NotFound, discord.Forbidden) as e:
+                # User left during execution or bot lacks permissions - handle gracefully
+                error_type = (
+                    "left guild"
+                    if isinstance(e, discord.NotFound)
+                    else "missing permissions"
+                )
+                logger.warning(
+                    f"User {user.id} {error_type} during {case_type.value} execution: {e}",
+                )
+                # Race condition fix: Check if case was already created before cancelling
+                # If case creation completed, we have an orphaned case that needs handling
+                if case_task.done():
+                    try:
+                        created_case = await case_task
+                        if created_case.id is not None:
+                            # Void the case to preserve audit trail but mark it as invalid
+                            # This prevents it from showing up in active case queries
+                            try:
+                                error_msg = (
+                                    str(e)[:100] if len(str(e)) > 100 else str(e)
+                                )
+                                failure_reason = (
+                                    f"Discord action failed ({error_type}): {error_msg}"
+                                )
+                                await self._case_service.void_case(
+                                    created_case.id,
+                                    failure_reason=failure_reason,
+                                )
+                                logger.warning(
+                                    f"Voided case #{created_case.case_number} (ID: {created_case.id}) "
+                                    f"because {error_type} during execution. Case preserved for audit trail.",
+                                )
+                            except Exception as void_error:
+                                logger.error(
+                                    f"Failed to void case #{created_case.case_number}: {void_error}",
+                                    exc_info=True,
+                                )
+                        else:
+                            logger.warning(
+                                f"Case #{created_case.case_number} was created but has no ID. "
+                                f"{error_type.capitalize()} during execution.",
+                            )
+                    except Exception as case_error:
+                        # Case creation itself failed, which is fine
+                        logger.debug(
+                            f"Case creation also failed (expected): {case_error}",
+                        )
+                else:
+                    # Case creation hasn't completed yet, safe to cancel
+                    case_task.cancel()
+                    try:
+                        await case_task
+                    except asyncio.CancelledError:
+                        logger.trace("Case creation task cancelled successfully")
+                # Return None for graceful handling - action cannot complete
+                return None
             except Exception as e:
                 logger.error(
                     f"Failed to execute Discord actions for {case_type.value}: {e}",
                     exc_info=True,
                 )
-                case_task.cancel()
+                # Race condition fix: Check if case was already created before cancelling
+                # If case creation completed, we have an orphaned case that needs handling
+                if case_task.done():
+                    try:
+                        created_case = await case_task
+                        if created_case.id is not None:
+                            # Void the case to preserve audit trail but mark it as invalid
+                            # This prevents it from showing up in active case queries
+                            try:
+                                # Extract error message for the case reason
+                                error_msg = (
+                                    str(e)[:100] if len(str(e)) > 100 else str(e)
+                                )
+                                failure_reason = f"Discord action failed: {error_msg}"
+                                await self._case_service.void_case(
+                                    created_case.id,
+                                    failure_reason=failure_reason,
+                                )
+                                logger.warning(
+                                    f"Voided case #{created_case.case_number} (ID: {created_case.id}) "
+                                    f"because Discord action failed. Case preserved for audit trail.",
+                                )
+                            except Exception as void_error:
+                                logger.error(
+                                    f"Failed to void case #{created_case.case_number}: {void_error}",
+                                    exc_info=True,
+                                )
+                        else:
+                            logger.warning(
+                                f"Case #{created_case.case_number} was created but has no ID. "
+                                f"Discord action failed.",
+                            )
+                    except Exception as case_error:
+                        # Case creation itself failed, which is fine
+                        logger.debug(
+                            f"Case creation also failed (expected): {case_error}",
+                        )
+                else:
+                    # Case creation hasn't completed yet, safe to cancel
+                    case_task.cancel()
+                    try:
+                        await case_task
+                    except asyncio.CancelledError:
+                        logger.trace("Case creation task cancelled successfully")
                 raise
 
             # Wait for case creation to complete
@@ -331,9 +431,25 @@ class ModerationCoordinator:
         """
         Handle DM timing based on action type.
 
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            Command context.
+        case_type : DBCaseType
+            Type of moderation action.
+        user : discord.Member | discord.User
+            Target user.
+        reason : str
+            Reason for the action.
+        action_desc : str
+            DM action description.
+        silent : bool
+            Whether to skip sending DM.
+
         Returns
         -------
-            True if DM was sent, False otherwise
+        bool
+            True if DM was sent, False otherwise.
         """
         if case_type in self.REMOVAL_ACTIONS:
             # Send DM BEFORE action for removal actions
@@ -357,23 +473,29 @@ class ModerationCoordinator:
         """
         Execute Discord API actions.
 
-        Note: Error handling is now centralized in the error handler.
-        Exceptions are allowed to bubble up to be properly handled by the
-        centralized error handler, which provides:
-        - Consistent error messaging
-        - Proper Sentry integration with command context
-        - Guild/user context enrichment
-        - Transaction management
+        Error handling is centralized in the error handler. Exceptions bubble
+        up for consistent messaging, Sentry integration, context enrichment,
+        and transaction management.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            Command context.
+        case_type : DBCaseType
+            Type of moderation action.
+        user : discord.Member | discord.User
+            Target user.
+        actions : Sequence[tuple[Callable[..., Coroutine[Any, Any, Any]], type[Any]]]
+            Discord API actions to execute.
 
         Returns
         -------
-            List of action results
+        list[Any]
+            List of action results.
         """
         results: list[Any] = []
 
-        for idx, action_tuple in enumerate(actions, 1):
-            # Extract action from tuple (action, expected_type)
-            action = action_tuple[0]
+        for idx, (action, __) in enumerate(actions, 1):
             operation_type = self._execution.get_operation_type(case_type)
             logger.trace(
                 f"Executing action {idx}/{len(actions)} for {case_type.value} (operation: {operation_type})",
@@ -403,9 +525,21 @@ class ModerationCoordinator:
         """
         Handle DM sending after successful action execution.
 
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            Command context.
+        user : discord.Member | discord.User
+            Target user.
+        reason : str
+            Reason for the action.
+        action_desc : str
+            DM action description.
+
         Returns
         -------
-            True if DM was sent, False otherwise
+        bool
+            True if DM was sent, False otherwise.
         """
         try:
             result = await asyncio.wait_for(
@@ -521,15 +655,10 @@ class ModerationCoordinator:
             ]
 
         # Use correct embed type based on case status
-        embed_type = (
-            (
-                EmbedType.ACTIVE_CASE
-                if case and case.case_status
-                else EmbedType.INACTIVE_CASE
-            )
-            if case
-            else EmbedType.ACTIVE_CASE
-        )
+        if case is None or case.case_status:
+            embed_type = EmbedType.ACTIVE_CASE
+        else:
+            embed_type = EmbedType.INACTIVE_CASE
 
         embed = EmbedCreator.create_embed(
             embed_type=embed_type,
@@ -549,7 +678,20 @@ class ModerationCoordinator:
         user: discord.Member | discord.User,
         dm_sent: bool,
     ) -> None:
-        """Send the response embed for the moderation action."""
+        """
+        Send the response embed for the moderation action.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            Command context.
+        case : Case | None
+            The moderation case, or None if creation failed.
+        user : discord.Member | discord.User
+            Target user.
+        dm_sent : bool
+            Whether DM was sent.
+        """
         logger.trace(
             f"Preparing response embed, case={'present' if case else 'None'}, dm_sent={dm_sent}",
         )
@@ -565,7 +707,25 @@ class ModerationCoordinator:
         user: discord.Member | discord.User,
         dm_sent: bool,
     ) -> discord.Message | None:
-        """Send the response embed to the mod log channel."""
+        """
+        Send the response embed to the mod log channel.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            Command context.
+        case : Case
+            The moderation case.
+        user : discord.Member | discord.User
+            Target user.
+        dm_sent : bool
+            Whether DM was sent.
+
+        Returns
+        -------
+        discord.Message | None
+            Mod log message if sent, None otherwise.
+        """
         logger.trace(f"Preparing mod log embed for case #{case.case_number}")
 
         # Create base embed and clone for mod log
@@ -598,7 +758,13 @@ class ModerationCoordinator:
         return await self._communication.send_mod_log_embed(ctx, embed)
 
     def _get_default_dm_action(self, case_type: DBCaseType) -> str:
-        """Get the default DM action description for a case type.
+        """
+        Get the default DM action description for a case type.
+
+        Parameters
+        ----------
+        case_type : DBCaseType
+            Type of moderation action.
 
         Returns
         -------
