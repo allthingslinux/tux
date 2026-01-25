@@ -152,3 +152,51 @@ class CaseService:
             case_id,
             message_id,
         )
+
+    async def void_case(
+        self,
+        case_id: int,
+        failure_reason: str | None = None,
+    ) -> Case | None:
+        """
+        Void a case by setting its status to False.
+
+        Used when a case was created but the Discord action failed,
+        preserving the audit trail while marking it as invalid.
+
+        Parameters
+        ----------
+        case_id : int
+            The case ID to void.
+        failure_reason : str | None, optional
+            Optional reason for voiding (e.g., "Discord action failed").
+            Will be appended to the existing case reason.
+
+        Returns
+        -------
+        Case | None
+            The voided case, or None if not found.
+        """
+        # Get the case first to preserve the original reason
+        case = await self._case_controller.get_case_by_id(case_id)
+        if case is None:
+            return None
+
+        # Build updated reason with failure information
+        updated_reason = case.case_reason
+        if failure_reason:
+            # Append failure reason, respecting max length (2000 chars)
+            failure_note = f" [VOIDED: {failure_reason}]"
+            if len(updated_reason) + len(failure_note) <= 2000:
+                updated_reason = updated_reason + failure_note
+            else:
+                # Truncate original reason if needed to fit failure note
+                max_original_length = 2000 - len(failure_note)
+                updated_reason = updated_reason[:max_original_length] + failure_note
+
+        # Update both status and reason
+        return await self._case_controller.update_by_id(
+            case_id,
+            case_status=False,
+            case_reason=updated_reason,
+        )
