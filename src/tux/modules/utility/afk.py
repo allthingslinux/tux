@@ -298,13 +298,12 @@ class Afk(BaseCog):
             # Check for prefix commands
             if message.content.startswith(f"{prefix}sto"):
                 return
-            # Check for slash command invocations (prefer interaction_metadata; interaction is deprecated)
-            command_name: str | None = None
-            if message.interaction_metadata:
-                command_name = getattr(message.interaction_metadata, "name", None)
-            elif hasattr(message, "interaction") and message.interaction is not None:
-                cmd = getattr(message.interaction, "command", None)
-                command_name = getattr(cmd, "name", None) if cmd else None
+            # Check for slash command invocations (interaction_metadata only; message.interaction is deprecated)
+            command_name: str | None = (
+                getattr(message.interaction_metadata, "name", None)
+                if message.interaction_metadata
+                else None
+            )
             if command_name and command_name in (
                 "self_timeout",
                 "sto",
