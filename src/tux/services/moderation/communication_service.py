@@ -12,8 +12,8 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.cache import GuildConfigCacheManager
 from tux.core.bot import Tux
-from tux.shared.cache import GuildConfigCacheManager
 from tux.shared.constants import EMBED_COLORS
 
 
@@ -255,7 +255,7 @@ class CommunicationService:
             Tuple of (audit_log_id, mod_log_id).
         """
         # Check cache first
-        cached = self._guild_config_cache.get(guild_id)
+        cached = await self._guild_config_cache.get(guild_id)
         # Only return cached values if both keys exist in cache
         # (even if values are None, that means they were explicitly cached as not configured)
         if cached is not None and "audit_log_id" in cached and "mod_log_id" in cached:
@@ -286,7 +286,7 @@ class CommunicationService:
 
         return audit_log_id, mod_log_id
 
-    def invalidate_guild_config_cache(self, guild_id: int) -> None:
+    async def invalidate_guild_config_cache(self, guild_id: int) -> None:
         """
         Invalidate cached guild config for a specific guild.
 
@@ -295,7 +295,7 @@ class CommunicationService:
         guild_id : int
             The guild ID to invalidate.
         """
-        self._guild_config_cache.invalidate(guild_id)
+        await self._guild_config_cache.invalidate(guild_id)
 
     async def send_audit_log_embed(  # noqa: PLR0911
         self,
