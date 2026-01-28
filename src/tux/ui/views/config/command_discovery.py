@@ -18,6 +18,10 @@ if TYPE_CHECKING:
 # command permissions list (e.g. moderation, levels/lvls/XP/blacklist).
 _PERMISSION_COG_MODULES = ("moderation", "levels")
 
+# Commands from those modules that do not use @requires_command_permission()
+# and must not appear in the permission assignment UI (e.g. level is view-only).
+_EXCLUDED_FROM_PERMISSION_ASSIGNMENT = frozenset({"level"})
+
 
 def get_moderation_commands(bot: Tux) -> list[str]:
     """
@@ -47,7 +51,11 @@ def get_moderation_commands(bot: Tux) -> list[str]:
             for command in cog.get_commands():
                 # Only add the main command name, not aliases
                 # Exclude restricted commands (owner/sysadmin only)
-                if command.name.lower() not in RESTRICTED_COMMANDS:
+                # Exclude commands that don't use the permission decorator (e.g. level is view-only)
+                if (
+                    command.name.lower() not in RESTRICTED_COMMANDS
+                    and command.name.lower() not in _EXCLUDED_FROM_PERMISSION_ASSIGNMENT
+                ):
                     command_names.add(command.name)
 
     # Fallback: Known commands that require permission assignment
