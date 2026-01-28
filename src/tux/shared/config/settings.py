@@ -3,7 +3,7 @@
 This module provides the main configuration class and global instance,
 using the extracted models and proper pydantic-settings for environment variable binding.
 
-Use .env for BOT_TOKEN, Postgres (POSTGRES_*), DATABASE_URL, EXTERNAL_SERVICES, DEBUG, LOG_LEVEL, MAINTENANCE_MODE.
+Use .env for BOT_TOKEN, Postgres (POSTGRES_*), DATABASE_URL, Valkey (VALKEY_*), EXTERNAL_SERVICES, DEBUG, LOG_LEVEL, MAINTENANCE_MODE.
 Put all other settings in config.json.
 
 Configuration loading priority (highest to lowest):
@@ -95,7 +95,7 @@ validate_environment()
 class Config(BaseSettings):
     """Main Tux configuration using Pydantic Settings (JSON-only file support).
 
-    Use .env for BOT_TOKEN, Postgres (POSTGRES_*), DATABASE_URL, EXTERNAL_SERVICES, DEBUG, LOG_LEVEL, MAINTENANCE_MODE;
+    Use .env for BOT_TOKEN, Postgres (POSTGRES_*), DATABASE_URL, Valkey (VALKEY_*), EXTERNAL_SERVICES, DEBUG, LOG_LEVEL, MAINTENANCE_MODE;
     put other settings in config.json.
 
     Configuration is loaded from multiple sources in priority order:
@@ -213,6 +213,46 @@ class Config(BaseSettings):
         ),
     ]
 
+    # Valkey (Redis-compatible cache) configuration
+    VALKEY_HOST: Annotated[
+        str,
+        Field(
+            default="",
+            description="Valkey host (empty to disable)",
+            examples=["localhost", "tux-valkey"],
+        ),
+    ] = ""
+    VALKEY_PORT: Annotated[
+        int,
+        Field(
+            default=6379,
+            description="Valkey port",
+            examples=[6379],
+        ),
+    ] = 6379
+    VALKEY_DB: Annotated[
+        int,
+        Field(
+            default=0,
+            description="Valkey database number",
+            examples=[0],
+        ),
+    ] = 0
+    VALKEY_PASSWORD: Annotated[
+        str,
+        Field(
+            default="",
+            description="Valkey password",
+        ),
+    ] = ""
+    VALKEY_URL: Annotated[
+        str,
+        Field(
+            default="",
+            description="Valkey URL override (overrides host/port/db/password)",
+        ),
+    ] = ""
+
     # Bot info
     BOT_INFO: BotInfo = Field(default_factory=BotInfo)  # type: ignore[arg-type]
 
@@ -297,6 +337,20 @@ class Config(BaseSettings):
             host = "tux-postgres"
 
         return f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{host}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+
+    @computed_field
+    @property
+    def valkey_url(self) -> str:
+        """Get Valkey URL, building from components if not explicitly set."""
+        if self.VALKEY_URL:
+            return self.VALKEY_URL
+        if not self.VALKEY_HOST:
+            return ""
+        host = self.VALKEY_HOST
+        if os.getenv("TUX_VERSION"):
+            host = "tux-valkey"
+        auth = f":{self.VALKEY_PASSWORD}@" if self.VALKEY_PASSWORD else ""
+        return f"valkey://{auth}{host}:{self.VALKEY_PORT}/{self.VALKEY_DB}"
 
     def get_prefix(self) -> str:
         """
