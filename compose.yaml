@@ -52,6 +52,27 @@ services:
       retries: 5
       start_period: 30s
     stop_grace_period: 30s
+  tux-valkey:
+    container_name: tux-valkey
+    hostname: tux-valkey
+    image: valkey/valkey:8.0-alpine
+    restart: ${RESTART_POLICY:-no}
+    ports: [127.0.0.1:6379:6379]
+    volumes:
+      - tux_valkey_data:/data
+    command: valkey-server --save 60 1 --loglevel warning
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+        compress: 'true'
+    healthcheck:
+      test: [CMD, valkey-cli, ping]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
   # Production app: pre-built image, no build, security hardening.
   # Use: docker compose --profile production up -d
@@ -187,4 +208,6 @@ services:
       - ./docker/adminer/autologin-form.php:/var/www/html/plugins-enabled/autologin-form.php:ro
 volumes:
   tux_postgres_data:
+    driver: local
+  tux_valkey_data:
     driver: local
