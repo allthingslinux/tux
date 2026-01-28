@@ -16,11 +16,11 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.cache import JailStatusCache
 from tux.core.bot import Tux
 from tux.core.checks import requires_command_permission
 from tux.core.flags import JailFlags
 from tux.database.models import CaseType
-from tux.shared.cache import JailStatusCache
 
 from . import ModerationCogBase
 
@@ -128,7 +128,7 @@ class Jail(ModerationCogBase):
             f"Re-jailed {member} on rejoin in guild {member.guild.id} ({member.guild.name})",
         )
         # Invalidate jail status cache (should already be True, but ensure consistency)
-        JailStatusCache().set(member.guild.id, member.id, True)
+        await JailStatusCache().set(member.guild.id, member.id, True)
         # Strip roles added by other on_member_join handlers (e.g. TTY roles ~5s)
         asyncio.create_task(  # noqa: RUF006
             self._delayed_rejail_cleanup(member.guild.id, member.id),
@@ -263,7 +263,7 @@ class Jail(ModerationCogBase):
         )
 
         # Invalidate jail status cache after jailing
-        JailStatusCache().invalidate(ctx.guild.id, member.id)
+        await JailStatusCache().invalidate(ctx.guild.id, member.id)
 
         # Remove old roles in the background after sending the response
         # Use graceful degradation - if some roles fail, continue with others
