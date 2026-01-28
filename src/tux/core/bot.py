@@ -18,6 +18,7 @@ from discord.ext import commands
 from loguru import logger
 from rich.console import Console
 
+from tux.cache import CacheService
 from tux.core.setup.orchestrator import BotSetupOrchestrator
 from tux.core.task_monitor import TaskMonitor
 from tux.database.controllers import DatabaseCoordinator
@@ -109,6 +110,7 @@ class Tux(commands.Bot):
 
         # Service integrations
         self.db_service = DatabaseService()
+        self.cache_service: CacheService | None = None  # Set by CacheSetupService
         self._db_coordinator: DatabaseCoordinator | None = None  # Cached coordinator
         self.sentry_manager = SentryManager()
         self.prefix_manager: Any | None = None  # Initialized during setup
@@ -457,6 +459,19 @@ class Tux(commands.Bot):
                 span.set_data("connections.db_error", str(e))
                 span.set_data("connections.db_error_type", type(e).__name__)
                 capture_exception_safe(e)
+
+            # Close Valkey cache connection
+            if self.cache_service:
+                try:
+                    logger.debug("Closing cache (Valkey) connections")
+                    await self.cache_service.close()
+                    logger.debug("Cache connections closed")
+                    span.set_data("connections.cache_closed", True)
+                except Exception as e:
+                    logger.error(f"Error during cache disconnection: {e}")
+                    span.set_data("connections.cache_closed", False)
+                    span.set_data("connections.cache_error", str(e))
+                    capture_exception_safe(e)
 
             # Close HTTP client session and connection pool
             try:
