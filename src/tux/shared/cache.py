@@ -198,7 +198,7 @@ class GuildConfigCacheManager:
         """Create or return the singleton instance."""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance._cache = TTLCache(ttl=300.0, max_size=1000)
+            cls._instance._cache = TTLCache(ttl=600.0, max_size=1000)  # 10 min
             cls._instance._locks = {}  # Per-guild locks for cache updates
         return cls._instance
 
@@ -361,8 +361,8 @@ class JailStatusCache:
         """Create or return the singleton instance."""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            # 60 second TTL - jail status changes infrequently
-            cls._instance._cache = TTLCache(ttl=60.0, max_size=5000)
+            # 5 min TTL - jail status changes infrequently
+            cls._instance._cache = TTLCache(ttl=300.0, max_size=5000)
             cls._instance._locks = {}  # Per (guild_id, user_id) locks for cache updates
             cls._instance._locks_lock = (
                 asyncio.Lock()
