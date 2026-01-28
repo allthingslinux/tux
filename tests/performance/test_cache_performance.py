@@ -5,12 +5,13 @@ Tests TTLCache, GuildConfigCacheManager, and JailStatusCache performance
 to ensure optimizations maintain or improve performance.
 """
 
+import asyncio
 import sys
 import timeit
 
 import pytest
 
-from tux.shared.cache import GuildConfigCacheManager, JailStatusCache, TTLCache
+from tux.cache import GuildConfigCacheManager, JailStatusCache, TTLCache
 
 
 @pytest.mark.performance
@@ -50,16 +51,18 @@ class TestGuildConfigCachePerformance:
     def test_cache_get_set_performance(self) -> None:
         """Benchmark guild config cache operations."""
         cache = GuildConfigCacheManager()
-        cache.clear_all()
 
-        def run_operations() -> None:
-            cache.clear_all()
+        async def run_operations() -> None:
+            await cache.clear_all()
             for guild_id in range(100):
-                cache.set(guild_id, audit_log_id=guild_id * 10)
-                cache.get(guild_id)
+                await cache.set(guild_id, audit_log_id=guild_id * 10)
+                await cache.get(guild_id)
+
+        def run_sync() -> None:
+            asyncio.run(run_operations())
 
         # Measure execution time
-        execution_time = timeit.timeit(run_operations, number=50)
+        execution_time = timeit.timeit(run_sync, number=50)
         # Should complete in reasonable time
         assert execution_time < 1.0, f"Cache operations too slow: {execution_time}s"
 
@@ -71,16 +74,18 @@ class TestJailStatusCachePerformance:
     def test_cache_get_set_performance(self) -> None:
         """Benchmark jail status cache operations."""
         cache = JailStatusCache()
-        cache.clear_all()
 
-        def run_operations() -> None:
-            cache.clear_all()
+        async def run_operations() -> None:
+            await cache.clear_all()
             for guild_id in range(50):
                 for user_id in range(10):
-                    cache.set(guild_id, user_id, is_jailed=(user_id % 2 == 0))
-                    cache.get(guild_id, user_id)
+                    await cache.set(guild_id, user_id, is_jailed=(user_id % 2 == 0))
+                    await cache.get(guild_id, user_id)
+
+        def run_sync() -> None:
+            asyncio.run(run_operations())
 
         # Measure execution time
-        execution_time = timeit.timeit(run_operations, number=50)
+        execution_time = timeit.timeit(run_sync, number=50)
         # Should complete in reasonable time
         assert execution_time < 1.0, f"Cache operations too slow: {execution_time}s"
