@@ -64,14 +64,18 @@ class AfkController(BaseController[AFK]):
         """
         # Check if member is already AFK in this guild
         existing = await self.get_afk_by_member(member_id, guild_id)
+        # Database stores naive UTC datetimes
+        now_naive = datetime.now(UTC).replace(tzinfo=None)
+        # Ensure until is also naive if provided
+        until_naive = until.replace(tzinfo=None) if until and until.tzinfo else until
         if existing:
             # Update existing AFK using composite primary key
             updated = await self.update_by_id(
                 (member_id, guild_id),
                 nickname=nickname,
                 reason=reason,
-                since=datetime.now(UTC),
-                until=until,
+                since=now_naive,
+                until=until_naive,
                 enforced=enforced,
                 perm_afk=is_perm,
             )
@@ -82,8 +86,8 @@ class AfkController(BaseController[AFK]):
             nickname=nickname,
             reason=reason,
             guild_id=guild_id,
-            since=datetime.now(UTC),
-            until=until,
+            since=now_naive,
+            until=until_naive,
             enforced=enforced,
             perm_afk=is_perm,
         )
@@ -273,7 +277,8 @@ class AfkController(BaseController[AFK]):
         list[AFK]
             List of expired AFK records.
         """
-        now = datetime.now(UTC)
+        # Database stores naive UTC datetimes, use naive for comparison
+        now = datetime.now(UTC).replace(tzinfo=None)
         return await self.find_all(
             filters=(
                 (AFK.guild_id == guild_id)
