@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from tux.cache import get_cache_backend
 from tux.core.permission_system import init_permission_system
 from tux.core.setup.base import BotSetupService
 from tux.database.controllers import DatabaseCoordinator
@@ -37,7 +38,12 @@ class PermissionSetupService(BotSetupService):
         """Set up the permission system for command authorization."""
         logger.info("Initializing permission system...")
 
-        db_coordinator = DatabaseCoordinator(self.db_service)
+        cache_backend = get_cache_backend(self.bot)
+        db_coordinator = DatabaseCoordinator(
+            self.db_service,
+            cache_backend=cache_backend,
+        )
+        self.bot._db_coordinator = db_coordinator  # type: ignore[reportPrivateUsage]
         init_permission_system(self.bot, db_coordinator)
 
         logger.success("Permission system initialized successfully")
