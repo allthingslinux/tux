@@ -56,7 +56,7 @@ class InfoPaginatorView(discord.ui.LayoutView):
             raise ValueError(error_msg)
         super().__init__(timeout=timeout)
         self.items = list(items)
-        self.chunks_list: list[list[str]] = list(chunks(iter(self.items), chunk_size))
+        self.chunks_list = list(chunks(iter(self.items), chunk_size))
         self.current_page = 0
         self.title = title
         self.list_type = list_type
