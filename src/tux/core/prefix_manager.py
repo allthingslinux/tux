@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from tux.cache import get_cache_backend
 from tux.database.utils import get_db_controller_from
 from tux.shared.config import CONFIG
 
@@ -91,8 +92,17 @@ class PrefixManager:
         if guild_id is None:
             return self._default_prefix
 
+        # Sync mirror for error extractor and fast path
         if guild_id in self._prefix_cache:
             return self._prefix_cache[guild_id]
+
+        # Backend (Valkey or in-memory) when available
+        backend = get_cache_backend(self.bot)
+        key = f"prefix:{guild_id}"
+        backend_val = await backend.get(key)
+        if backend_val is not None and isinstance(backend_val, str):
+            self._prefix_cache[guild_id] = backend_val
+            return backend_val
 
         return await self._load_guild_prefix(guild_id)
 
@@ -117,6 +127,10 @@ class PrefixManager:
             return
 
         self._prefix_cache[guild_id] = prefix
+
+        # Write to backend when available (no TTL; prefix is long-lived)
+        backend = get_cache_backend(self.bot)
+        await backend.set(f"prefix:{guild_id}", prefix, ttl_sec=None)
 
         # Fire-and-forget: persist to database asynchronously
         asyncio.create_task(self._persist_prefix(guild_id, prefix))  # noqa: RUF006
@@ -155,6 +169,8 @@ class PrefixManager:
 
             prefix = guild_config.prefix
             self._prefix_cache[guild_id] = prefix
+            backend = get_cache_backend(self.bot)
+            await backend.set(f"prefix:{guild_id}", prefix, ttl_sec=None)
 
         except Exception as e:
             logger.warning(
@@ -224,8 +240,14 @@ class PrefixManager:
                     timeout=10.0,
                 )
 
+                backend = get_cache_backend(self.bot)
                 for config in all_configs:
                     self._prefix_cache[config.id] = config.prefix
+                    await backend.set(
+                        f"prefix:{config.id}",
+                        config.prefix,
+                        ttl_sec=None,
+                    )
 
                 self._cache_loaded = True
                 logger.info(
@@ -242,7 +264,7 @@ class PrefixManager:
                 logger.error(f"Failed to load prefix cache: {type(e).__name__}")
                 self._cache_loaded = True
 
-    def invalidate_cache(self, guild_id: int | None = None) -> None:
+    async def invalidate_cache(self, guild_id: int | None = None) -> None:
         """
         Invalidate prefix cache for a specific guild or all guilds.
 
@@ -254,14 +276,16 @@ class PrefixManager:
 
         Examples
         --------
-        >>> manager.invalidate_cache(123456789)  # Specific guild
-        >>> manager.invalidate_cache()  # All guilds
+        >>> await manager.invalidate_cache(123456789)  # Specific guild
+        >>> await manager.invalidate_cache()  # All guilds
         """
         if guild_id is None:
             self._prefix_cache.clear()
             self._cache_loaded = False
             logger.debug("All prefix cache invalidated")
         else:
+            backend = get_cache_backend(self.bot)
+            await backend.delete(f"prefix:{guild_id}")
             self._prefix_cache.pop(guild_id, None)
             logger.debug(f"Prefix cache invalidated for guild {guild_id}")
 
