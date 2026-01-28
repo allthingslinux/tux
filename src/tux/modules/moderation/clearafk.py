@@ -9,6 +9,7 @@ import contextlib
 
 import discord
 from discord.ext import commands
+from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
@@ -35,7 +36,9 @@ class ClearAFK(BaseCog):
         description="Clear a member's AFK status and reset their nickname.",
     )
     @commands.guild_only()
-    @requires_command_permission()  # Ensure the user has the required permission rank
+    @requires_command_permission(
+        allow_self_use_for_param="member",
+    )  # Anyone can clear their own AFK; clearing others requires permission rank
     async def clear_afk(
         self,
         ctx: commands.Context[Tux],
@@ -75,14 +78,47 @@ class ClearAFK(BaseCog):
         # Fetch the AFK entry to retrieve the original nickname
         entry = await self.db.afk.get_afk_member(member.id, guild_id=ctx.guild.id)
 
-        await self.db.afk.remove_afk(member.id, ctx.guild.id)
+        if not entry:
+            # Entry was removed between check and fetch (race condition)
+            if ctx.interaction:
+                msg = await ctx.interaction.followup.send(
+                    f"{member.mention} is no longer AFK.",
+                    ephemeral=True,
+                )
+                assert msg is not None
+                return msg
+            return await ctx.send(f"{member.mention} is no longer AFK.")
 
-        if entry:
-            if entry.nickname:
-                with contextlib.suppress(discord.Forbidden):
-                    await member.edit(nick=entry.nickname)  # Reset nickname to original
-            if entry.enforced:  # untimeout the user if the afk status is a self-timeout
-                await member.timeout(None, reason="removing self-timeout")
+        # Restore nickname and untimeout before removing from database
+        # This ensures if operations fail, AFK entry still exists
+        nickname_restored = False
+        if entry.nickname:
+            with contextlib.suppress(discord.Forbidden):
+                await member.edit(nick=entry.nickname)  # Reset nickname to original
+                nickname_restored = True
+
+        if entry.enforced:  # untimeout the user if the afk status is a self-timeout
+            try:
+                # Check if member is actually timed out before attempting untimeout
+                if member.timed_out_until is not None:
+                    await member.timeout(None, reason="removing self-timeout")
+            except (discord.Forbidden, discord.HTTPException) as e:
+                logger.warning(
+                    f"Failed to untimeout member {member.id}: {e}",
+                )
+
+        # Only remove from database after operations succeed (or are attempted)
+        # Re-check entry exists to avoid race condition
+        current_entry = await self.db.afk.get_afk_member(
+            member.id,
+            guild_id=ctx.guild.id,
+        )
+        if current_entry is not None:
+            await self.db.afk.remove_afk(member.id, ctx.guild.id)
+        elif not nickname_restored and entry.nickname:
+            # Entry was removed but nickname wasn't restored, try to restore it
+            with contextlib.suppress(discord.Forbidden):
+                await member.edit(nick=entry.nickname)
 
         if ctx.interaction:
             msg = await ctx.interaction.followup.send(
