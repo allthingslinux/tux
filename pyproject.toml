@@ -49,6 +49,7 @@ dependencies = [
     "tomli-w>=1.0.0",
     "tomlkit>=0.13.3",
     "pyyaml>=6.0.3",
+    "valkey>=6.1.1",
 ]
 
 [project.urls]

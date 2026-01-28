@@ -10,7 +10,6 @@ tags:
   - pydantic-settings
   - dotenv
   - env-variables
-icon: lucide/variable
 ---
 <!-- region:config -->
 # Environment Variables
@@ -19,7 +18,7 @@ icon: lucide/variable
 
 Main Tux configuration using Pydantic Settings (JSON-only file support).
 
-Use **.env** for BOT_TOKEN, Postgres (POSTGRES_*), DATABASE_URL, EXTERNAL_SERVICES, DEBUG, LOG_LEVEL, MAINTENANCE_MODE; put all other settings in **config.json**.
+Use **.env** for BOT_TOKEN, Postgres (POSTGRES_*), DATABASE_URL, Valkey (VALKEY_*), EXTERNAL_SERVICES, DEBUG, LOG_LEVEL, MAINTENANCE_MODE; put all other settings in **config.json**.
 
 Configuration is loaded from multiple sources in priority order:
 
@@ -41,6 +40,11 @@ Configuration is loaded from multiple sources in priority order:
 | `POSTGRES_USER` | `string` | `"tuxuser"` | PostgreSQL username | `"tuxuser"`, `"tux_admin"` |
 | `POSTGRES_PASSWORD` | `string` | `"ChangeThisToAStrongPassword123!"` | PostgreSQL password | `"ChangeThisToAStrongPassword123!"`, `"SecurePassword456!"` |
 | `DATABASE_URL` | `string` | `""` | Custom database URL override | `"postgresql://user:password@localhost:5432/tuxdb"` |
+| `VALKEY_HOST` | `string` | `""` | Valkey host (empty to disable) | `"localhost"`, `"tux-valkey"` |
+| `VALKEY_PORT` | `integer` | `6379` | Valkey port | `6379` |
+| `VALKEY_DB` | `integer` | `0` | Valkey database number | `0` |
+| `VALKEY_PASSWORD` | `string` | `""` | Valkey password | - |
+| `VALKEY_URL` | `string` | `""` | Valkey URL override (overrides host/port/db/password) | - |
 | `ALLOW_SYSADMINS_EVAL` | `boolean` | `false` | Allow sysadmins to use eval | `false`, `true` |
 
 ### BotInfo

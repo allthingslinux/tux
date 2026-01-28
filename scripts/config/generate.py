@@ -151,7 +151,7 @@ def generate_schema() -> None:
 
 
 def _is_env_key(ek: str) -> bool:
-    """Return True if this key belongs in .env (Postgres, ExternalServices, BOT_TOKEN, DATABASE_URL, DEBUG, LOG_LEVEL, MAINTENANCE_MODE)."""
+    """Return True if this key belongs in .env (Postgres, Valkey, ExternalServices, BOT_TOKEN, DATABASE_URL, DEBUG, LOG_LEVEL, MAINTENANCE_MODE)."""
     e = ek.upper()
     if e in {
         "BOT_TOKEN",
@@ -163,6 +163,8 @@ def _is_env_key(ek: str) -> bool:
     }:
         return True
     if e.startswith("POSTGRES_"):
+        return True
+    if e.startswith("VALKEY_"):
         return True
     return e.startswith("EXTERNAL_SERVICES__")
 
@@ -247,10 +249,10 @@ def generate_env_example() -> None:
             flat[k.upper()] = ""
         else:
             flat[k.upper()] = str(v)
-    # Keep only .env keys: Postgres, ExternalServices, BOT_TOKEN, DATABASE_URL
+    # Keep only .env keys: Postgres, Valkey, ExternalServices, BOT_TOKEN, DATABASE_URL, etc.
     flat = {ek: ev for ek, ev in flat.items() if _is_env_key(ek)}
     lines = [
-        "# Postgres, ExternalServices, BOT_TOKEN, DATABASE_URL, DEBUG, LOG_LEVEL, MAINTENANCE_MODE.",
+        "# Postgres, Valkey, ExternalServices, BOT_TOKEN, DATABASE_URL, DEBUG, LOG_LEVEL, MAINTENANCE_MODE.",
         "# Used by Tux and Docker Compose. Other settings → config/config.json (config.json.example).",
         "",
     ]
@@ -320,7 +322,7 @@ def generate_env_markdown() -> None:  # noqa: PLR0912, PLR0915
         "",
         "Main Tux configuration using Pydantic Settings (JSON-only file support).",
         "",
-        "Use **.env** for BOT_TOKEN, Postgres (POSTGRES_*), DATABASE_URL, EXTERNAL_SERVICES, DEBUG, LOG_LEVEL, MAINTENANCE_MODE; put all other settings in **config.json**.",
+        "Use **.env** for BOT_TOKEN, Postgres (POSTGRES_*), DATABASE_URL, Valkey (VALKEY_*), EXTERNAL_SERVICES, DEBUG, LOG_LEVEL, MAINTENANCE_MODE; put all other settings in **config.json**.",
         "",
         "Configuration is loaded from multiple sources in priority order:",
         "1. Environment variables (highest priority)",

@@ -85,8 +85,8 @@ async def del_afk(
     AttributeError
         If target is not a Member or doesn't have a guild attribute.
     """
-    # Validate that target is a Member with a guild
-    if not isinstance(target, discord.Member) or target.guild is None:
+    # Validate that target is a Member with a guild (runtime check for callers)
+    if not isinstance(target, discord.Member) or target.guild is None:  # type: ignore[reportUnnecessaryIsInstance, reportUnnecessaryComparison]
         msg = f"target must be a discord.Member with a guild, got {type(target)}"
         raise AttributeError(msg)
 

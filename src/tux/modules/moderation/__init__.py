@@ -14,11 +14,11 @@ from typing import TYPE_CHECKING, Any, ClassVar
 import discord
 from discord.ext import commands
 
+from tux.cache import JailStatusCache
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.database.models import CaseType as DBCaseType
 from tux.services.moderation import ModerationServiceFactory
-from tux.shared.cache import JailStatusCache
 
 if TYPE_CHECKING:
     from tux.services.moderation import ModerationCoordinator
