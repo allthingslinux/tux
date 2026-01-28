@@ -31,6 +31,7 @@ class BotSetupOrchestrator:
         """
         self.bot = bot
         # Lazy import to avoid circular imports
+        from .cache_setup import CacheSetupService  # noqa: PLC0415
         from .cog_setup import CogSetupService  # noqa: PLC0415
         from .database_setup import DatabaseSetupService  # noqa: PLC0415
         from .permission_setup import PermissionSetupService  # noqa: PLC0415
@@ -38,6 +39,7 @@ class BotSetupOrchestrator:
 
         self.services = [
             DatabaseSetupService(bot.db_service),
+            CacheSetupService(bot),
             PermissionSetupService(bot, bot.db_service),
             PrefixSetupService(bot),
             CogSetupService(bot),
