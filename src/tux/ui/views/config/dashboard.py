@@ -1582,10 +1582,10 @@ class ConfigDashboard(discord.ui.LayoutView):
         tuple[list[tuple[str, int | None, bool]], dict[int, Any], dict[int, list[dict[str, Any]]]]
             Tuple of (all_commands, rank_map, assignments_by_rank)
         """
-        # Get all moderation commands
+        # Get all commands that use the permission decorator (moderation, levels, etc.)
         moderation_commands = get_moderation_commands(self.bot)
         logger.debug(
-            f"Found {len(moderation_commands)} moderation commands for guild {self.guild.id}",
+            f"Found {len(moderation_commands)} permission-assignable commands for guild {self.guild.id}",
         )
 
         # Fetch command permissions, ranks, and assignments in parallel to reduce
@@ -1876,7 +1876,7 @@ class ConfigDashboard(discord.ui.LayoutView):
             # Page header with description
             page_header = discord.ui.TextDisplay[discord.ui.LayoutView](
                 "# 🤖 Command Permissions\n\n"
-                "Assign permission ranks to moderation commands. "
+                "Assign permission ranks to commands (moderation, levels/XP/blacklist, etc.). "
                 "Commands without assigned ranks are disabled by default.",
             )
             container.add_item(page_header)
