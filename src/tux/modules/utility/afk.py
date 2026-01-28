@@ -298,18 +298,23 @@ class Afk(BaseCog):
             # Check for prefix commands
             if message.content.startswith(f"{prefix}sto"):
                 return
-            # Check for slash command invocations
-            if (
-                message.interaction
-                and message.interaction.command
-                and message.interaction.command.name
-                in (
-                    "self_timeout",
-                    "sto",
-                    "stimeout",
-                    "selftimeout",
-                )
+            # Check for slash command invocations (prefer interaction_metadata; interaction is deprecated)
+            command_name: str | None = None
+            if message.interaction_metadata:
+                command_name = getattr(message.interaction_metadata, "name", None)
+            elif hasattr(message, "interaction") and message.interaction is not None:
+                cmd = getattr(message.interaction, "command", None)
+                command_name = getattr(cmd, "name", None) if cmd else None
+            if command_name and command_name in (
+                "self_timeout",
+                "sto",
+                "stimeout",
+                "selftimeout",
             ):
+                logger.debug(
+                    "Ignoring self_timeout command response from %s",
+                    message.author.id,
+                )
                 return
 
             afks_mentioned: list[tuple[discord.Member, AFKMODEL]] = []
