@@ -6,6 +6,4 @@ This module contains code that can be shared across all applications
 configuration management, and generic helper functions.
 """
 
-from tux.shared.cache import TTLCache
-
-__all__ = ["TTLCache"]
+__all__: list[str] = []
