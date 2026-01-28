@@ -29,9 +29,9 @@ if TYPE_CHECKING:
 class PermissionRankController(BaseController[PermissionRank]):
     """Controller for managing guild permission ranks."""
 
-    # Shared cache for permission ranks (5 minute TTL)
-    _ranks_cache: TTLCache = TTLCache(ttl=300.0, max_size=1000)
-    _guild_ranks_cache: TTLCache = TTLCache(ttl=300.0, max_size=500)
+    # Shared cache for permission ranks (10 minute TTL)
+    _ranks_cache: TTLCache = TTLCache(ttl=600.0, max_size=1000)
+    _guild_ranks_cache: TTLCache = TTLCache(ttl=600.0, max_size=500)
 
     def __init__(self, db: DatabaseService | None = None) -> None:
         """
@@ -274,10 +274,10 @@ class PermissionRankController(BaseController[PermissionRank]):
 class PermissionAssignmentController(BaseController[PermissionAssignment]):
     """Controller for managing guild permission assignments."""
 
-    # Shared cache for permission assignments (5 minute TTL)
-    _assignments_cache: TTLCache = TTLCache(ttl=300.0, max_size=500)
-    # Shared cache for user permission ranks (2 minute TTL, shorter because user roles can change)
-    _user_rank_cache: TTLCache = TTLCache(ttl=120.0, max_size=5000)
+    # Shared cache for permission assignments (10 minute TTL)
+    _assignments_cache: TTLCache = TTLCache(ttl=600.0, max_size=500)
+    # Shared cache for user permission ranks (5 minute TTL)
+    _user_rank_cache: TTLCache = TTLCache(ttl=300.0, max_size=5000)
 
     def __init__(self, db: DatabaseService | None = None) -> None:
         """Initialize the guild permission assignment controller.
@@ -312,7 +312,7 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
         self._assignments_cache.invalidate(f"permission_assignments:{guild_id}")
         # Invalidate all user rank caches for this guild (users may have new ranks)
         # We can't easily invalidate specific user caches, so we'll let them expire naturally
-        # The 2-minute TTL is short enough for this to be acceptable
+        # The 5-minute TTL is short enough for this to be acceptable
         logger.trace(f"Invalidated permission assignment cache for guild {guild_id}")
         return result
 
@@ -454,8 +454,8 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
 class PermissionCommandController(BaseController[PermissionCommand]):
     """Controller for managing command permission requirements."""
 
-    # Shared cache for command permissions (5 minute TTL)
-    _command_permissions_cache: TTLCache = TTLCache(ttl=300.0, max_size=2000)
+    # Shared cache for command permissions (10 minute TTL)
+    _command_permissions_cache: TTLCache = TTLCache(ttl=600.0, max_size=2000)
 
     def __init__(self, db: DatabaseService | None = None) -> None:
         """Initialize the guild command permission controller.
