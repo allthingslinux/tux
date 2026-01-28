@@ -69,12 +69,34 @@ async def del_afk(
     target: discord.Member,
     nickname: str,
 ) -> None:
-    """Remove a member's AFK status, restores their nickname, and updates the database."""
-    await db.afk.remove_afk(target.id, target.guild.id)
+    """Remove a member's AFK status, restores their nickname, and updates the database.
 
-    # Suppress Forbidden errors if the bot doesn't have permission to change the nickname
+    Parameters
+    ----------
+    db : DatabaseCoordinator
+        The database coordinator instance.
+    target : discord.Member
+        The member whose AFK status should be removed. Must be a Member (not User).
+    nickname : str
+        The original nickname to restore.
+
+    Raises
+    ------
+    AttributeError
+        If target is not a Member or doesn't have a guild attribute.
+    """
+    # Validate that target is a Member with a guild
+    if not isinstance(target, discord.Member) or target.guild is None:
+        msg = f"target must be a discord.Member with a guild, got {type(target)}"
+        raise AttributeError(msg)
+
+    # Restore nickname first before removing from database
+    # This ensures if nickname restore fails, AFK entry still exists
     with contextlib.suppress(discord.Forbidden):
         # Only attempt to restore nickname if it was actually changed by add_afk
         # Prevents resetting a manually changed nickname if del_afk is called unexpectedly
         if target.display_name.startswith(AFK_PREFIX):
             await target.edit(nick=nickname)
+
+    # Remove from database after nickname is restored (or attempted)
+    await db.afk.remove_afk(target.id, target.guild.id)
