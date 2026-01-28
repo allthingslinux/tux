@@ -6,7 +6,7 @@
 
 **Core:** Python 3.13.2+ • discord.py • PostgreSQL 17+ • SQLModel • Docker
 **Tools:** uv • ruff • basedpyright • pytest • loguru • sentry-sdk • httpx • Zensical
-**Additional:** typer (CLI) • Alembic (migrations) • psycopg (async PostgreSQL) • pydantic-settings
+**Additional:** typer (CLI) • Alembic (migrations) • psycopg (async PostgreSQL) • pydantic-settings • Valkey (optional cache)
 
 ## Cursor Rules & Commands
 
@@ -66,6 +66,7 @@ uv run tux start --debug
 ```text
 tux/
 ├── src/tux/                    # Main source code
+│   ├── cache/                  # Cache layer (Valkey/in-memory backend, CacheService)
 │   ├── core/                   # Bot core (bot.py, app.py, base_cog.py)
 │   ├── database/               # Database layer
 │   │   ├── models/             # SQLModel models
@@ -292,6 +293,15 @@ docker compose up -d tux-postgres
 
 **Note:** `tux-postgres` has no profile and always starts. Do not use `--profile dev` and `--profile production` together.
 
+**Optional: Valkey (cache):** For shared cache across processes or restarts, start Valkey and set env:
+
+```bash
+docker compose up -d tux-valkey
+# In .env: VALKEY_URL=redis://localhost:6379/0  (or leave unset to use in-memory cache)
+```
+
+When `VALKEY_URL` is set and reachable, guild config, jail status, prefix, and permission caches use Valkey; otherwise they use in-memory TTL caches.
+
 ## Conventional Commits
 
 Format: `<type>[scope]: <description>`
@@ -376,7 +386,7 @@ refactor(database): optimize query performance
 
 - **Async for I/O** - All database and HTTP operations are async
 - **Connection pooling** - psycopg connection pooling for PostgreSQL
-- **TTL caching** - Thread-safe TTL cache system for frequently accessed data (guild config, jail status, permissions)
+- **TTL caching** - Thread-safe TTL cache system for frequently accessed data (guild config, jail status, permissions). Optional Valkey backend for shared cache across restarts (set `VALKEY_URL` and run `tux-valkey` in compose).
 - **Batch operations** - Batch retrieval for permission checks and database queries
 - **Cache pre-warming** - Automatic cache pre-warming on bot startup
 - **Optimize queries** - Use database controllers with proper indexing
