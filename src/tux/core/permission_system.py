@@ -110,8 +110,8 @@ class PermissionSystem:
         Default permission rank hierarchy (0-7).
     """
 
-    # Shared cache for command permissions with parent fallback (5 minute TTL)
-    _command_permission_cache: TTLCache = TTLCache(ttl=300.0, max_size=2000)
+    # Shared cache for command permissions with parent fallback (10 minute TTL)
+    _command_permission_cache: TTLCache = TTLCache(ttl=600.0, max_size=2000)
 
     def __init__(self, bot: Tux, db: DatabaseCoordinator) -> None:
         """
