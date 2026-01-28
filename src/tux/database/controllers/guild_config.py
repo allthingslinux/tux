@@ -11,9 +11,9 @@ from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
+from tux.cache import GuildConfigCacheManager
 from tux.database.controllers.base import BaseController
 from tux.database.models import GuildConfig
-from tux.shared.cache import GuildConfigCacheManager
 
 if TYPE_CHECKING:
     from tux.database.service import DatabaseService
@@ -85,7 +85,7 @@ class GuildConfigController(BaseController[GuildConfig]):
                 "jail_channel_id",
             )
         ):
-            GuildConfigCacheManager().invalidate(guild_id)
+            await GuildConfigCacheManager().invalidate(guild_id)
 
         return result
 
@@ -102,7 +102,7 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         result = await self.delete_by_id(guild_id)
         if result:
-            GuildConfigCacheManager().invalidate(guild_id)
+            await GuildConfigCacheManager().invalidate(guild_id)
         return result
 
     async def get_all_configs(self) -> list[GuildConfig]:
@@ -310,14 +310,14 @@ class GuildConfigController(BaseController[GuildConfig]):
             The jail role ID, or None if not configured.
         """
         # Check cache first
-        cached = GuildConfigCacheManager().get(guild_id)
+        cached = await GuildConfigCacheManager().get(guild_id)
         if cached is not None and "jail_role_id" in cached:
             return cached["jail_role_id"]
 
         # Cache miss - fetch from database
         jail_role_id = await self.get_config_field(guild_id, "jail_role_id")
         # Update cache (only jail_role_id, don't touch other fields)
-        GuildConfigCacheManager().set(guild_id, jail_role_id=jail_role_id)
+        await GuildConfigCacheManager().set(guild_id, jail_role_id=jail_role_id)
         return jail_role_id
 
     # TODO: Remove/rename after investigation of use
@@ -344,14 +344,14 @@ class GuildConfigController(BaseController[GuildConfig]):
             The jail channel ID, or None if not configured.
         """
         # Check cache first
-        cached = GuildConfigCacheManager().get(guild_id)
+        cached = await GuildConfigCacheManager().get(guild_id)
         if cached is not None and "jail_channel_id" in cached:
             return cached["jail_channel_id"]
 
         # Cache miss - fetch from database
         jail_channel_id = await self.get_config_field(guild_id, "jail_channel_id")
         # Update cache (only jail_channel_id, don't touch other fields)
-        GuildConfigCacheManager().set(guild_id, jail_channel_id=jail_channel_id)
+        await GuildConfigCacheManager().set(guild_id, jail_channel_id=jail_channel_id)
         return jail_channel_id
 
     async def get_jail_config(self, guild_id: int) -> tuple[int | None, int | None]:
@@ -371,7 +371,7 @@ class GuildConfigController(BaseController[GuildConfig]):
             A tuple of (jail_role_id, jail_channel_id).
         """
         # Check cache first
-        cached = GuildConfigCacheManager().get(guild_id)
+        cached = await GuildConfigCacheManager().get(guild_id)
         if cached is not None:
             jail_role_id = cached.get("jail_role_id")
             jail_channel_id = cached.get("jail_channel_id")
@@ -385,7 +385,7 @@ class GuildConfigController(BaseController[GuildConfig]):
         jail_channel_id = getattr(config, "jail_channel_id", None) if config else None
 
         # Update cache with both values
-        GuildConfigCacheManager().set(
+        await GuildConfigCacheManager().set(
             guild_id,
             jail_role_id=jail_role_id,
             jail_channel_id=jail_channel_id,
@@ -636,7 +636,7 @@ class GuildConfigController(BaseController[GuildConfig]):
             Tuple of (audit_log_id, mod_log_id).
         """
         # Check cache first
-        cached = GuildConfigCacheManager().get(guild_id)
+        cached = await GuildConfigCacheManager().get(guild_id)
         if cached is not None:
             # If cache exists, check if we have the log channel IDs
             # They might be None (not configured), which is valid
@@ -657,7 +657,7 @@ class GuildConfigController(BaseController[GuildConfig]):
         config = await self.get_config_by_guild_id(guild_id)
         if not config:
             # No config exists - cache None values and return
-            GuildConfigCacheManager().set(
+            await GuildConfigCacheManager().set(
                 guild_id,
                 audit_log_id=None,
                 mod_log_id=None,
@@ -675,7 +675,7 @@ class GuildConfigController(BaseController[GuildConfig]):
         )
 
         # Update cache with both values (preserves existing jail fields if any)
-        GuildConfigCacheManager().set(
+        await GuildConfigCacheManager().set(
             guild_id,
             audit_log_id=audit_log_id,
             mod_log_id=mod_log_id,

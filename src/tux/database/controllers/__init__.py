@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from tux.cache import AsyncCacheBackendProtocol
     from tux.database.service import DatabaseService
 
 __all__ = [
@@ -73,7 +74,11 @@ class DatabaseCoordinator:
         If no database service is provided.
     """
 
-    def __init__(self, db: DatabaseService | None = None) -> None:
+    def __init__(
+        self,
+        db: DatabaseService | None = None,
+        cache_backend: AsyncCacheBackendProtocol | None = None,
+    ) -> None:
         """
         Initialize the database coordinator.
 
@@ -81,6 +86,8 @@ class DatabaseCoordinator:
         ----------
         db : DatabaseService, optional
             The database service instance. If None, raises RuntimeError.
+        cache_backend : AsyncCacheBackendProtocol | None, optional
+            Optional cache backend (Valkey/in-memory) for permission controllers.
 
         Raises
         ------
@@ -93,6 +100,7 @@ class DatabaseCoordinator:
             )
             raise RuntimeError(error_msg)
         self.db = db
+        self._cache_backend = cache_backend
         self._guild: GuildController | None = None
         self._guild_config: GuildConfigController | None = None
         self._permission_ranks: PermissionRankController | None = None
@@ -173,19 +181,28 @@ class DatabaseCoordinator:
     def permission_ranks(self) -> PermissionRankController:
         """Get the permission ranks controller."""
         if self._permission_ranks is None:
-            self._permission_ranks = PermissionRankController(self.db)
+            self._permission_ranks = PermissionRankController(
+                self.db,
+                cache_backend=getattr(self, "_cache_backend", None),
+            )
         return self._permission_ranks
 
     @property
     def permission_assignments(self) -> PermissionAssignmentController:
         """Get the permission assignments controller."""
         if self._permission_assignments is None:
-            self._permission_assignments = PermissionAssignmentController(self.db)
+            self._permission_assignments = PermissionAssignmentController(
+                self.db,
+                cache_backend=getattr(self, "_cache_backend", None),
+            )
         return self._permission_assignments
 
     @property
     def command_permissions(self) -> PermissionCommandController:
         """Get the command permissions controller."""
         if self._permission_commands is None:
-            self._permission_commands = PermissionCommandController(self.db)
+            self._permission_commands = PermissionCommandController(
+                self.db,
+                cache_backend=getattr(self, "_cache_backend", None),
+            )
         return self._permission_commands
