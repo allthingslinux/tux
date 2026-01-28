@@ -196,29 +196,69 @@ class SelfTimeout(BaseCog):
             The guild name for logging.
         duration_readable : str
             Human-readable duration string.
-        """
-        await member.timeout(
-            timedelta(seconds=float(duration_seconds)),
-            reason="self time-out",
-        )
-        logger.info(
-            f"✅ Self-timeout applied: {member.display_name} ({member.id}) in {guild_name} for {duration_readable}",
-        )
 
-        timeout_until = datetime.now(UTC) + timedelta(seconds=duration_seconds)
+        Raises
+        ------
+        discord.Forbidden
+            If bot lacks permission to timeout the member.
+        discord.HTTPException
+            If Discord API request fails.
+        """
+        # Check if user is already timed out
+        if member.timed_out_until is not None:
+            logger.warning(
+                f"Member {member.id} already timed out until {member.timed_out_until}",
+            )
+            # Continue anyway - will overwrite existing timeout
+
+        # Create naive UTC datetime (database stores naive datetimes)
+        timeout_until = datetime.now(UTC).replace(tzinfo=None) + timedelta(
+            seconds=duration_seconds,
+        )
         assert member.guild is not None
-        await add_afk(
-            self.db,
-            reason,
-            member,
-            member.guild.id,
-            True,
-            timeout_until,
-            True,
-        )
-        logger.debug(
-            f"AFK status set for {member.id} until {timeout_until}",
-        )
+
+        # Set AFK status first (before timeout) so if timeout fails, we can clean up
+        try:
+            await add_afk(
+                self.db,
+                reason,
+                member,
+                member.guild.id,
+                True,
+                timeout_until,
+                True,
+            )
+            logger.debug(
+                f"AFK status set for {member.id} until {timeout_until}",
+            )
+        except Exception as e:
+            logger.error(
+                f"Failed to set AFK status for {member.id}: {e}",
+                exc_info=True,
+            )
+            raise
+
+        # Apply timeout after AFK is set
+        try:
+            await member.timeout(
+                timedelta(seconds=float(duration_seconds)),
+                reason="self time-out",
+            )
+            logger.info(
+                f"✅ Self-timeout applied: {member.display_name} ({member.id}) in {guild_name} for {duration_readable}",
+            )
+        except (discord.Forbidden, discord.HTTPException) as e:
+            # If timeout fails, try to clean up AFK status
+            logger.error(
+                f"Failed to apply timeout for {member.id}: {e}. Attempting to clean up AFK status.",
+            )
+            try:
+                await self.db.afk.remove_afk(member.id, member.guild.id)
+            except Exception as cleanup_error:
+                logger.error(
+                    f"Failed to clean up AFK status after timeout failure: {cleanup_error}",
+                )
+            raise
 
     @commands.hybrid_command(
         name="self_timeout",
@@ -320,11 +360,36 @@ class SelfTimeout(BaseCog):
             reason,
         )
 
-        if entry is not None:
+        # Re-fetch member before any AFK/timeout operations to avoid race conditions
+        # (member might have left during confirmation; del_afk needs a live member for nickname restore)
+        member = ctx.guild.get_member(ctx.author.id)
+        if member is None:
+            logger.warning(
+                f"Member {ctx.author.id} left guild {ctx.guild.id} before timeout application",
+            )
+            # Remove stale AFK entry if present so we don't leave orphaned DB state
+            current_entry = await self.db.afk.get_afk_member(
+                ctx.author.id,
+                guild_id=ctx.guild.id,
+            )
+            if current_entry is not None:
+                await self.db.afk.remove_afk(ctx.author.id, ctx.guild.id)
+            await self._send_error_message(
+                ctx,
+                "You are no longer in this guild. Cannot apply timeout.",
+            )
+            return
+
+        # Re-fetch entry right before removal (could have been removed by another process)
+        current_entry = await self.db.afk.get_afk_member(
+            member.id,
+            guild_id=ctx.guild.id,
+        )
+        if current_entry is not None:
             logger.debug(
                 f"Removing existing AFK status for {member.id} before self-timeout",
             )
-            await del_afk(self.db, member, entry.nickname)
+            await del_afk(self.db, member, current_entry.nickname)
 
         await self._apply_timeout(
             member,
