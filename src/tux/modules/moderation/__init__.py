@@ -166,6 +166,9 @@ class ModerationCogBase(BaseCog):
     async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
         """Check if a user is snippet banned.
 
+        Uses the latest SNIPPETBAN or SNIPPETUNBAN case only; other case types
+        (e.g. WARN) are ignored so intervening actions do not clear status.
+
         Parameters
         ----------
         guild_id : int
@@ -178,9 +181,9 @@ class ModerationCogBase(BaseCog):
         bool
             True if user is snippet banned, False otherwise
         """
-        latest_case = await self.db.case.get_latest_case_by_user(
-            guild_id=guild_id,
+        latest_case = await self.db.case.get_latest_snippet_ban_or_unban_case(
             user_id=user_id,
+            guild_id=guild_id,
         )
         return bool(latest_case and latest_case.case_type == DBCaseType.SNIPPETBAN)
 

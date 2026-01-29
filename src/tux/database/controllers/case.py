@@ -535,6 +535,36 @@ class CaseController(BaseController[Case]):
             order_by=[Case.id.desc()],  # type: ignore[attr-defined]
         )
 
+    async def get_latest_snippet_ban_or_unban_case(
+        self,
+        user_id: int,
+        guild_id: int,
+    ) -> Case | None:
+        """
+        Get the most recent SNIPPETBAN or SNIPPETUNBAN case for a user in a guild.
+
+        Used to determine if a user is currently snippet banned: if the latest
+        of these is SNIPPETBAN, they are banned; if SNIPPETUNBAN or none, they
+        are not. Ignores other case types (e.g. WARN, KICK) so intervening
+        actions do not break snippet ban status.
+
+        Returns
+        -------
+        Case | None
+            The most recent SNIPPETBAN or SNIPPETUNBAN case if found, None otherwise.
+        """
+        return await self.find_one(
+            filters=(Case.case_user_id == user_id)
+            & (Case.guild_id == guild_id)
+            & (
+                or_(
+                    Case.case_type == DBCaseType.SNIPPETBAN,  # type: ignore[arg-type]
+                    Case.case_type == DBCaseType.SNIPPETUNBAN,  # type: ignore[arg-type]
+                )
+            ),
+            order_by=[Case.id.desc()],  # type: ignore[attr-defined]
+        )
+
     async def set_tempban_expired(
         self,
         case_id: int,
