@@ -352,7 +352,7 @@ class ModerationCoordinator:
                     dm_task,
                     return_exceptions=True,
                 )
-                if isinstance(case_result, Exception):
+                if isinstance(case_result, BaseException):
                     logger.error(
                         f"Failed to create case for {case_type.value} on user {user.id}: {case_result!r}",
                         exc_info=case_result,
@@ -360,7 +360,7 @@ class ModerationCoordinator:
                     case = None
                 else:
                     case = cast(Case, case_result)
-                if isinstance(dm_result, Exception):
+                if isinstance(dm_result, BaseException):
                     logger.warning(
                         f"Failed to send post-action DM to user {user.id}: {dm_result}",
                     )
