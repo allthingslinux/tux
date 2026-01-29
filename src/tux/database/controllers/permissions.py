@@ -409,6 +409,12 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
                 )
                 items = cast(list[dict[str, Any]], raw)
                 return [PermissionAssignment.model_validate(d) for d in items]
+            if raw is not None:
+                logger.warning(
+                    "Malformed cache entry for permission assignments (guild {}), "
+                    "fetching from DB",
+                    guild_id,
+                )
         cache_key = f"permission_assignments:{guild_id}"
         if self._backend is None:
             cached = self._assignments_cache.get(cache_key)
@@ -457,6 +463,46 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
             )
         return deleted_count > 0
 
+    async def remove_role_assignments_from_rank(
+        self,
+        guild_id: int,
+        permission_rank_id: int,
+        role_ids: list[int],
+    ) -> int:
+        """
+        Remove permission level assignments for multiple roles from a single rank.
+
+        Only deletes assignments for the given permission_rank_id, so roles are
+        removed from that rank only, not from every rank in the guild.
+
+        Invalidates the permission assignments cache once after all deletions.
+
+        Returns
+        -------
+        int
+            Number of role assignments removed.
+        """
+        if not role_ids:
+            return 0
+        deleted_count = await self.delete_where(
+            filters=(PermissionAssignment.guild_id == guild_id)
+            & (PermissionAssignment.permission_rank_id == permission_rank_id)
+            & (PermissionAssignment.role_id.in_(role_ids)),  # type: ignore[attr-defined]
+        )
+        if deleted_count > 0:
+            if self._backend is not None:
+                await self._backend.delete(
+                    f"{PERM_KEY_PREFIX}permission_assignments:{guild_id}",
+                )
+            else:
+                self._assignments_cache.invalidate(
+                    f"permission_assignments:{guild_id}",
+                )
+            logger.trace(
+                f"Invalidated permission assignment cache for guild {guild_id}",
+            )
+        return deleted_count
+
     async def get_user_permission_rank(  # noqa: PLR0911, PLR0912
         self,
         guild_id: int,
@@ -496,7 +542,6 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
                 )
                 return raw
         else:
-            cache_key = f"user_permission_rank:{guild_id}:{user_id}:{sorted_roles}"
             cached = self._user_rank_cache.get(cache_key)
             if cached is not None:
                 logger.trace(
@@ -670,6 +715,14 @@ class PermissionCommandController(BaseController[PermissionCommand]):
 
         Call after removing a command permission (e.g. delete_where) so the next
         get_command_permission sees fresh data.
+
+        Notes
+        -----
+        This invalidates only the controller cache (PERM_KEY_PREFIX). Callers that
+        use PermissionSystem.get_command_permission must also call
+        PermissionSystem.invalidate_command_permission_cache so the fallback cache
+        (PERM_FALLBACK_KEY_PREFIX) is cleared; both layers must be invalidated
+        together after a database change.
         """
         if self._backend is not None:
             await self._backend.delete(
@@ -721,20 +774,21 @@ class PermissionCommandController(BaseController[PermissionCommand]):
                 logger.trace(
                     f"Cache hit for command permission {command_name} (guild {guild_id})",
                 )
-                return cached
+                return unwrap_optional_perm(cached)
 
         result = await self.find_one(
             filters=(PermissionCommand.guild_id == guild_id)
             & (PermissionCommand.command_name == command_name),
         )
+        wrapped = wrap_optional_perm(result)
         if self._backend is not None:
             await self._backend.set(
                 backend_key,
-                wrap_optional_perm(result),
+                wrapped,
                 ttl_sec=PERM_RANKS_TTL,
             )
         else:
-            self._command_permissions_cache.set(cache_key, result)
+            self._command_permissions_cache.set(cache_key, wrapped)
         logger.trace(f"Cached command permission for {command_name} (guild {guild_id})")
         return result
 
