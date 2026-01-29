@@ -1369,18 +1369,13 @@ class ConfigDashboard(discord.ui.LayoutView):
             )
             return
 
-        # Remove roles from rank (use remove_role_assignment so controller cache is invalidated)
+        # Remove roles from this rank only (batch so cache is invalidated once)
         try:
-            removed_count = 0
-            for role in selected_roles:
-                removed = (
-                    await self.bot.db.permission_assignments.remove_role_assignment(
-                        self.guild.id,
-                        role.id,
-                    )
-                )
-                if removed:
-                    removed_count += 1
+            removed_count = await self.bot.db.permission_assignments.remove_role_assignments_from_rank(
+                self.guild.id,
+                rank_obj.id,
+                [role.id for role in selected_roles],
+            )
 
             await interaction.followup.send(
                 f"✅ Successfully removed {removed_count} role(s) from Rank {rank_id}",
