@@ -11,7 +11,6 @@ default.
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import functools
 import inspect
 import time
@@ -194,8 +193,10 @@ async def command_permission_check(ctx: commands.Context[Any]) -> bool:
     # Defer slash interactions before potentially slow permission check
     inter = getattr(ctx, "interaction", None)
     if inter is not None and not inter.response.is_done():
-        with contextlib.suppress(Exception):
+        try:
             await inter.response.defer(ephemeral=True)
+        except Exception as e:
+            logger.debug("Could not defer interaction in check phase: {}", e)
     if not ctx.guild or not ctx.command:
         return True
     # Bot owner, sysadmin, and guild owner bypass (same as callback wrapper path)
