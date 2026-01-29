@@ -129,10 +129,11 @@ class ValkeyBackend:
             return json.loads(raw)
         except json.JSONDecodeError:
             logger.debug(
-                "Valkey key returned non-JSON value, returning raw",
+                "Valkey key returned non-JSON value, deleting key and treating as miss",
                 key=key,
             )
-            return raw
+            await self._client.delete(full_key)
+            return None
 
     async def set(
         self,
@@ -142,7 +143,7 @@ class ValkeyBackend:
     ) -> None:
         """Set a value with optional TTL. Serializes to JSON."""
         full_key = self._key(key)
-        payload = value if isinstance(value, str) else json.dumps(value, default=str)
+        payload = json.dumps(value, default=str)
         if ttl_sec is not None and ttl_sec > 0:
             await self._client.setex(full_key, int(ttl_sec), payload)
         else:
