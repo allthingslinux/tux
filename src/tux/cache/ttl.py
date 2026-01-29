@@ -119,6 +119,17 @@ class TTLCache:
             del self._cache[key]
             logger.trace(f"Cache entry invalidated: {key}")
 
+    def invalidate_keys_matching(self, predicate: Callable[[Any], bool]) -> int:
+        """Remove all entries whose key matches the predicate. Return count removed."""
+        to_remove = [k for k in self._cache if predicate(k)]
+        for k in to_remove:
+            del self._cache[k]
+        if to_remove:
+            logger.trace(
+                f"Cache invalidated {len(to_remove)} entries matching predicate",
+            )
+        return len(to_remove)
+
     def get_or_fetch(
         self,
         key: Any,
