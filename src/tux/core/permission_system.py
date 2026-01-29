@@ -495,6 +495,30 @@ class PermissionSystem:
         )
         return command_perm
 
+    async def invalidate_command_permission_cache(
+        self,
+        guild_id: int,
+        command_name: str,
+    ) -> None:
+        """
+        Invalidate the command permission fallback cache for a command and its parents.
+
+        Call after removing or changing a command permission outside set_command_permission
+        (e.g. delete_where) so the next get_command_permission sees fresh data.
+        """
+        await self._cache_backend.delete(
+            f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{command_name}",
+        )
+        parts = command_name.split()
+        for i in range(len(parts) - 1, 0, -1):
+            parent_name = " ".join(parts[:i])
+            await self._cache_backend.delete(
+                f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{parent_name}",
+            )
+        logger.trace(
+            f"Invalidated command permission fallback cache for {command_name} (guild {guild_id})",
+        )
+
     # ---------- Query Methods ----------
 
     async def get_command_permission(
