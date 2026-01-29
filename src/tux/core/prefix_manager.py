@@ -17,7 +17,8 @@ This architecture ensures sub-millisecond prefix lookups after initial cache loa
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+from collections.abc import Coroutine
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
@@ -241,7 +242,7 @@ class PrefixManager:
                 )
 
                 backend = get_cache_backend(self.bot)
-                write_tasks = []
+                write_tasks: list[Coroutine[Any, Any, None]] = []
                 for config in all_configs:
                     self._prefix_cache[config.id] = config.prefix
                     write_tasks.append(
