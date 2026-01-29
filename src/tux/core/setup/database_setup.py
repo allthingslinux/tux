@@ -90,8 +90,8 @@ class DatabaseSetupService(BaseSetupService):
                 result = await session.execute(
                     text("SELECT version_num FROM alembic_version"),
                 )
-                row = result.fetchone()
-                return row[0] if row else None
+                rev = result.scalar()
+                return str(rev) if rev is not None else None
         except Exception:
             # Table doesn't exist or query failed - no migrations applied yet
             return None
@@ -116,7 +116,10 @@ class DatabaseSetupService(BaseSetupService):
         # Get current revision from database (more reliable than command.current
         # which can be affected by stdout suppression)
         current_rev = await self._get_current_revision()
-        logger.debug(f"Current database revision: {current_rev}")
+        rev_display = (
+            current_rev if current_rev is not None else "None (no migrations applied)"
+        )
+        logger.debug("Current database revision: {}", rev_display)
 
         # Use ScriptDirectory to reliably get head revisions
         # command.heads() can return None in some cases, but ScriptDirectory is more reliable
