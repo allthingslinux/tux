@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -22,12 +23,12 @@ def mock_bot() -> MagicMock:
 
 
 @pytest.fixture
-def prefix_manager(mock_bot: MagicMock) -> PrefixManager:
-    """PrefixManager with mocked bot."""
+def prefix_manager(mock_bot: MagicMock) -> Generator[PrefixManager]:
+    """PrefixManager with mocked bot; CONFIG patch stays active for full test."""
     with patch("tux.core.prefix_manager.CONFIG") as mock_config:
         mock_config.get_prefix.return_value = "!"
         mock_config.is_prefix_override_enabled.return_value = False
-        return PrefixManager(mock_bot)
+        yield PrefixManager(mock_bot)
 
 
 @pytest.mark.asyncio
