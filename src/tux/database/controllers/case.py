@@ -8,7 +8,7 @@ automatic case numbering, status tracking, and audit logging for Discord guilds.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from loguru import logger
 from sqlalchemy import or_, select
@@ -21,21 +21,55 @@ from tux.database.models.enums import CaseType as DBCaseType
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
+    from tux.cache import AsyncCacheBackendProtocol
     from tux.database.service import DatabaseService
+
+CASE_BY_NUMBER_CACHE_TTL_SEC = 120.0  # 2 min; cases can be updated via modify
+
+
+def _case_cache_key(guild_id: int, case_number: int) -> str:
+    """Return cache key for case-by-number lookup (backend adds tux: prefix)."""
+    return f"case:by_number:{guild_id}:{case_number}"
+
+
+def _wrap_case_for_cache(value: Case | None) -> dict[str, Any]:
+    """Wrap optional Case for backend (distinguish cached None from miss)."""
+    if value is None:
+        return {"_v": None}
+    # Exclude relationship so cache payload is JSON-serializable
+    return {"_v": value.model_dump(mode="json", exclude={"guild"})}
+
+
+def _unwrap_case_from_cache(raw: Any) -> Case | None:
+    """Unwrap optional Case from backend."""
+    if raw is None or not isinstance(raw, dict):
+        return None
+    raw_dict = cast(dict[str, Any], raw)
+    v = raw_dict.get("_v")
+    if v is None:
+        return None
+    return Case.model_validate(cast(dict[str, Any], v))
 
 
 class CaseController(BaseController[Case]):
     """Clean Case controller using the new BaseController pattern."""
 
-    def __init__(self, db: DatabaseService | None = None) -> None:
+    def __init__(
+        self,
+        db: DatabaseService | None = None,
+        cache_backend: AsyncCacheBackendProtocol | None = None,
+    ) -> None:
         """Initialize the case controller.
 
         Parameters
         ----------
         db : DatabaseService | None, optional
             The database service instance. If None, uses the default service.
+        cache_backend : AsyncCacheBackendProtocol | None, optional
+            Optional cache backend (Valkey/in-memory) for case-by-number lookups.
         """
         super().__init__(Case, db)
+        self._cache_backend = cache_backend
 
     # Simple, clean methods that use BaseController's CRUD operations
     async def get_case_by_id(self, case_id: int) -> Case | None:
@@ -344,14 +378,29 @@ class CaseController(BaseController[Case]):
         """
         Get a case by its case number in a guild.
 
+        Uses optional cache backend (Valkey when connected) to avoid repeated DB
+        hits for the same case. Cache is invalidated on update_case_by_number.
+
         Returns
         -------
         Case | None
             The case if found, None otherwise.
         """
-        return await self.find_one(
+        key = _case_cache_key(guild_id, case_number)
+        if self._cache_backend is not None:
+            raw = await self._cache_backend.get(key)
+            if raw is not None:
+                return _unwrap_case_from_cache(raw)
+        case = await self.find_one(
             filters=(Case.case_number == case_number) & (Case.guild_id == guild_id),
         )
+        if self._cache_backend is not None:
+            await self._cache_backend.set(
+                key,
+                _wrap_case_for_cache(case),
+                ttl_sec=CASE_BY_NUMBER_CACHE_TTL_SEC,
+            )
+        return case
 
     async def get_cases_by_options(
         self,
@@ -393,6 +442,9 @@ class CaseController(BaseController[Case]):
         """
         Update a case by guild ID and case number.
 
+        Invalidates the case-by-number cache for this (guild_id, case_number)
+        so the next get_case_by_number sees fresh data.
+
         Returns
         -------
         Case | None
@@ -404,7 +456,10 @@ class CaseController(BaseController[Case]):
             return None
 
         # Update the case with the provided values
-        return await self.update_by_id(case.id, **kwargs)
+        updated = await self.update_by_id(case.id, **kwargs)
+        if updated is not None and self._cache_backend is not None:
+            await self._cache_backend.delete(_case_cache_key(guild_id, case_number))
+        return updated
 
     async def get_all_cases(self, guild_id: int) -> list[Case]:
         """
