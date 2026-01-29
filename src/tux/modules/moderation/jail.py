@@ -208,15 +208,11 @@ class Jail(ModerationCogBase):
         if ctx.interaction:
             await ctx.defer(ephemeral=True)
 
-        # Parallelize independent database queries
-        jail_role_id_task = self.db.guild_config.get_jail_role_id(ctx.guild.id)
-        jail_channel_id_task = self.db.guild_config.get_jail_channel_id(ctx.guild.id)
+        # One DB round-trip for jail config when cache misses; is_jailed in parallel
+        jail_config_task = self.db.guild_config.get_jail_config(ctx.guild.id)
         is_jailed_task = self.is_jailed(ctx.guild.id, member.id)
-
-        # Wait for all queries to complete
-        jail_role_id, jail_channel_id, is_jailed_result = await asyncio.gather(
-            jail_role_id_task,
-            jail_channel_id_task,
+        (jail_role_id, jail_channel_id), is_jailed_result = await asyncio.gather(
+            jail_config_task,
             is_jailed_task,
         )
 
