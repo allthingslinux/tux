@@ -27,7 +27,6 @@ class AsyncCacheBackend(Protocol):
 
     async def get(self, key: str) -> Any | None:
         """Get a value by key. Return None if missing or expired."""
-        ...
 
     async def set(
         self,
@@ -36,15 +35,12 @@ class AsyncCacheBackend(Protocol):
         ttl_sec: float | None = None,
     ) -> None:
         """Set a value with optional TTL."""
-        ...
 
     async def delete(self, key: str) -> None:
         """Delete a key."""
-        ...
 
     async def exists(self, key: str) -> bool:
         """Return True if key exists and is not expired."""
-        ...
 
 
 class InMemoryBackend:
@@ -82,7 +78,11 @@ class InMemoryBackend:
         value: Any,
         ttl_sec: float | None = None,
     ) -> None:
-        """Set a value with optional TTL."""
+        """Set a value with optional TTL.
+
+        Note: ttl_sec is ignored; all entries use the backend default TTL.
+        See Valkey implementation notes in docs (caching.md).
+        """
         self._cache.set(key, value)
 
     async def delete(self, key: str) -> None:
