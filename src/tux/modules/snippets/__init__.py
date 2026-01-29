@@ -35,6 +35,11 @@ class SnippetsBaseCog(BaseCog):
     async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
         """Check if a user is currently snippet banned in a guild.
 
+        Uses the latest case for the user: if the most recent case is
+        SNIPPETBAN, the user is banned; if it is SNIPPETUNBAN or anything
+        else, they are not. This ensures unbans are respected without
+        mutating or closing the original ban case.
+
         Parameters
         ----------
         guild_id : int
@@ -47,12 +52,11 @@ class SnippetsBaseCog(BaseCog):
         bool
             True if the user is snippet banned, False otherwise.
         """
-        return await self.db.case.is_user_under_restriction(
-            guild_id=guild_id,
+        latest_case = await self.db.case.get_latest_case_by_user(
             user_id=user_id,
-            active_restriction_type=DBCaseType.JAIL,
-            inactive_restriction_type=DBCaseType.UNJAIL,
+            guild_id=guild_id,
         )
+        return bool(latest_case and latest_case.case_type == DBCaseType.SNIPPETBAN)
 
     def _create_snippets_list_embed(
         self,
