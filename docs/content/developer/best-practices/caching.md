@@ -37,7 +37,7 @@ All cache keys that represent guild-specific data include `guild_id` (and `user_
 - `guild_config:{guild_id}`
 - `jail_status:{guild_id}:{user_id}`
 - `prefix:{guild_id}`
-- `perm:command_permission:{guild_id}:{command_name}`
+- `perm:command_permission_fallback:{guild_id}:{command_name}`
 
 ## Overview
 
@@ -273,10 +273,10 @@ The permission system supports cache pre-warming on bot startup to reduce cold-s
 
 ```python
 # Pre-warm caches for a specific guild
-await permission_system.pre_warm_guild_cache(guild_id)
+await permission_system.prewarm_cache_for_guild(guild_id)
 
 # Pre-warm caches for all guilds
-await permission_system.pre_warm_all_caches()
+await permission_system.prewarm_cache_for_all_guilds()
 ```
 
 This is invoked during bot initialization where applicable.
