@@ -108,6 +108,19 @@ class TestTTLCache:
         assert fetch_called == [1]
         assert cache.get("k") == "fetched"
 
+    def test_get_or_fetch_caches_none_and_does_not_refetch(self) -> None:
+        """get_or_fetch caches None so subsequent calls return None without refetching."""
+        cache = TTLCache(ttl=60.0)
+        fetch_called = []
+
+        def fetch() -> None:
+            fetch_called.append(1)
+
+        assert cache.get_or_fetch("k", fetch) is None
+        assert fetch_called == [1]
+        assert cache.get_or_fetch("k", fetch) is None
+        assert fetch_called == [1]
+
     def test_size_returns_count_and_cleans_expired(self) -> None:
         """size() removes expired entries and returns current count."""
         cache = TTLCache(ttl=60.0)
