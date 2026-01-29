@@ -305,7 +305,7 @@ All consumers (cache setup, permission setup, prefix manager, permission system)
 ### JailStatusCache: set vs async_set
 
 - **`set()`**: Overwrites the cached value. Used after rejail (jail.py) to record the new status.
-- **`async_set()`**: “Set if absent” — only writes when the key is missing; does not overwrite an existing value. No current callers; reserved for future use (e.g. avoid overwriting a newer unjail with an older rejail). For normal “update after rejail” use `set()`.
+- **`async_set()`**: Same overwrite behavior as `set()`, with async locking for concurrent safety. Use when multiple coroutines may update the same guild/user; otherwise `set()` is sufficient.
 
 ### Valkey disconnect and errors
 
