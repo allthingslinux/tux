@@ -46,6 +46,7 @@ async def test_get_prefix_returns_from_backend_when_cached(
         result = await prefix_manager.get_prefix(TEST_GUILD_ID)
     assert result == "?"
     assert prefix_manager._prefix_cache[TEST_GUILD_ID] == "?"
+    mock_backend.get.assert_called_once_with(f"prefix:{TEST_GUILD_ID}")
 
 
 @pytest.mark.asyncio
@@ -54,7 +55,11 @@ async def test_get_prefix_returns_from_sync_cache_on_hit(
 ) -> None:
     """get_prefix returns from _prefix_cache when key already in cache (no backend call)."""
     prefix_manager._prefix_cache[TEST_GUILD_ID] = "."
-    result = await prefix_manager.get_prefix(TEST_GUILD_ID)
+    with patch(
+        "tux.core.prefix_manager.get_cache_backend",
+        side_effect=AssertionError("Backend should not be called on cache hit"),
+    ):
+        result = await prefix_manager.get_prefix(TEST_GUILD_ID)
     assert result == "."
 
 
