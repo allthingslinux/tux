@@ -39,9 +39,8 @@ class AsyncCacheBackend(Protocol):
     async def delete(self, key: str) -> None:
         """Delete a key."""
 
-    async def exists(self, key: str) -> bool:
+    async def exists(self, key: str) -> bool:  # type: ignore[reportReturnType]
         """Return True if key exists and is not expired."""
-        ...
 
 
 class InMemoryBackend:
