@@ -241,13 +241,18 @@ class PrefixManager:
                 )
 
                 backend = get_cache_backend(self.bot)
+                write_tasks = []
                 for config in all_configs:
                     self._prefix_cache[config.id] = config.prefix
-                    await backend.set(
-                        f"prefix:{config.id}",
-                        config.prefix,
-                        ttl_sec=None,
+                    write_tasks.append(
+                        backend.set(
+                            f"prefix:{config.id}",
+                            config.prefix,
+                            ttl_sec=None,
+                        ),
                     )
+                if write_tasks:
+                    await asyncio.gather(*write_tasks)
 
                 self._cache_loaded = True
                 logger.info(
@@ -286,8 +291,11 @@ class PrefixManager:
         """
         backend = get_cache_backend(self.bot)
         if guild_id is None:
-            for gid in list(self._prefix_cache.keys()):
-                await backend.delete(f"prefix:{gid}")
+            keys_to_delete = list(self._prefix_cache.keys())
+            if keys_to_delete:
+                await asyncio.gather(
+                    *(backend.delete(f"prefix:{gid}") for gid in keys_to_delete),
+                )
             self._prefix_cache.clear()
             self._cache_loaded = False
             logger.debug("All prefix cache invalidated")
