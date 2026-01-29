@@ -308,37 +308,81 @@ class ModerationCoordinator:
                     exc_info=True,
                 )
                 case = None
-        else:
-            # No Discord actions, just create case
-            try:
-                case = await self._create_case_async(
-                    ctx,
-                    case_type,
-                    user,
-                    reason,
-                    case_kwargs,
-                )
-            except Exception as e:
-                logger.error(
-                    f"Failed to create case for {case_type.value} on user {user.id}: {e!r}",
-                    exc_info=True,
-                )
-                case = None
 
-        # Handle post-action DM for non-removal actions
-        if case_type not in self.REMOVAL_ACTIONS and not silent:
-            try:
-                logger.trace(f"Sending post-action DM for {case_type.value}")
-                dm_sent = await self._handle_post_action_dm(
-                    ctx,
-                    user,
-                    reason,
-                    action_desc,
+            # Post-action DM for non-removal actions (e.g. WARN) when we had Discord actions
+            if case_type not in self.REMOVAL_ACTIONS and not silent:
+                try:
+                    logger.trace(f"Sending post-action DM for {case_type.value}")
+                    dm_sent = await self._handle_post_action_dm(
+                        ctx,
+                        user,
+                        reason,
+                        action_desc,
+                    )
+                    logger.trace(f"DM sent status (post-action): {dm_sent}")
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to send post-action DM to user {user.id}: {e}",
+                    )
+                    dm_sent = False
+        else:
+            # No Discord actions (e.g. jail): create case and optionally post-action DM in parallel
+            # so slash response is not blocked by sequential DB then DM
+            need_post_dm = case_type not in self.REMOVAL_ACTIONS and not silent
+            if need_post_dm:
+                case_task = asyncio.create_task(
+                    self._create_case_async(
+                        ctx,
+                        case_type,
+                        user,
+                        reason,
+                        case_kwargs,
+                    ),
                 )
-                logger.trace(f"DM sent status (post-action): {dm_sent}")
-            except Exception as e:
-                # DM failed, but continue
-                logger.warning(f"Failed to send post-action DM to user {user.id}: {e}")
+                dm_task = asyncio.create_task(
+                    self._handle_post_action_dm(
+                        ctx,
+                        user,
+                        reason,
+                        action_desc,
+                    ),
+                )
+                case_result, dm_result = await asyncio.gather(
+                    case_task,
+                    dm_task,
+                    return_exceptions=True,
+                )
+                if isinstance(case_result, Exception):
+                    logger.error(
+                        f"Failed to create case for {case_type.value} on user {user.id}: {case_result!r}",
+                        exc_info=case_result,
+                    )
+                    case = None
+                else:
+                    case = case_result
+                if isinstance(dm_result, Exception):
+                    logger.warning(
+                        f"Failed to send post-action DM to user {user.id}: {dm_result}",
+                    )
+                    dm_sent = False
+                else:
+                    dm_sent = dm_result
+                    logger.trace(f"DM sent status (post-action): {dm_sent}")
+            else:
+                try:
+                    case = await self._create_case_async(
+                        ctx,
+                        case_type,
+                        user,
+                        reason,
+                        case_kwargs,
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"Failed to create case for {case_type.value} on user {user.id}: {e!r}",
+                        exc_info=True,
+                    )
+                    case = None
                 dm_sent = False
 
         # Send response embed and mod log embed in parallel (they're independent)
