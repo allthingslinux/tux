@@ -8,7 +8,7 @@ for moderation operations, replacing the mixin-based approach.
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
 from datetime import UTC, datetime, timedelta
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import discord
 from discord.ext import commands
@@ -359,14 +359,14 @@ class ModerationCoordinator:
                     )
                     case = None
                 else:
-                    case = cast(Case, case_result)
+                    case = case_result
                 if isinstance(dm_result, BaseException):
                     logger.warning(
                         f"Failed to send post-action DM to user {user.id}: {dm_result}",
                     )
                     dm_sent = False
                 else:
-                    dm_sent = cast(bool, dm_result)
+                    dm_sent = dm_result
                     logger.trace(f"DM sent status (post-action): {dm_sent}")
             else:
                 try:
