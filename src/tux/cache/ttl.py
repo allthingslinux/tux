@@ -8,6 +8,9 @@ from typing import Any
 
 from loguru import logger
 
+# Sentinel for caching None in get_or_fetch (get() returns None for misses)
+_CACHED_NONE: Any = object()
+
 __all__ = ["TTLCache"]
 
 
@@ -90,9 +93,13 @@ class TTLCache:
         value : Any
             The value to cache.
         """
-        # Evict oldest entries if at max size
-        if self._max_size is not None and len(self._cache) >= self._max_size:
-            # Remove oldest entry (simple FIFO eviction)
+        # Evict oldest entry only when at max size and adding a new key (updating
+        # an existing key does not increase size)
+        if (
+            self._max_size is not None
+            and len(self._cache) >= self._max_size
+            and key not in self._cache
+        ):
             oldest_key = next(iter(self._cache))
             del self._cache[oldest_key]
             logger.trace(f"Cache evicted oldest entry: {oldest_key}")
@@ -151,11 +158,13 @@ class TTLCache:
             The cached or fetched value.
         """
         cached = self.get(key)
+        if cached is _CACHED_NONE:
+            return None
         if cached is not None:
             return cached
 
         value = fetch_fn()
-        self.set(key, value)
+        self.set(key, _CACHED_NONE if value is None else value)
         return value
 
     def size(self) -> int:
