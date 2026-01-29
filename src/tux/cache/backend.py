@@ -41,6 +41,7 @@ class AsyncCacheBackend(Protocol):
 
     async def exists(self, key: str) -> bool:
         """Return True if key exists and is not expired."""
+        ...
 
 
 class InMemoryBackend:
