@@ -45,15 +45,14 @@ Quick guide to get your Discord bot token configured for Tux.
 
 ## Environment Setup
 
-Add to your `.env` file:
+Add your bot token to `.env`:
 
 ```env
 # Required: Your Discord bot token
 BOT_TOKEN=your_bot_token_here
-
-# Optional: Bot owner Discord user ID (for admin commands)
-USER_IDS__BOT_OWNER_ID=your_discord_user_id_here
 ```
+
+Set **bot owner ID** (and optional sysadmins) in **`config/config.json`**, not in `.env`. See [Self-Host Configuration](index.md) for the JSON structure.
 
 !!! important "Keep Tokens Secret"
     - Never share your token
