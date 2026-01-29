@@ -660,6 +660,39 @@ class PermissionCommandController(BaseController[PermissionCommand]):
         )
         return result[0]  # upsert returns (record, created)
 
+    async def invalidate_command_permission(
+        self,
+        guild_id: int,
+        command_name: str,
+    ) -> None:
+        """
+        Invalidate the command permission cache for a command and its parents.
+
+        Call after removing a command permission (e.g. delete_where) so the next
+        get_command_permission sees fresh data.
+        """
+        if self._backend is not None:
+            await self._backend.delete(
+                f"{PERM_KEY_PREFIX}command_permission:{guild_id}:{command_name}",
+            )
+            parts = command_name.split()
+            for i in range(len(parts) - 1, 0, -1):
+                parent_name = " ".join(parts[:i])
+                await self._backend.delete(
+                    f"{PERM_KEY_PREFIX}command_permission:{guild_id}:{parent_name}",
+                )
+        else:
+            cache_key = f"command_permission:{guild_id}:{command_name}"
+            self._command_permissions_cache.invalidate(cache_key)
+            parts = command_name.split()
+            for i in range(len(parts) - 1, 0, -1):
+                parent_name = " ".join(parts[:i])
+                parent_cache_key = f"command_permission:{guild_id}:{parent_name}"
+                self._command_permissions_cache.invalidate(parent_cache_key)
+        logger.trace(
+            f"Invalidated command permission cache for {command_name} (guild {guild_id})",
+        )
+
     async def get_command_permission(
         self,
         guild_id: int,
