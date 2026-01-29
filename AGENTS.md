@@ -6,7 +6,7 @@
 
 **Core:** Python 3.13.2+ • discord.py • PostgreSQL 17+ • SQLModel • Docker
 **Tools:** uv • ruff • basedpyright • pytest • loguru • sentry-sdk • httpx • Zensical
-**Additional:** typer (CLI) • Alembic (migrations) • psycopg (async PostgreSQL) • pydantic-settings • Valkey (optional cache)
+**Additional:** typer (CLI) • Alembic (migrations) • psycopg (async PostgreSQL) • pydantic-settings • Valkey (optional cache backend; CacheService, InMemoryBackend/ValkeyBackend)
 
 ## Cursor Rules & Commands
 
@@ -66,7 +66,7 @@ uv run tux start --debug
 ```text
 tux/
 ├── src/tux/                    # Main source code
-│   ├── cache/                  # Cache layer (Valkey/in-memory backend, CacheService)
+│   ├── cache/                  # Cache layer: CacheService, backends (InMemoryBackend, ValkeyBackend), TTLCache, managers (GuildConfigCacheManager, JailStatusCache)
 │   ├── core/                   # Bot core (bot.py, app.py, base_cog.py)
 │   ├── database/               # Database layer
 │   │   ├── models/             # SQLModel models
@@ -100,7 +100,6 @@ tux/
 │   │   └── views/              # View components
 │   ├── shared/                 # Shared utilities
 │   │   ├── config/             # Configuration models
-│   │   ├── cache.py            # TTL cache system (TTLCache, GuildConfigCacheManager, JailStatusCache)
 │   │   ├── constants.py        # Constants
 │   │   ├── exceptions.py       # Custom exceptions
 │   │   └── functions.py        # Utility functions
@@ -213,6 +212,20 @@ uv run db reset             # Safe reset (downgrade to base, reapply all)
 uv run db nuke              # Complete wipe (destructive, requires confirmation)
 uv run db nuke --fresh      # Nuclear reset + delete migration files
 ```
+
+**Health:** `uv run db health` checks PostgreSQL and, when `VALKEY_URL` is set, Valkey (cache) connectivity.
+
+## Cache
+
+**Stack:** `tux.cache` — CacheService (Valkey lifecycle), backends (InMemoryBackend, ValkeyBackend), TTLCache, cache managers (GuildConfigCacheManager, JailStatusCache). Optional Valkey for shared cache across processes/restarts.
+
+- **CacheService** — Async Valkey client; connect/ping/close. Created at startup; `bot.cache_service` is set when `VALKEY_URL` is configured and connection succeeds.
+- **Backends** — `get_cache_backend(bot)` returns ValkeyBackend when connected, else a shared InMemoryBackend. Keys use `tux:` prefix; values are JSON.
+- **Managers** — GuildConfigCacheManager and JailStatusCache (and prefix/permission consumers) use the injected backend; no code changes needed when switching in-memory vs Valkey.
+- **Config** — Set `VALKEY_URL=valkey://host:port/db` in `.env` to enable Valkey; leave unset for in-memory only.
+- **Health** — `uv run db health` includes an optional Valkey check when `VALKEY_URL` is set.
+
+See [Caching Best Practices](docs/content/developer/best-practices/caching.md) for usage and multi-guild safety.
 
 ## CLI Commands
 
