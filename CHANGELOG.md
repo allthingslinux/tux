@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Testing**: Performance benchmarks for cache operations, data structures, permission systems, and string substitutions
 * **Documentation**: Help command documentation with usage, syntax, and interactive features; enhanced configuration, commands, and caching documentation
 * **Valkey**: Optional Valkey cache backend with in-memory fallback; CacheService and CacheSetupService for connection and lifecycle; prefix manager, database controllers, and permission system use cache backend; Valkey health check in `db health`; configuration via settings, `.env`, and Docker Compose (service and profile); password validation and URL encoding for Valkey URLs; cache invalidation by key predicate; unit tests for cache backends, service, TTLCache, and managers
+* **Permission system**: Role assignment removal method and cache invalidation for role and command permission changes; command permission check function; enhanced permission error messaging for unconfigured commands
 
 ### Changed
 
@@ -43,6 +44,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Docker Compose**: Removed `initial_sync` from sync actions; Valkey service runs with warning log level (reduces verbosity)
 * **Python version**: Updated to 3.13.11 across configuration files, workflows, and pre-commit hooks
 * **Cache**: TTLCache uses _CACHED_NONE sentinel for eviction and None handling; GuildConfigCacheManager has locking and null-lock support; guild config and jail status use async cache operations; permission system and moderation (jail, prefix manager) use cache backend with concurrent retrieval and storage; prefix cache write/delete uses asyncio; jail command has cooldown and invalidates cache on rejoin; moderation coordinator has improved type safety and parallel case creation and DM handling; documentation for caching, Valkey TTL, environment, and Docker setup
+* **Permission system**: Role removal logic optimized with batch removal and extracted cache invalidation method
+* **Database**: CaseController caching for case retrieval by number and optional cache backend support
+* **Moderation**: Simplified type handling in moderation coordinator
 
 ### Fixed
 
@@ -59,6 +63,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Logging**: Cache setup and cache managers use consistent logger message formatting
 * **Bot and health**: Cache disconnection and Valkey health check have improved error logging
 * **Permission system**: Command permission cache correctly handles malformed entries and cache hits
+* **Snippets**: Snippet ban check uses latest case per user so unbans are respected
+* **Decorators**: Interaction deferral uses try-except instead of contextlib.suppress for better error logging
+* **Cache setup**: Cache service closed correctly when connection error occurs during setup
 
 ## [0.1.1] - 2026-01-21
 
