@@ -20,17 +20,19 @@ class TestModelQueries:
     @pytest.mark.integration
     @pytest.mark.database
     @pytest.mark.asyncio
-    async def test_basic_queries(self, db_service: DatabaseService) -> None:
-        """Test basic SQLModel queries."""
+    async def test_insert_and_commit_persists_guilds_with_expected_ids(
+        self,
+        db_service: DatabaseService,
+    ) -> None:
+        """Insert and commit guilds; persisted rows have expected ids and case_count."""
+        # Arrange
         async with db_service.session() as session:
-            # Create test guilds
             guilds = [Guild(id=TEST_GUILD_ID + i, case_count=i) for i in range(5)]
-
             for guild in guilds:
                 session.add(guild)
+            # Act
             await session.commit()
-
-            # Test individual access
+            # Assert
             for i, guild in enumerate(guilds):
                 assert guild.id == TEST_GUILD_ID + i
                 assert guild.case_count == i
@@ -39,23 +41,22 @@ class TestModelQueries:
     @pytest.mark.database
     @pytest.mark.asyncio
     async def test_complex_queries(self, db_service: DatabaseService) -> None:
-        """Test complex SQLModel queries with filtering and ordering."""
+        """Filter, order, and aggregate over persisted guilds return expected results."""
         async with db_service.session() as session:
-            # Create test data
+            # Arrange
             guilds = [Guild(id=TEST_GUILD_ID + i, case_count=i * 2) for i in range(10)]
-
             for guild in guilds:
                 session.add(guild)
             await session.commit()
 
-            # Test filtering
+            # Act & Assert - filtering
             statement = select(Guild).where(Guild.case_count > 10)
             high_case_guilds = (
                 (await session.execute(statement)).scalars().unique().all()
             )
             assert len(high_case_guilds) == 4  # case_count 12, 14, 16, 18
 
-            # Test ordering
+            # Act & Assert - ordering
             statement = select(Guild).order_by(desc(Guild.case_count)).limit(3)
             top_guilds = (await session.execute(statement)).scalars().unique().all()
             assert len(top_guilds) == 3
@@ -63,7 +64,7 @@ class TestModelQueries:
             assert top_guilds[1].case_count == 16
             assert top_guilds[2].case_count == 14
 
-            # Test aggregation with raw SQL
+            # Act & Assert - aggregation
             result = await session.execute(text("SELECT COUNT(*) FROM guild"))
             count = result.scalar()
             assert count == 10
@@ -72,13 +73,12 @@ class TestModelQueries:
     @pytest.mark.database
     @pytest.mark.asyncio
     async def test_join_queries(self, db_service: DatabaseService) -> None:
-        """Test join queries between related models."""
+        """Join of guild and guild_config returns expected row."""
         async with db_service.session() as session:
-            # Create guild with config
+            # Arrange
             guild = Guild(id=TEST_GUILD_ID, case_count=5)
             session.add(guild)
             await session.commit()
-
             config = GuildConfig(
                 id=TEST_GUILD_ID,
                 prefix="!j",  # Use valid prefix length (max 3 chars)
@@ -87,7 +87,7 @@ class TestModelQueries:
             session.add(config)
             await session.commit()
 
-            # Test join query using raw SQL (use proper table names)
+            # Act
             result = await session.execute(
                 text("""
                 SELECT g.id, g.case_count, gc.prefix
@@ -98,6 +98,7 @@ class TestModelQueries:
                 {"guild_id": TEST_GUILD_ID},
             )
 
+            # Assert
             row = result.fetchone()
             assert row is not None
             assert row[0] == TEST_GUILD_ID

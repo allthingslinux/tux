@@ -37,7 +37,6 @@ class TestRestrictedCommands:
         mock_db_coordinator: MagicMock,
     ) -> PermissionSystem:
         """Create a PermissionSystem instance for testing."""
-        PermissionSystem._command_permission_cache.clear()
         return PermissionSystem(mock_bot, mock_db_coordinator)
 
     @pytest.mark.unit

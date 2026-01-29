@@ -12,6 +12,7 @@ import discord
 import pytest
 from discord.ext import commands
 
+from tux.core.bot import Tux
 from tux.core.permission_system import RESTRICTED_COMMANDS
 from tux.help.data import HelpData
 from tux.shared.config import CONFIG
@@ -29,7 +30,7 @@ class TestHelpPermissionFiltering:
     @pytest.fixture
     def mock_bot(self) -> MagicMock:
         """Create a mock bot instance."""
-        bot = MagicMock()
+        bot = MagicMock(spec=Tux)
         bot.owner_ids = {BOT_OWNER_ID}  # Bot owner ID
         return bot
 
@@ -67,21 +68,21 @@ class TestHelpPermissionFiltering:
         mock_ctx: commands.Context[Any],
         mock_command: commands.Command[Any, Any, Any],
     ) -> None:
-        """Test basic command visibility checks."""
+        """Hidden/disabled commands are filtered; normal commands are visible."""
+        # Arrange
         help_data = HelpData(mock_bot, mock_ctx)
 
-        # Hidden command should be filtered
+        # Act & Assert - hidden command filtered
         mock_command.hidden = True
         assert not await help_data.can_run_command(mock_command)
 
-        # Disabled command should be filtered
+        # Act & Assert - disabled command filtered
         mock_command.hidden = False
         mock_command.enabled = False
         assert not await help_data.can_run_command(mock_command)
 
-        # Normal command should be visible
+        # Act & Assert - normal command visible
         mock_command.enabled = True
-        # No permission system used, so should be visible
         assert await help_data.can_run_command(mock_command)
 
     @pytest.mark.unit
@@ -315,7 +316,15 @@ class TestHelpPermissionFiltering:
 
         help_data = HelpData(mock_bot, mock_ctx)
 
+        # Permission system required by get_command_categories -> batch_can_run_commands
+        mock_perm_system = MagicMock()
+        mock_perm_system.batch_get_command_permissions = AsyncMock(
+            return_value={"ban": None, "eval": None},
+        )
+        mock_perm_system.get_user_permission_rank = AsyncMock(return_value=0)
+
         with (
+            patch("tux.help.data.get_permission_system", return_value=mock_perm_system),
             patch.object(CONFIG.USER_IDS, "BOT_OWNER_ID", BOT_OWNER_ID),
             patch.object(CONFIG.USER_IDS, "SYSADMINS", []),
         ):
