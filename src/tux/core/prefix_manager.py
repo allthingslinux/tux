@@ -268,16 +268,21 @@ class PrefixManager:
         """
         Invalidate prefix cache for a specific guild or all guilds.
 
+        When guild_id is None, only the in-memory cache is cleared; backend
+        keys (e.g. Valkey) are left untouched and will be treated as fresh
+        on subsequent get_prefix calls. When guild_id is set, both in-memory
+        and backend state for that guild are invalidated.
+
         Parameters
         ----------
         guild_id : int | None, optional
-            The guild ID to invalidate, or None to invalidate all.
+            The guild ID to invalidate, or None to invalidate all (in-memory only).
             Defaults to None.
 
         Examples
         --------
         >>> await manager.invalidate_cache(123456789)  # Specific guild
-        >>> await manager.invalidate_cache()  # All guilds
+        >>> await manager.invalidate_cache()  # All guilds (in-memory only)
         """
         if guild_id is None:
             self._prefix_cache.clear()
