@@ -423,6 +423,25 @@ class PermissionSystem:
 
     # ---------- Command Permission Management ----------
 
+    async def _invalidate_command_fallback_cache(
+        self,
+        guild_id: int,
+        command_name: str,
+    ) -> None:
+        """Invalidate fallback cache for command and its parent commands."""
+        await self._cache_backend.delete(
+            f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{command_name}",
+        )
+        parts = command_name.split()
+        for i in range(len(parts) - 1, 0, -1):
+            parent_name = " ".join(parts[:i])
+            await self._cache_backend.delete(
+                f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{parent_name}",
+            )
+        logger.trace(
+            f"Invalidated command permission fallback cache for {command_name} (guild {guild_id})",
+        )
+
     async def set_command_permission(
         self,
         guild_id: int,
@@ -477,18 +496,7 @@ class PermissionSystem:
             required_rank=required_rank,
         )
 
-        await self._cache_backend.delete(
-            f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{command_name}",
-        )
-        parts = command_name.split()
-        for i in range(len(parts) - 1, 0, -1):
-            parent_name = " ".join(parts[:i])
-            await self._cache_backend.delete(
-                f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{parent_name}",
-            )
-        logger.trace(
-            f"Invalidated command permission fallback cache for {command_name} (guild {guild_id})",
-        )
+        await self._invalidate_command_fallback_cache(guild_id, command_name)
 
         logger.info(
             f"Set command {command_name} to require rank {required_rank} in guild {guild_id}",
@@ -506,18 +514,7 @@ class PermissionSystem:
         Call after removing or changing a command permission outside set_command_permission
         (e.g. delete_where) so the next get_command_permission sees fresh data.
         """
-        await self._cache_backend.delete(
-            f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{command_name}",
-        )
-        parts = command_name.split()
-        for i in range(len(parts) - 1, 0, -1):
-            parent_name = " ".join(parts[:i])
-            await self._cache_backend.delete(
-                f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{parent_name}",
-            )
-        logger.trace(
-            f"Invalidated command permission fallback cache for {command_name} (guild {guild_id})",
-        )
+        await self._invalidate_command_fallback_cache(guild_id, command_name)
 
     # ---------- Query Methods ----------
 
