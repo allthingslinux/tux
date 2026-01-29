@@ -10,7 +10,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-* **Cache system**: TTLCache for thread-safe caching with automatic expiration; GuildConfigCacheManager for managing guild configuration data
 * **Database**: Performance indexes for cases table (composite indexes for case lookups and expired tempbans); `fix-sequences` command to synchronize PostgreSQL sequences; safety checks for database reset and nuke operations in test mode
 * **Bot configuration**: BotIntents model for Discord bot gateway intents configuration; HTTP client configuration for high-latency environments; `first_ready` flag for bot readiness tracking
 * **Commands**: Enhanced case viewing with user or case number arguments; FlexibleUserConverter for enhanced user identification; `get_user_safe` utility function for optimized user resolution; `convert_reason` function to clean moderation reasons by removing flag-like prefixes
@@ -22,10 +21,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Development tools**: Performance profiling command (`profile`) for analyzing Python script performance with cProfile
 * **Testing**: Performance benchmarks for cache operations, data structures, permission systems, and string substitutions
 * **Documentation**: Help command documentation with usage, syntax, and interactive features; enhanced configuration, commands, and caching documentation
+* **Valkey**: Optional Valkey cache backend with in-memory fallback; CacheService and CacheSetupService for connection and lifecycle; prefix manager, database controllers, and permission system use cache backend; Valkey health check in `db health`; configuration via settings, `.env`, and Docker Compose (service and profile); password validation and URL encoding for Valkey URLs; cache invalidation by key predicate; unit tests for cache backends, service, TTLCache, and managers
 
 ### Changed
 
-* **Caching**: Guild configuration caching for audit log, mod log, jail role, and jail channel IDs; cache invalidation on config updates; cache pre-warming on bot startup; memory efficiency improvements with `__slots__` in cache classes (TTLCache, GuildConfigCacheManager, JailStatusCache)
 * **Performance**: Batch processing for permission checks, member role checks, and subcommand filtering; optimized command category retrieval; parallel execution of Discord actions and case creation in moderation coordinator; memory efficiency with `__slots__` in dependency trackers
 * **Optimizations**: Optimized placeholder substitution in activity handler and fact module using single-pass substitution; optimized TLDR cache directory resolution with `@lru_cache` decorator for command listings
 * **Interaction handling**: Improved deferral logic across all moderation commands; enhanced response handling in Info, XKCD, and other modules; `send_after_defer` method for improved message handling
@@ -41,8 +40,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Dashboard**: Enhanced ranks management with cache control and rebuild options; improved cache invalidation logic for fresh data retrieval
 * **Task monitor**: Optimized task categorization and processing using generator expressions and defaultdict for better memory efficiency
 * **Guild config**: Simplified logging in `get_log_channel_ids` method; streamlined cache invalidation logic
-* **Docker Compose**: Removed `initial_sync` from sync actions
+* **Docker Compose**: Removed `initial_sync` from sync actions; Valkey service runs with warning log level (reduces verbosity)
 * **Python version**: Updated to 3.13.11 across configuration files, workflows, and pre-commit hooks
+* **Cache**: TTLCache uses _CACHED_NONE sentinel for eviction and None handling; GuildConfigCacheManager has locking and null-lock support; guild config and jail status use async cache operations; permission system and moderation (jail, prefix manager) use cache backend with concurrent retrieval and storage; prefix cache write/delete uses asyncio; jail command has cooldown and invalidates cache on rejoin; moderation coordinator has improved type safety and parallel case creation and DM handling; documentation for caching, Valkey TTL, environment, and Docker setup
 
 ### Fixed
 
@@ -55,6 +55,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Config**: Clarified cache invalidation handling in ConfigDashboard (automatically managed by GuildConfigController.update_config)
 * **Container**: Simplified Python image reference in Containerfile
 * **Pre-commit**: Updated Python version in pre-commit configuration for consistency
+* **Cache**: TTLCache correctly handles _CACHED_NONE to avoid unnecessary refetching; ValkeyBackend serializes values with JSON (broad type support); CacheSetupService closes properly on init failure; AsyncCacheBackend exists method has type annotation
+* **Logging**: Cache setup and cache managers use consistent logger message formatting
+* **Bot and health**: Cache disconnection and Valkey health check have improved error logging
+* **Permission system**: Command permission cache correctly handles malformed entries and cache hits
 
 ## [0.1.1] - 2026-01-21
 
