@@ -35,13 +35,18 @@ class CacheSetupService(BotSetupService):
         super().__init__(bot, "cache")
 
     async def setup(self) -> None:
-        """
-        Connect to Valkey when configured; otherwise leave cache_service as None.
+        """Set up the cache backend for the bot.
 
-        If VALKEY_URL (or VALKEY_HOST) is empty, bot.cache_service is set to None
-        and the bot continues without Valkey (in-memory caches only). If the URL
-        is set but connection or ping fails, log and set bot.cache_service = None
-        so the bot still starts. Never raises.
+        Returns
+        -------
+        None
+            Initializes `cache_service` and never raises.
+
+        Notes
+        -----
+        If VALKEY_URL (or VALKEY_HOST) is empty, the bot uses in-memory caches.
+        If connection or ping fails, the bot logs a warning and continues with
+        in-memory caches.
         """
         if not CONFIG.valkey_url:
             self.bot.cache_service = None
@@ -58,7 +63,8 @@ class CacheSetupService(BotSetupService):
                     self.bot.cache_service = None
             except Exception as e:
                 logger.warning(
-                    f"Valkey connection failed ({e}); using in-memory caches only",
+                    "Valkey connection failed ({}); using in-memory caches only",
+                    e,
                 )
                 self.bot.cache_service = None
             finally:
