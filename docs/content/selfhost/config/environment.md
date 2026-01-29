@@ -57,10 +57,10 @@ in-memory cache (no extra service required).
 Use either **VALKEY_URL** or **individual variables**:
 
 ```env
-# Option A: URL (overrides VALKEY_HOST/PORT/DB/PASSWORD)
+# Option A: URL (overrides VALKEY_HOST/PORT/DB/PASSWORD; use localhost for local runs)
 VALKEY_URL=valkey://localhost:6379/0
 
-# Option B: Individual (e.g. for Docker with tux-valkey)
+# Option B: Individual (use tux-valkey when bot runs in Docker Compose)
 VALKEY_HOST=tux-valkey
 VALKEY_PORT=6379
 VALKEY_DB=0
