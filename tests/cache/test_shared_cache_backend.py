@@ -181,17 +181,18 @@ class TestJailStatusCacheWithBackend:
         assert await cache.get(1, 4) is False
 
     @pytest.mark.asyncio
-    async def test_async_set_skips_write_when_backend_has_value(
+    async def test_async_set_overwrites_when_backend_has_value(
         self,
         cache: JailStatusCache,
         backend: InMemoryBackend,
     ) -> None:
-        """async_set when backend already has value skips write (set-if-absent)."""
+        """async_set overwrites existing value (same as set)."""
         backend.get = AsyncMock(return_value=True)
         backend.set = AsyncMock()
         await cache.async_set(10, 20, is_jailed=False)
-        backend.get.assert_called()
-        backend.set.assert_not_called()
+        backend.set.assert_called_once()
+        call_args = backend.set.call_args
+        assert call_args[0][1] is False  # is_jailed
 
     @pytest.mark.asyncio
     async def test_async_set_writes_when_backend_missing(
