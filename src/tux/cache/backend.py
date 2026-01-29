@@ -142,7 +142,7 @@ class ValkeyBackend:
     ) -> None:
         """Set a value with optional TTL. Serializes to JSON."""
         full_key = self._key(key)
-        payload = value if isinstance(value, str) else json.dumps(value)
+        payload = value if isinstance(value, str) else json.dumps(value, default=str)
         if ttl_sec is not None and ttl_sec > 0:
             await self._client.setex(full_key, int(ttl_sec), payload)
         else:
