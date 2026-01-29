@@ -53,7 +53,7 @@ class GuildConfigCacheManager:
         """Set the cache backend (e.g. from get_cache_backend(bot))."""
         self._backend = backend
         logger.debug(
-            "GuildConfigCacheManager backend set to %s",
+            "GuildConfigCacheManager backend set to {}",
             type(backend).__name__,
         )
 
@@ -248,7 +248,7 @@ class JailStatusCache:
         """Set the cache backend (e.g. from get_cache_backend(bot))."""
         self._backend = backend
         logger.debug(
-            "JailStatusCache backend set to %s",
+            "JailStatusCache backend set to {}",
             type(backend).__name__,
         )
 
