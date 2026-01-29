@@ -42,8 +42,9 @@ async def _check_cache() -> dict[str, str]:
         if await cache_service.ping():
             logger.debug("Valkey health check: healthy")
             return {"status": "healthy", "message": "Valkey ping OK"}
-        logger.debug("Valkey health check: ping failed")
-        return {"status": "unhealthy", "message": "Valkey ping failed"}  # noqa: TRY300
+        else:  # noqa: RET505
+            logger.debug("Valkey health check: ping failed")
+            return {"status": "unhealthy", "message": "Valkey ping failed"}
     except Exception as e:
         logger.warning("Valkey health check failed: %s", e)
         return {"status": "unhealthy", "message": str(e)}
