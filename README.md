@@ -32,7 +32,7 @@
 </div>
 
 > [!WARNING]
-> **This codebase is under heavy development and subject to breaking changes.** APIs, configurations, and features may change without notice. Use at your own risk in production environments. Until v0.1.0 is released, the documentation is not guaranteed to be accurate or up to date.
+> **This codebase is under heavy development and subject to breaking changes.** APIs, configurations, and features may change without notice. Documentation is not guaranteed to be accurate or up to date. Use at your own risk in production environments.
 
 ---
 
