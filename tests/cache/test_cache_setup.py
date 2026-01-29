@@ -54,11 +54,13 @@ async def test_setup_when_connect_raises_sets_cache_service_none(
         with patch("tux.core.setup.cache_setup.CacheService") as mock_cls:
             instance = MagicMock()
             instance.connect = AsyncMock(side_effect=ConnectionError("refused"))
+            instance.close = AsyncMock()
             mock_cls.return_value = instance
             service = CacheSetupService(mock_bot)
             await service.setup()
     assert mock_bot.cache_service is None
     instance.connect.assert_called_once()
+    instance.close.assert_called_once()
 
 
 @pytest.mark.asyncio
