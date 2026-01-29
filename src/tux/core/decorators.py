@@ -11,6 +11,7 @@ default.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import functools
 import inspect
 import time
@@ -26,7 +27,7 @@ from tux.database.models import PermissionCommand
 from tux.shared.config import CONFIG
 from tux.shared.exceptions import TuxPermissionDeniedError
 
-__all__ = ["requires_command_permission"]
+__all__ = ["requires_command_permission", "command_permission_check"]
 
 F = TypeVar("F", bound=Callable[..., Awaitable[Any]])
 
@@ -99,28 +100,13 @@ def requires_command_permission(
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
             """Check permissions and execute the decorated function if allowed.
 
-            Performs comprehensive permission checking including bot owner bypass,
-            guild owner bypass, and database-driven rank checking.
-
-            Parameters
-            ----------
-            *args : Any
-                Positional arguments passed to the decorated function.
-            **kwargs : Any
-                Keyword arguments passed to the decorated function.
-
-            Returns
-            -------
-            Any
-                The result of the decorated function execution.
-
-            Raises
-            ------
-            TuxPermissionDeniedError
-                When user lacks required permissions for the command.
-            ValueError
-                When context or interaction cannot be found in arguments.
+            When the command uses check-phase permission (no allow_self_use_for_param),
+            permission was already enforced before argument conversion; this wrapper
+            then just invokes the callback.
             """
+            # Permission already run in check phase (before conversion) for this command
+            if getattr(wrapper, "__tux_perm_check_in_phase__", False):
+                return await func(*args, **kwargs)
             # Extract context or interaction from args
             ctx, interaction = _extract_context_or_interaction(args)
 
@@ -187,12 +173,49 @@ def requires_command_permission(
             # Permission check passed, execute command
             return await func(*args, **kwargs)
 
-        # Mark as using dynamic permissions
+        # Mark as using dynamic permissions; store options for check-phase registration
         wrapper.__uses_dynamic_permissions__ = True  # type: ignore[attr-defined]
+        wrapper.__tux_perm_allow_unconfigured__ = allow_unconfigured  # type: ignore[attr-defined]
+        wrapper.__tux_perm_allow_self_use_for_param__ = allow_self_use_for_param  # type: ignore[attr-defined]
 
         return cast(F, wrapper)
 
     return decorator
+
+
+async def command_permission_check(ctx: commands.Context[Any]) -> bool:
+    """
+    Run permission check in the command check phase (before argument conversion).
+
+    Used for commands that do not use allow_self_use_for_param so users get
+    "permission denied" before "missing required argument". Reads allow_unconfigured
+    from ctx.command.callback.__tux_perm_allow_unconfigured__.
+    """
+    # Defer slash interactions before potentially slow permission check
+    inter = getattr(ctx, "interaction", None)
+    if inter is not None and not inter.response.is_done():
+        with contextlib.suppress(Exception):
+            await inter.response.defer(ephemeral=True)
+    if not ctx.guild or not ctx.command:
+        return True
+    # Bot owner, sysadmin, and guild owner bypass (same as callback wrapper path)
+    if _should_bypass_permission_check(
+        ctx.author.id,
+        ctx.guild,
+        ctx.command.qualified_name,
+    ):
+        return True
+    callback = getattr(ctx.command, "callback", None)
+    allow_unconfigured = getattr(callback, "__tux_perm_allow_unconfigured__", False)
+    await _check_permissions(
+        ctx,
+        getattr(ctx, "interaction", None),
+        ctx.guild,
+        ctx.author.id,
+        ctx.command.qualified_name,
+        allow_unconfigured,
+    )
+    return True
 
 
 def _get_command_name(
