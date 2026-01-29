@@ -53,6 +53,7 @@ services:
       start_period: 30s
     stop_grace_period: 30s
   tux-valkey:
+    profiles: [valkey]
     container_name: tux-valkey
     hostname: tux-valkey
     image: valkey/valkey:8.0-alpine
