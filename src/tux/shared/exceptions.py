@@ -175,7 +175,15 @@ class TuxPermissionDeniedError(
         self.user_rank = user_rank
         self.command_name = command_name
 
-        if command_name:
+        # Unconfigured: no permission rank assigned for this command (0/0)
+        if required_rank == 0 and user_rank == 0:
+            if command_name:
+                message = f"Command `{command_name}` has not been configured (no permission rank assigned)."
+            else:
+                message = (
+                    "Command has not been configured (no permission rank assigned)."
+                )
+        elif command_name:
             message = f"You need permission rank **{required_rank}** to use `{command_name}`. Your rank: **{user_rank}**"
         else:
             message = f"You need permission rank **{required_rank}**. Your rank: **{user_rank}**"
