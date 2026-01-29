@@ -74,6 +74,13 @@ Leave `VALKEY_URL` and `VALKEY_HOST` empty to disable Valkey. See the
     Use Valkey if you want cache to persist across bot restarts or run multiple Tux
     processes. For a single instance that restarts rarely, in-memory cache is sufficient.
 
+!!! tip "VALKEY_HOST: localhost vs tux-valkey"
+    Use **`VALKEY_HOST=localhost`** (or `VALKEY_URL=valkey://localhost:6379/0`) when
+    running the bot on your host (e.g. `uv run tux start`). Use **`VALKEY_HOST=tux-valkey`**
+    when the bot runs inside Docker Compose so it can reach the Valkey container by
+    service name. If you see "Name or service not known" for `tux-valkey`, you are
+    running the bot locally—switch to `localhost` or start Valkey and point to it.
+
 ### Bot owner and sysadmins (recommended)
 
 Configure in **`config/config.json`**, not in `.env`:
