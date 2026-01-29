@@ -30,6 +30,15 @@ Tux uses a TTL-based caching system to improve performance and reduce database l
 
 Setup (e.g. `cache_setup.py`) connects to Valkey on startup and sets the backend on `GuildConfigCacheManager` and `JailStatusCache`; permission controllers receive the backend via the coordinator. No code changes are required in consumers — they use the same managers; the backend is injected by setup.
 
+!!! note "Backend-specific behavior: clear_all and invalidate_guild"
+    **In-memory only when Valkey is used.** `GuildConfigCacheManager.clear_all()` and
+    `JailStatusCache.invalidate_guild(guild_id)` only affect the in-memory cache.
+    When a Valkey backend is set, they do **not** remove keys from Valkey (the current
+    API has no pattern delete). To clear backend state for a specific guild, use
+    per-guild `invalidate(guild_id)` (guild config) or `invalidate(guild_id, user_id)`
+    (jail status). Expect the same method name to have different scope depending on
+    whether the backend is in-memory or Valkey.
+
 ### Multi-guild safety
 
 All cache keys that represent guild-specific data include `guild_id` (and `user_id` or `command_name` where needed). One backend instance is shared across all guilds; keys do not collide. Examples:
@@ -229,10 +238,10 @@ await cache_manager.invalidate(guild_id)
 
 ### 3. Use singleton cache managers
 
-For shared data like guild config and jail status, use the singleton cache managers. Do not replace or bypass them with ad-hoc caches for the same data:
+For shared data like guild config and jail status, use the singleton cache managers. Calling `GuildConfigCacheManager()` or `JailStatusCache()` multiple times returns the **same shared instance** (implemented via `__new__`). Do not replace or bypass them with ad-hoc caches for the same data:
 
 ```python
-# ✅ Good: Use singleton
+# ✅ Good: Use singleton (same instance every time)
 cache_manager = GuildConfigCacheManager()
 config = await cache_manager.get(guild_id)
 
@@ -283,7 +292,7 @@ This is invoked during bot initialization where applicable.
 
 ## Concurrency and safety
 
-- **TTLCache**: Synchronous API; safe for concurrent use from multiple async tasks (no await between check and use for a key).
+- **TTLCache**: Synchronous API that can be called from async tasks without `await`; safe for concurrent access from multiple async tasks.
 - **Managers**: Async API; use `await` for get/set/invalidate. Locks are per-guild or per (guild_id, user_id) to avoid cross-guild contention.
 - **Backends**: One backend instance per bot; keys include `guild_id` (and user/command where needed) so multiple guilds do not share the same logical entry.
 
@@ -311,6 +320,16 @@ All consumers (cache setup, permission setup, prefix manager, permission system)
 
 - **No automatic reconnection**: If Valkey is lost mid-run (network partition, server restart), the client is not reconnected. Cache operations will raise (e.g. connection errors) until the process is restarted. Startup retries and ping-on-connect reduce the chance of running with a bad connection.
 - **Backend operations**: `ValkeyBackend` get/set/delete do not catch exceptions; Valkey/network errors propagate to callers. Callers should handle or log as appropriate.
+
+**Operational guidance when Valkey is used in production:**
+
+- **Monitoring and alerting**: Monitor Valkey health (e.g. ping/health checks) and alert on connection failures or timeouts so operators can act before user-facing errors spike.
+- **Graceful degradation**: At startup, if Valkey is unavailable, the bot falls back to an in-memory backend and continues. Mid-run, there is no automatic fallback: cache operations that hit Valkey will raise until the process is restarted.
+- **Failure response**: If Valkey fails mid-run, cache reads/writes will raise. Whether
+  the application continues depends on how callers handle these errors (e.g. catching
+  and falling back to DB, or letting the error propagate). Plan for restart or
+  failover if cache availability is required; otherwise ensure callers tolerate cache
+  errors and degrade gracefully (e.g. bypass cache and hit the database).
 
 ### Backend behavior details
 
