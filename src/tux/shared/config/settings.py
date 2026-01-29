@@ -20,6 +20,7 @@ import os
 import warnings
 from pathlib import Path
 from typing import Annotated
+from urllib.parse import quote as urlquote
 
 from pydantic import Field, computed_field
 from pydantic_settings import (
@@ -86,6 +87,27 @@ def validate_environment() -> None:
             "Please set a strong POSTGRES_PASSWORD environment variable."
         )
         raise ValueError(error_msg)
+
+    # Valkey cache password: warn on weak/short when set (do not block)
+    valkey_password = os.getenv("VALKEY_PASSWORD", "")
+    if valkey_password and valkey_password in weak_passwords:
+        warnings.warn(
+            "⚠️  SECURITY WARNING: Using weak Valkey cache password! "
+            "Set a strong VALKEY_PASSWORD for production.",
+            UserWarning,
+            stacklevel=2,
+        )
+    if (
+        valkey_password
+        and len(valkey_password) < 12
+        and valkey_password not in ["ChangeThisToAStrongPassword123!"]
+    ):
+        warnings.warn(
+            "⚠️  SECURITY WARNING: Valkey password is very short (<12 chars). "
+            "Use a longer password for better security.",
+            UserWarning,
+            stacklevel=2,
+        )
 
 
 # Validate environment when module is imported
@@ -341,7 +363,11 @@ class Config(BaseSettings):
     @computed_field
     @property
     def valkey_url(self) -> str:
-        """Get Valkey URL, building from components if not explicitly set."""
+        """Get Valkey URL, building from components if not explicitly set.
+
+        Do not log or expose the return value; it may contain credentials.
+        Password is URL-encoded so special characters (@, :, /) do not break the URL.
+        """
         if self.VALKEY_URL:
             return self.VALKEY_URL
         if not self.VALKEY_HOST:
@@ -349,7 +375,11 @@ class Config(BaseSettings):
         host = self.VALKEY_HOST
         if os.getenv("TUX_VERSION"):
             host = "tux-valkey"
-        auth = f":{self.VALKEY_PASSWORD}@" if self.VALKEY_PASSWORD else ""
+        if self.VALKEY_PASSWORD:
+            encoded = urlquote(self.VALKEY_PASSWORD, safe="")
+            auth = f":{encoded}@"
+        else:
+            auth = ""
         return f"valkey://{auth}{host}:{self.VALKEY_PORT}/{self.VALKEY_DB}"
 
     def get_prefix(self) -> str:
