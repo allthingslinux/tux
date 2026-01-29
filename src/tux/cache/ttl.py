@@ -80,6 +80,8 @@ class TTLCache:
             logger.trace(f"Cache entry expired for key: {key}")
             return None
 
+        if value is _CACHED_NONE:
+            return None
         return value
 
     def set(self, key: Any, value: Any) -> None:
@@ -157,9 +159,12 @@ class TTLCache:
         Any
             The cached or fetched value.
         """
+        # Check raw cache for _CACHED_NONE so we return None without refetch
+        if key in self._cache:
+            stored, expire_time = self._cache[key]
+            if time.monotonic() <= expire_time and stored is _CACHED_NONE:
+                return None
         cached = self.get(key)
-        if cached is _CACHED_NONE:
-            return None
         if cached is not None:
             return cached
 
