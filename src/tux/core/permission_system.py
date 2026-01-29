@@ -524,10 +524,15 @@ class PermissionSystem:
         backend_key = f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{command_name}"
         raw = await self._cache_backend.get(backend_key)
         if raw is not None:
+            unwrapped = unwrap_optional_perm(raw)
+            if unwrapped is not None:
+                logger.trace(
+                    f"Cache hit for command permission with fallback {command_name} (guild {guild_id})",
+                )
+                return unwrapped
             logger.trace(
-                f"Cache hit for command permission with fallback {command_name} (guild {guild_id})",
+                f"Malformed cache entry for command permission {command_name} (guild {guild_id}), resolving as miss",
             )
-            return unwrap_optional_perm(raw)
 
         # For single-word commands (no parents), use direct query for efficiency
         parts = command_name.split()
@@ -631,7 +636,14 @@ class PermissionSystem:
         raw_values = await asyncio.gather(*get_coros)
         for (_, command_name), raw in zip(keys_and_names, raw_values, strict=True):
             if raw is not None:
-                cached_results[command_name] = unwrap_optional_perm(raw)
+                unwrapped = unwrap_optional_perm(raw)
+                if unwrapped is not None:
+                    cached_results[command_name] = unwrapped
+                else:
+                    logger.trace(
+                        f"Malformed cache entry for command permission {command_name} (guild {guild_id}), resolving as miss",
+                    )
+                    uncached_commands.append(command_name)
             else:
                 uncached_commands.append(command_name)
 
