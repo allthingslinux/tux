@@ -61,7 +61,7 @@ jobs:
           INSERT_ISSUE_URLS: true
           AUTO_ASSIGN: true
           IDENTIFIERS: |
-            [{"name": "TODO", "labels": ["enhancement"]}, {"name": "FIXME", "labels": ["bug"]}]
+            [{"name": "TODO", "labels": ["todo-to-issue"]}, {"name": "FIXME", "labels": ["todo-to-issue"]}]
           ESCAPE: true
           IGNORE: |
             .github/,node_modules/,dist/,build/,vendor/,uv.lock
