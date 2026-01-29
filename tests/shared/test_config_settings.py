@@ -18,8 +18,9 @@ pytestmark = pytest.mark.unit
 
 @pytest.fixture(autouse=True)
 def _safe_env_for_config(monkeypatch: pytest.MonkeyPatch) -> None:  # type: ignore[reportUnusedFunction]
-    """Ensure POSTGRES_PASSWORD is safe so validate_environment does not raise on import."""
+    """Ensure POSTGRES_PASSWORD is safe and TUX_VERSION unset for deterministic config."""
     monkeypatch.setenv("POSTGRES_PASSWORD", "ChangeThisToAStrongPassword123!")
+    monkeypatch.delenv("TUX_VERSION", raising=False)
 
 
 def _config(**kwargs: Any) -> Any:
