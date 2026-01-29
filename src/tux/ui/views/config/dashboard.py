@@ -17,7 +17,6 @@ import discord
 from loguru import logger
 
 from tux.core.permission_system import DEFAULT_RANKS, get_permission_system
-from tux.database.models.models import PermissionAssignment
 from tux.shared.constants import (
     CONFIG_COLOR_BLURPLE,
     CONFIG_COLOR_GREEN,
@@ -1370,18 +1369,17 @@ class ConfigDashboard(discord.ui.LayoutView):
             )
             return
 
-        # Remove roles from rank
+        # Remove roles from rank (use remove_role_assignment so controller cache is invalidated)
         try:
             removed_count = 0
             for role in selected_roles:
-                deleted_count = await self.bot.db.permission_assignments.delete_where(
-                    filters=(
-                        PermissionAssignment.guild_id == self.guild.id,
-                        PermissionAssignment.permission_rank_id == rank_obj.id,
-                        PermissionAssignment.role_id == role.id,
-                    ),
+                removed = (
+                    await self.bot.db.permission_assignments.remove_role_assignment(
+                        self.guild.id,
+                        role.id,
+                    )
                 )
-                if deleted_count > 0:
+                if removed:
                     removed_count += 1
 
             await interaction.followup.send(
