@@ -55,13 +55,15 @@ class CacheSetupService(BotSetupService):
                     logger.success("Cache (Valkey) setup completed")
                 else:
                     logger.warning("Valkey ping failed; using in-memory caches only")
-                    await service.close()
                     self.bot.cache_service = None
             except Exception as e:
                 logger.warning(
                     f"Valkey connection failed ({e}); using in-memory caches only",
                 )
                 self.bot.cache_service = None
+            finally:
+                if self.bot.cache_service is None:
+                    await service.close()
 
         # Wire cache backend into singletons (Valkey if connected, else in-memory)
         backend = get_cache_backend(self.bot)
