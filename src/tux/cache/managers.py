@@ -31,10 +31,11 @@ class GuildConfigCacheManager:
     are async and use the backend.
     """
 
-    __slots__ = ("_backend", "_cache", "_locks")
+    __slots__ = ("_backend", "_cache", "_locks", "_locks_lock")
     _instance: GuildConfigCacheManager | None = None
     _cache: TTLCache
     _locks: dict[int, asyncio.Lock]
+    _locks_lock: asyncio.Lock
     _backend: AsyncCacheBackend | None
 
     def __new__(cls) -> GuildConfigCacheManager:
@@ -43,6 +44,7 @@ class GuildConfigCacheManager:
             cls._instance = super().__new__(cls)
             cls._instance._cache = TTLCache(ttl=GUILD_CONFIG_TTL_SEC, max_size=1000)
             cls._instance._locks = {}
+            cls._instance._locks_lock = asyncio.Lock()
             cls._instance._backend = None
         return cls._instance
 
@@ -54,10 +56,11 @@ class GuildConfigCacheManager:
             type(backend).__name__,
         )
 
-    def _get_lock(self, guild_id: int) -> asyncio.Lock:
-        """Get or create a lock for a specific guild."""
-        if guild_id not in self._locks:
-            self._locks[guild_id] = asyncio.Lock()
+    async def _get_lock(self, guild_id: int) -> asyncio.Lock:
+        """Get or create a lock for a specific guild (thread-safe)."""
+        async with self._locks_lock:
+            if guild_id not in self._locks:
+                self._locks[guild_id] = asyncio.Lock()
         return self._locks[guild_id]
 
     def _cache_key(self, guild_id: int) -> str:
@@ -139,7 +142,7 @@ class GuildConfigCacheManager:
         jail_channel_id: int | None = _MISSING,
     ) -> None:
         """Cache guild config for a guild with async locking (for concurrent safety)."""
-        lock = self._get_lock(guild_id)
+        lock = await self._get_lock(guild_id)
         async with lock:
             key = self._cache_key(guild_id)
             if self._backend is not None:
@@ -287,7 +290,7 @@ class JailStatusCache:
             return is_jailed
 
     async def async_set(self, guild_id: int, user_id: int, is_jailed: bool) -> None:
-        """Cache jail status with async locking."""
+        """Cache jail status with async locking (set-if-absent: only writes when no cached value exists)."""
         lock = await self._get_lock(guild_id, user_id)
         async with lock:
             key = self._cache_key(guild_id, user_id)
@@ -314,9 +317,12 @@ class JailStatusCache:
 
     async def invalidate_guild(self, guild_id: int) -> None:
         """Invalidate all jail status entries for a guild (in-memory only)."""
-        self._cache.clear()
+        prefix = f"jail_status:{guild_id}:"
+        removed = self._cache.invalidate_keys_matching(
+            lambda key: str(key).startswith(prefix),
+        )
         logger.debug(
-            f"Cleared all jail status cache entries (guild {guild_id} invalidation)",
+            f"Invalidated {removed} jail status cache entries for guild {guild_id}",
         )
 
     async def clear_all(self) -> None:
