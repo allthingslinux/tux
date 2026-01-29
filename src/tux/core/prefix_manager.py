@@ -170,8 +170,15 @@ class PrefixManager:
 
             prefix = guild_config.prefix
             self._prefix_cache[guild_id] = prefix
-            backend = get_cache_backend(self.bot)
-            await backend.set(f"prefix:{guild_id}", prefix, ttl_sec=None)
+            try:
+                backend = get_cache_backend(self.bot)
+                await backend.set(f"prefix:{guild_id}", prefix, ttl_sec=None)
+            except Exception as e:
+                logger.warning(
+                    "Failed to cache prefix for guild {}: {}",
+                    guild_id,
+                    type(e).__name__,
+                )
 
         except Exception as e:
             logger.warning(
