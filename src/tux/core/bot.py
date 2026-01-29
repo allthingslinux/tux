@@ -471,6 +471,7 @@ class Tux(commands.Bot):
                     logger.error(f"Error during cache disconnection: {e}")
                     span.set_data("connections.cache_closed", False)
                     span.set_data("connections.cache_error", str(e))
+                    span.set_data("connections.cache_error_type", type(e).__name__)
                     capture_exception_safe(e)
 
             # Close HTTP client session and connection pool
