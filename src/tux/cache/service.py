@@ -83,7 +83,7 @@ class CacheService:
                 retry_on_error=retry_on_error,
                 **kwargs,
             )
-            logger.success("Connected to Valkey")
+            logger.success("Valkey client initialized")
         except Exception as e:
             logger.warning(f"Failed to connect to Valkey: {e}")
             self._client = None
