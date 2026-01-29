@@ -48,6 +48,7 @@ Complete guide to environment variable configuration, including:
 
 - Configuration priority and loading order
 - Essential variables
+- Optional Valkey (cache) backend
 - Docker-specific configuration
 - Validation and testing
 
@@ -67,12 +68,15 @@ POSTGRES_PASSWORD=your_secure_password_here
 # Optional
 LOG_LEVEL=INFO
 DEBUG=false
-USER_IDS__BOT_OWNER_ID=123456789012345678
 ```
+
+!!! note "Bot owner, sysadmins, prefix"
+    Set `USER_IDS.BOT_OWNER_ID`, `USER_IDS.SYSADMINS`, and `BOT_INFO.PREFIX` in
+    `config/config.json`, not in `.env`. See the JSON example below.
 
 ### `config/config.json`
 
-JSON configuration file for structured settings:
+JSON configuration file for structured settings (bot owner, sysadmins, prefix, intents, etc.):
 
 ```json
 {
@@ -84,6 +88,10 @@ JSON configuration file for structured settings:
     "presences": true,
     "members": true,
     "message_content": true
+  },
+  "USER_IDS": {
+    "BOT_OWNER_ID": 123456789012345678,
+    "SYSADMINS": [123456789012345678, 987654321098765432]
   }
 }
 ```
@@ -153,6 +161,21 @@ All three privileged intents are required for full functionality:
 - **presences**: Required for status_roles feature
 - **members**: Required for on_member_join, jail, tty_roles
 - **message_content**: Required for prefix commands and most features
+
+### Enable optional Valkey cache
+
+To use Valkey (Redis-compatible) for shared cache across restarts:
+
+```env
+# With Docker (start tux-valkey with --profile valkey)
+VALKEY_HOST=tux-valkey
+VALKEY_PORT=6379
+
+# Or use a URL
+VALKEY_URL=valkey://localhost:6379/0
+```
+
+Leave Valkey unset to use in-memory cache. See [Environment Configuration](environment.md#optional-valkey-cache).
 
 ### Set Log Level
 
