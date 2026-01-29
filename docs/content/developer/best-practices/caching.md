@@ -108,6 +108,41 @@ Choose appropriate TTL values based on how often data changes:
 - **Moderately changing data** (e.g. guild config): 300–600 seconds (5–10 minutes)
 - **Rarely changing data** (e.g. permission ranks): 600 seconds (10 minutes)
 
+See [Cache TTL reference](#cache-ttl-reference) for where each TTL is defined and how Valkey vs in-memory use them.
+
+## Cache TTL reference
+
+This section documents where TTLs are defined, what values we use, and how they behave with Valkey vs in-memory backends.
+
+### Where TTLs are defined
+
+| Data | Constant | Value | Defined in |
+|------|----------|-------|------------|
+| Guild config (audit log, mod log, jail role/channel IDs) | `GUILD_CONFIG_TTL_SEC` | 600 s (10 min) | `src/tux/cache/managers.py` |
+| Jail status per (guild, user) | `JAIL_STATUS_TTL_SEC` | 300 s (5 min) | `src/tux/cache/managers.py` |
+| Prefix per guild | *(none)* | No TTL | `src/tux/core/prefix_manager.py` — long-lived, `ttl_sec=None` |
+| Permission ranks, assignments, command fallbacks | `PERM_RANKS_TTL` | 600 s (10 min) | `src/tux/database/controllers/permissions.py` |
+| User permission rank (guild, user, roles) | `PERM_USER_RANK_TTL` | 300 s (5 min) | `src/tux/database/controllers/permissions.py` |
+
+### Valkey vs in-memory
+
+- **Valkey**: Each `set` passes `ttl_sec` to the backend. Valkey uses `SETEX` when `ttl_sec > 0`; otherwise `SET` (no expiry). So guild config, jail, and permissions use the per-call TTLs above; prefix uses no TTL and never expires in Valkey.
+- **InMemoryBackend** (fallback when Valkey is not configured or unavailable): **Ignores `ttl_sec`** on `set()`. All entries use the backend’s `default_ttl` (300 s).
+  So when running without Valkey, everything stored via the shared fallback backend effectively has a 5-minute TTL, regardless of what the consumer requested.
+
+  Managers and permission controllers use their **own** TTLCache only when no backend is set (e.g. before setup or in tests); those caches honor the constants above.
+  When cache setup uses the fallback (Valkey down or unset), guild config, jail, prefix, and permissions share one in-memory store with a single 5-min TTL for all keys.
+
+### Rationale and realistic ranges
+
+- **Guild config (10 min)**: Audit/mod log IDs, jail role/channel change rarely. 5–10 minutes is a good balance; shorter TTLs add DB load without much freshness gain.
+- **Jail status (5 min)**: Can change on jail/unjail. We invalidate on update; TTL limits staleness if invalidation is missed. 5 minutes is reasonable; 1–5 min is fine if you prefer faster expiry.
+- **Prefix (no TTL)**: Changed only via config commands; we invalidate on update. No TTL avoids pointless churn and matches long-lived config.
+- **Permission ranks / assignments (10 min)**: Ranks and role assignments change infrequently. 10 minutes keeps hit rate high; we invalidate on create/update/delete.
+- **User permission rank (5 min)**: Derived from assignments + user roles. Shorter than rank TTL (5 vs 10 min) reduces staleness when roles change; we still invalidate when assignments change.
+
+**When to tune**: Increase TTL for very stable data (e.g. huge guilds, read-heavy) to improve hit rate; decrease if you see stale behavior and invalidation can’t cover all paths. Keep jail and user-rank TTLs ≤ rank/config TTLs so derived data expires first.
+
 ## GuildConfigCacheManager
 
 `GuildConfigCacheManager` is a singleton that caches guild configuration (audit log ID, mod log ID, jail role ID, jail channel ID). When a backend is set (e.g. Valkey), get/set/invalidate use the backend; otherwise they use an in-memory TTL cache. All methods that read or write cache are **async**.
