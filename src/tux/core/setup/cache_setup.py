@@ -67,4 +67,4 @@ class CacheSetupService(BotSetupService):
         backend = get_cache_backend(self.bot)
         GuildConfigCacheManager().set_backend(backend)
         JailStatusCache().set_backend(backend)
-        logger.debug("Cache backend wired: %s", type(backend).__name__)
+        logger.debug("Cache backend wired: {}", type(backend).__name__)
