@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock
 
 import pytest
@@ -20,11 +21,14 @@ class TestGuildConfigCacheManagerWithBackend:
         return InMemoryBackend()
 
     @pytest.fixture
-    def manager(self, backend: InMemoryBackend) -> GuildConfigCacheManager:
-        """Singleton with backend set."""
+    def manager(self, backend: InMemoryBackend) -> Generator[GuildConfigCacheManager]:
+        """Singleton with backend set; teardown clears state to avoid leakage."""
         manager = GuildConfigCacheManager()
         manager.set_backend(backend)
-        return manager
+        yield manager
+        manager._backend = None
+        manager._cache.clear()
+        manager._locks.clear()
 
     @pytest.mark.asyncio
     async def test_get_returns_none_when_not_cached(
@@ -126,11 +130,14 @@ class TestJailStatusCacheWithBackend:
         return InMemoryBackend()
 
     @pytest.fixture
-    def cache(self, backend: InMemoryBackend) -> JailStatusCache:
-        """Singleton with backend set."""
+    def cache(self, backend: InMemoryBackend) -> Generator[JailStatusCache]:
+        """Singleton with backend set; teardown clears state to avoid leakage."""
         jail_cache = JailStatusCache()
         jail_cache.set_backend(backend)
-        return jail_cache
+        yield jail_cache
+        jail_cache._backend = None
+        jail_cache._cache.clear()
+        jail_cache._locks.clear()
 
     @pytest.mark.asyncio
     async def test_get_returns_none_when_not_cached(
