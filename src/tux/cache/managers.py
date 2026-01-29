@@ -50,7 +50,13 @@ class GuildConfigCacheManager:
         return cls._instance
 
     def set_backend(self, backend: AsyncCacheBackend) -> None:
-        """Set the cache backend (e.g. from get_cache_backend(bot))."""
+        """Set the cache backend.
+
+        Parameters
+        ----------
+        backend : AsyncCacheBackend
+            Backend instance to use for cache operations.
+        """
         self._backend = backend
         logger.debug(
             "GuildConfigCacheManager backend set to {}",
@@ -187,7 +193,21 @@ class GuildConfigCacheManager:
         jail_role_id: int | None = _MISSING,
         jail_channel_id: int | None = _MISSING,
     ) -> None:
-        """Cache guild config for a guild with async locking (concurrent safety)."""
+        """Cache guild config for a guild with async locking (concurrent safety).
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+        audit_log_id : int | None, optional
+            The audit log channel ID. Omit to skip updating this field.
+        mod_log_id : int | None, optional
+            The mod log channel ID. Omit to skip updating this field.
+        jail_role_id : int | None, optional
+            The jail role ID. Omit to skip updating this field.
+        jail_channel_id : int | None, optional
+            The jail channel ID. Omit to skip updating this field.
+        """
         await self.set(
             guild_id,
             audit_log_id=audit_log_id,
@@ -211,10 +231,16 @@ class GuildConfigCacheManager:
             await self._backend.delete(key)
         else:
             self._cache.invalidate(key)
-        logger.debug(f"Invalidated guild config cache for guild {guild_id}")
+        logger.debug("Invalidated guild config cache for guild {}", guild_id)
 
     async def clear_all(self) -> None:
-        """Clear all cached guild config entries (in-memory only; backend has no pattern delete)."""
+        """Clear all cached guild config entries.
+
+        Notes
+        -----
+        Only the in-memory cache is cleared; when a backend is configured,
+        backend keys are not deleted (no pattern delete).
+        """
         self._cache.clear()
         logger.debug("Cleared all guild config cache entries")
 
@@ -245,7 +271,13 @@ class JailStatusCache:
         return cls._instance
 
     def set_backend(self, backend: AsyncCacheBackend) -> None:
-        """Set the cache backend (e.g. from get_cache_backend(bot))."""
+        """Set the cache backend.
+
+        Parameters
+        ----------
+        backend : AsyncCacheBackend
+            Backend instance to use for cache operations.
+        """
         self._backend = backend
         logger.debug(
             "JailStatusCache backend set to {}",
@@ -290,7 +322,17 @@ class JailStatusCache:
         return self._cache.get(key)
 
     async def set(self, guild_id: int, user_id: int, is_jailed: bool) -> None:
-        """Cache jail status for a user."""
+        """Cache jail status for a user.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+        user_id : int
+            The user ID.
+        is_jailed : bool
+            Whether the user is jailed.
+        """
         key = self._cache_key(guild_id, user_id)
         if self._backend is not None:
             await self._backend.set(key, is_jailed, ttl_sec=JAIL_STATUS_TTL_SEC)
@@ -303,7 +345,22 @@ class JailStatusCache:
         user_id: int,
         fetch_func: Callable[[], Coroutine[Any, Any, bool]],
     ) -> bool:
-        """Get cached value or fetch and cache with async locking (stampede protection)."""
+        """Get cached value or fetch and cache with async locking (stampede protection).
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+        user_id : int
+            The user ID.
+        fetch_func : Callable[[], Coroutine[Any, Any, bool]]
+            Async callable that returns the jail status when cache misses.
+
+        Returns
+        -------
+        bool
+            Cached or freshly fetched jail status.
+        """
         cached_status = await self.get(guild_id, user_id)
         if cached_status is not None:
             return cached_status
@@ -318,7 +375,17 @@ class JailStatusCache:
             return is_jailed
 
     async def async_set(self, guild_id: int, user_id: int, is_jailed: bool) -> None:
-        """Cache jail status with async locking; overwrites any existing value (same as set)."""
+        """Cache jail status with async locking; overwrites any existing value.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+        user_id : int
+            The user ID.
+        is_jailed : bool
+            Whether the user is jailed.
+        """
         key = self._cache_key(guild_id, user_id)
         lock = await self._get_lock(guild_id, user_id)
         async with lock:
@@ -328,19 +395,36 @@ class JailStatusCache:
                 self._cache.set(key, is_jailed)
 
     async def invalidate(self, guild_id: int, user_id: int) -> None:
-        """Invalidate cached jail status for a user."""
+        """Invalidate cached jail status for a user.
+
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID.
+        user_id : int
+            The user ID.
+        """
         key = self._cache_key(guild_id, user_id)
         if self._backend is not None:
             await self._backend.delete(key)
         else:
             self._cache.invalidate(key)
         logger.debug(
-            f"Invalidated jail status cache for guild {guild_id}, user {user_id}",
+            "Invalidated jail status cache for guild {}, user {}",
+            guild_id,
+            user_id,
         )
 
     async def invalidate_guild(self, guild_id: int) -> None:
         """Invalidate in-memory jail status entries for a guild.
 
+        Parameters
+        ----------
+        guild_id : int
+            The guild ID to invalidate.
+
+        Notes
+        -----
         Only the in-memory cache is cleared for this guild; when a backend
         (e.g. Valkey) is configured, backend keys for this guild are not
         deleted. For full clear use :meth:`clear_all` (in-memory only).
@@ -350,10 +434,17 @@ class JailStatusCache:
             lambda key: str(key).startswith(prefix),
         )
         logger.debug(
-            f"Invalidated {removed} jail status cache entries for guild {guild_id}",
+            "Invalidated {} jail status cache entries for guild {}",
+            removed,
+            guild_id,
         )
 
     async def clear_all(self) -> None:
-        """Clear all cached jail status entries."""
+        """Clear all cached jail status entries (in-memory only).
+
+        Notes
+        -----
+        When a backend is configured, backend keys are not deleted.
+        """
         self._cache.clear()
         logger.debug("Cleared all jail status cache entries")
