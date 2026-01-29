@@ -127,8 +127,8 @@ class Jail(ModerationCogBase):
         logger.info(
             f"Re-jailed {member} on rejoin in guild {member.guild.id} ({member.guild.name})",
         )
-        # Invalidate jail status cache (should already be True, but ensure consistency)
-        await JailStatusCache().set(member.guild.id, member.id, True)
+        # Invalidate so next is_jailed fetches fresh from DB (consistent with jail command)
+        await JailStatusCache().invalidate(member.guild.id, member.id)
         # Strip roles added by other on_member_join handlers (e.g. TTY roles ~5s)
         asyncio.create_task(  # noqa: RUF006
             self._delayed_rejail_cleanup(member.guild.id, member.id),
@@ -182,6 +182,7 @@ class Jail(ModerationCogBase):
         aliases=["j"],
     )
     @commands.guild_only()
+    @commands.cooldown(1, 5.0, commands.BucketType.guild)
     @requires_command_permission()
     async def jail(
         self,
