@@ -126,7 +126,7 @@ This section documents where TTLs are defined, what values we use, and how they 
 
 ### Valkey vs in-memory
 
-- **Valkey**: Each `set` passes `ttl_sec` to the backend. Valkey uses `SETEX` when `ttl_sec > 0`; otherwise `SET` (no expiry). So guild config, jail, and permissions use the per-call TTLs above; prefix uses no TTL and never expires in Valkey.
+- **Valkey**: Each `set` passes `ttl_sec` to the backend, which uses `SETEX` when `ttl_sec > 0` and plain `SET` otherwise (no expiry). Guild config, jail, and permissions use the per-call TTLs above; prefix uses no TTL and never expires.
 - **InMemoryBackend** (fallback when Valkey is not configured or unavailable): **Ignores `ttl_sec`** on `set()`. All entries use the backend’s `default_ttl` (300 s).
   So when running without Valkey, everything stored via the shared fallback backend effectively has a 5-minute TTL, regardless of what the consumer requested.
 
