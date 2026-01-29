@@ -622,9 +622,14 @@ class PermissionSystem:
         cached_results: dict[str, PermissionCommand | None] = {}
         uncached_commands: list[str] = []
 
-        for command_name in command_names:
-            backend_key = f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{command_name}"
-            raw = await self._cache_backend.get(backend_key)
+        # Fetch all cache entries concurrently (important for Valkey/network caches)
+        keys_and_names = [
+            (f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{cmd}", cmd)
+            for cmd in command_names
+        ]
+        get_coros = [self._cache_backend.get(key) for key, _ in keys_and_names]
+        raw_values = await asyncio.gather(*get_coros)
+        for (_, command_name), raw in zip(keys_and_names, raw_values, strict=True):
             if raw is not None:
                 cached_results[command_name] = unwrap_optional_perm(raw)
             else:
@@ -674,22 +679,26 @@ class PermissionSystem:
         # Build result dict for uncached commands, checking each command and its parents
         # Check command itself, then parents in order of specificity
         for command_name in uncached_commands:
-            # Find the first matching permission (command itself, then parents)
             result = next(
                 (
                     perm_lookup[name]
                     for name in command_to_parents[command_name]
                     if name in perm_lookup
                 ),
-                None,  # No permission found for this command or its parents
+                None,
             )
             cached_results[command_name] = result
 
-            await self._cache_backend.set(
+        # Write all cache entries concurrently (important for Valkey/network caches)
+        set_coros = [
+            self._cache_backend.set(
                 f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{command_name}",
-                wrap_optional_perm(result),
+                wrap_optional_perm(cached_results[command_name]),
                 ttl_sec=PERM_FALLBACK_TTL,
             )
+            for command_name in uncached_commands
+        ]
+        await asyncio.gather(*set_coros)
 
         return cached_results
 
