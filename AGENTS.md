@@ -291,13 +291,13 @@ docker compose up -d tux-postgres
 - `production` - Production mode with pre-built image and security hardening
 - `adminer` - Optional database management UI (combine with dev or production)
 
-**Note:** `tux-postgres` has no profile and always starts. Do not use `--profile dev` and `--profile production` together.
+**Note:** `tux-postgres` has no profile and always starts. Use `--profile valkey` to start Valkey (optional cache). Do not use `--profile dev` and `--profile production` together.
 
 **Optional: Valkey (cache):** For shared cache across processes or restarts, start Valkey and set env:
 
 ```bash
-docker compose up -d tux-valkey
-# In .env: VALKEY_URL=redis://localhost:6379/0  (or leave unset to use in-memory cache)
+docker compose --profile valkey up -d tux-valkey
+# In .env: VALKEY_URL=valkey://localhost:6379/0  (or leave unset to use in-memory cache)
 ```
 
 When `VALKEY_URL` is set and reachable, guild config, jail status, prefix, and permission caches use Valkey; otherwise they use in-memory TTL caches.
