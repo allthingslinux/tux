@@ -153,7 +153,10 @@ class DatabaseCoordinator:
     def case(self) -> CaseController:
         """Get the moderation case controller."""
         if self._case is None:
-            self._case = CaseController(self.db)
+            self._case = CaseController(
+                self.db,
+                cache_backend=getattr(self, "_cache_backend", None),
+            )
         return self._case
 
     @property
