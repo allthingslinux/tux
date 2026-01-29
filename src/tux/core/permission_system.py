@@ -19,7 +19,6 @@ from discord.ext import commands
 from loguru import logger
 from sqlmodel import select
 
-from tux.cache import TTLCache
 from tux.cache.backend import get_cache_backend
 from tux.database.controllers import DatabaseCoordinator
 from tux.database.controllers.permissions import (
@@ -117,9 +116,6 @@ class PermissionSystem:
     _default_ranks : dict[int, RankDefinition]
         Default permission rank hierarchy (0-7).
     """
-
-    # Fallback in-memory cache when no backend (10 minute TTL)
-    _command_permission_cache: TTLCache = TTLCache(ttl=600.0, max_size=2000)
 
     def __init__(self, bot: Tux, db: DatabaseCoordinator) -> None:
         """
