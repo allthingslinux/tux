@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from contextlib import asynccontextmanager
 from typing import Any, cast
 
 from loguru import logger
@@ -73,12 +72,6 @@ class GuildConfigCacheManager:
     def _cache_key(self, guild_id: int) -> str:
         """Return the cache key for a guild (backend adds tux: prefix)."""
         return f"guild_config:{guild_id}"
-
-    @staticmethod
-    @asynccontextmanager
-    async def _null_lock() -> Any:
-        """No-op async context manager when locking is not needed."""
-        yield
 
     async def get(self, guild_id: int) -> dict[str, int | None] | None:
         """
@@ -176,14 +169,13 @@ class GuildConfigCacheManager:
                     jail_channel_id=jail_channel_id,
                 )
         else:
-            async with self._null_lock():
-                await self._set_impl(
-                    guild_id,
-                    audit_log_id=audit_log_id,
-                    mod_log_id=mod_log_id,
-                    jail_role_id=jail_role_id,
-                    jail_channel_id=jail_channel_id,
-                )
+            await self._set_impl(
+                guild_id,
+                audit_log_id=audit_log_id,
+                mod_log_id=mod_log_id,
+                jail_role_id=jail_role_id,
+                jail_channel_id=jail_channel_id,
+            )
 
     async def async_set(
         self,
