@@ -98,6 +98,43 @@ def test_config_get_database_url() -> None:
     assert c.get_database_url() == c.database_url == "postgresql://x:y@h:5/db"
 
 
+def test_config_valkey_url_uses_explicit_valkey_url() -> None:
+    """When VALKEY_URL is set, valkey_url returns it unchanged."""
+    c = _config(VALKEY_URL="valkey://custom:6379/1")
+    assert c.valkey_url == "valkey://custom:6379/1"
+
+
+def test_config_valkey_url_empty_when_valkey_host_empty() -> None:
+    """When VALKEY_URL is empty and VALKEY_HOST is empty, valkey_url is empty."""
+    c = _config(VALKEY_URL="", VALKEY_HOST="")
+    assert c.valkey_url == ""
+
+
+def test_config_valkey_url_builds_from_components() -> None:
+    """When VALKEY_URL is empty and VALKEY_HOST set, valkey_url is built from host/port/db."""
+    c = _config(
+        VALKEY_URL="",
+        VALKEY_HOST="cache.example.com",
+        VALKEY_PORT=6379,
+        VALKEY_DB=0,
+        VALKEY_PASSWORD="",
+    )
+    assert c.valkey_url == "valkey://cache.example.com:6379/0"
+
+
+def test_config_valkey_url_includes_password_when_set() -> None:
+    """When VALKEY_PASSWORD is set, valkey_url includes auth and starts with valkey://."""
+    c = _config(
+        VALKEY_URL="",
+        VALKEY_HOST="localhost",
+        VALKEY_PORT=6379,
+        VALKEY_DB=0,
+        VALKEY_PASSWORD="secret",
+    )
+    assert c.valkey_url.startswith("valkey://")
+    assert "localhost" in c.valkey_url
+
+
 def test_config_get_github_private_key_empty() -> None:
     """get_github_private_key returns empty string when GITHUB_PRIVATE_KEY is empty."""
     c = _config(
