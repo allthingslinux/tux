@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
+from contextlib import asynccontextmanager
 from typing import Any, cast
 
 from loguru import logger
@@ -67,6 +68,12 @@ class GuildConfigCacheManager:
         """Return the cache key for a guild (backend adds tux: prefix)."""
         return f"guild_config:{guild_id}"
 
+    @staticmethod
+    @asynccontextmanager
+    async def _null_lock() -> Any:
+        """No-op async context manager when locking is not needed."""
+        yield
+
     async def get(self, guild_id: int) -> dict[str, int | None] | None:
         """
         Get cached guild config for a guild.
@@ -90,6 +97,40 @@ class GuildConfigCacheManager:
             )
         return self._cache.get(key)
 
+    async def _set_impl(
+        self,
+        guild_id: int,
+        audit_log_id: int | None = _MISSING,
+        mod_log_id: int | None = _MISSING,
+        jail_role_id: int | None = _MISSING,
+        jail_channel_id: int | None = _MISSING,
+    ) -> None:
+        """Merge and write guild config (caller holds lock if needed)."""
+        key = self._cache_key(guild_id)
+        if self._backend is not None:
+            raw = await self._backend.get(key)
+            existing: dict[str, int | None] = (
+                cast(dict[str, int | None], raw) if isinstance(raw, dict) else {}
+            )
+        else:
+            existing = cast(
+                dict[str, int | None],
+                self._cache.get(key) or {},
+            )
+        updated: dict[str, int | None] = dict(existing)
+        if audit_log_id is not _MISSING:
+            updated["audit_log_id"] = audit_log_id
+        if mod_log_id is not _MISSING:
+            updated["mod_log_id"] = mod_log_id
+        if jail_role_id is not _MISSING:
+            updated["jail_role_id"] = jail_role_id
+        if jail_channel_id is not _MISSING:
+            updated["jail_channel_id"] = jail_channel_id
+        if self._backend is not None:
+            await self._backend.set(key, updated, ttl_sec=GUILD_CONFIG_TTL_SEC)
+        else:
+            self._cache.set(key, updated)
+
     async def set(
         self,
         guild_id: int,
@@ -97,6 +138,8 @@ class GuildConfigCacheManager:
         mod_log_id: int | None = _MISSING,
         jail_role_id: int | None = _MISSING,
         jail_channel_id: int | None = _MISSING,
+        *,
+        use_lock: bool = False,
     ) -> None:
         """
         Cache guild config for a guild (partial merge).
@@ -113,25 +156,28 @@ class GuildConfigCacheManager:
             The jail role ID. Omit to skip updating this field.
         jail_channel_id : int | None, optional
             The jail channel ID. Omit to skip updating this field.
+        use_lock : bool, optional
+            If True, acquire per-guild lock before read-merge-write (for concurrent
+            safety). Use when multiple coroutines may update the same guild.
         """
-        key = self._cache_key(guild_id)
-        if self._backend is not None:
-            existing: dict[str, int | None] = (await self._backend.get(key)) or {}
+        if use_lock:
+            async with await self._get_lock(guild_id):
+                await self._set_impl(
+                    guild_id,
+                    audit_log_id=audit_log_id,
+                    mod_log_id=mod_log_id,
+                    jail_role_id=jail_role_id,
+                    jail_channel_id=jail_channel_id,
+                )
         else:
-            existing = self._cache.get(key) or {}
-        updated: dict[str, int | None] = dict(existing)
-        if audit_log_id is not _MISSING:
-            updated["audit_log_id"] = audit_log_id
-        if mod_log_id is not _MISSING:
-            updated["mod_log_id"] = mod_log_id
-        if jail_role_id is not _MISSING:
-            updated["jail_role_id"] = jail_role_id
-        if jail_channel_id is not _MISSING:
-            updated["jail_channel_id"] = jail_channel_id
-        if self._backend is not None:
-            await self._backend.set(key, updated, ttl_sec=GUILD_CONFIG_TTL_SEC)
-        else:
-            self._cache.set(key, updated)
+            async with self._null_lock():
+                await self._set_impl(
+                    guild_id,
+                    audit_log_id=audit_log_id,
+                    mod_log_id=mod_log_id,
+                    jail_role_id=jail_role_id,
+                    jail_channel_id=jail_channel_id,
+                )
 
     async def async_set(
         self,
@@ -141,33 +187,15 @@ class GuildConfigCacheManager:
         jail_role_id: int | None = _MISSING,
         jail_channel_id: int | None = _MISSING,
     ) -> None:
-        """Cache guild config for a guild with async locking (for concurrent safety)."""
-        lock = await self._get_lock(guild_id)
-        async with lock:
-            key = self._cache_key(guild_id)
-            if self._backend is not None:
-                raw = await self._backend.get(key)
-                existing: dict[str, int | None] = (
-                    cast(dict[str, int | None], raw) if isinstance(raw, dict) else {}
-                )
-            else:
-                existing = cast(
-                    dict[str, int | None],
-                    self._cache.get(key) or {},
-                )
-            updated = dict(existing)
-            if audit_log_id is not _MISSING:
-                updated["audit_log_id"] = audit_log_id
-            if mod_log_id is not _MISSING:
-                updated["mod_log_id"] = mod_log_id
-            if jail_role_id is not _MISSING:
-                updated["jail_role_id"] = jail_role_id
-            if jail_channel_id is not _MISSING:
-                updated["jail_channel_id"] = jail_channel_id
-            if self._backend is not None:
-                await self._backend.set(key, updated, ttl_sec=GUILD_CONFIG_TTL_SEC)
-            else:
-                self._cache.set(key, updated)
+        """Cache guild config for a guild with async locking (concurrent safety)."""
+        await self.set(
+            guild_id,
+            audit_log_id=audit_log_id,
+            mod_log_id=mod_log_id,
+            jail_role_id=jail_role_id,
+            jail_channel_id=jail_channel_id,
+            use_lock=True,
+        )
 
     async def invalidate(self, guild_id: int) -> None:
         """
@@ -290,18 +318,13 @@ class JailStatusCache:
             return is_jailed
 
     async def async_set(self, guild_id: int, user_id: int, is_jailed: bool) -> None:
-        """Cache jail status with async locking (set-if-absent: only writes when no cached value exists)."""
+        """Cache jail status with async locking; overwrites any existing value (same as set)."""
+        key = self._cache_key(guild_id, user_id)
         lock = await self._get_lock(guild_id, user_id)
         async with lock:
-            key = self._cache_key(guild_id, user_id)
             if self._backend is not None:
-                existing = await self._backend.get(key)
-                if existing is not None:
-                    return
                 await self._backend.set(key, is_jailed, ttl_sec=JAIL_STATUS_TTL_SEC)
             else:
-                if self._cache.get(key) is not None:
-                    return
                 self._cache.set(key, is_jailed)
 
     async def invalidate(self, guild_id: int, user_id: int) -> None:
@@ -316,7 +339,12 @@ class JailStatusCache:
         )
 
     async def invalidate_guild(self, guild_id: int) -> None:
-        """Invalidate all jail status entries for a guild (in-memory only)."""
+        """Invalidate in-memory jail status entries for a guild.
+
+        Only the in-memory cache is cleared for this guild; when a backend
+        (e.g. Valkey) is configured, backend keys for this guild are not
+        deleted. For full clear use :meth:`clear_all` (in-memory only).
+        """
         prefix = f"jail_status:{guild_id}:"
         removed = self._cache.invalidate_keys_matching(
             lambda key: str(key).startswith(prefix),
