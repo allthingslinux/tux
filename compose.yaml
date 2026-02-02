@@ -56,7 +56,7 @@ services:
     profiles: [valkey]
     container_name: tux-valkey
     hostname: tux-valkey
-    image: valkey/valkey:8.0-alpine
+    image: valkey/valkey:9.0-alpine@sha256:c106a0c03bcb23cbdf9febe693114cb7800646b11ca8b303aee7409de005faa8
     restart: ${RESTART_POLICY:-no}
     ports: [127.0.0.1:6379:6379]
     volumes:
