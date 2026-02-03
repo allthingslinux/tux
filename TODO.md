@@ -1,5 +1,6 @@
 # TODO.md
 
+- [ ] Fix debug logging not working via log level on docker dev profile (at least as im aware)
 - [ ] Fix db version command not working
 - [ ] Update docs on how to setup native discord roles in relation to our config approach.
 - [ ] Fix jail setup not being in the config wizard.
