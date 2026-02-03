@@ -6,7 +6,6 @@ placeholder substitution, and automated fact posting functionality.
 Facts are loaded from TOML files and support various categories.
 """
 
-import contextlib
 import random
 import tomllib
 from pathlib import Path
@@ -20,58 +19,11 @@ from loguru import logger
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.services.http_client import http_client
-from tux.shared.config import CONFIG
-from tux.shared.version import get_version
+from tux.shared.functions import substitute_placeholders
 from tux.ui.embeds import EmbedCreator
 
 # Define workspace root relative to the project root
 workspace_root = Path(__file__).parent.parent.parent.parent.parent
-
-
-def _substitute_placeholders(bot: Tux, text: str) -> str:
-    """Substitute placeholders in text.
-
-    Available placeholders:
-    {member_count} -> Total member count
-    {guild_count} -> Total guild count
-    {bot_name} -> Bot name
-    {bot_version} -> Bot version
-    {prefix} -> Bot prefix
-
-    Parameters
-    ----------
-    text : str
-        Text to substitute placeholders in.
-
-    Returns
-    -------
-    str
-        Text with placeholders substituted.
-    """
-    if not text:
-        return text
-
-    with contextlib.suppress(Exception):
-        # Build placeholder map only for placeholders present in text
-        placeholders: dict[str, str] = {}
-
-        if "{member_count}" in text:
-            placeholders["member_count"] = str(
-                sum(guild.member_count or 0 for guild in bot.guilds),
-            )
-        if "{guild_count}" in text:
-            placeholders["guild_count"] = str(len(bot.guilds) if bot.guilds else 0)
-        if "{bot_name}" in text:
-            placeholders["bot_name"] = CONFIG.BOT_INFO.BOT_NAME
-        if "{bot_version}" in text:
-            placeholders["bot_version"] = get_version()
-        if "{prefix}" in text:
-            placeholders["prefix"] = CONFIG.get_prefix()
-
-        # Single-pass substitution using format_map
-        if placeholders:
-            text = text.format_map(placeholders)
-    return text
 
 
 class Fact(BaseCog):
@@ -130,7 +82,7 @@ class Fact(BaseCog):
                 (
                     k
                     for k, data in self.facts_data.items()
-                    if _substitute_placeholders(
+                    if substitute_placeholders(
                         self.bot,
                         data.get("name", k.title()),
                     ).lower()
@@ -141,7 +93,7 @@ class Fact(BaseCog):
         if not key:
             return None
         cfg = self.facts_data[key]
-        disp = _substitute_placeholders(self.bot, cfg.get("name", key.title()))
+        disp = substitute_placeholders(self.bot, cfg.get("name", key.title()))
         # Fetch via API if configured
         if cfg.get("fact_api_url") and cfg.get("fact_api_field"):
             try:
@@ -150,11 +102,11 @@ class Fact(BaseCog):
                 fact_raw = resp.json().get(cfg["fact_api_field"])
             except Exception:
                 fact_raw = None
-            fact = _substitute_placeholders(self.bot, fact_raw or "No fact available.")
+            fact = substitute_placeholders(self.bot, fact_raw or "No fact available.")
         else:
             lst = cfg.get("facts", [])
             fact = (
-                _substitute_placeholders(self.bot, random.choice(lst))
+                substitute_placeholders(self.bot, random.choice(lst))
                 if lst
                 else "No facts available."
             )
@@ -181,7 +133,7 @@ class Fact(BaseCog):
         """
         choices = [app_commands.Choice(name="Random", value="random")] + [
             app_commands.Choice(
-                name=_substitute_placeholders(self.bot, data.get("name", key.title())),
+                name=substitute_placeholders(self.bot, data.get("name", key.title())),
                 value=key,
             )
             for key, data in self.facts_data.items()
@@ -210,7 +162,7 @@ class Fact(BaseCog):
             )
         else:
             names = [
-                _substitute_placeholders(self.bot, data.get("name", key.title()))
+                substitute_placeholders(self.bot, data.get("name", key.title()))
                 for key, data in self.facts_data.items()
             ]
             embed = EmbedCreator.create_embed(

@@ -14,7 +14,7 @@ from loguru import logger
 
 from tux.core.bot import Tux
 from tux.shared.config import CONFIG
-from tux.shared.version import get_version
+from tux.shared.functions import substitute_placeholders
 
 # Map the string type to the discord.ActivityType enum.
 ACTIVITY_TYPE_MAP = {
@@ -96,53 +96,6 @@ class ActivityHandler(commands.Cog):
 
         return activities or [discord.Game(name="with Linux commands")]
 
-    def _substitute_placeholders(self, text: str) -> str:
-        """Substitute placeholders in text.
-
-        Available placeholders:
-        {member_count} -> Total member count
-        {guild_count} -> Total guild count
-        {bot_name} -> Bot name
-        {bot_version} -> Bot version
-        {prefix} -> Bot prefix
-
-        Parameters
-        ----------
-        text : str
-            Text to substitute placeholders in.
-
-        Returns
-        -------
-        str
-            Text with placeholders substituted.
-        """
-        if not text:
-            return text
-
-        with contextlib.suppress(Exception):
-            # Build placeholder map only for placeholders present in text
-            placeholders: dict[str, str] = {}
-
-            if "{member_count}" in text:
-                placeholders["member_count"] = str(
-                    sum(guild.member_count or 0 for guild in self.bot.guilds),
-                )
-            if "{guild_count}" in text:
-                placeholders["guild_count"] = str(
-                    len(self.bot.guilds) if self.bot.guilds else 0,
-                )
-            if "{bot_name}" in text:
-                placeholders["bot_name"] = CONFIG.BOT_INFO.BOT_NAME
-            if "{bot_version}" in text:
-                placeholders["bot_version"] = get_version()
-            if "{prefix}" in text:
-                placeholders["prefix"] = CONFIG.get_prefix()
-
-            # Single-pass substitution using format_map
-            if placeholders:
-                text = text.format_map(placeholders)
-        return text
-
     def _create_activity_with_substitution(
         self,
         activity: discord.Activity | discord.Streaming | discord.Game,
@@ -157,7 +110,7 @@ class ActivityHandler(commands.Cog):
         if not hasattr(activity, "name") or not activity.name:
             return activity
 
-        name = self._substitute_placeholders(activity.name)
+        name = substitute_placeholders(self.bot, activity.name)
 
         if isinstance(activity, discord.Streaming):
             return discord.Streaming(name=name, url=activity.url)
