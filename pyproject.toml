@@ -69,7 +69,7 @@ ai = "scripts.ai:main"
 [dependency-groups]
 dev = [
     "pre-commit>=4.3.0",
-    "basedpyright==1.37.1",
+    "basedpyright==1.37.2",
     "ruff>=0.12.4",
     "yamllint>=1.37.1",
     "yamlfix>=1.18.0",
