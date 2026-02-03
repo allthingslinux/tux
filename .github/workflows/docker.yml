@@ -44,7 +44,7 @@ jobs:
         && 'true' || steps.docker_changes.outputs.any_changed }}
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
         with:
           fetch-depth: 0
       - name: Check Docker
@@ -68,7 +68,7 @@ jobs:
       packages: write  # Required for registry cache backend
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
       # Set up Docker Buildx for advanced build features
       # Uses docker/setup-buildx-action@v3 to create and boot a builder
@@ -97,7 +97,7 @@ jobs:
       # Login to registry for registry cache access and Docker Scout (read/write cache, not pushing images)
       # Docker Scout requires authentication to access environments and compare images
       - name: Login to Registry
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef  # v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9  # v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -206,7 +206,7 @@ jobs:
       # See: https://docs.docker.com/scout/integrations/ci/gha/
       - name: Authenticate to Docker Hub
         if: steps.docker_hub_check.outputs.enabled == 'true'
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef  # v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9  # v3
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PAT }}
@@ -258,7 +258,7 @@ jobs:
       id-token: write
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
       # Set up Docker Buildx for advanced build features
       # Uses docker/setup-buildx-action@v3 to create and boot a builder
@@ -284,7 +284,7 @@ jobs:
       - name: Setup Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f  # v3
       - name: Login to Registry
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef  # v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9  # v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -480,7 +480,7 @@ jobs:
       # See: https://docs.docker.com/scout/integrations/ci/gha/
       - name: Authenticate to Docker Hub
         if: steps.docker_hub_check.outputs.enabled == 'true'
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef  # v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9  # v3
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PAT }}

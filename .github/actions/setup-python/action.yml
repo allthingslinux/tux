@@ -44,7 +44,7 @@ runs:
     # - python-version: Sets UV_PYTHON to ensure uv uses the correct Python version
     # - version: Empty defaults to latest or version from pyproject.toml/uv.toml
     - name: Install uv
-      uses: astral-sh/setup-uv@61cb8a9741eeb8a550a1b8544337180c0fc8476b  # v7
+      uses: astral-sh/setup-uv@803947b9bd8e9f986429fa0c5a41c367cd732b41  # v7
       with:
         # Version: Empty means use latest or version from pyproject.toml/uv.toml
         # If pyproject.toml has [tool.uv] with required-version, that will be used
