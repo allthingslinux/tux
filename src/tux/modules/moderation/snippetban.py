@@ -59,10 +59,6 @@ class SnippetBan(ModerationCogBase):
         """
         assert ctx.guild
 
-        # Defer early to acknowledge interaction before async work
-        if ctx.interaction:
-            await ctx.defer(ephemeral=True)
-
         # Check if user is already snippet banned
         if await self.is_snippetbanned(ctx.guild.id, member.id):
             if ctx.interaction:

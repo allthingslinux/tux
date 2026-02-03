@@ -205,10 +205,6 @@ class Jail(ModerationCogBase):
         """
         assert ctx.guild
 
-        # Defer early to acknowledge interaction before async work
-        if ctx.interaction:
-            await ctx.defer(ephemeral=True)
-
         # One DB round-trip for jail config when cache misses; is_jailed in parallel
         jail_config_task = self.db.guild_config.get_jail_config(ctx.guild.id)
         is_jailed_task = self.is_jailed(ctx.guild.id, member.id)

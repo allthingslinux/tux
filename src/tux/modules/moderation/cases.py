@@ -152,10 +152,6 @@ class Cases(ModerationCogBase):
 
         Shortcut: `$cases <user>` automatically runs `$cases search -u <user>`.
         """
-        # Defer early to acknowledge interaction before async work
-        if ctx.interaction:
-            await ctx.defer(ephemeral=True)
-
         if argument is None:
             await self._view_all_cases(ctx)
             return
@@ -247,10 +243,6 @@ class Cases(ModerationCogBase):
         flags : CasesViewFlags
             Filter criteria (--type, --user, --moderator).
         """
-        # Defer early to acknowledge interaction before async work
-        if ctx.interaction:
-            await ctx.defer(ephemeral=True)
-
         await self._view_cases_with_flags(ctx, flags)
 
     @cases.command(
@@ -279,10 +271,6 @@ class Cases(ModerationCogBase):
             Modification options (--status, --reason).
         """
         assert ctx.guild
-
-        # Defer early to acknowledge interaction before async work
-        if ctx.interaction:
-            await ctx.defer(ephemeral=True)
 
         case = await self.db.case.get_case_by_number(case_number, ctx.guild.id)
         if not case:

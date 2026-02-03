@@ -61,10 +61,6 @@ class ClearAFK(BaseCog):
         """
         assert ctx.guild
 
-        # Defer early to acknowledge interaction before async work
-        if ctx.interaction:
-            await ctx.defer(ephemeral=True)
-
         if not await self.db.afk.is_afk(member.id, guild_id=ctx.guild.id):
             if ctx.interaction:
                 msg = await ctx.interaction.followup.send(

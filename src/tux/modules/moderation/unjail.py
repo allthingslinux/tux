@@ -171,10 +171,6 @@ class Unjail(ModerationCogBase):
         """
         assert ctx.guild
 
-        # Defer early to acknowledge interaction before async work
-        if ctx.interaction:
-            await ctx.defer(ephemeral=True)
-
         # Parallelize independent database queries
         jail_role_id_task = self.db.guild_config.get_jail_role_id(ctx.guild.id)
         is_jailed_task = self.is_jailed(ctx.guild.id, member.id)

@@ -130,10 +130,6 @@ class Unban(ModerationCogBase):
         """
         assert ctx.guild
 
-        # Defer early to acknowledge interaction before async work
-        if ctx.interaction:
-            await ctx.defer(ephemeral=True)
-
         # First, try standard user conversion
         try:
             user = await commands.UserConverter().convert(ctx, username_or_id)
