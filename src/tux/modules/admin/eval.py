@@ -124,6 +124,8 @@ class Eval(BaseCog):
             # Evaluate the expression
             fn_name = "_eval_expr"
             cmd = cmd.strip("` ")
+            # Remove invisible Unicode control characters (e.g., U+2068)
+            cmd = "".join(c for c in cmd if c.isprintable() or c in "\n\t\r")
 
             # Add a layer of indentation
             cmd = "\n".join(f"    {i}" for i in cmd.splitlines())
