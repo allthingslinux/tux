@@ -25,7 +25,7 @@ services:
   tux-postgres:
     container_name: tux-postgres
     hostname: tux-postgres
-    image: postgres:17-alpine@sha256:bb377b7239d2774ac8cc76f481596ce96c5a6b5e9d141f6d0a0ee371a6e7c0f2
+    image: postgres:18-alpine@sha256:aa6eb304ddb6dd26df23d05db4e5cb05af8951cda3e0dc57731b771e0ef4ab29
     restart: ${RESTART_POLICY:-no}
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
