@@ -397,6 +397,17 @@ class Afk(BaseCog):
                     logger.debug(
                         f"Expiring AFK status for {member.name} ({member.id}) in {guild.name}",
                     )
+                    # If this is an enforced self-timeout, remove the Discord timeout first
+                    if current_entry.enforced and member.timed_out_until is not None:
+                        try:
+                            await member.timeout(None, reason="self-timeout expired")
+                            logger.debug(
+                                f"Removed Discord timeout for {member.id} after self-timeout expiration",
+                            )
+                        except (discord.Forbidden, discord.HTTPException) as e:
+                            logger.warning(
+                                f"Failed to remove timeout for {member.id} on expiration: {e}",
+                            )
                     # Use current_entry to ensure we have the latest nickname
                     await del_afk(self.db, member, current_entry.nickname)
 
