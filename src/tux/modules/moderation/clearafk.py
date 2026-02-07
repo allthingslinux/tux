@@ -61,6 +61,10 @@ class ClearAFK(BaseCog):
         """
         assert ctx.guild
 
+        # Ensure interaction is deferred for slash commands
+        if ctx.interaction and not ctx.interaction.response.is_done():
+            await ctx.interaction.response.defer(ephemeral=True)
+
         if not await self.db.afk.is_afk(member.id, guild_id=ctx.guild.id):
             if ctx.interaction:
                 msg = await ctx.interaction.followup.send(
