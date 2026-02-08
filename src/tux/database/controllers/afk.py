@@ -10,6 +10,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
+from loguru import logger
+
 from tux.database.controllers.base import BaseController
 from tux.database.models import AFK
 
@@ -279,7 +281,20 @@ class AfkController(BaseController[AFK]):
         """
         # Database stores naive UTC datetimes, use naive for comparison
         now = datetime.now(UTC).replace(tzinfo=None)
-        return await self.find_all(
+
+        # First, get ALL AFK entries for this guild to debug
+        all_entries = await self.find_all(filters=AFK.guild_id == guild_id)
+        logger.debug(
+            f"Total AFK entries in guild {guild_id}: {len(all_entries)}",
+        )
+        for entry in all_entries:
+            logger.debug(
+                f"AFK entry: member={entry.member_id}, until={entry.until}, "
+                f"perm_afk={entry.perm_afk}, enforced={entry.enforced}, "
+                f"expired={entry.until < now if entry.until else 'N/A'}",
+            )
+
+        expired = await self.find_all(
             filters=(
                 (AFK.guild_id == guild_id)
                 & (AFK.perm_afk == False)  # noqa: E712 - Temporary AFK only
@@ -287,3 +302,5 @@ class AfkController(BaseController[AFK]):
                 & (AFK.until < now)  # type: ignore[arg-type]
             ),
         )
+        logger.debug(f"Expired AFK entries found: {len(expired)}")
+        return expired
