@@ -362,7 +362,7 @@ class Afk(BaseCog):
             for mentioned in message.mentions:
                 entry = await self._get_afk_entry(mentioned.id, message.guild.id)
                 if entry:
-                    # Skip expired AFK entries (e.g., self-timeout that expired but hasn't been cleaned up yet)
+                    # Check if entry has expired
                     if entry.until is not None:
                         until_naive = (
                             entry.until.replace(tzinfo=None)
@@ -371,10 +371,11 @@ class Afk(BaseCog):
                         )
                         now_naive = datetime.now(UTC).replace(tzinfo=None)
                         if until_naive < now_naive:
-                            # Entry has expired, skip showing as AFK
-                            logger.debug(
-                                f"Skipping expired AFK entry for {mentioned.id} (expired at {entry.until})",
+                            # Entry has expired - clean it up immediately
+                            logger.info(
+                                f"Cleaning up expired AFK entry for {mentioned.name} ({mentioned.id}) on mention",
                             )
+                            await del_afk(self.db, mentioned, entry.nickname)
                             continue
                     afks_mentioned.append((cast(discord.Member, mentioned), entry))
 
@@ -415,7 +416,7 @@ class Afk(BaseCog):
                 f"Error in check_afk listener for message {message.id}: {e}",
             )
 
-    @tasks.loop(seconds=30, name="afk_expiration_handler")
+    @tasks.loop(seconds=60, name="afk_expiration_handler")
     async def handle_afk_expiration(self) -> None:
         """Check AFK database at a regular interval, remove AFK from users with an entry that has expired."""
         # Skip AFK expiration processing during maintenance mode
@@ -474,7 +475,7 @@ class Afk(BaseCog):
     async def before_handle_afk_expiration(self) -> None:
         """Wait until the bot is ready."""
         await self.bot.wait_until_ready()
-        logger.info("AFK expiration handler started (runs every 30 seconds)")
+        logger.info("AFK expiration handler started (runs every 60 seconds)")
 
     @handle_afk_expiration.error
     async def on_handle_afk_expiration_error(self, error: BaseException) -> None:
