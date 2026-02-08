@@ -321,6 +321,20 @@ class Afk(BaseCog):
             for mentioned in message.mentions:
                 entry = await self._get_afk_entry(mentioned.id, message.guild.id)
                 if entry:
+                    # Skip expired AFK entries (e.g., self-timeout that expired but hasn't been cleaned up yet)
+                    if entry.until is not None:
+                        until_naive = (
+                            entry.until.replace(tzinfo=None)
+                            if entry.until.tzinfo
+                            else entry.until
+                        )
+                        now_naive = datetime.now(UTC).replace(tzinfo=None)
+                        if until_naive < now_naive:
+                            # Entry has expired, skip showing as AFK
+                            logger.debug(
+                                f"Skipping expired AFK entry for {mentioned.id} (expired at {entry.until})",
+                            )
+                            continue
                     afks_mentioned.append((cast(discord.Member, mentioned), entry))
 
             if not afks_mentioned:
