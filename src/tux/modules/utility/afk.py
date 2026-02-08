@@ -75,9 +75,10 @@ class Afk(BaseCog):
             entry = await self._get_afk_entry(after.id, after.guild.id)
             if entry and entry.enforced:
                 logger.info(
-                    f"Timeout expired for {after.name} ({after.id}), removing enforced AFK status",
+                    f"Timeout expired for {after.name} ({after.id}), removing enforced AFK status via on_member_update",
                 )
                 # Restore nickname and remove AFK entry
+                # This happens before the expiration handler runs, preventing double-processing
                 await del_afk(self.db, after, entry.nickname)
             elif entry:
                 logger.debug(
@@ -457,17 +458,9 @@ class Afk(BaseCog):
                     logger.debug(
                         f"Expiring AFK status for {member.name} ({member.id}) in {guild.name}",
                     )
-                    # If this is an enforced self-timeout, remove the Discord timeout first
-                    if current_entry.enforced and member.timed_out_until is not None:
-                        try:
-                            await member.timeout(None, reason="self-timeout expired")
-                            logger.debug(
-                                f"Removed Discord timeout for {member.id} after self-timeout expiration",
-                            )
-                        except (discord.Forbidden, discord.HTTPException) as e:
-                            logger.warning(
-                                f"Failed to remove timeout for {member.id} on expiration: {e}",
-                            )
+                    # Note: Discord timeout is automatically removed by Discord when it expires
+                    # The on_member_update listener handles immediate cleanup when timeout is removed
+                    # This handler is a safety net for entries that weren't caught by the listener
                     # Use current_entry to ensure we have the latest nickname
                     await del_afk(self.db, member, current_entry.nickname)
 
