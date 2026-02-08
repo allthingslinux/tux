@@ -6,12 +6,19 @@ including text processing, time conversion, parameter validation, and documentat
 formatting utilities.
 """
 
+import contextlib
 import inspect
 import re
 from datetime import timedelta
-from typing import Any, Union, get_args, get_origin
+from typing import TYPE_CHECKING, Any, Union, get_args, get_origin
 
 from discord.ext import commands
+
+from tux.shared.config import CONFIG
+from tux.shared.version import get_version
+
+if TYPE_CHECKING:
+    from tux.core.bot import Tux
 
 __all__ = [
     "clean_reason",
@@ -23,6 +30,7 @@ __all__ = [
     "parse_time_string",
     "seconds_to_human_readable",
     "strip_formatting",
+    "substitute_placeholders",
     "truncate",
 ]
 
@@ -432,3 +440,51 @@ def docstring_parameter(*sub: Any) -> Any:
         return obj
 
     return dec
+
+
+def substitute_placeholders(bot: "Tux", text: str) -> str:
+    """Substitute placeholders in text.
+
+    Available placeholders:
+    {member_count} -> Total member count
+    {guild_count} -> Total guild count
+    {bot_name} -> Bot name
+    {bot_version} -> Bot version
+    {prefix} -> Bot prefix
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance.
+    text : str
+        Text to substitute placeholders in.
+
+    Returns
+    -------
+    str
+        Text with placeholders substituted.
+    """
+    if not text:
+        return text
+
+    with contextlib.suppress(Exception):
+        # Build placeholder map only for placeholders present in text
+        placeholders: dict[str, str] = {}
+
+        if "{member_count}" in text:
+            placeholders["member_count"] = str(
+                sum(guild.member_count or 0 for guild in bot.guilds),
+            )
+        if "{guild_count}" in text:
+            placeholders["guild_count"] = str(len(bot.guilds) if bot.guilds else 0)
+        if "{bot_name}" in text:
+            placeholders["bot_name"] = CONFIG.BOT_INFO.BOT_NAME
+        if "{bot_version}" in text:
+            placeholders["bot_version"] = get_version()
+        if "{prefix}" in text:
+            placeholders["prefix"] = CONFIG.get_prefix()
+
+        # Single-pass substitution using format_map
+        if placeholders:
+            text = text.format_map(placeholders)
+    return text

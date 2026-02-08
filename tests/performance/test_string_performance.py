@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 
-from tux.plugins.atl.fact import _substitute_placeholders
+from tux.shared.functions import substitute_placeholders
 
 if TYPE_CHECKING:
     from tux.core.bot import Tux
@@ -34,7 +34,7 @@ class TestStringSubstitutionPerformance:
         text = "Bot: {bot_name} | Version: {bot_version} | Guilds: {guild_count} | Members: {member_count} | Prefix: {prefix}"
 
         def run_substitution() -> str:
-            return _substitute_placeholders(cast("Tux", bot), text)
+            return substitute_placeholders(cast("Tux", bot), text)
 
         # Measure execution time
         execution_time = timeit.timeit(run_substitution, number=1000)
@@ -54,7 +54,7 @@ class TestStringSubstitutionPerformance:
         text = "Guild count: {guild_count}"
 
         def run_substitution() -> str:
-            return _substitute_placeholders(cast("Tux", bot), text)
+            return substitute_placeholders(cast("Tux", bot), text)
 
         # Measure execution time
         execution_time = timeit.timeit(run_substitution, number=1000)
