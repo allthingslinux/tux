@@ -39,11 +39,53 @@ class Afk(BaseCog):
             The bot instance to attach this cog to.
         """
         super().__init__(bot)
+        logger.info("Initializing AFK cog and starting expiration handler")
         self.handle_afk_expiration.start()
+        logger.debug("AFK expiration handler start() called")
 
     async def cog_unload(self) -> None:
         """Cancel the background task when the cog is unloaded."""
         self.handle_afk_expiration.cancel()
+
+    @commands.Cog.listener("on_member_update")
+    async def on_timeout_expire(
+        self,
+        before: discord.Member,
+        after: discord.Member,
+    ) -> None:
+        """
+        Handle timeout expiration for enforced AFK (self-timeout).
+
+        When a member's timeout expires, immediately restore their nickname
+        and remove their AFK status if it was an enforced self-timeout.
+
+        Parameters
+        ----------
+        before : discord.Member
+            The member state before the update.
+        after : discord.Member
+            The member state after the update.
+        """
+        # Check if timeout was removed (expired or manually removed)
+        if before.timed_out_until is not None and after.timed_out_until is None:
+            logger.debug(
+                f"Timeout removed for {after.name} ({after.id}), checking for enforced AFK",
+            )
+            # Check if member has an enforced AFK entry
+            entry = await self._get_afk_entry(after.id, after.guild.id)
+            if entry and entry.enforced:
+                logger.info(
+                    f"Timeout expired for {after.name} ({after.id}), removing enforced AFK status via on_member_update",
+                )
+                # Restore nickname and remove AFK entry
+                # This happens before the expiration handler runs, preventing double-processing
+                await del_afk(self.db, after, entry.nickname)
+            elif entry:
+                logger.debug(
+                    f"Member {after.id} has AFK entry but not enforced (enforced={entry.enforced})",
+                )
+            else:
+                logger.debug(f"No AFK entry found for {after.id}")
 
     @commands.hybrid_command(name="afk")
     @commands.guild_only()
@@ -321,6 +363,21 @@ class Afk(BaseCog):
             for mentioned in message.mentions:
                 entry = await self._get_afk_entry(mentioned.id, message.guild.id)
                 if entry:
+                    # Check if entry has expired
+                    if entry.until is not None:
+                        until_naive = (
+                            entry.until.replace(tzinfo=None)
+                            if entry.until.tzinfo
+                            else entry.until
+                        )
+                        now_naive = datetime.now(UTC).replace(tzinfo=None)
+                        if until_naive < now_naive:
+                            # Entry has expired - clean it up immediately
+                            logger.info(
+                                f"Cleaning up expired AFK entry for {mentioned.name} ({mentioned.id}) on mention",
+                            )
+                            await del_afk(self.db, mentioned, entry.nickname)
+                            continue
                     afks_mentioned.append((cast(discord.Member, mentioned), entry))
 
             if not afks_mentioned:
@@ -360,7 +417,7 @@ class Afk(BaseCog):
                 f"Error in check_afk listener for message {message.id}: {e}",
             )
 
-    @tasks.loop(seconds=120, name="afk_expiration_handler")
+    @tasks.loop(seconds=60, name="afk_expiration_handler")
     async def handle_afk_expiration(self) -> None:
         """Check AFK database at a regular interval, remove AFK from users with an entry that has expired."""
         # Skip AFK expiration processing during maintenance mode
@@ -397,6 +454,9 @@ class Afk(BaseCog):
                     logger.debug(
                         f"Expiring AFK status for {member.name} ({member.id}) in {guild.name}",
                     )
+                    # Note: Discord timeout is automatically removed by Discord when it expires
+                    # The on_member_update listener handles immediate cleanup when timeout is removed
+                    # This handler is a safety net for entries that weren't caught by the listener
                     # Use current_entry to ensure we have the latest nickname
                     await del_afk(self.db, member, current_entry.nickname)
 
@@ -404,6 +464,7 @@ class Afk(BaseCog):
     async def before_handle_afk_expiration(self) -> None:
         """Wait until the bot is ready."""
         await self.bot.wait_until_ready()
+        logger.info("AFK expiration handler started (runs every 60 seconds)")
 
     @handle_afk_expiration.error
     async def on_handle_afk_expiration_error(self, error: BaseException) -> None:

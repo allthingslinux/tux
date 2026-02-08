@@ -160,7 +160,7 @@ class Purge(BaseCog):
 
         # Check if the limit is within the valid range
         if limit < 1 or limit > 500:
-            await ctx.send("Invalid amount, maximum 500, minimum 1.", ephemeral=True)
+            await ctx.send("Invalid amount, maximum 500, minimum 1.", delete_after=5)
             return
 
         # If the channel is not specified, default to the current channel
@@ -172,7 +172,7 @@ class Purge(BaseCog):
             ):
                 await ctx.send(
                     "Invalid channel type, must be a text channel, thread, or voice channel.",
-                    ephemeral=True,
+                    delete_after=5,
                 )
                 return
 
@@ -201,19 +201,19 @@ class Purge(BaseCog):
                 await ctx.send(
                     f"Purged {len(deleted)} messages from {channel.mention}. "
                     f"Note: Discord only allows bulk deletion of messages less than 14 days old.",
-                    ephemeral=True,
+                    delete_after=5,
                 )
 
             else:
                 await ctx.send(
                     f"Purged {len(deleted)} messages from {channel.mention}.",
-                    ephemeral=True,
+                    delete_after=5,
                 )
 
         except discord.Forbidden:
             await ctx.send(
                 "I don't have permission to delete messages in that channel.",
-                ephemeral=True,
+                delete_after=5,
             )
             return
 
@@ -221,7 +221,7 @@ class Purge(BaseCog):
             logger.error(f"An error occurred while purging messages: {error}")
             await ctx.send(
                 f"An error occurred while purging messages: {error}",
-                ephemeral=True,
+                delete_after=5,
             )
             return
 
@@ -229,7 +229,7 @@ class Purge(BaseCog):
             logger.error(f"Unexpected error in purge command: {error}")
             await ctx.send(
                 "An unexpected error occurred while purging messages.",
-                ephemeral=True,
+                delete_after=5,
             )
             return
 

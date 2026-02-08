@@ -25,7 +25,7 @@ services:
   tux-postgres:
     container_name: tux-postgres
     hostname: tux-postgres
-    image: postgres:17-alpine@sha256:ff4ccc02b97e0ebb6b328ef9ff92522f95586f83be6801896b615088defc8ad2
+    image: postgres:17-alpine@sha256:bb377b7239d2774ac8cc76f481596ce96c5a6b5e9d141f6d0a0ee371a6e7c0f2
     restart: ${RESTART_POLICY:-no}
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
@@ -56,7 +56,7 @@ services:
     profiles: [valkey]
     container_name: tux-valkey
     hostname: tux-valkey
-    image: valkey/valkey:9.0-alpine@sha256:c106a0c03bcb23cbdf9febe693114cb7800646b11ca8b303aee7409de005faa8
+    image: valkey/valkey:9.0-alpine@sha256:68677f85c863830af7836ff07c4a13b7f085ebeff62f4dedb71499ca27d229f2
     restart: ${RESTART_POLICY:-no}
     ports: [127.0.0.1:6379:6379]
     volumes:
@@ -185,7 +185,7 @@ services:
           path: .env
           target: /app/.env
   tux-adminer:
-    image: adminer:latest@sha256:b6d3c299d1754368031415e567609d500a4a5a22c17b7812749a8f677d93f066
+    image: adminer:latest@sha256:a3167350c4eb9ae4473b8ea0f49c8e5ae74c87b240ee2f6086521dba2a6bf243
     container_name: tux-adminer
     hostname: tux-adminer
     profiles: [adminer]

@@ -224,9 +224,9 @@ class SelfTimeout(BaseCog):
                 reason,
                 member,
                 member.guild.id,
-                True,
+                False,  # is_perm=False for self-timeout (temporary, not permanent)
                 timeout_until,
-                True,
+                True,  # enforced=True for self-timeout
             )
             logger.debug(
                 f"AFK status set for {member.id} until {timeout_until}",

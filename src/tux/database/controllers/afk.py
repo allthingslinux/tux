@@ -279,6 +279,7 @@ class AfkController(BaseController[AFK]):
         """
         # Database stores naive UTC datetimes, use naive for comparison
         now = datetime.now(UTC).replace(tzinfo=None)
+
         return await self.find_all(
             filters=(
                 (AFK.guild_id == guild_id)
