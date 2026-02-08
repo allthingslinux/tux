@@ -45,6 +45,45 @@ class Afk(BaseCog):
         """Cancel the background task when the cog is unloaded."""
         self.handle_afk_expiration.cancel()
 
+    @commands.Cog.listener("on_member_update")
+    async def on_timeout_expire(
+        self,
+        before: discord.Member,
+        after: discord.Member,
+    ) -> None:
+        """
+        Handle timeout expiration for enforced AFK (self-timeout).
+
+        When a member's timeout expires, immediately restore their nickname
+        and remove their AFK status if it was an enforced self-timeout.
+
+        Parameters
+        ----------
+        before : discord.Member
+            The member state before the update.
+        after : discord.Member
+            The member state after the update.
+        """
+        # Check if timeout was removed (expired or manually removed)
+        if before.timed_out_until is not None and after.timed_out_until is None:
+            logger.debug(
+                f"Timeout removed for {after.name} ({after.id}), checking for enforced AFK",
+            )
+            # Check if member has an enforced AFK entry
+            entry = await self._get_afk_entry(after.id, after.guild.id)
+            if entry and entry.enforced:
+                logger.info(
+                    f"Timeout expired for {after.name} ({after.id}), removing enforced AFK status",
+                )
+                # Restore nickname and remove AFK entry
+                await del_afk(self.db, after, entry.nickname)
+            elif entry:
+                logger.debug(
+                    f"Member {after.id} has AFK entry but not enforced (enforced={entry.enforced})",
+                )
+            else:
+                logger.debug(f"No AFK entry found for {after.id}")
+
     @commands.hybrid_command(name="afk")
     @commands.guild_only()
     async def afk(
