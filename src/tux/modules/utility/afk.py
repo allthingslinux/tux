@@ -422,10 +422,8 @@ class Afk(BaseCog):
         """Check AFK database at a regular interval, remove AFK from users with an entry that has expired."""
         # Skip AFK expiration processing during maintenance mode
         if self.bot.maintenance_mode:
-            logger.debug("Skipping AFK expiration check (maintenance mode)")
             return
 
-        logger.debug("Running AFK expiration handler")
         for guild in self.bot.guilds:
             expired_entries = await self._get_expired_afk_entries(guild.id)
 
@@ -433,8 +431,6 @@ class Afk(BaseCog):
                 logger.info(
                     f"Processing {len(expired_entries)} expired AFK entries in {guild.name}",
                 )
-            else:
-                logger.debug(f"No expired AFK entries found in {guild.name}")
 
             for entry in expired_entries:
                 # Re-check if entry still exists (could have been removed by user message)
