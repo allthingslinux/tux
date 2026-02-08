@@ -9,6 +9,7 @@ import contextlib
 from datetime import datetime
 
 import discord
+from loguru import logger
 
 from tux.database.controllers import DatabaseCoordinator
 from tux.shared.constants import AFK_PREFIX, NICKNAME_MAX_LENGTH, TRUNCATION_SUFFIX
@@ -61,6 +62,9 @@ async def add_afk(
 
     # Suppress Forbidden errors if the bot doesn't have permission to change the nickname
     with contextlib.suppress(discord.Forbidden):
+        logger.info(
+            f"Setting AFK nickname for {target.id}: '{target.display_name}' -> '{new_name}'",
+        )
         await target.edit(nick=new_name)
 
 
@@ -96,7 +100,14 @@ async def del_afk(
         # Only attempt to restore nickname if it was actually changed by add_afk
         # Prevents resetting a manually changed nickname if del_afk is called unexpectedly
         if target.display_name.startswith(AFK_PREFIX):
+            logger.info(
+                f"Restoring nickname for {target.id}: '{target.display_name}' -> '{nickname}'",
+            )
             await target.edit(nick=nickname)
+        else:
+            logger.debug(
+                f"Skipping nickname restore for {target.id} (doesn't have AFK prefix)",
+            )
 
     # Remove from database after nickname is restored (or attempted)
     await db.afk.remove_afk(target.id, target.guild.id)
