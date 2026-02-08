@@ -39,7 +39,9 @@ class Afk(BaseCog):
             The bot instance to attach this cog to.
         """
         super().__init__(bot)
+        logger.info("Initializing AFK cog and starting expiration handler")
         self.handle_afk_expiration.start()
+        logger.debug("AFK expiration handler start() called")
 
     async def cog_unload(self) -> None:
         """Cancel the background task when the cog is unloaded."""
