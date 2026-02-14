@@ -376,7 +376,11 @@ class Afk(BaseCog):
                             logger.info(
                                 f"Cleaning up expired AFK entry for {mentioned.name} ({mentioned.id}) on mention",
                             )
-                            await del_afk(self.db, mentioned, entry.nickname)
+                            await del_afk(
+                                self.db,
+                                cast(discord.Member, mentioned),
+                                entry.nickname,
+                            )
                             continue
                     afks_mentioned.append((cast(discord.Member, mentioned), entry))
 
