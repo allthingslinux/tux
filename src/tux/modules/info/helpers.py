@@ -263,9 +263,9 @@ def extract_invite_code(invite_input: str) -> str:
     """
     invite_input_lower = invite_input.lower()
     if "discord.gg/" in invite_input_lower:
-        return invite_input.split("discord.gg/")[-1].split("?")[0]
+        return invite_input.rsplit("discord.gg/", maxsplit=1)[-1].split("?")[0]
     if "discord.com/invite/" in invite_input_lower:
-        return invite_input.split("discord.com/invite/")[-1].split("?")[0]
+        return invite_input.rsplit("discord.com/invite/", maxsplit=1)[-1].split("?")[0]
     return invite_input
 
 
