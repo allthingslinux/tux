@@ -323,7 +323,7 @@ class EmojiManager:
             A tuple where the first element is the newly created emoji (if created)
             and the second element is the file_path if processing failed or was skipped.
         """
-        if not file_path.is_file():
+        if not await asyncio.to_thread(file_path.is_file):
             logger.trace(f"Skipping non-file item: {file_path.name}")
             return None, file_path
 
