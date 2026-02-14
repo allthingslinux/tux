@@ -447,7 +447,7 @@ class DatabaseService:
                 "Engine should not be None after connection check"
             )
             async with self._engine.begin() as conn:
-                inspector = await conn.run_sync(lambda sync_conn: inspect(sync_conn))
+                inspector = await conn.run_sync(inspect)
 
                 # Check if required tables exist
                 existing_tables = await conn.run_sync(
