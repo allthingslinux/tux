@@ -78,6 +78,7 @@ def get_moderation_commands(bot: Tux) -> list[str]:
         "pollunban",  # aliases: pub
         "snippetban",  # aliases: sb
         "snippetunban",  # aliases: sub
+        "togglesnippetlock",  # aliases: tsl
         "clearafk",  # aliases: unafk
         # Levels / XP / blacklist (levels set, setxp, reset, blacklist)
         "levels",  # aliases: lvls
