@@ -4,7 +4,7 @@ Command: docs wrangler-tail.
 Views real-time logs from deployed docs.
 """
 
-from enum import Enum
+from enum import StrEnum
 from typing import Annotated
 
 from typer import Exit, Option
@@ -17,14 +17,14 @@ from scripts.ui import print_error, print_info, print_section
 app = create_app()
 
 
-class OutputFormat(str, Enum):
+class OutputFormat(StrEnum):
     """Output formats for wrangler tail."""
 
     JSON = "json"
     PRETTY = "pretty"
 
 
-class LogStatus(str, Enum):
+class LogStatus(StrEnum):
     """Log status filters for wrangler tail."""
 
     OK = "ok"
