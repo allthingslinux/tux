@@ -7,10 +7,10 @@ providing type-safe constants for permissions, onboarding stages, and case types
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class PermissionType(str, Enum):
+class PermissionType(StrEnum):
     """Types of permissions that can be configured in the system."""
 
     MEMBER = "member"
@@ -21,7 +21,7 @@ class PermissionType(str, Enum):
     MODULE = "module"
 
 
-class OnboardingStage(str, Enum):
+class OnboardingStage(StrEnum):
     """Stages of the guild onboarding process."""
 
     NOT_STARTED = "not_started"
@@ -31,7 +31,7 @@ class OnboardingStage(str, Enum):
     COMPLETED = "completed"
 
 
-class CaseType(str, Enum):
+class CaseType(StrEnum):
     """Types of moderation cases that can be recorded in the system."""
 
     BAN = "BAN"
