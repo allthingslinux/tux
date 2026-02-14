@@ -1,7 +1,3 @@
- NOTE: Any claims relating to BAGS, crypto, and similar projects that are not officially endorsed by @kzndotsh on X/GitHub should be deamed as fake.
-
- @yonatankarimish / <https://x.com/yonatankarimish/status/2020538652317655253> is 100% fake.
-
 <!-- markdownlint-disable MD041 -->
 
 <div align="center">
