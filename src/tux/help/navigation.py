@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from enum import Enum, auto
 from pathlib import Path
 from typing import Any
@@ -592,7 +593,7 @@ class HelpNavigation:
             # But we need to re-attach the file when going back to main
             banner_path = Path("assets/branding/help_banner.png")
             files: list[discord.File] = []
-            if banner_path.exists():
+            if await asyncio.to_thread(banner_path.exists):
                 files.append(discord.File(banner_path, filename="help_banner.png"))
             await interaction.message.edit(embed=embed, view=view, attachments=files)
 
