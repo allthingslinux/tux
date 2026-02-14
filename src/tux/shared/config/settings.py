@@ -71,7 +71,7 @@ def validate_environment() -> None:
     if (
         db_password
         and len(db_password) < 12
-        and db_password not in ["ChangeThisToAStrongPassword123!"]
+        and db_password != "ChangeThisToAStrongPassword123!"
     ):
         warnings.warn(
             "⚠️  SECURITY WARNING: Database password is very short (<12 chars). "
@@ -100,7 +100,7 @@ def validate_environment() -> None:
     if (
         valkey_password
         and len(valkey_password) < 12
-        and valkey_password not in ["ChangeThisToAStrongPassword123!"]
+        and valkey_password != "ChangeThisToAStrongPassword123!"
     ):
         warnings.warn(
             "⚠️  SECURITY WARNING: Valkey password is very short (<12 chars). "
