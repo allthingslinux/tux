@@ -27,16 +27,18 @@ if TYPE_CHECKING:
     from tux.database.service import DatabaseService
 
 PERM_KEY_PREFIX = "perm:"
-PERM_RANKS_TTL = 600.0
-PERM_USER_RANK_TTL = 300.0
+# Ranks and assignments: setup-once; invalidated on config change.
+PERM_RANKS_TTL = 7200.0  # 2 hours
+# User rank (derived from roles); invalidated when assignments change.
+PERM_USER_RANK_TTL = 7200.0  # 2 hours
 
 
 class PermissionRankController(BaseController[PermissionRank]):
     """Controller for managing guild permission ranks."""
 
-    # Shared cache for permission ranks (10 minute TTL) when no backend
-    _ranks_cache: TTLCache = TTLCache(ttl=600.0, max_size=1000)
-    _guild_ranks_cache: TTLCache = TTLCache(ttl=600.0, max_size=500)
+    # Shared cache for permission ranks when no backend
+    _ranks_cache: TTLCache = TTLCache(ttl=PERM_RANKS_TTL, max_size=1000)
+    _guild_ranks_cache: TTLCache = TTLCache(ttl=PERM_RANKS_TTL, max_size=500)
 
     def __init__(
         self,
@@ -337,9 +339,9 @@ class PermissionRankController(BaseController[PermissionRank]):
 class PermissionAssignmentController(BaseController[PermissionAssignment]):
     """Controller for managing guild permission assignments."""
 
-    # Shared cache when no backend (10 min / 5 min TTL)
-    _assignments_cache: TTLCache = TTLCache(ttl=600.0, max_size=500)
-    _user_rank_cache: TTLCache = TTLCache(ttl=300.0, max_size=5000)
+    # Shared cache when no backend
+    _assignments_cache: TTLCache = TTLCache(ttl=PERM_RANKS_TTL, max_size=500)
+    _user_rank_cache: TTLCache = TTLCache(ttl=PERM_USER_RANK_TTL, max_size=5000)
 
     def __init__(
         self,
@@ -638,8 +640,8 @@ def unwrap_optional_perm(raw: Any) -> PermissionCommand | None:
 class PermissionCommandController(BaseController[PermissionCommand]):
     """Controller for managing command permission requirements."""
 
-    # Shared cache when no backend (10 minute TTL)
-    _command_permissions_cache: TTLCache = TTLCache(ttl=600.0, max_size=2000)
+    # Shared cache when no backend
+    _command_permissions_cache: TTLCache = TTLCache(ttl=PERM_RANKS_TTL, max_size=2000)
 
     def __init__(
         self,
