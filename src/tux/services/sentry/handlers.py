@@ -344,7 +344,7 @@ def _filter_and_group_spans(spans: list[dict[str, Any]]) -> list[dict[str, Any]]
         description = span.get("description", "")
 
         # Skip noisy operations
-        if op in ["http.request"] and any(
+        if op == "http.request" and any(
             domain in description for domain in ["discord.com", "discordapp.com"]
         ):
             continue
