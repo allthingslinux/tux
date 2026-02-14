@@ -24,7 +24,8 @@ if TYPE_CHECKING:
     from tux.cache import AsyncCacheBackendProtocol
     from tux.database.service import DatabaseService
 
-CASE_BY_NUMBER_CACHE_TTL_SEC = 120.0  # 2 min; cases can be updated via modify
+# Case lookup by number; invalidated on update_case_by_number.
+CASE_BY_NUMBER_CACHE_TTL_SEC = 1800.0  # 30 min
 
 
 def _case_cache_key(guild_id: int, case_number: int) -> str:
