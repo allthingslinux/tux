@@ -23,6 +23,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Documentation**: Help command documentation with usage, syntax, and interactive features; enhanced configuration, commands, and caching documentation
 * **Valkey**: Optional Valkey cache backend with in-memory fallback; CacheService and CacheSetupService for connection and lifecycle; prefix manager, database controllers, and permission system use cache backend; Valkey health check in `db health`; configuration via settings, `.env`, and Docker Compose (service and profile); password validation and URL encoding for Valkey URLs; cache invalidation by key predicate; unit tests for cache backends, service, TTLCache, and managers
 * **Permission system**: Role assignment removal method and cache invalidation for role and command permission changes; command permission check function; enhanced permission error messaging for unconfigured commands
+* **Utility**: Loguru logging for AFK nickname changes and restorations (target user ID, nickname changes, skipped restore events)
+* **Config dashboard**: Togglesnippetlock command in configurable command list for command permissions
 
 ### Changed
 
@@ -47,6 +49,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Permission system**: Role removal logic optimized with batch removal and extracted cache invalidation method
 * **Database**: CaseController caching for case retrieval by number and optional cache backend support
 * **Moderation**: Simplified type handling in moderation coordinator
+* **Cache**: Updated TTL values for guild config, jail status, permission caches, and case-by-number cache to improve performance and reduce staleness
+* **AFK**: Removed debug logging; streamlined expiration handling by relying on Discord's automatic timeout removal and on_member_update listener; increased expiration handler interval from 30 seconds to 60 seconds
+* **Documentation**: Removed fake claims from README; added disclaimer regarding unofficial endorsements
+* **Renovate**: Added commit message suffix to skip pre-commit.ci on Renovate branches
+* **Code quality**: StrEnum for enums (PermissionType, OnboardingStage, CaseType, OutputFormat, LogStatus); asyncio.to_thread for blocking Path operations (cog loader, help navigation, emoji manager); simplified database service inspect call; password validation inequality checks; Sentry span filtering logic
 
 ### Fixed
 
@@ -66,6 +73,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Snippets**: Snippet ban check uses latest case per user so unbans are respected
 * **Decorators**: Interaction deferral uses try-except instead of contextlib.suppress for better error logging
 * **Cache setup**: Cache service closed correctly when connection error occurs during setup
+* **AFK**: Clean up expired AFK entries immediately when user is mentioned instead of skipping
+* **Self-timeout**: Corrected is_perm parameter to False for self-timeouts (temporary, not permanent)
+* **AFK**: Cast mentioned user to discord.Member before del_afk call (type safety)
 
 ## [0.1.1] - 2026-01-21
 
