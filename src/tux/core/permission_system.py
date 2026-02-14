@@ -35,7 +35,8 @@ if TYPE_CHECKING:
     from tux.core.bot import Tux
 
 PERM_FALLBACK_KEY_PREFIX = "perm:command_permission_fallback:"
-PERM_FALLBACK_TTL = 600.0
+# Command required rank: setup-once; invalidated when config changes.
+PERM_FALLBACK_TTL = 7200.0  # 2 hours
 
 __all__ = [
     # Constants

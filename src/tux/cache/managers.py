@@ -14,8 +14,10 @@ from tux.cache.ttl import TTLCache
 # Sentinel value to indicate a field was not provided
 _MISSING: Any = object()
 
-GUILD_CONFIG_TTL_SEC = 600.0  # 10 min
-JAIL_STATUS_TTL_SEC = 300.0  # 5 min
+# Setup-once, rarely change; invalidated on config update. 2h = session-friendly, low staleness risk.
+GUILD_CONFIG_TTL_SEC = 7200.0  # 2 hours
+# Invalidated on jail/unjail; TTL only for cold expiry.
+JAIL_STATUS_TTL_SEC = 3600.0  # 1 hour
 
 __all__ = ["GuildConfigCacheManager", "JailStatusCache"]
 

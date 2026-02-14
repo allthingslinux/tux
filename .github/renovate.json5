@@ -11,6 +11,8 @@
         'before 4am on Monday',
     ],
     timezone: 'America/New_York',
+    // Skip pre-commit.ci on Renovate branches (pre-commit.ci skips when this is in the commit message)
+    commitMessageSuffix: '\n\n[skip pre-commit.ci]',
     dependencyDashboard: true,
     dependencyDashboardOSVVulnerabilitySummary: 'unresolved',
     enabledManagers: [
