@@ -63,13 +63,15 @@ class Ban(ModerationCogBase):
             dm_action="banned",
             actions=[
                 (
-                    lambda: ctx.guild.ban(
-                        member,
-                        reason=flags.reason,
-                        delete_message_seconds=flags.purge * 86400,
-                    )
-                    if ctx.guild
-                    else None,
+                    lambda: (
+                        ctx.guild.ban(
+                            member,
+                            reason=flags.reason,
+                            delete_message_seconds=flags.purge * 86400,
+                        )
+                        if ctx.guild
+                        else None
+                    ),
                     type(None),
                 ),
             ],
