@@ -413,7 +413,11 @@ class CogLoader(commands.Cog):
         list[tuple[int, Path]]
             List of (priority, path) tuples sorted by priority (highest first).
         """
-        all_py_files = list(directory.rglob("*.py"))
+
+        def _rglob_py(d: Path) -> list[Path]:
+            return list(d.rglob("*.py"))
+
+        all_py_files = await asyncio.to_thread(_rglob_py, directory)
 
         cog_paths: list[tuple[int, Path]] = []
         for item in all_py_files:
