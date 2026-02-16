@@ -205,6 +205,7 @@ class TestErrorHandler:
         mock_interaction.followup.send.assert_called_once_with(
             embed=embed,
             ephemeral=True,
+            wait=False,
         )
 
     @pytest.mark.asyncio

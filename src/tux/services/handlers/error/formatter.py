@@ -22,8 +22,21 @@ class ErrorFormatter:
         error: Exception,
         source: commands.Context[Tux] | discord.Interaction,
         config: ErrorHandlerConfig,
+        *,
+        event_id: str | None = None,
     ) -> discord.Embed:
         """Create user-friendly error embed.
+
+        Parameters
+        ----------
+        error : Exception
+            The error to format.
+        source : commands.Context[Tux] | discord.Interaction
+            Command context or interaction.
+        config : ErrorHandlerConfig
+            Error handler configuration.
+        event_id : str | None, optional
+            Sentry event ID when the error was reported to Sentry.
 
         Returns
         -------
@@ -47,6 +60,10 @@ class ErrorFormatter:
             and (usage := self._get_command_usage(source))
         ):
             embed.add_field(name="Usage", value=f"`{usage}`", inline=False)
+
+        # Include Sentry event ID in footer when applicable (for support correlation)
+        if event_id:
+            embed.set_footer(text=f"Error ID: {event_id}")
 
         return embed
 

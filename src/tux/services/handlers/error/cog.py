@@ -6,6 +6,7 @@ import traceback
 from typing import Any
 
 import discord
+import sentry_sdk
 from discord import app_commands
 from discord.ext import commands
 from loguru import logger
@@ -16,6 +17,9 @@ from tux.services.sentry import (
     set_command_context,
     set_user_context,
     track_command_end,
+)
+from tux.services.sentry import (
+    is_initialized as sentry_is_initialized,
 )
 
 from .config import ERROR_CONFIG_MAP, ErrorHandlerConfig
@@ -121,21 +125,61 @@ class ErrorHandler(commands.Cog):
         # Get error configuration
         config = self._get_error_config(root_error)
 
-        # Set Sentry context for enhanced error reporting
+        # Set Sentry context when we will report to Sentry
         if config.send_to_sentry:
             self._set_sentry_context(source, root_error)
 
         # Log error (includes action summary)
         self._log_error(root_error, config, source)
 
-        # Send user response if configured
+        # Send embed first so the user sees a response immediately
+        sent_message: discord.Message | None = None
         if config.send_embed:
             embed = self.formatter.format_error_embed(root_error, source, config)
-            await self._send_error_response(source, embed)
+            sent_message = await self._send_error_response(
+                source,
+                embed,
+                wait_for_message=config.send_to_sentry,
+            )
 
-        # Report to Sentry if configured
-        if config.send_to_sentry:
+        # Capture to Sentry and get event_id (avoid double-capture: only fallback when not initialized)
+        event_id: str | None = None
+        if config.send_to_sentry and sentry_is_initialized():
+            try:
+                event_id = sentry_sdk.capture_exception(root_error)
+            except Exception as capture_error:
+                logger.warning(
+                    "Failed to capture exception to Sentry: %s",
+                    capture_error,
+                )
+                capture_exception_safe(root_error)
+        elif config.send_to_sentry:
             capture_exception_safe(root_error)
+
+        # Edit the sent message to add Sentry error ID in footer when applicable
+        if config.send_embed and event_id and sent_message is not None:
+            try:
+                updated_embed = self.formatter.format_error_embed(
+                    root_error,
+                    source,
+                    config,
+                    event_id=event_id,
+                )
+                await sent_message.edit(embed=updated_embed)
+            except discord.HTTPException as e:
+                logger.debug("Could not edit error message with event_id: %s", e)
+        elif config.send_embed and event_id and isinstance(source, discord.Interaction):
+            # We used response.send_message (no message ref); edit original response
+            try:
+                updated_embed = self.formatter.format_error_embed(
+                    root_error,
+                    source,
+                    config,
+                    event_id=event_id,
+                )
+                await source.edit_original_response(embed=updated_embed)
+            except discord.HTTPException as e:
+                logger.debug("Could not edit original response with event_id: %s", e)
 
     def _set_sentry_context(
         self,
@@ -235,23 +279,33 @@ class ErrorHandler(commands.Cog):
         self,
         source: commands.Context[Tux] | discord.Interaction,
         embed: discord.Embed,
-    ) -> None:
-        """Send error response to user."""
+        *,
+        wait_for_message: bool = False,
+    ) -> discord.Message | None:
+        """Send error response to user.
+
+        When wait_for_message is True, returns the sent message so the caller can
+        edit it later (e.g. to add Sentry event_id). For interaction.response.send_message
+        we cannot get the message; caller must use edit_original_response.
+        """
         try:
             if isinstance(source, discord.Interaction):
-                # App command - ephemeral response
                 if source.response.is_done():
-                    await source.followup.send(embed=embed, ephemeral=True)
-                else:
-                    await source.response.send_message(embed=embed, ephemeral=True)
+                    return await source.followup.send(
+                        embed=embed,
+                        ephemeral=True,
+                        wait=wait_for_message,
+                    )
+                await source.response.send_message(embed=embed, ephemeral=True)
+                return None
             # Prefix command
-            else:
-                await source.reply(embed=embed, mention_author=False)
+            return await source.reply(embed=embed, mention_author=False)
         except discord.HTTPException as e:
             logger.warning(f"Failed to send error response: {e}")
+            return None
         except Exception as e:
-            # Catch all other exceptions to prevent silent failures
             logger.exception("Unexpected error while sending error response: {}", e)
+            return None
 
     @commands.Cog.listener("on_command_error")
     async def on_command_error(

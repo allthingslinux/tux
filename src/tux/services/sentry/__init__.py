@@ -108,6 +108,7 @@ __all__ = [
     "convert_httpx_error",
     # Instrumentation and tracking
     "instrument_bot_commands",
+    "is_initialized",
     "safe_set_name",
     "track_command_end",
     "track_command_start",
