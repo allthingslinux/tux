@@ -8,9 +8,11 @@ bookmarked by reacting with specific emojis, and bookmarks are stored in user DM
 from __future__ import annotations
 
 import io
+from collections.abc import Sequence
 
 import aiohttp
 import discord
+from discord import StickerFormatType, StickerItem
 from discord.abc import Messageable
 from discord.ext import commands
 from loguru import logger
@@ -181,7 +183,7 @@ class Bookmarks(BaseCog):
             The list to append extracted files to.
         """
         for attachment in message.attachments:
-            if len(files) >= 10:
+            if len(files) > 10:
                 break
 
             if attachment.content_type and "image" in attachment.content_type:
@@ -240,11 +242,11 @@ class Bookmarks(BaseCog):
         files : list[discord.File]
             The list to append extracted files to.
         """
-        if len(files) >= 10:
+        if len(files) > 10:
             return
 
         for embed in message.embeds:
-            if len(files) >= 10:
+            if len(files) > 10:
                 break
 
             if embed.image and embed.image.url:
@@ -311,13 +313,56 @@ class Bookmarks(BaseCog):
         if len(content) > EMBED_MAX_DESC_LENGTH:
             content = f"{content[: EMBED_MAX_DESC_LENGTH - 4]}..."
 
+        # Prepare attachment bullets
+        attachment_list = ""
+        if message.attachments:
+            attachment_list = "\n".join(
+                f"• [{att.filename}]({att.url})" for att in message.attachments
+            )
+
+        sticker_list: str = ""
+
+        stickers: Sequence[StickerItem] = message.stickers
+
+        if stickers:
+            bullets: list[str] = [
+                f"• [{sticker.name}](https://cdn.discordapp.com/stickers/{sticker.id}.png)"
+                if sticker.format in {StickerFormatType.png, StickerFormatType.apng}
+                and sticker.id != 0
+                else f"• {sticker.name}"
+                for sticker in stickers
+            ]
+            sticker_list = "\n".join(bullets)
+
+        # Combine everything into the embed description and enforce the max length
+
+        parts: list[str] = []
+        if content:
+            parts.append(content)
+        else:
+            parts.append("> No content available to display")
+        if attachment_list:
+            parts.append(f"**Attachments:**\n{attachment_list}")
+        if sticker_list:
+            parts.append(f"**Stickers:**\n{sticker_list}")
+        description = "\n\n".join(parts)
+
+        limit_warning = "\n\n*(Message cut off due to character limit.)*"
+        # Ensure we never exceed Discord's embed description limit
+        if len(description) > EMBED_MAX_DESC_LENGTH:
+            # reserve space for the notice
+            cutoff = EMBED_MAX_DESC_LENGTH - len(limit_warning)
+
+            # avoid negative slice sizes in extreme cases
+            cutoff = max(0, cutoff)
+
+            description = description[:cutoff].rstrip() + limit_warning
+
         embed = EmbedCreator.create_embed(
             bot=self.bot,
             embed_type=EmbedCreator.INFO,
             title="Message Bookmarked",
-            description=f"{content}"
-            if content
-            else "> No content available to display",
+            description=description,
         )
 
         # Add author to the embed
@@ -340,18 +385,6 @@ class Bookmarks(BaseCog):
             name="Jump to Message",
             value=f"[Click Here]({message.jump_url})",
         )
-
-        # Add attachments to the embed
-        if message.attachments:
-            attachments = "\n".join(
-                f"[{a.filename}]({a.url})" for a in message.attachments
-            )
-            embed.add_field(name="Attachments", value=attachments, inline=False)
-
-        # Add stickers to the embed
-        if message.stickers:
-            stickers = "\n".join(f"[{s.name}]({s.url})" for s in message.stickers)
-            embed.add_field(name="Stickers", value=stickers, inline=False)
 
         # Handle embeds
         if message.embeds:
