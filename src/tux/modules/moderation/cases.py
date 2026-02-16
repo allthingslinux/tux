@@ -215,10 +215,7 @@ class Cases(ModerationCogBase):
         case_number : int
             The case number to view (e.g., 123).
         """
-        # Defer early to acknowledge interaction before async work
-        if ctx.interaction:
-            await ctx.defer(ephemeral=True)
-
+        # Permission decorator already defers for slash commands; no need to defer here.
         await self._view_single_case(ctx, case_number)
 
     @cases.command(
@@ -453,9 +450,8 @@ class Cases(ModerationCogBase):
                 await ctx.reply("Failed to update case.", mention_author=False)
             return
 
-        # Update the mod log embed if it exists
-        await self._update_mod_log_embed(ctx, updated_case)
-
+        # Respond to the user first (before slow mod log update) so the interaction
+        # followup doesn't expire and we avoid 10015 Unknown Webhook.
         user = await self._resolve_user(case.case_user_id)
         await self._send_case_embed(
             ctx,
@@ -464,6 +460,9 @@ class Cases(ModerationCogBase):
             updated_case.case_reason,
             user,
         )
+
+        # Then update the mod log embed if it exists (slower; failure doesn't affect user).
+        await self._update_mod_log_embed(ctx, updated_case)
 
     async def _update_mod_log_embed(
         self,
@@ -703,7 +702,16 @@ class Cases(ModerationCogBase):
             embed.set_thumbnail(url=user.avatar.url)
 
         if ctx.interaction:
-            await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+            try:
+                await ctx.interaction.followup.send(embed=embed, ephemeral=True)
+            except discord.NotFound as e:
+                # 10015 Unknown Webhook: interaction followup webhook invalid/expired
+                # (e.g. long-running command). Don't re-raise so error handler
+                # doesn't try to send and hit 10062 Unknown interaction.
+                logger.warning(
+                    "Could not send case embed to user (interaction followup invalid): %s",
+                    e,
+                )
         else:
             await ctx.send(embed=embed)
 
