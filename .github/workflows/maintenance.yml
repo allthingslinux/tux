@@ -55,7 +55,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Convert
-        uses: alstr/todo-to-issue-action@c45b007d85c8edf3365b139a9d4c65793e7c674f  # v5.1.13
+        uses: alstr/todo-to-issue-action@64aca8fda7023259aada83ba44ad988c4c443657  # v5.1.14
         with:
           CLOSE_ISSUES: true
           INSERT_ISSUE_URLS: true
