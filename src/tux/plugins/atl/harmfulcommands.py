@@ -73,8 +73,9 @@ class HarmfulCommands(BaseCog):
         """
         # Normalize command by removing all whitespace for fork bomb check
         normalized = "".join(command.strip().lower().split())
-        if normalized in FORK_BOMB_PATTERNS:
-            return "FORK_BOMB"
+        for pattern in FORK_BOMB_PATTERNS:
+            if re.search(pattern, normalized):
+                return "FORK_BOMB"
 
         # Check for dangerous rm commands
         if re.search(DANGEROUS_RM_COMMANDS, command, re.IGNORECASE):
