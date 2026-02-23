@@ -34,7 +34,7 @@ DANGEROUS_RM_COMMANDS = (
     r"(?:\s+--no-preserve-root|\s+\*)*"
 )
 
-FORK_BOMB_PATTERNS = [":(){:&};:", ":(){:|:&};:"]
+FORK_BOMB_PATTERNS = [r".*(.*)\(\)\s*{\s*\1\s*(\|\s*\1\s*)?&\s*}\s*;\s*\1.*"]
 
 DANGEROUS_DD_COMMANDS = r"dd\s+.*of=/dev/([hs]d[a-z]|nvme\d+n\d+)"
 
