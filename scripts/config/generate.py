@@ -160,6 +160,9 @@ def _is_env_key(ek: str) -> bool:
         "DEBUG",
         "LOG_LEVEL",
         "MAINTENANCE_MODE",
+        "POOL_SIZE",
+        "MAX_OVERFLOW",
+        "POOL_TIMEOUT",
     }:
         return True
     if e.startswith("POSTGRES_"):

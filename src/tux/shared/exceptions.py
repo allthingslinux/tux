@@ -396,7 +396,7 @@ class TuxHotReloadConfigurationError(TuxHotReloadError):
 T = TypeVar("T")
 
 
-def handle_gather_result(result: T | BaseException, expected_type: type[T]) -> T:
+def handle_gather_result[T](result: T | BaseException, expected_type: type[T]) -> T:
     """Handle a result from asyncio.gather with return_exceptions=True.
 
     Parameters

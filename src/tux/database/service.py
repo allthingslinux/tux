@@ -81,10 +81,18 @@ class DatabaseService:
             Additional arguments passed to create_async_engine.
         """
         try:
+            # Get pool settings from config, allow kwargs to override
+            pool_size = kwargs.pop("pool_size", CONFIG.POOL_SIZE)
+            max_overflow = kwargs.pop("max_overflow", CONFIG.MAX_OVERFLOW)
+            pool_timeout = kwargs.pop("pool_timeout", CONFIG.POOL_TIMEOUT)
+
             self._engine = create_async_engine(
                 database_url,
                 pool_pre_ping=True,
                 pool_recycle=3600,
+                pool_size=pool_size,
+                max_overflow=max_overflow,
+                pool_timeout=pool_timeout,
                 echo=self._echo,
                 **kwargs,
             )
@@ -95,7 +103,9 @@ class DatabaseService:
                 expire_on_commit=False,
             )
 
-            logger.success("Successfully connected to database")
+            logger.success(
+                f"Successfully connected to database (pool_size={pool_size}, max_overflow={max_overflow})",
+            )
 
         except Exception as e:
             logger.error(f"Failed to connect to database: {type(e).__name__}")

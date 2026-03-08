@@ -40,6 +40,9 @@ Configuration is loaded from multiple sources in priority order:
 | `POSTGRES_USER` | `string` | `"tuxuser"` | PostgreSQL username | `"tuxuser"`, `"tux_admin"` |
 | `POSTGRES_PASSWORD` | `string` | `"ChangeThisToAStrongPassword123!"` | PostgreSQL password | `"ChangeThisToAStrongPassword123!"`, `"SecurePassword456!"` |
 | `DATABASE_URL` | `string` | `""` | Custom database URL override | `"postgresql://user:password@localhost:5432/tuxdb"` |
+| `POOL_SIZE` | `integer` | `20` | Database connection pool size | - |
+| `MAX_OVERFLOW` | `integer` | `40` | Maximum overflow connections beyond pool_size | - |
+| `POOL_TIMEOUT` | `number` | `30.0` | Seconds to wait for connection from pool | - |
 | `VALKEY_HOST` | `string` | `""` | Valkey host (empty to disable) | `"localhost"`, `"tux-valkey"` |
 | `VALKEY_PORT` | `integer` | `6379` | Valkey port | `6379` |
 | `VALKEY_DB` | `integer` | `0` | Valkey database number | `0` |

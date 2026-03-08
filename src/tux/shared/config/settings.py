@@ -235,6 +235,35 @@ class Config(BaseSettings):
         ),
     ]
 
+    # Database connection pool settings
+    POOL_SIZE: Annotated[
+        int,
+        Field(
+            default=20,
+            description="Database connection pool size",
+            ge=5,
+            le=100,
+        ),
+    ]
+    MAX_OVERFLOW: Annotated[
+        int,
+        Field(
+            default=40,
+            description="Maximum overflow connections beyond pool_size",
+            ge=10,
+            le=200,
+        ),
+    ]
+    POOL_TIMEOUT: Annotated[
+        float,
+        Field(
+            default=30.0,
+            description="Seconds to wait for connection from pool",
+            ge=5.0,
+            le=120.0,
+        ),
+    ]
+
     # Valkey (Redis-compatible cache) configuration
     VALKEY_HOST: Annotated[
         str,
