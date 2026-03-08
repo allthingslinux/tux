@@ -64,6 +64,7 @@ class SnippetsBaseCog(BaseCog):
         snippets: list[Snippet],
         total_snippets: int,
         search_query: str | None = None,
+        member: discord.User | None = None,
     ) -> discord.Embed:
         """Create an embed for displaying a paginated list of snippets.
 
@@ -101,7 +102,11 @@ class SnippetsBaseCog(BaseCog):
         )
         count = len(snippets)
         total_snippets = total_snippets or 0
-        embed_title = f"Snippets ({count}/{total_snippets})"
+        embed_title = (
+            f"Snippets by {member.display_name} ({count}/{total_snippets})"
+            if member
+            else f"Snippets ({count}/{total_snippets})"
+        )
 
         footer_text, footer_icon_url = EmbedCreator.get_footer(
             bot=ctx.bot,

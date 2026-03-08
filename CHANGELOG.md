@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Permission system**: Role assignment removal method and cache invalidation for role and command permission changes; command permission check function; enhanced permission error messaging for unconfigured commands
 * **Utility**: Loguru logging for AFK nickname changes and restorations (target user ID, nickname changes, skipped restore events)
 * **Config dashboard**: Togglesnippetlock command in configurable command list for command permissions
+* **Snippets**: `$snippets`/`$ls` command now accepts an optional member argument to list snippets created by a specific user (`$ls @user`), using `FlexibleUserConverter` to support mentions, user IDs, and usernames including users who have left the guild
 
 ### Changed
 
