@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-* **Database**: Performance indexes for cases table (composite indexes for case lookups and expired tempbans); `fix-sequences` command to synchronize PostgreSQL sequences; safety checks for database reset and nuke operations in test mode
+* **Database**: Performance indexes for cases table (composite indexes for case lookups and expired tempbans); `fix-sequences` command to synchronize PostgreSQL sequences; safety checks for database reset and nuke operations in test mode; configurable connection pool settings (`POOL_SIZE`, `MAX_OVERFLOW`, `POOL_TIMEOUT`) to prevent pool exhaustion during high load
 * **Bot configuration**: BotIntents model for Discord bot gateway intents configuration; HTTP client configuration for high-latency environments; `first_ready` flag for bot readiness tracking
 * **Commands**: Enhanced case viewing with user or case number arguments; FlexibleUserConverter for enhanced user identification; `get_user_safe` utility function for optimized user resolution; `convert_reason` function to clean moderation reasons by removing flag-like prefixes
 * **Help system**: Banner image support in help command
@@ -76,6 +76,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **AFK**: Clean up expired AFK entries immediately when user is mentioned instead of skipping
 * **Self-timeout**: Corrected is_perm parameter to False for self-timeouts (temporary, not permanent)
 * **AFK**: Cast mentioned user to discord.Member before del_afk call (type safety)
+* **Starboard**: Await cancelled debounce tasks to suppress RuntimeWarning on task cancellation
+
+### Changed
+
+* **Database**: Increased default connection pool from 5+10 to 20+40 (60 total connections) to handle high load and prevent timeout errors during spam scenarios
 
 ## [0.1.1] - 2026-01-21
 
