@@ -123,7 +123,7 @@ jobs:
       # Note: Image name is local-only (tux) since PR builds don't push to registry
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051  # v5
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf  # v6
         with:
           # Local image name (no registry prefix needed for validation builds)
           images: tux
@@ -325,7 +325,7 @@ jobs:
       # for push (manifest+index annotations for full registry support).
       - name: Extract metadata for validation
         id: meta_validate
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051  # v5
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf  # v6
         with:
           # Full registry path for production images (ghcr.io/owner/repo)
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
@@ -362,7 +362,7 @@ jobs:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest
       - name: Extract metadata for push
         id: meta_push
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051  # v5
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf  # v6
         with:
           # Full registry path for production images (ghcr.io/owner/repo)
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
