@@ -130,7 +130,8 @@ class ListSnippets(SnippetsBaseCog):
             filtered_snippets = [
                 s
                 for s in filtered_snippets
-                if sq in s.snippet_name.lower() or sq in s.snippet_content.lower()
+                if sq in s.snippet_name.lower()
+                or (s.snippet_content is not None and sq in s.snippet_content.lower())
             ]
 
         if not filtered_snippets:
