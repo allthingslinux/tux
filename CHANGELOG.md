@@ -81,6 +81,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Self-timeout**: Corrected is_perm parameter to False for self-timeouts (temporary, not permanent)
 * **AFK**: Cast mentioned user to discord.Member before del_afk call (type safety)
 * **Starboard**: Await cancelled debounce tasks to suppress RuntimeWarning on task cancellation
+* **Bookmarks**: Embed description stays within Discord limits after combining message content, attachment list, and sticker lines; gathering files from attachments and embed images respects the 10-file cap; guild stickers use `StickerItem` URLs and standard (built-in) stickers are name-only using fetched sticker metadata
 
 ### Changed
 
