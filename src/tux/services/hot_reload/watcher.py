@@ -228,9 +228,9 @@ class FileWatcher:
                     logger.warning(f"Watch directory does not exist: {short}")
                     continue
 
-                # Get the current event loop to pass to CogWatcher
+                # Get the current event loop to pass to CogWatcher (must be running)
                 try:
-                    current_loop = asyncio.get_event_loop()
+                    current_loop = asyncio.get_running_loop()
                 except RuntimeError:
                     current_loop = None
 
