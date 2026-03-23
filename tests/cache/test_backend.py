@@ -120,12 +120,12 @@ class TestValkeyBackend:
         assert payload == json.dumps({"x": 1})
 
     @pytest.mark.asyncio
-    async def test_string_value_stored_as_is(self, mock_client: MagicMock) -> None:
-        """String values are stored as-is (no extra JSON)."""
+    async def test_string_values_json_encoded(self, mock_client: MagicMock) -> None:
+        """String values use the same JSON serialization path as other types."""
         backend = ValkeyBackend(mock_client)
         await backend.set("k", "plain")
         mock_client.set.assert_called_once()
-        assert mock_client.set.call_args[0][1] == "plain"
+        assert mock_client.set.call_args[0][1] == json.dumps("plain")
 
     @pytest.mark.asyncio
     async def test_get_deserializes_json(self, mock_client: MagicMock) -> None:
@@ -159,7 +159,7 @@ class TestValkeyBackend:
         args = mock_client.setex.call_args[0]
         assert args[0] == f"{KEY_PREFIX}k"
         assert args[1] == 60
-        assert args[2] == "v"
+        assert args[2] == json.dumps("v")
 
     @pytest.mark.asyncio
     async def test_set_called_when_ttl_sec_none(self, mock_client: MagicMock) -> None:
