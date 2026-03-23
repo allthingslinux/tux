@@ -19,6 +19,12 @@ from tux.database.models import Levels
 from tux.shared.config import CONFIG
 from tux.ui.embeds import EmbedCreator
 
+# Reconcile stored level vs XP-derived level when |calculated - stored| exceeds this.
+# A drift of 1 is tolerated (rounding when mapping XP <-> level); larger drift usually
+# means exponent/config changes or inconsistent DB state. Keep in sync with member
+# rejoin role restore in EventHandler.on_member_join.
+LEVEL_XP_LEVEL_MISMATCH_RECONCILE_THRESHOLD: int = 1
+
 
 class LevelsService(BaseCog):
     """Service for managing user levels and XP in Discord guilds."""
@@ -132,7 +138,10 @@ class LevelsService(BaseCog):
         expected_level_from_xp = self.calculate_level(current_xp)
 
         # If stored level doesn't match calculated level, log and use calculated level
-        if abs(expected_level_from_xp - current_level) > 1:
+        if (
+            abs(expected_level_from_xp - current_level)
+            > LEVEL_XP_LEVEL_MISMATCH_RECONCILE_THRESHOLD
+        ):
             logger.warning(
                 f"Level mismatch detected for {member.name} ({member.id}): "
                 f"Stored level: {current_level}, Calculated from XP ({current_xp:.2f}): {expected_level_from_xp}, "

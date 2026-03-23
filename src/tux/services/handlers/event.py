@@ -7,7 +7,10 @@ from loguru import logger
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.core.permission_system import get_permission_system
-from tux.modules.features.levels import LevelsService
+from tux.modules.features.levels import (
+    LEVEL_XP_LEVEL_MISMATCH_RECONCILE_THRESHOLD,
+    LevelsService,
+)
 from tux.shared.config import CONFIG
 
 
@@ -137,7 +140,10 @@ class EventHandler(BaseCog):
 
         current_level = level_data.level
         expected_from_xp = levels_cog.calculate_level(level_data.xp)
-        if abs(expected_from_xp - current_level) > 1:
+        if (
+            abs(expected_from_xp - current_level)
+            > LEVEL_XP_LEVEL_MISMATCH_RECONCILE_THRESHOLD
+        ):
             effective_level = expected_from_xp
         else:
             effective_level = current_level
@@ -147,9 +153,17 @@ class EventHandler(BaseCog):
 
         try:
             await levels_cog.update_roles(member, member.guild, effective_level)
+        except discord.DiscordException as e:
+            logger.warning(
+                "Failed to restore level roles for member {} in guild {} ({}): {}",
+                member.id,
+                member.guild.id,
+                type(e).__name__,
+                e,
+            )
         except Exception:
             logger.exception(
-                "Failed to restore level roles for member {} in guild {}",
+                "Unexpected error restoring level roles for member {} in guild {}",
                 member.id,
                 member.guild.id,
             )
