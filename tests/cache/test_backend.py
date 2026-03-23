@@ -51,8 +51,8 @@ class TestInMemoryBackend:
         assert await backend.exists("k") is False
 
     @pytest.mark.asyncio
-    async def test_set_accepts_ttl_sec_ignored(self) -> None:
-        """InMemoryBackend accepts ttl_sec (TTLCache handles TTL internally)."""
+    async def test_set_honors_positive_ttl_sec(self) -> None:
+        """InMemoryBackend uses ttl_sec when positive (aligns with Valkey SETEX)."""
         backend = InMemoryBackend(default_ttl=60.0)
         await backend.set("k", "v", ttl_sec=120.0)
         assert await backend.get("k") == "v"
