@@ -344,6 +344,6 @@ uv run db fix-sequences            # Apply fixes
 
 ## See Also
 
-- [AGENTS.md](../../../AGENTS.md) - Project overview and standards
+- [AGENTS.md](../../../AGENTS.md) - Agent entry point (links to [.agents/](../../../.agents/) for setup, CLI, workflow, patterns)
 - [Database Management](../../selfhost/manage/database.md) - Database management guide
 - [Development Setup](../../developer/tutorials/development-setup.md) - Development environment setup
