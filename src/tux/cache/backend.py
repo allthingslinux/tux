@@ -80,10 +80,14 @@ class InMemoryBackend:
     ) -> None:
         """Set a value with optional TTL.
 
-        Note: ttl_sec is ignored; all entries use the backend default TTL.
-        See Valkey implementation notes in docs (caching.md).
+        Matches :class:`ValkeyBackend`: positive ``ttl_sec`` sets that lifetime;
+        ``None`` or non-positive ``ttl_sec`` stores without expiry (in-process
+        only), like Redis ``SET`` without ``EX``.
         """
-        self._cache.set(key, value)
+        if ttl_sec is not None and ttl_sec > 0:
+            self._cache.set(key, value, ttl=ttl_sec)
+        else:
+            self._cache.set(key, value, ttl=float("inf"))
 
     async def delete(self, key: str) -> None:
         """Delete a key."""
