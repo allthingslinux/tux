@@ -591,17 +591,15 @@ class PermissionSystem:
                 session.expunge(perm)
 
         # Return the first match in order of specificity (command itself, then parents)
+        perm_lookup = {perm.command_name: perm for perm in found_permissions}
         result = None
         for name in command_names_to_check:
-            for perm in found_permissions:
-                if perm.command_name == name:
-                    if name != command_name:
-                        logger.trace(
-                            f"Using parent command permission '{name}' for '{command_name}'",
-                        )
-                    result = perm
-                    break
-            if result:
+            if name in perm_lookup:
+                if name != command_name:
+                    logger.trace(
+                        f"Using parent command permission '{name}' for '{command_name}'",
+                    )
+                result = perm_lookup[name]
                 break
 
         await self._cache_backend.set(
