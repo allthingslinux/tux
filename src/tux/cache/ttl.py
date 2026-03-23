@@ -84,7 +84,7 @@ class TTLCache:
             return None
         return value
 
-    def set(self, key: Any, value: Any) -> None:
+    def set(self, key: Any, value: Any, *, ttl: float | None = None) -> None:
         """
         Set a value in the cache.
 
@@ -94,6 +94,10 @@ class TTLCache:
             The cache key.
         value : Any
             The value to cache.
+        ttl : float | None, optional
+            Entry TTL in seconds. If None, uses the cache's default ``self._ttl``.
+            Use ``float("inf")`` for entries that should not expire until
+            invalidated or cleared.
         """
         # Evict oldest entry only when at max size and adding a new key (updating
         # an existing key does not increase size)
@@ -106,9 +110,10 @@ class TTLCache:
             del self._cache[oldest_key]
             logger.trace(f"Cache evicted oldest entry: {oldest_key}")
 
-        expire_time = time.monotonic() + self._ttl
+        effective_ttl = self._ttl if ttl is None else ttl
+        expire_time = time.monotonic() + effective_ttl
         self._cache[key] = (value, expire_time)
-        logger.trace(f"Cache entry set for key: {key} (expires in {self._ttl}s)")
+        logger.trace(f"Cache entry set for key: {key} (expires in {effective_ttl}s)")
 
     def invalidate(self, key: Any | None = None) -> None:
         """
