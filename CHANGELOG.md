@@ -55,6 +55,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Documentation**: Removed fake claims from README; added disclaimer regarding unofficial endorsements
 * **Renovate**: Added commit message suffix to skip pre-commit.ci on Renovate branches
 * **Code quality**: StrEnum for enums (PermissionType, OnboardingStage, CaseType, OutputFormat, LogStatus); asyncio.to_thread for blocking Path operations (cog loader, help navigation, emoji manager); simplified database service inspect call; password validation inequality checks; Sentry span filtering logic
+* **Cache**: `InMemoryBackend` honors `ttl_sec` on each `set` (and `TTLCache` supports per-entry TTL), matching Valkey semantics so permission and shared caches keep their intended lifetime when Valkey is not configured; entries no longer all expire on the backend default short TTL
+* **Core**: Prefer `asyncio.get_running_loop()` over `get_event_loop()` in database setup, Sentry async flush, hot reload watcher, and database migration plugin
+* **Permission system**: Dictionary-based lookup in `get_command_permission` when resolving parent-command fallback (less work per check)
 
 ### Fixed
 
@@ -71,7 +74,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Logging**: Cache setup and cache managers use consistent logger message formatting
 * **Bot and health**: Cache disconnection and Valkey health check have improved error logging
 * **Permission system**: Command permission cache correctly handles malformed entries and cache hits
-* **Snippets**: Snippet ban check uses latest case per user so unbans are respected
+* **Snippets**: Snippet ban check uses latest case per user so unbans are respected; `list_snippets` filtering handles `None` snippet content without error
 * **Decorators**: Interaction deferral uses try-except instead of contextlib.suppress for better error logging
 * **Cache setup**: Cache service closed correctly when connection error occurs during setup
 * **AFK**: Clean up expired AFK entries immediately when user is mentioned instead of skipping
