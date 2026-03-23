@@ -128,7 +128,7 @@ class DatabaseSetupService(BaseSetupService):
         head_revs_str = ", ".join(head_revs) or "None (no migration files)"
         logger.debug(f"Head revision(s): {head_revs_str}")
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
         # Database is available (already connected in setup()),
         # run migrations with a timeout
