@@ -7,12 +7,13 @@ bookmarked by reacting with specific emojis, and bookmarks are stored in user DM
 
 from __future__ import annotations
 
+import asyncio
 import io
 from collections.abc import Sequence
 
 import aiohttp
 import discord
-from discord import StickerFormatType, StickerItem
+from discord import StandardSticker, StickerFormatType, StickerItem
 from discord.abc import Messageable
 from discord.ext import commands
 from loguru import logger
@@ -132,7 +133,7 @@ class Bookmarks(BaseCog):
         message : discord.Message
             The message to be bookmarked.
         """
-        embed = self._create_bookmark_embed(message)
+        embed = await self._create_bookmark_embed(message)
         files = await self._get_files_from_message(message)
 
         try:
@@ -183,7 +184,7 @@ class Bookmarks(BaseCog):
             The list to append extracted files to.
         """
         for attachment in message.attachments:
-            if len(files) > 10:
+            if len(files) >= 10:
                 break
 
             if attachment.content_type and "image" in attachment.content_type:
@@ -214,8 +215,8 @@ class Bookmarks(BaseCog):
                 break
 
             if sticker.format in {
-                discord.StickerFormatType.png,
-                discord.StickerFormatType.apng,
+                StickerFormatType.png,
+                StickerFormatType.apng,
             }:
                 try:
                     sticker_bytes = await sticker.read()
@@ -242,11 +243,11 @@ class Bookmarks(BaseCog):
         files : list[discord.File]
             The list to append extracted files to.
         """
-        if len(files) > 10:
+        if len(files) >= 10:
             return
 
         for embed in message.embeds:
-            if len(files) > 10:
+            if len(files) >= 10:
                 break
 
             if embed.image and embed.image.url:
@@ -289,7 +290,49 @@ class Bookmarks(BaseCog):
 
         return files
 
-    def _create_bookmark_embed(self, message: discord.Message) -> discord.Embed:
+    async def _format_sticker_bullets(
+        self,
+        stickers: Sequence[StickerItem],
+    ) -> str:
+        """Build sticker lines for the embed: link guild stickers; name-only for standard.
+
+        Fetches full sticker metadata so :class:`StandardSticker` can be detected;
+        uses :attr:`StickerItem.url` for links (correct CDN for png/apng/gif).
+
+        Parameters
+        ----------
+        stickers : Sequence[StickerItem]
+            Sticker items from the message.
+
+        Returns
+        -------
+        str
+            Newline-separated bullet lines, or empty string.
+        """
+        if not stickers:
+            return ""
+
+        results = await asyncio.gather(
+            *[s.fetch() for s in stickers],
+            return_exceptions=True,
+        )
+        lines: list[str] = []
+        for sticker, full in zip(stickers, results, strict=True):
+            if isinstance(full, Exception):
+                logger.debug(
+                    "Could not fetch sticker {} for bookmark embed: {}",
+                    sticker.id,
+                    full,
+                )
+                lines.append(f"• {sticker.name}")
+                continue
+            if isinstance(full, StandardSticker):
+                lines.append(f"• {sticker.name}")
+            else:
+                lines.append(f"• [{sticker.name}]({sticker.url})")
+        return "\n".join(lines)
+
+    async def _create_bookmark_embed(self, message: discord.Message) -> discord.Embed:
         """
         Create an embed for a bookmarked message.
 
@@ -320,19 +363,8 @@ class Bookmarks(BaseCog):
                 f"• [{att.filename}]({att.url})" for att in message.attachments
             )
 
-        sticker_list: str = ""
-
         stickers: Sequence[StickerItem] = message.stickers
-
-        if stickers:
-            bullets: list[str] = [
-                f"• [{sticker.name}](https://cdn.discordapp.com/stickers/{sticker.id}.png)"
-                if sticker.format in {StickerFormatType.png, StickerFormatType.apng}
-                and sticker.id != 0
-                else f"• {sticker.name}"
-                for sticker in stickers
-            ]
-            sticker_list = "\n".join(bullets)
+        sticker_list = await self._format_sticker_bullets(stickers)
 
         # Combine everything into the embed description and enforce the max length
 
