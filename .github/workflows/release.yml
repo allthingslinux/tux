@@ -24,7 +24,7 @@ jobs:
       is_prerelease: ${{ steps.version.outputs.is_prerelease }}
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
         with:
           fetch-depth: 0
       - name: Determine Version
@@ -39,7 +39,7 @@ jobs:
       # Note: This step requires GitHub API access and won't work with act (local testing)
       # It will fail gracefully in act, allowing manual testing of release steps
       - name: Wait
-        uses: lewagon/wait-on-check-action@3603e826ee561ea102b58accb5ea55a1a7482343  # v1.4.1
+        uses: lewagon/wait-on-check-action@74049309dfeff245fe8009a0137eacf28136cb3c  # v1.5.0
         continue-on-error: true
         with:
           ref: ${{ github.sha }}
@@ -53,7 +53,7 @@ jobs:
     needs: [validate, wait]
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -96,7 +96,7 @@ jobs:
       # Note: This step requires GitHub API access and won't work with act (local testing)
       # It will fail gracefully in act, allowing manual testing of changelog steps
       - name: Create Release
-        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b  # v2
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe  # v2
         continue-on-error: true
         with:
           tag_name: ${{ needs.validate.outputs.version }}

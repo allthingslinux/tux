@@ -136,7 +136,7 @@ def _remove_ansi(text: str) -> str:
 
 def _remove_backticks(text: str) -> str:
     """
-    Remove backticks from text.
+    Remove backticks and invisible Unicode control characters from text.
 
     Parameters
     ----------
@@ -146,9 +146,11 @@ def _remove_backticks(text: str) -> str:
     Returns
     -------
     str
-        Text with backticks removed.
+        Text with backticks and control characters removed.
     """
-    return BACKTICKS_PATTERN.sub("", text)
+    text = BACKTICKS_PATTERN.sub("", text)
+    # Remove invisible Unicode control characters (e.g., U+2068)
+    return "".join(c for c in text if c.isprintable() or c in "\n\t\r")
 
 
 class CodeDispatch(ABC):

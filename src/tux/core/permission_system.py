@@ -19,16 +19,24 @@ from discord.ext import commands
 from loguru import logger
 from sqlmodel import select
 
+from tux.cache.backend import get_cache_backend
 from tux.database.controllers import DatabaseCoordinator
+from tux.database.controllers.permissions import (
+    unwrap_optional_perm,
+    wrap_optional_perm,
+)
 from tux.database.models.models import (
     PermissionAssignment,
     PermissionCommand,
     PermissionRank,
 )
-from tux.shared.cache import TTLCache
 
 if TYPE_CHECKING:
     from tux.core.bot import Tux
+
+PERM_FALLBACK_KEY_PREFIX = "perm:command_permission_fallback:"
+# Command required rank: setup-once; invalidated when config changes.
+PERM_FALLBACK_TTL = 7200.0  # 2 hours
 
 __all__ = [
     # Constants
@@ -110,9 +118,6 @@ class PermissionSystem:
         Default permission rank hierarchy (0-7).
     """
 
-    # Shared cache for command permissions with parent fallback (5 minute TTL)
-    _command_permission_cache: TTLCache = TTLCache(ttl=300.0, max_size=2000)
-
     def __init__(self, bot: Tux, db: DatabaseCoordinator) -> None:
         """
         Initialize the permission system with bot and database connections.
@@ -127,6 +132,7 @@ class PermissionSystem:
         self.bot = bot
         self.db = db
         self._default_ranks = DEFAULT_RANKS
+        self._cache_backend = get_cache_backend(bot)
 
     # ---------- Guild Initialization ----------
 
@@ -418,6 +424,25 @@ class PermissionSystem:
 
     # ---------- Command Permission Management ----------
 
+    async def _invalidate_command_fallback_cache(
+        self,
+        guild_id: int,
+        command_name: str,
+    ) -> None:
+        """Invalidate fallback cache for command and its parent commands."""
+        await self._cache_backend.delete(
+            f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{command_name}",
+        )
+        parts = command_name.split()
+        for i in range(len(parts) - 1, 0, -1):
+            parent_name = " ".join(parts[:i])
+            await self._cache_backend.delete(
+                f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{parent_name}",
+            )
+        logger.trace(
+            f"Invalidated command permission fallback cache for {command_name} (guild {guild_id})",
+        )
+
     async def set_command_permission(
         self,
         guild_id: int,
@@ -472,23 +497,25 @@ class PermissionSystem:
             required_rank=required_rank,
         )
 
-        # Invalidate cache for this command and potential parent commands
-        cache_key = f"command_permission_fallback:{guild_id}:{command_name}"
-        self._command_permission_cache.invalidate(cache_key)
-        # Also invalidate parent command caches
-        parts = command_name.split()
-        for i in range(len(parts) - 1, 0, -1):
-            parent_name = " ".join(parts[:i])
-            parent_cache_key = f"command_permission_fallback:{guild_id}:{parent_name}"
-            self._command_permission_cache.invalidate(parent_cache_key)
-        logger.trace(
-            f"Invalidated command permission fallback cache for {command_name} (guild {guild_id})",
-        )
+        await self._invalidate_command_fallback_cache(guild_id, command_name)
 
         logger.info(
             f"Set command {command_name} to require rank {required_rank} in guild {guild_id}",
         )
         return command_perm
+
+    async def invalidate_command_permission_cache(
+        self,
+        guild_id: int,
+        command_name: str,
+    ) -> None:
+        """
+        Invalidate the command permission fallback cache for a command and its parents.
+
+        Call after removing or changing a command permission outside set_command_permission
+        (e.g. delete_where) so the next get_command_permission sees fresh data.
+        """
+        await self._invalidate_command_fallback_cache(guild_id, command_name)
 
     # ---------- Query Methods ----------
 
@@ -516,24 +543,27 @@ class PermissionSystem:
         PermissionCommand | None
             The command permission record, or None if no override exists.
         """
-        # Check cache first
-        cache_key = f"command_permission_fallback:{guild_id}:{command_name}"
-        cached = self._command_permission_cache.get(cache_key)
-        if cached is not None:
+        backend_key = f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{command_name}"
+        raw = await self._cache_backend.get(backend_key)
+        if raw is not None:
+            unwrapped = unwrap_optional_perm(raw)
             logger.trace(
                 f"Cache hit for command permission with fallback {command_name} (guild {guild_id})",
             )
-            return cached
+            return unwrapped
 
         # For single-word commands (no parents), use direct query for efficiency
         parts = command_name.split()
         if len(parts) == 1:
-            # No parents to check, just query the command directly (uses cache)
             result = await self.db.command_permissions.get_command_permission(
                 guild_id,
                 command_name,
             )
-            self._command_permission_cache.set(cache_key, result)
+            await self._cache_backend.set(
+                backend_key,
+                wrap_optional_perm(result),
+                ttl_sec=PERM_FALLBACK_TTL,
+            )
             return result
 
         # For multi-word commands, build list of all possible command names to check
@@ -561,25 +591,22 @@ class PermissionSystem:
                 session.expunge(perm)
 
         # Return the first match in order of specificity (command itself, then parents)
-        # This ensures subcommand overrides take precedence
+        perm_lookup = {perm.command_name: perm for perm in found_permissions}
         result = None
         for name in command_names_to_check:
-            for perm in found_permissions:
-                if perm.command_name == name:
-                    # Only log at trace level - this is expected behavior when subcommands
-                    # inherit parent permissions, and happens frequently during help system
-                    # permission checks for dropdown filtering
-                    if name != command_name:
-                        logger.trace(
-                            f"Using parent command permission '{name}' for '{command_name}'",
-                        )
-                    result = perm
-                    break
-            if result:
+            if name in perm_lookup:
+                if name != command_name:
+                    logger.trace(
+                        f"Using parent command permission '{name}' for '{command_name}'",
+                    )
+                result = perm_lookup[name]
                 break
 
-        # Cache the result (even if None)
-        self._command_permission_cache.set(cache_key, result)
+        await self._cache_backend.set(
+            backend_key,
+            wrap_optional_perm(result),
+            ttl_sec=PERM_FALLBACK_TTL,
+        )
         logger.trace(
             f"Cached command permission with fallback for {command_name} (guild {guild_id})",
         )
@@ -613,15 +640,19 @@ class PermissionSystem:
         if not command_names:
             return {}
 
-        # Check cache first for commands that are already cached
         cached_results: dict[str, PermissionCommand | None] = {}
         uncached_commands: list[str] = []
 
-        for command_name in command_names:
-            cache_key = f"command_permission_fallback:{guild_id}:{command_name}"
-            cached = self._command_permission_cache.get(cache_key)
-            if cached is not None:
-                cached_results[command_name] = cached
+        # Fetch all cache entries concurrently (important for Valkey/network caches)
+        keys_and_names = [
+            (f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{cmd}", cmd)
+            for cmd in command_names
+        ]
+        get_coros = [self._cache_backend.get(key) for key, _ in keys_and_names]
+        raw_values = await asyncio.gather(*get_coros)
+        for (_, command_name), raw in zip(keys_and_names, raw_values, strict=True):
+            if raw is not None:
+                cached_results[command_name] = unwrap_optional_perm(raw)
             else:
                 uncached_commands.append(command_name)
 
@@ -669,21 +700,26 @@ class PermissionSystem:
         # Build result dict for uncached commands, checking each command and its parents
         # Check command itself, then parents in order of specificity
         for command_name in uncached_commands:
-            # Find the first matching permission (command itself, then parents)
             result = next(
                 (
                     perm_lookup[name]
                     for name in command_to_parents[command_name]
                     if name in perm_lookup
                 ),
-                None,  # No permission found for this command or its parents
+                None,
             )
             cached_results[command_name] = result
 
-            # Populate the same cache that get_command_permission uses
-            # This ensures both methods benefit from the same cache
-            cache_key = f"command_permission_fallback:{guild_id}:{command_name}"
-            self._command_permission_cache.set(cache_key, result)
+        # Write all cache entries concurrently (important for Valkey/network caches)
+        set_coros = [
+            self._cache_backend.set(
+                f"{PERM_FALLBACK_KEY_PREFIX}{guild_id}:{command_name}",
+                wrap_optional_perm(cached_results[command_name]),
+                ttl_sec=PERM_FALLBACK_TTL,
+            )
+            for command_name in uncached_commands
+        ]
+        await asyncio.gather(*set_coros)
 
         return cached_results
 

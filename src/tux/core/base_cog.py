@@ -17,6 +17,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.core.decorators import command_permission_check
 from tux.shared.config import CONFIG
 from tux.shared.functions import generate_usage
 
@@ -63,6 +64,28 @@ class BaseCog(commands.Cog):
 
         # Automatically generate usage strings for commands without explicit usage
         self._setup_command_usage()
+        # Run permission check before argument conversion for eligible commands
+        self._setup_permission_checks()
+
+    def _setup_permission_checks(self) -> None:
+        """
+        Add check-phase permission for commands that use dynamic permissions and do not use allow_self_use_for_param.
+
+        Ensures users see "permission denied" before "missing required argument".
+        """
+        try:
+            for command in self.get_commands():
+                callback = getattr(command, "callback", None)
+                if not getattr(callback, "__uses_dynamic_permissions__", False):
+                    continue
+                if getattr(callback, "__tux_perm_allow_self_use_for_param__", None):
+                    continue
+                command.checks.insert(0, command_permission_check)
+                callback.__tux_perm_check_in_phase__ = True  # type: ignore[attr-defined]
+        except Exception:
+            logger.exception(
+                f"Failed to setup permission checks for {self.__class__.__name__}",
+            )
 
     def _setup_command_usage(self) -> None:
         """

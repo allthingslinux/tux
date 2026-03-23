@@ -10,12 +10,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import discord
 import pytest
 
+from tux.cache import JailStatusCache
 from tux.core.bot import Tux
 from tux.database.controllers import CaseController, DatabaseCoordinator
 from tux.database.models import CaseType
 from tux.database.service import DatabaseService
 from tux.modules.moderation.jail import Jail
-from tux.shared.cache import JailStatusCache
 
 TEST_GUILD_ID = 123456
 ALT_GUILD_ID = 987654
@@ -459,7 +459,7 @@ class TestRejailOnRejoin:
         db_service: DatabaseService,
     ) -> DatabaseCoordinator:
         """DatabaseCoordinator with guild and jail config (role + channel) set."""
-        JailStatusCache().clear_all()
+        await JailStatusCache().clear_all()
         coord = DatabaseCoordinator(db_service)
         await coord.guild.get_or_create_guild(TEST_GUILD_ID)
         await coord.guild_config.get_or_create_config(TEST_GUILD_ID)
@@ -528,7 +528,8 @@ class TestRejailOnRejoin:
         jail_ready_coord: DatabaseCoordinator,
     ) -> None:
         """on_member_join does not rejail when user's latest case is UNJAIL."""
-        # Arrange
+        # Arrange - invalidate cache so we hit DB (backend may hold stale True from other tests)
+        await JailStatusCache().invalidate(TEST_GUILD_ID, TEST_USER_ID)
         await jail_ready_coord.case.create_case(
             case_type=CaseType.JAIL,
             case_user_id=TEST_USER_ID,

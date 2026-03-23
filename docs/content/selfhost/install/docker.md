@@ -86,10 +86,6 @@ POSTGRES_USER=tuxuser
 POSTGRES_PASSWORD=your_secure_password_here
 POSTGRES_PORT=5432
 
-# Optional: Bot Configuration
-USER_IDS__BOT_OWNER_ID=123456789012345678
-BOT_INFO__PREFIX=$
-
 # Optional: Logging
 LOG_LEVEL=INFO
 DEBUG=false
@@ -130,8 +126,9 @@ Profiles work as in [Docker Compose](https://docs.docker.com/compose/how-tos/pro
 
 The Docker Compose setup includes:
 
-- **tux-postgres** - PostgreSQL database
-- **tux** (production) or **tux-dev** (development) - Tux Discord bot
+- **tux-postgres** - PostgreSQL database (no profile; always started with Tux)
+- **tux** (production) or **tux-dev** (development) - Tux Discord bot; use `--profile production` or `--profile dev`
+- **tux-valkey** (optional) - Valkey cache for shared cache across restarts; use `--profile valkey`
 - **tux-adminer** (optional) - Database management UI at `http://localhost:8080`; use `--profile adminer`
 
 ## Services Overview
@@ -172,6 +169,30 @@ docker compose --profile production --profile adminer up -d
 
 Omit `--profile adminer` to run without Adminer.
 
+### Valkey (optional cache)
+
+Valkey provides a shared cache (guild config, jail status, prefix, permissions) that
+persists across bot restarts. Without it, Tux uses in-memory cache (no extra container).
+
+To use Valkey with Docker:
+
+1. Start Valkey with the `valkey` profile:
+
+   ```bash
+   docker compose --profile dev --profile valkey up -d
+   # or
+   docker compose --profile production --profile valkey up -d
+   ```
+
+2. Set the Valkey host in `.env` so Tux can connect:
+
+   ```env
+   VALKEY_HOST=tux-valkey
+   VALKEY_PORT=6379
+   ```
+
+Omit `--profile valkey` and leave `VALKEY_HOST` empty to run without Valkey.
+
 ## Configuration
 
 ### Environment Variables
@@ -188,13 +209,15 @@ POSTGRES_USER=tuxuser
 POSTGRES_PASSWORD=your_secure_password_here
 POSTGRES_PORT=5432
 
-# Bot Configuration
-USER_IDS__BOT_OWNER_ID=123456789012345678
-BOT_INFO__PREFIX=$
+# Bot owner, sysadmins, prefix: set in config/config.json; see [Configuration](../config/index.md)
 
 # Logging
 LOG_LEVEL=INFO
 DEBUG=false
+
+# Optional: Valkey (use with --profile valkey)
+VALKEY_HOST=tux-valkey
+VALKEY_PORT=6379
 
 # Optional: External Services
 EXTERNAL_SERVICES__SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id

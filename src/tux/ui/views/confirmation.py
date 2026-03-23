@@ -46,7 +46,7 @@ class BaseConfirmationView(discord.ui.View):
         button : discord.ui.Button[discord.ui.View]
             The button that was pressed.
         """
-        if interaction.user.id is not self.user:
+        if interaction.user.id != self.user:
             await interaction.response.send_message(
                 "This interaction is locked to the command author.",
                 ephemeral=True,
@@ -71,7 +71,7 @@ class BaseConfirmationView(discord.ui.View):
         button : discord.ui.Button[discord.ui.View]
             The button that was pressed.
         """
-        if interaction.user.id is not self.user:
+        if interaction.user.id != self.user:
             await interaction.response.send_message(
                 "This interaction is locked to the command author.",
                 ephemeral=True,

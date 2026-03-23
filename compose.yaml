@@ -25,7 +25,7 @@ services:
   tux-postgres:
     container_name: tux-postgres
     hostname: tux-postgres
-    image: postgres:17-alpine@sha256:ff4ccc02b97e0ebb6b328ef9ff92522f95586f83be6801896b615088defc8ad2
+    image: postgres:17-alpine@sha256:6f30057d31f5861b66f3545d4821f987aacf1dd920765f0acadea0c58ff975b1
     restart: ${RESTART_POLICY:-no}
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
@@ -52,6 +52,28 @@ services:
       retries: 5
       start_period: 30s
     stop_grace_period: 30s
+  tux-valkey:
+    profiles: [valkey]
+    container_name: tux-valkey
+    hostname: tux-valkey
+    image: valkey/valkey:9.0-alpine@sha256:84c96f47ebe197e635cd3ddbe3ab74e8bdf783cf3befbfb1c36387275c1cd5d5
+    restart: ${RESTART_POLICY:-no}
+    ports: [127.0.0.1:6379:6379]
+    volumes:
+      - tux_valkey_data:/data
+    command: valkey-server --save 60 1 --loglevel warning
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+        compress: 'true'
+    healthcheck:
+      test: [CMD, valkey-cli, ping]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
   # Production app: pre-built image, no build, security hardening.
   # Use: docker compose --profile production up -d
@@ -163,7 +185,7 @@ services:
           path: .env
           target: /app/.env
   tux-adminer:
-    image: adminer:latest@sha256:b6d3c299d1754368031415e567609d500a4a5a22c17b7812749a8f677d93f066
+    image: adminer:latest@sha256:16a72c6140f64d00a3a9edf8d3d3b18a7b0a29ca31b0453378d9eb71f01f9e34
     container_name: tux-adminer
     hostname: tux-adminer
     profiles: [adminer]
@@ -187,4 +209,6 @@ services:
       - ./docker/adminer/autologin-form.php:/var/www/html/plugins-enabled/autologin-form.php:ro
 volumes:
   tux_postgres_data:
+    driver: local
+  tux_valkey_data:
     driver: local

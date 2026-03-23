@@ -402,7 +402,7 @@ class TestNewMigrationCommands:
             patch(
                 "tux.plugins.v0_1_db_migrate.plugin.SchemaInspector",
             ) as mock_inspector_class,
-            patch("asyncio.get_event_loop") as mock_loop,
+            patch("asyncio.get_running_loop") as mock_get_running_loop,
         ):
             mock_inspector = MagicMock()
             mock_inspector.engine = MagicMock()
@@ -427,7 +427,7 @@ class TestNewMigrationCommands:
             mock_event_loop.run_in_executor = AsyncMock(
                 side_effect=mock_run_in_executor,
             )
-            mock_loop.return_value = mock_event_loop
+            mock_get_running_loop.return_value = mock_event_loop
 
             await plugin.migrate_audit(mock_ctx)
 

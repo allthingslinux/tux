@@ -56,10 +56,6 @@ class Warn(ModerationCogBase):
         """
         assert ctx.guild
 
-        # Defer early to acknowledge interaction before async work
-        if ctx.interaction:
-            await ctx.defer(ephemeral=True)
-
         # Execute warn with case creation and DM
         await self.moderate_user(
             ctx=ctx,

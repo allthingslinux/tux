@@ -9,6 +9,7 @@ import contextlib
 from datetime import datetime
 
 import discord
+from loguru import logger
 
 from tux.database.controllers import DatabaseCoordinator
 from tux.shared.constants import AFK_PREFIX, NICKNAME_MAX_LENGTH, TRUNCATION_SUFFIX
@@ -61,6 +62,9 @@ async def add_afk(
 
     # Suppress Forbidden errors if the bot doesn't have permission to change the nickname
     with contextlib.suppress(discord.Forbidden):
+        logger.info(
+            f"Setting AFK nickname for {target.id}: '{target.display_name}' -> '{new_name}'",
+        )
         await target.edit(nick=new_name)
 
 
@@ -69,12 +73,41 @@ async def del_afk(
     target: discord.Member,
     nickname: str,
 ) -> None:
-    """Remove a member's AFK status, restores their nickname, and updates the database."""
-    await db.afk.remove_afk(target.id, target.guild.id)
+    """Remove a member's AFK status, restores their nickname, and updates the database.
 
-    # Suppress Forbidden errors if the bot doesn't have permission to change the nickname
+    Parameters
+    ----------
+    db : DatabaseCoordinator
+        The database coordinator instance.
+    target : discord.Member
+        The member whose AFK status should be removed. Must be a Member (not User).
+    nickname : str
+        The original nickname to restore.
+
+    Raises
+    ------
+    AttributeError
+        If target is not a Member or doesn't have a guild attribute.
+    """
+    # Validate that target is a Member with a guild (runtime check for callers)
+    if not isinstance(target, discord.Member) or target.guild is None:  # type: ignore[reportUnnecessaryIsInstance, reportUnnecessaryComparison]
+        msg = f"target must be a discord.Member with a guild, got {type(target)}"
+        raise AttributeError(msg)
+
+    # Restore nickname first before removing from database
+    # This ensures if nickname restore fails, AFK entry still exists
     with contextlib.suppress(discord.Forbidden):
         # Only attempt to restore nickname if it was actually changed by add_afk
         # Prevents resetting a manually changed nickname if del_afk is called unexpectedly
         if target.display_name.startswith(AFK_PREFIX):
+            logger.info(
+                f"Restoring nickname for {target.id}: '{target.display_name}' -> '{nickname}'",
+            )
             await target.edit(nick=nickname)
+        else:
+            logger.debug(
+                f"Skipping nickname restore for {target.id} (doesn't have AFK prefix)",
+            )
+
+    # Remove from database after nickname is restored (or attempted)
+    await db.afk.remove_afk(target.id, target.guild.id)

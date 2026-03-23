@@ -44,6 +44,14 @@ These are the system requirements needed to install and run Tux.
 !!! tip "Tip"
     If you don't want to manage the database yourself, consider using a managed PostgreSQL service such as [Supabase](https://supabase.com/).
 
+#### Optional: Valkey (cache)
+
+- **Valkey** (Redis-compatible): Optional. When configured, Tux uses it for guild config,
+  jail status, prefix, and permission caches so state can persist across restarts.
+  When not set, Tux uses in-memory cache. See
+  [Environment Configuration](config/environment.md#optional-valkey-cache) and
+  [Docker Installation](install/docker.md#valkey-optional-cache).
+
 ### Discord Bot Requirements
 
 - **Bot Token**: Read [our guide](./config/bot-token.md) on obtaining a bot token.

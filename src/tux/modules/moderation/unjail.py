@@ -11,12 +11,12 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.cache import JailStatusCache
 from tux.core.bot import Tux
 from tux.core.checks import requires_command_permission
 from tux.core.flags import UnjailFlags
 from tux.database.models import Case
 from tux.database.models import CaseType as DBCaseType
-from tux.shared.cache import JailStatusCache
 
 from . import ModerationCogBase
 
@@ -171,10 +171,6 @@ class Unjail(ModerationCogBase):
         """
         assert ctx.guild
 
-        # Defer early to acknowledge interaction before async work
-        if ctx.interaction:
-            await ctx.defer(ephemeral=True)
-
         # Parallelize independent database queries
         jail_role_id_task = self.db.guild_config.get_jail_role_id(ctx.guild.id)
         is_jailed_task = self.is_jailed(ctx.guild.id, member.id)
@@ -250,7 +246,7 @@ class Unjail(ModerationCogBase):
 
             # Invalidate jail status cache after unjailing
             assert ctx.guild is not None
-            JailStatusCache().invalidate(ctx.guild.id, member.id)
+            await JailStatusCache().invalidate(ctx.guild.id, member.id)
 
         # Execute the action (removed lock since moderation service handles concurrency)
         await perform_unjail()

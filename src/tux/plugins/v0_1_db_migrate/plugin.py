@@ -138,7 +138,7 @@ class DatabaseMigration(BaseCog):
             self.schema_inspector.connect()
 
             # Generate schema report in executor to avoid blocking event loop
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             report = await loop.run_in_executor(
                 None,
                 self.schema_inspector.get_schema_report,
@@ -222,7 +222,7 @@ class DatabaseMigration(BaseCog):
             self.schema_inspector.connect()
 
             # Get PK constraint details in executor to avoid blocking event loop
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             pk_info = await loop.run_in_executor(
                 None,
                 self.schema_inspector.inspect_primary_key_constraint,
@@ -437,7 +437,7 @@ class DatabaseMigration(BaseCog):
 
                     return duplicates, total_count, unique_count
 
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             duplicates, total_count, unique_count = await loop.run_in_executor(
                 None,
                 query_duplicates,
@@ -522,7 +522,7 @@ class DatabaseMigration(BaseCog):
             self.schema_inspector.connect()
 
             # Generate schema report in executor to avoid blocking event loop
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             report = await loop.run_in_executor(
                 None,
                 self.schema_inspector.get_schema_report,

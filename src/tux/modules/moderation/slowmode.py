@@ -75,10 +75,6 @@ class Slowmode(BaseCog):
         """
         assert ctx.guild
 
-        # Defer early to acknowledge interaction before async work
-        if ctx.interaction:
-            await ctx.defer(ephemeral=True)
-
         # Try to parse first argument as a channel
         target_channel = (
             await self._resolve_channel(ctx, channel_or_delay)

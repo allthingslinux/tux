@@ -35,6 +35,11 @@ class SnippetsBaseCog(BaseCog):
     async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
         """Check if a user is currently snippet banned in a guild.
 
+        Uses the latest SNIPPETBAN or SNIPPETUNBAN case only: if the most
+        recent of those is SNIPPETBAN, the user is banned; if SNIPPETUNBAN or
+        none, they are not. Other case types (e.g. WARN, KICK) are ignored so
+        intervening actions do not incorrectly clear snippet ban status.
+
         Parameters
         ----------
         guild_id : int
@@ -47,12 +52,11 @@ class SnippetsBaseCog(BaseCog):
         bool
             True if the user is snippet banned, False otherwise.
         """
-        return await self.db.case.is_user_under_restriction(
-            guild_id=guild_id,
+        latest_case = await self.db.case.get_latest_snippet_ban_or_unban_case(
             user_id=user_id,
-            active_restriction_type=DBCaseType.JAIL,
-            inactive_restriction_type=DBCaseType.UNJAIL,
+            guild_id=guild_id,
         )
+        return bool(latest_case and latest_case.case_type == DBCaseType.SNIPPETBAN)
 
     def _create_snippets_list_embed(
         self,
@@ -60,6 +64,7 @@ class SnippetsBaseCog(BaseCog):
         snippets: list[Snippet],
         total_snippets: int,
         search_query: str | None = None,
+        member: discord.User | None = None,
     ) -> discord.Embed:
         """Create an embed for displaying a paginated list of snippets.
 
@@ -97,7 +102,11 @@ class SnippetsBaseCog(BaseCog):
         )
         count = len(snippets)
         total_snippets = total_snippets or 0
-        embed_title = f"Snippets ({count}/{total_snippets})"
+        embed_title = (
+            f"Snippets by {member.display_name} ({count}/{total_snippets})"
+            if member
+            else f"Snippets ({count}/{total_snippets})"
+        )
 
         footer_text, footer_icon_url = EmbedCreator.get_footer(
             bot=ctx.bot,

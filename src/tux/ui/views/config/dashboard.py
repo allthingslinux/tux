@@ -17,7 +17,6 @@ import discord
 from loguru import logger
 
 from tux.core.permission_system import DEFAULT_RANKS, get_permission_system
-from tux.database.models.models import PermissionAssignment
 from tux.shared.constants import (
     CONFIG_COLOR_BLURPLE,
     CONFIG_COLOR_GREEN,
@@ -1370,19 +1369,13 @@ class ConfigDashboard(discord.ui.LayoutView):
             )
             return
 
-        # Remove roles from rank
+        # Remove roles from this rank only (batch so cache is invalidated once)
         try:
-            removed_count = 0
-            for role in selected_roles:
-                deleted_count = await self.bot.db.permission_assignments.delete_where(
-                    filters=(
-                        PermissionAssignment.guild_id == self.guild.id,
-                        PermissionAssignment.permission_rank_id == rank_obj.id,
-                        PermissionAssignment.role_id == role.id,
-                    ),
-                )
-                if deleted_count > 0:
-                    removed_count += 1
+            removed_count = await self.bot.db.permission_assignments.remove_role_assignments_from_rank(
+                self.guild.id,
+                rank_obj.id,
+                [role.id for role in selected_roles],
+            )
 
             await interaction.followup.send(
                 f"✅ Successfully removed {removed_count} role(s) from Rank {rank_id}",
@@ -1582,10 +1575,10 @@ class ConfigDashboard(discord.ui.LayoutView):
         tuple[list[tuple[str, int | None, bool]], dict[int, Any], dict[int, list[dict[str, Any]]]]
             Tuple of (all_commands, rank_map, assignments_by_rank)
         """
-        # Get all moderation commands
+        # Get all commands that use the permission decorator (moderation, levels, etc.)
         moderation_commands = get_moderation_commands(self.bot)
         logger.debug(
-            f"Found {len(moderation_commands)} moderation commands for guild {self.guild.id}",
+            f"Found {len(moderation_commands)} permission-assignable commands for guild {self.guild.id}",
         )
 
         # Fetch command permissions, ranks, and assignments in parallel to reduce
@@ -1876,7 +1869,7 @@ class ConfigDashboard(discord.ui.LayoutView):
             # Page header with description
             page_header = discord.ui.TextDisplay[discord.ui.LayoutView](
                 "# 🤖 Command Permissions\n\n"
-                "Assign permission ranks to moderation commands. "
+                "Assign permission ranks to commands (moderation, levels/XP/blacklist, etc.). "
                 "Commands without assigned ranks are disabled by default.",
             )
             container.add_item(page_header)

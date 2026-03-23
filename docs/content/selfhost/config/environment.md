@@ -47,13 +47,54 @@ POSTGRES_PASSWORD=your_secure_password
 
 See [Database Configuration](database.md) for setup.
 
-### Bot owner (recommended)
+### Optional: Valkey (cache)
+
+Valkey (Redis-compatible) is an **optional** cache backend. When configured, Tux uses it for
+guild config, jail status, prefix, and permission caches so state can be shared across
+restarts or multiple processes. When Valkey is not set or unavailable, Tux uses an
+in-memory cache (no extra service required).
+
+Use either **VALKEY_URL** or **individual variables**:
 
 ```env
-USER_IDS__BOT_OWNER_ID=123456789012345678
+# Option A: URL (overrides VALKEY_HOST/PORT/DB/PASSWORD; use localhost for local runs)
+VALKEY_URL=valkey://localhost:6379/0
+
+# Option B: Individual (use tux-valkey when bot runs in Docker Compose)
+VALKEY_HOST=tux-valkey
+VALKEY_PORT=6379
+VALKEY_DB=0
+VALKEY_PASSWORD=
 ```
 
-Enables owner-only commands and maintenance control. [ENV Reference](../../reference/env.md) documents `USER_IDS__SYSADMINS` and other IDs.
+Leave `VALKEY_URL` and `VALKEY_HOST` empty to disable Valkey. See the
+[ENV Reference](../../reference/env.md) for all Valkey variables.
+
+!!! note "When to use Valkey"
+    Use Valkey if you want cache to persist across bot restarts or run multiple Tux
+    processes. For a single instance that restarts rarely, in-memory cache is sufficient.
+
+!!! tip "VALKEY_HOST: localhost vs tux-valkey"
+    Use **`VALKEY_HOST=localhost`** (or `VALKEY_URL=valkey://localhost:6379/0`) when
+    running the bot on your host (e.g. `uv run tux start`). Use **`VALKEY_HOST=tux-valkey`**
+    when the bot runs inside Docker Compose so it can reach the Valkey container by
+    service name. If you see "Name or service not known" for `tux-valkey`, you are
+    running the bot locally—switch to `localhost` or start Valkey and point to it.
+
+### Bot owner and sysadmins (recommended)
+
+Configure in **`config/config.json`**, not in `.env`:
+
+```json
+{
+  "USER_IDS": {
+    "BOT_OWNER_ID": 123456789012345678,
+    "SYSADMINS": [123456789012345678, 987654321098765432]
+  }
+}
+```
+
+Enables owner-only commands and maintenance control. See [Self-Host Configuration](index.md) for the full JSON layout and `uv run config generate` for an example file.
 
 ## Docker
 

@@ -43,7 +43,7 @@ jobs:
       any: ${{ steps.docs_changes.outputs.any_changed == 'true' || steps.code_changes.outputs.any_changed == 'true' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
         with:
           fetch-depth: 0
       - name: Check Docs
@@ -76,7 +76,7 @@ jobs:
       any: ${{ needs.changes.outputs.any }}
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
         with:
           fetch-depth: 0
           sparse-checkout: |
@@ -104,7 +104,7 @@ jobs:
           uv run zensical build
           echo "Documentation build completed successfully"
       - name: Upload Documentation Artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7
         with:
           name: docs
           path: site
@@ -131,9 +131,9 @@ jobs:
       issues: write
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       - name: Download Documentation Artifact
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
           name: docs
           path: site
@@ -238,7 +238,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       - name: Find Pull Request
         if: github.event_name == 'push'
-        uses: juliangruber/find-pull-request-action@48b6133aa6c826f267ebd33aa2d29470f9d9e7d0  # v1
+        uses: juliangruber/find-pull-request-action@33d46d4ff90884bb23aaead16044125daaf733d8  # v1
         id: find_pr
         with:
           branch: ${{ github.ref_name }}

@@ -1,8 +1,8 @@
 """
 Command discovery utilities for ConfigDashboard.
 
-Provides functions to discover and filter moderation commands
-for the command permissions UI.
+Provides functions to discover and filter commands that use the permission
+decorator for the command permissions UI (moderation, levels/XP, etc.).
 """
 
 from __future__ import annotations
@@ -14,14 +14,23 @@ from tux.core.permission_system import RESTRICTED_COMMANDS
 if TYPE_CHECKING:
     from tux.core.bot import Tux
 
+# Module name substrings: cogs in these modules are included in the config
+# command permissions list (e.g. moderation, levels/lvls/XP/blacklist).
+_PERMISSION_COG_MODULES = ("moderation", "levels")
+
+# Commands from those modules that do not use @requires_command_permission()
+# and must not appear in the permission assignment UI (e.g. level is view-only).
+_EXCLUDED_FROM_PERMISSION_ASSIGNMENT = frozenset({"level"})
+
 
 def get_moderation_commands(bot: Tux) -> list[str]:
     """
-    Discover all moderation command names from loaded cogs.
+    Discover all command names that use the permission decorator from loaded cogs.
 
-    Only includes the main command name, not aliases.
-    Commands are discovered by checking if the cog's module contains "moderation".
-    Restricted commands (owner/sysadmin only) are automatically excluded.
+    Only includes the main command name, not aliases. Commands are discovered
+    from cogs whose module contains "moderation" or "levels" (covers moderation
+    commands and level/XP/blacklist management). Restricted commands
+    (owner/sysadmin only) are automatically excluded.
 
     Parameters
     ----------
@@ -35,20 +44,24 @@ def get_moderation_commands(bot: Tux) -> list[str]:
     """
     command_names: set[str] = set()
 
-    # Discover commands from loaded cogs
+    # Discover commands from loaded cogs (moderation and levels)
     for cog in bot.cogs.values():
-        # Check if cog's module contains "moderation"
         module_name = cog.__class__.__module__
-        if "moderation" in module_name.lower():
+        if any(part in module_name.lower() for part in _PERMISSION_COG_MODULES):
             for command in cog.get_commands():
                 # Only add the main command name, not aliases
                 # Exclude restricted commands (owner/sysadmin only)
-                if command.name.lower() not in RESTRICTED_COMMANDS:
+                # Exclude commands that don't use the permission decorator (e.g. level is view-only)
+                if (
+                    command.name.lower() not in RESTRICTED_COMMANDS
+                    and command.name.lower() not in _EXCLUDED_FROM_PERMISSION_ASSIGNMENT
+                ):
                     command_names.add(command.name)
 
-    # Fallback: Known moderation commands if discovery fails
-    # Only includes main command names (not aliases) that require permission assignment
+    # Fallback: Known commands that require permission assignment
+    # Only includes main command names (not aliases)
     known_commands = {
+        # Moderation
         "ban",  # aliases: b
         "unban",  # aliases: ub
         "kick",  # aliases: k
@@ -65,7 +78,10 @@ def get_moderation_commands(bot: Tux) -> list[str]:
         "pollunban",  # aliases: pub
         "snippetban",  # aliases: sb
         "snippetunban",  # aliases: sub
+        "togglesnippetlock",  # aliases: tsl
         "clearafk",  # aliases: unafk
+        # Levels / XP / blacklist (levels set, setxp, reset, blacklist)
+        "levels",  # aliases: lvls
         # Note: "report" command does not use @requires_command_permission()
         # so it's excluded from permission assignment
     }

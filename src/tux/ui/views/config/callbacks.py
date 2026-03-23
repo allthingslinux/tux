@@ -14,8 +14,8 @@ from typing import TYPE_CHECKING, Any
 import discord
 from loguru import logger
 
-from tux.core.permission_system import RESTRICTED_COMMANDS
-from tux.database.models.models import PermissionAssignment, PermissionCommand
+from tux.core.permission_system import RESTRICTED_COMMANDS, get_permission_system
+from tux.database.models.models import PermissionCommand
 
 from .modals import EditRankModal
 
@@ -228,18 +228,13 @@ def create_role_update_callback(
                     role_id,
                 )
 
-            # Remove unselected roles
+            # Remove unselected roles (use remove_role_assignment so controller cache is invalidated)
             for role_id in roles_to_remove:
-                deleted_count = (
-                    await dashboard.bot.db.permission_assignments.delete_where(
-                        filters=(
-                            PermissionAssignment.guild_id == dashboard.guild.id,
-                            PermissionAssignment.permission_rank_id == rank_db_id,
-                            PermissionAssignment.role_id == role_id,
-                        ),
-                    )
+                removed = await dashboard.bot.db.permission_assignments.remove_role_assignment(
+                    dashboard.guild.id,
+                    role_id,
                 )
-                if deleted_count > 0:
+                if removed:
                     removed_count += 1
 
             # Don't send success message - UI reflects the change automatically
@@ -303,8 +298,19 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
                         PermissionCommand.command_name == command_name,
                     ),
                 )
+                # Invalidate both caches so next check sees fresh data
+                await (
+                    dashboard.bot.db.command_permissions.invalidate_command_permission(
+                        dashboard.guild.id,
+                        command_name,
+                    )
+                )
+                await get_permission_system().invalidate_command_permission_cache(
+                    dashboard.guild.id,
+                    command_name,
+                )
             elif selected_value is not None:
-                # Assign rank to command
+                # Assign rank to command (via permission system so its cache is invalidated)
                 rank_value = int(selected_value)
 
                 # Validate rank exists
@@ -319,10 +325,10 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
                     )
                     return
 
-                await dashboard.bot.db.command_permissions.set_command_permission(
-                    guild_id=dashboard.guild.id,
-                    command_name=command_name,
-                    required_rank=rank_value,
+                await get_permission_system().set_command_permission(
+                    dashboard.guild.id,
+                    command_name,
+                    rank_value,
                 )
             else:
                 # No valid selection made

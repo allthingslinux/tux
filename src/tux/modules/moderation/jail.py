@@ -16,11 +16,11 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.cache import JailStatusCache
 from tux.core.bot import Tux
 from tux.core.checks import requires_command_permission
 from tux.core.flags import JailFlags
 from tux.database.models import CaseType
-from tux.shared.cache import JailStatusCache
 
 from . import ModerationCogBase
 
@@ -127,8 +127,8 @@ class Jail(ModerationCogBase):
         logger.info(
             f"Re-jailed {member} on rejoin in guild {member.guild.id} ({member.guild.name})",
         )
-        # Invalidate jail status cache (should already be True, but ensure consistency)
-        JailStatusCache().set(member.guild.id, member.id, True)
+        # Invalidate so next is_jailed fetches fresh from DB (consistent with jail command)
+        await JailStatusCache().invalidate(member.guild.id, member.id)
         # Strip roles added by other on_member_join handlers (e.g. TTY roles ~5s)
         asyncio.create_task(  # noqa: RUF006
             self._delayed_rejail_cleanup(member.guild.id, member.id),
@@ -182,6 +182,7 @@ class Jail(ModerationCogBase):
         aliases=["j"],
     )
     @commands.guild_only()
+    @commands.cooldown(1, 5.0, commands.BucketType.guild)
     @requires_command_permission()
     async def jail(
         self,
@@ -204,19 +205,11 @@ class Jail(ModerationCogBase):
         """
         assert ctx.guild
 
-        # Defer early to acknowledge interaction before async work
-        if ctx.interaction:
-            await ctx.defer(ephemeral=True)
-
-        # Parallelize independent database queries
-        jail_role_id_task = self.db.guild_config.get_jail_role_id(ctx.guild.id)
-        jail_channel_id_task = self.db.guild_config.get_jail_channel_id(ctx.guild.id)
+        # One DB round-trip for jail config when cache misses; is_jailed in parallel
+        jail_config_task = self.db.guild_config.get_jail_config(ctx.guild.id)
         is_jailed_task = self.is_jailed(ctx.guild.id, member.id)
-
-        # Wait for all queries to complete
-        jail_role_id, jail_channel_id, is_jailed_result = await asyncio.gather(
-            jail_role_id_task,
-            jail_channel_id_task,
+        (jail_role_id, jail_channel_id), is_jailed_result = await asyncio.gather(
+            jail_config_task,
             is_jailed_task,
         )
 
@@ -263,7 +256,7 @@ class Jail(ModerationCogBase):
         )
 
         # Invalidate jail status cache after jailing
-        JailStatusCache().invalidate(ctx.guild.id, member.id)
+        await JailStatusCache().invalidate(ctx.guild.id, member.id)
 
         # Remove old roles in the background after sending the response
         # Use graceful degradation - if some roles fail, continue with others

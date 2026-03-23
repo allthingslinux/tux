@@ -1,4 +1,3 @@
-
 <!-- markdownlint-disable MD041 -->
 
 <div align="center">
@@ -32,7 +31,7 @@
 </div>
 
 > [!WARNING]
-> **This codebase is under heavy development and subject to breaking changes.** APIs, configurations, and features may change without notice. Use at your own risk in production environments. Until v0.1.0 is released, the documentation is not guaranteed to be accurate or up to date.
+> **This codebase is under heavy development and subject to breaking changes.** APIs, configurations, and features may change without notice. Documentation is not guaranteed to be accurate or up to date. Use at your own risk in production environments.
 
 ---
 
@@ -59,6 +58,7 @@ Tux is a feature-rich Discord bot originally built for the [All Things Linux](ht
 - **Utilities** - Server management and utility commands
 - **Fun** - Entertainment commands and interactive features
 - **Plugin System** - Extensible architecture for custom functionality
+- **Caching** - Optional Valkey (Redis-compatible) cache for guild config, jail status, and permissions; falls back to in-memory TTL when Valkey is not configured
 
 ## Why Tux?
 
@@ -83,6 +83,7 @@ Tux is a feature-rich Discord bot originally built for the [All Things Linux](ht
 | **HTTP Client** | `httpx` for async requests |
 | **Configuration** | `pydantic-settings` with json/env support |
 | **Containers** | Docker & Docker Compose |
+| **Cache** | `valkey` with in-memory fallback |
 
 ## Documentation
 

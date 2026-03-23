@@ -53,10 +53,6 @@ class Ban(ModerationCogBase):
         """
         assert ctx.guild
 
-        # Defer early to acknowledge interaction before async work
-        if ctx.interaction:
-            await ctx.defer(ephemeral=True)
-
         # Execute ban with case creation and DM
         await self.moderate_user(
             ctx=ctx,
@@ -67,13 +63,15 @@ class Ban(ModerationCogBase):
             dm_action="banned",
             actions=[
                 (
-                    lambda: ctx.guild.ban(
-                        member,
-                        reason=flags.reason,
-                        delete_message_seconds=flags.purge * 86400,
-                    )
-                    if ctx.guild
-                    else None,
+                    lambda: (
+                        ctx.guild.ban(
+                            member,
+                            reason=flags.reason,
+                            delete_message_seconds=flags.purge * 86400,
+                        )
+                        if ctx.guild
+                        else None
+                    ),
                     type(None),
                 ),
             ],

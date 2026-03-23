@@ -17,10 +17,12 @@ This architecture ensures sub-millisecond prefix lookups after initial cache loa
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+from collections.abc import Coroutine
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
+from tux.cache import get_cache_backend
 from tux.database.utils import get_db_controller_from
 from tux.shared.config import CONFIG
 
@@ -91,8 +93,17 @@ class PrefixManager:
         if guild_id is None:
             return self._default_prefix
 
+        # Sync mirror for error extractor and fast path
         if guild_id in self._prefix_cache:
             return self._prefix_cache[guild_id]
+
+        # Backend (Valkey or in-memory) when available
+        backend = get_cache_backend(self.bot)
+        key = f"prefix:{guild_id}"
+        backend_val = await backend.get(key)
+        if backend_val is not None and isinstance(backend_val, str):
+            self._prefix_cache[guild_id] = backend_val
+            return backend_val
 
         return await self._load_guild_prefix(guild_id)
 
@@ -117,6 +128,10 @@ class PrefixManager:
             return
 
         self._prefix_cache[guild_id] = prefix
+
+        # Write to backend when available (no TTL; prefix is long-lived)
+        backend = get_cache_backend(self.bot)
+        await backend.set(f"prefix:{guild_id}", prefix, ttl_sec=None)
 
         # Fire-and-forget: persist to database asynchronously
         asyncio.create_task(self._persist_prefix(guild_id, prefix))  # noqa: RUF006
@@ -155,6 +170,15 @@ class PrefixManager:
 
             prefix = guild_config.prefix
             self._prefix_cache[guild_id] = prefix
+            try:
+                backend = get_cache_backend(self.bot)
+                await backend.set(f"prefix:{guild_id}", prefix, ttl_sec=None)
+            except Exception as e:
+                logger.warning(
+                    "Failed to cache prefix for guild {}: {}",
+                    guild_id,
+                    type(e).__name__,
+                )
 
         except Exception as e:
             logger.warning(
@@ -224,8 +248,19 @@ class PrefixManager:
                     timeout=10.0,
                 )
 
+                backend = get_cache_backend(self.bot)
+                write_tasks: list[Coroutine[Any, Any, None]] = []
                 for config in all_configs:
                     self._prefix_cache[config.id] = config.prefix
+                    write_tasks.append(
+                        backend.set(
+                            f"prefix:{config.id}",
+                            config.prefix,
+                            ttl_sec=None,
+                        ),
+                    )
+                if write_tasks:
+                    await asyncio.gather(*write_tasks)
 
                 self._cache_loaded = True
                 logger.info(
@@ -242,9 +277,14 @@ class PrefixManager:
                 logger.error(f"Failed to load prefix cache: {type(e).__name__}")
                 self._cache_loaded = True
 
-    def invalidate_cache(self, guild_id: int | None = None) -> None:
+    async def invalidate_cache(self, guild_id: int | None = None) -> None:
         """
         Invalidate prefix cache for a specific guild or all guilds.
+
+        When guild_id is None, in-memory cache is cleared and backend keys for
+        all cached guilds are removed (same as per-guild delete for each).
+        When guild_id is set, both in-memory and backend state for that guild
+        are invalidated.
 
         Parameters
         ----------
@@ -254,14 +294,21 @@ class PrefixManager:
 
         Examples
         --------
-        >>> manager.invalidate_cache(123456789)  # Specific guild
-        >>> manager.invalidate_cache()  # All guilds
+        >>> await manager.invalidate_cache(123456789)  # Specific guild
+        >>> await manager.invalidate_cache()  # All guilds (in-memory + backend)
         """
+        backend = get_cache_backend(self.bot)
         if guild_id is None:
+            keys_to_delete = list(self._prefix_cache.keys())
+            if keys_to_delete:
+                await asyncio.gather(
+                    *(backend.delete(f"prefix:{gid}") for gid in keys_to_delete),
+                )
             self._prefix_cache.clear()
             self._cache_loaded = False
             logger.debug("All prefix cache invalidated")
         else:
+            await backend.delete(f"prefix:{guild_id}")
             self._prefix_cache.pop(guild_id, None)
             logger.debug(f"Prefix cache invalidated for guild {guild_id}")
 

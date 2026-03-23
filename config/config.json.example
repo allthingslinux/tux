@@ -10,6 +10,11 @@
     "HIDE_BOT_OWNER": false,
     "PREFIX": "$"
   },
+  "BOT_INTENTS": {
+    "presences": true,
+    "members": true,
+    "message_content": true
+  },
   "USER_IDS": {
     "BOT_OWNER_ID": 0,
     "SYSADMINS": [

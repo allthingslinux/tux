@@ -3,7 +3,7 @@
 This module provides the main configuration class and global instance,
 using the extracted models and proper pydantic-settings for environment variable binding.
 
-Use .env for BOT_TOKEN, Postgres (POSTGRES_*), DATABASE_URL, EXTERNAL_SERVICES, DEBUG, LOG_LEVEL, MAINTENANCE_MODE.
+Use .env for BOT_TOKEN, Postgres (POSTGRES_*), DATABASE_URL, Valkey (VALKEY_*), EXTERNAL_SERVICES, DEBUG, LOG_LEVEL, MAINTENANCE_MODE.
 Put all other settings in config.json.
 
 Configuration loading priority (highest to lowest):
@@ -20,6 +20,7 @@ import os
 import warnings
 from pathlib import Path
 from typing import Annotated
+from urllib.parse import quote as urlquote
 
 from pydantic import Field, computed_field
 from pydantic_settings import (
@@ -70,7 +71,7 @@ def validate_environment() -> None:
     if (
         db_password
         and len(db_password) < 12
-        and db_password not in ["ChangeThisToAStrongPassword123!"]
+        and db_password != "ChangeThisToAStrongPassword123!"
     ):
         warnings.warn(
             "⚠️  SECURITY WARNING: Database password is very short (<12 chars). "
@@ -87,6 +88,27 @@ def validate_environment() -> None:
         )
         raise ValueError(error_msg)
 
+    # Valkey cache password: warn on weak/short when set (do not block)
+    valkey_password = os.getenv("VALKEY_PASSWORD", "")
+    if valkey_password and valkey_password in weak_passwords:
+        warnings.warn(
+            "⚠️  SECURITY WARNING: Using weak Valkey cache password! "
+            "Set a strong VALKEY_PASSWORD for production.",
+            UserWarning,
+            stacklevel=2,
+        )
+    if (
+        valkey_password
+        and len(valkey_password) < 12
+        and valkey_password != "ChangeThisToAStrongPassword123!"
+    ):
+        warnings.warn(
+            "⚠️  SECURITY WARNING: Valkey password is very short (<12 chars). "
+            "Use a longer password for better security.",
+            UserWarning,
+            stacklevel=2,
+        )
+
 
 # Validate environment when module is imported
 validate_environment()
@@ -95,7 +117,7 @@ validate_environment()
 class Config(BaseSettings):
     """Main Tux configuration using Pydantic Settings (JSON-only file support).
 
-    Use .env for BOT_TOKEN, Postgres (POSTGRES_*), DATABASE_URL, EXTERNAL_SERVICES, DEBUG, LOG_LEVEL, MAINTENANCE_MODE;
+    Use .env for BOT_TOKEN, Postgres (POSTGRES_*), DATABASE_URL, Valkey (VALKEY_*), EXTERNAL_SERVICES, DEBUG, LOG_LEVEL, MAINTENANCE_MODE;
     put other settings in config.json.
 
     Configuration is loaded from multiple sources in priority order:
@@ -213,6 +235,75 @@ class Config(BaseSettings):
         ),
     ]
 
+    # Database connection pool settings
+    POOL_SIZE: Annotated[
+        int,
+        Field(
+            default=20,
+            description="Database connection pool size",
+            ge=5,
+            le=100,
+        ),
+    ]
+    MAX_OVERFLOW: Annotated[
+        int,
+        Field(
+            default=40,
+            description="Maximum overflow connections beyond pool_size",
+            ge=10,
+            le=200,
+        ),
+    ]
+    POOL_TIMEOUT: Annotated[
+        float,
+        Field(
+            default=30.0,
+            description="Seconds to wait for connection from pool",
+            ge=5.0,
+            le=120.0,
+        ),
+    ]
+
+    # Valkey (Redis-compatible cache) configuration
+    VALKEY_HOST: Annotated[
+        str,
+        Field(
+            default="",
+            description="Valkey host (empty to disable)",
+            examples=["localhost", "tux-valkey"],
+        ),
+    ] = ""
+    VALKEY_PORT: Annotated[
+        int,
+        Field(
+            default=6379,
+            description="Valkey port",
+            examples=[6379],
+        ),
+    ] = 6379
+    VALKEY_DB: Annotated[
+        int,
+        Field(
+            default=0,
+            description="Valkey database number",
+            examples=[0],
+        ),
+    ] = 0
+    VALKEY_PASSWORD: Annotated[
+        str,
+        Field(
+            default="",
+            description="Valkey password",
+        ),
+    ] = ""
+    VALKEY_URL: Annotated[
+        str,
+        Field(
+            default="",
+            description="Valkey URL override (overrides host/port/db/password)",
+        ),
+    ] = ""
+
     # Bot info
     BOT_INFO: BotInfo = Field(default_factory=BotInfo)  # type: ignore[arg-type]
 
@@ -297,6 +388,28 @@ class Config(BaseSettings):
             host = "tux-postgres"
 
         return f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{host}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+
+    @computed_field
+    @property
+    def valkey_url(self) -> str:
+        """Get Valkey URL, building from components if not explicitly set.
+
+        Do not log or expose the return value; it may contain credentials.
+        Password is URL-encoded so special characters (@, :, /) do not break the URL.
+        """
+        if self.VALKEY_URL:
+            return self.VALKEY_URL
+        if not self.VALKEY_HOST:
+            return ""
+        host = self.VALKEY_HOST
+        if os.getenv("TUX_VERSION"):
+            host = "tux-valkey"
+        if self.VALKEY_PASSWORD:
+            encoded = urlquote(self.VALKEY_PASSWORD, safe="")
+            auth = f":{encoded}@"
+        else:
+            auth = ""
+        return f"valkey://{auth}{host}:{self.VALKEY_PORT}/{self.VALKEY_DB}"
 
     def get_prefix(self) -> str:
         """

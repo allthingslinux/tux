@@ -81,10 +81,18 @@ class DatabaseService:
             Additional arguments passed to create_async_engine.
         """
         try:
+            # Get pool settings from config, allow kwargs to override
+            pool_size = kwargs.pop("pool_size", CONFIG.POOL_SIZE)
+            max_overflow = kwargs.pop("max_overflow", CONFIG.MAX_OVERFLOW)
+            pool_timeout = kwargs.pop("pool_timeout", CONFIG.POOL_TIMEOUT)
+
             self._engine = create_async_engine(
                 database_url,
                 pool_pre_ping=True,
                 pool_recycle=3600,
+                pool_size=pool_size,
+                max_overflow=max_overflow,
+                pool_timeout=pool_timeout,
                 echo=self._echo,
                 **kwargs,
             )
@@ -95,7 +103,9 @@ class DatabaseService:
                 expire_on_commit=False,
             )
 
-            logger.success("Successfully connected to database")
+            logger.success(
+                f"Successfully connected to database (pool_size={pool_size}, max_overflow={max_overflow})",
+            )
 
         except Exception as e:
             logger.error(f"Failed to connect to database: {type(e).__name__}")
@@ -294,7 +304,9 @@ class DatabaseService:
         """
         start_time = time.perf_counter()
         retry_count = 0
-        operation_name = span_desc.split(":")[0] if ":" in span_desc else "query"
+        operation_name = (
+            span_desc.split(":", maxsplit=1)[0] if ":" in span_desc else "query"
+        )
 
         for attempt in range(max_retries):
             try:
@@ -445,7 +457,7 @@ class DatabaseService:
                 "Engine should not be None after connection check"
             )
             async with self._engine.begin() as conn:
-                inspector = await conn.run_sync(lambda sync_conn: inspect(sync_conn))
+                inspector = await conn.run_sync(inspect)
 
                 # Check if required tables exist
                 existing_tables = await conn.run_sync(

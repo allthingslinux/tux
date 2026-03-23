@@ -73,7 +73,11 @@ class SupportNotifier(BaseCog):
             channel = self.bot.get_channel(PING_CHANNEL_ID)
 
             if channel is not None and isinstance(channel, discord.TextChannel):
-                await channel.send(content=f"<@&{SUPPORT_ROLE_ID}>", embed=embed)
+                await channel.send(
+                    content=f"<@&{SUPPORT_ROLE_ID}>",
+                    embed=embed,
+                    allowed_mentions=discord.AllowedMentions(roles=True),
+                )
 
 
 async def setup(bot: Tux) -> None:

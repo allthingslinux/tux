@@ -34,7 +34,7 @@ DANGEROUS_RM_COMMANDS = (
     r"(?:\s+--no-preserve-root|\s+\*)*"
 )
 
-FORK_BOMB_PATTERNS = [":(){:&};:", ":(){:|:&};:"]
+FORK_BOMB_PATTERNS = [r".*(.*)\(\)\s*{\s*\1\s*(\|\s*\1\s*)?&\s*}\s*;\s*\1.*"]
 
 DANGEROUS_DD_COMMANDS = r"dd\s+.*of=/dev/([hs]d[a-z]|nvme\d+n\d+)"
 
@@ -73,8 +73,9 @@ class HarmfulCommands(BaseCog):
         """
         # Normalize command by removing all whitespace for fork bomb check
         normalized = "".join(command.strip().lower().split())
-        if normalized in FORK_BOMB_PATTERNS:
-            return "FORK_BOMB"
+        for pattern in FORK_BOMB_PATTERNS:
+            if re.search(pattern, normalized):
+                return "FORK_BOMB"
 
         # Check for dangerous rm commands
         if re.search(DANGEROUS_RM_COMMANDS, command, re.IGNORECASE):

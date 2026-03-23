@@ -106,7 +106,10 @@ class HotReload(commands.Cog):
 
         # Schedule async reload with debouncing
         try:
-            loop = asyncio.get_event_loop()
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = asyncio.get_event_loop()
             if loop.is_closed():
                 return  # Don't reload if loop is closed
 
