@@ -58,6 +58,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Cache**: `InMemoryBackend` honors `ttl_sec` on each `set` (and `TTLCache` supports per-entry TTL), matching Valkey semantics so permission and shared caches keep their intended lifetime when Valkey is not configured; entries no longer all expire on the backend default short TTL
 * **Core**: Prefer `asyncio.get_running_loop()` over `get_event_loop()` in database setup, Sentry async flush, hot reload watcher, and database migration plugin
 * **Permission system**: Dictionary-based lookup in `get_command_permission` when resolving parent-command fallback (less work per check)
+* **Levels**: `LEVEL_XP_LEVEL_MISMATCH_RECONCILE_THRESHOLD` centralizes and documents when stored level vs XP-derived level are reconciled (same rule as XP processing and member rejoin role restore)
+* **Event handling**: Member rejoin level role restore catches `discord.DiscordException` with warning and exception type name; other errors still log with full traceback
 
 ### Fixed
 
