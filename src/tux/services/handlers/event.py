@@ -1,4 +1,4 @@
-"""Event handlers for Tux Bot such as on ready, on guild join, on guild remove, on message and on guild channel create."""
+"""Event handlers for Tux Bot such as on ready, on guild join, on guild remove, on member join (level role restore), on message and on guild channel create."""
 
 import discord
 from discord.ext import commands
@@ -7,11 +7,12 @@ from loguru import logger
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.core.permission_system import get_permission_system
+from tux.modules.features.levels import LevelsService
 from tux.shared.config import CONFIG
 
 
 class EventHandler(BaseCog):
-    """Event handlers for Tux Bot such as on ready, on guild join, on guild remove, on message and on guild channel create."""
+    """Event handlers for on_ready, guild join/remove, member join (level role restore), on_message, and guild channel create."""
 
     def __init__(self, bot: Tux) -> None:
         """
@@ -113,6 +114,53 @@ class EventHandler(BaseCog):
 
         # Initialize basic guild data (permissions only)
         await self.bot.db.guild_config.update_onboarding_stage(guild.id, "not_started")
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member) -> None:
+        """Re-apply XP level roles when a member rejoins with existing level data."""
+        if member.bot:
+            return
+
+        levels_cog = self.bot.get_cog("LevelsService")
+        if not isinstance(levels_cog, LevelsService):
+            return
+
+        if await self.bot.is_jailed(member.guild.id, member.id):
+            return
+
+        level_data = await self.db.levels.get_user_level_data(
+            member.id,
+            member.guild.id,
+        )
+        if level_data is None or level_data.blacklisted:
+            return
+
+        current_level = level_data.level
+        expected_from_xp = levels_cog.calculate_level(level_data.xp)
+        if abs(expected_from_xp - current_level) > 1:
+            effective_level = expected_from_xp
+        else:
+            effective_level = current_level
+
+        if effective_level <= 0:
+            return
+
+        try:
+            await levels_cog.update_roles(member, member.guild, effective_level)
+        except Exception:
+            logger.exception(
+                "Failed to restore level roles for member {} in guild {}",
+                member.id,
+                member.guild.id,
+            )
+        else:
+            logger.debug(
+                "Restored level roles for {} ({}) at effective level {} in guild {}",
+                member.name,
+                member.id,
+                effective_level,
+                member.guild.id,
+            )
 
     # TODO: Define data expiration policy for guilds
     @commands.Cog.listener()
