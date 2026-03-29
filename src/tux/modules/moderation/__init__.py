@@ -97,6 +97,20 @@ class ModerationCogBase(BaseCog):
         **kwargs : Any
             Additional case data
         """
+        # Role hierarchy check: only applies when the target is a guild member
+        if (
+            ctx.guild
+            and isinstance(user, discord.Member)
+            and isinstance(ctx.author, discord.Member)
+            and ctx.author != ctx.guild.owner
+            and user.top_role >= ctx.author.top_role
+        ):
+            await self._respond(
+                ctx,
+                "You cannot moderate a member with an equal or higher role than yours.",
+            )
+            return
+
         await self.moderation.execute_moderation_action(
             ctx=ctx,
             case_type=case_type,
