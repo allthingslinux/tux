@@ -63,6 +63,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+* **Moderation**: Role hierarchy check added to all moderation actions — moderators can no longer act on members with an equal or higher top role; guild owner bypass uses `owner_id` (cache-safe); bot-vs-target role check prevents `discord.Forbidden` errors when the bot's role is insufficient (#1227)
 * **Moderation**: Interaction deferral handling across all moderation modules; improved error handling in slowmode channel conversion; enhanced guild config caching and embed handling in CommunicationService and ExecutionService; added assertions for case and jail role in unjail operation
 * **Event handling**: First ready state marked even on setup failure to prevent unnecessary expensive checks on retries
 * **Error handling**: Enhanced error logging with context information; improved error handling in moderation coordinator with proper task cancellation
