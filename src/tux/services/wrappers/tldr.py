@@ -453,7 +453,7 @@ class TldrClient:
             if content.startswith("[") and content.endswith("]") and "|" in content:
                 short, long = content[1:-1].split("|", 1)
                 if show_both:
-                    chosen = f"{short}|{long}"
+                    chosen = f"[{short}|{long}]"
                 elif show_short:
                     chosen = short
                 else:
