@@ -28,7 +28,14 @@ Before starting the installation, ensure your system meets the following require
 
 ## 1. Install PostgreSQL 17
 
-Tux requires PostgreSQL 17 or higher. On Ubuntu/Debian systems, you can install it using the official PostgreSQL repository.
+Tux requires PostgreSQL 17 or higher. You can either install it directly on the host or use the Docker Compose PostgreSQL service from the project.
+
+!!! tip "Use Docker for PostgreSQL only"
+    If you prefer not to manage PostgreSQL yourself, you can run just the database
+    in Docker while running Tux on bare metal. Run `docker compose up -d tux-postgres`,
+    then set `POSTGRES_HOST=localhost` and `POSTGRES_PORT=5432` in your `.env`
+    (the compose file already exposes the port on `127.0.0.1`). Skip ahead to
+    [step 2](#2-install-uv).
 
 ### Automated Repository Setup
 
