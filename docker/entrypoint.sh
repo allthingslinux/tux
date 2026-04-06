@@ -101,9 +101,17 @@ start_bot_with_retry() {
 
 # Ensure cache directories exist with proper permissions
 # This handles cases where bind mounts don't include subdirectories
+# Bind mounts from compose.yaml (./data/cache:/app/.cache) are created as root:root
+# by Docker, so nonroot (uid 1001) cannot write to them without host-side setup.
 ensure_cache_dirs() {
     echo "Ensuring cache directories exist..."
-    mkdir -p /app/.cache/tldr /app/temp
+    if ! mkdir -p /app/.cache/tldr /app/temp 2>/dev/null; then
+        echo "⚠️  Cannot create cache directories — bind mount likely owned by root"
+        echo "   Fix: run on the host before starting the container:"
+        echo "     mkdir -p data/cache data/temp data/user-home"
+        echo "     sudo chown -R 1001:1001 data/cache data/temp data/user-home"
+        exit 1
+    fi
     # Try to set ownership if we have permission (may fail on bind mounts)
     chown -R nonroot:nonroot /app/.cache/tldr /app/temp 2>/dev/null || true
     chmod -R 755 /app/.cache/tldr /app/temp 2>/dev/null || true

@@ -19,8 +19,12 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 # Configuration constants following 12-factor app principles
-# Resolve relative paths to absolute to avoid permission issues
-_cache_dir = os.getenv("TLDR_CACHE_DIR", ".cache/tldr")
+# Docker sets TLDR_CACHE_DIR explicitly; bare metal falls back to XDG_CACHE_HOME
+_cache_dir = os.getenv("TLDR_CACHE_DIR") or str(
+    Path(os.getenv("XDG_CACHE_HOME", "")) / "tldr"
+    if os.getenv("XDG_CACHE_HOME")
+    else Path.home() / ".cache" / "tldr",
+)
 CACHE_DIR: Path = (
     Path(_cache_dir) if Path(_cache_dir).is_absolute() else Path(_cache_dir).resolve()
 )
@@ -730,6 +734,9 @@ class TldrClient:
 
                 with zipfile.ZipFile(BytesIO(content)) as archive:
                     archive.extractall(target_path)
+
+                # Invalidate command listing cache so autocomplete reflects new data
+                TldrClient.list_tldr_commands.cache_clear()
 
                 return f"Cache updated for language `{language}` from {url}"
 

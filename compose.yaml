@@ -75,6 +75,22 @@ services:
       retries: 5
       start_period: 5s
 
+  # Init container: ensure bind-mount directories have correct ownership.
+  # Docker creates host dirs as root:root; nonroot (1001) cannot write to them.
+  tux-init:
+    image: busybox:latest
+    profiles: [production, dev]
+    volumes:
+      - ./data/cache:/app/.cache
+      - ./data/temp:/app/temp
+      - ./data/user-home:/home/nonroot
+    entrypoint:
+      - sh
+      - -c
+      - |
+        mkdir -p /app/.cache/tldr /app/temp /home/nonroot
+        chown -R 1001:1001 /app/.cache /app/temp /home/nonroot
+
   # Production app: pre-built image, no build, security hardening.
   # Use: docker compose --profile production up -d
   tux:
@@ -106,6 +122,8 @@ services:
     depends_on: &tux-depends
       tux-postgres:
         condition: service_healthy
+      tux-init:
+        condition: service_completed_successfully
     healthcheck: &tux-health
       test:
         - CMD-SHELL
