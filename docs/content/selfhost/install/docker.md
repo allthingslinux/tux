@@ -76,6 +76,12 @@ nano .env
 
 **Required environment variables:**
 
+Generate a strong database password first:
+
+```bash
+openssl rand -base64 32
+```
+
 ```env
 # Discord Bot Token (required)
 BOT_TOKEN=your_bot_token_here
@@ -83,7 +89,7 @@ BOT_TOKEN=your_bot_token_here
 # Database Configuration (optional - defaults provided)
 POSTGRES_DB=tuxdb
 POSTGRES_USER=tuxuser
-POSTGRES_PASSWORD=your_secure_password_here
+POSTGRES_PASSWORD=<paste the generated password here>
 POSTGRES_PORT=5432
 
 # Optional: Logging
@@ -91,8 +97,12 @@ LOG_LEVEL=INFO
 DEBUG=false
 ```
 
-!!! warning "Change Default Password"
-    The default PostgreSQL password is insecure. Always set a strong `POSTGRES_PASSWORD` in your `.env` file.
+!!! warning "Set password before first startup"
+    Docker uses `POSTGRES_PASSWORD` to create the database user on first launch.
+    Generate a strong password with `openssl rand -base64 32` and set it **before**
+    running `docker compose up` for the first time. Changing it in `.env` later won't
+    update the database — see [Database Configuration](../config/database.md#password-security)
+    for details.
 
 ### 3. Start Services
 

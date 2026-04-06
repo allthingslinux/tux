@@ -106,10 +106,30 @@ DATABASE_URL=postgresql://tuxuser:password@your-host.db.ondigitalocean.com:25060
 
 ### Password Security
 
+Generate a strong random password before first startup:
+
+```bash
+# Generate a 32-character random password
+openssl rand -base64 32
+```
+
+Set it in your `.env` file:
+
+```env
+POSTGRES_PASSWORD=<paste the generated password here>
+```
+
+!!! important "Set before first startup"
+    Docker Compose uses `POSTGRES_PASSWORD` to create the initial PostgreSQL superuser
+    on first container startup. If you start with the default password and change it
+    later in `.env`, the database will still have the old password. To change it after
+    first run, connect to PostgreSQL and run
+    `ALTER USER tuxuser WITH PASSWORD 'new_password';`,
+    or delete the volume (`docker compose down -v`) and start fresh.
+
 Follow these practices for database passwords:
 
-- Use strong passwords (minimum 12 characters, mix of letters, numbers, symbols)
-- Avoid common weak passwords (`password`, `admin`, `postgres`, `123456`, `qwerty`, `tuxpass`)
+- Use a randomly generated password (the `openssl` command above is sufficient)
 - Never commit passwords to version control
 - Rotate passwords periodically
 - Consider secrets management tools (`pass`, `1Password`, cloud secrets)

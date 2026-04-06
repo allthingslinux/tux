@@ -118,6 +118,14 @@ sudo nano /opt/tux/.env
 
 **Required variables for bare metal setup:**
 
+Generate a strong database password first:
+
+```bash
+openssl rand -base64 32
+```
+
+Then set it in your `.env`:
+
 ```env
 # Discord Bot Token
 BOT_TOKEN=your_bot_token_here
@@ -127,8 +135,13 @@ POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_DB=tuxdb
 POSTGRES_USER=tuxuser
-POSTGRES_PASSWORD=your_secure_password_here
+POSTGRES_PASSWORD=<paste the generated password here>
 ```
+
+!!! important "Match your PostgreSQL user password"
+    The `POSTGRES_PASSWORD` value must match the password you set when creating
+    the PostgreSQL user. If you haven't created the user yet, use this password
+    when you do: `ALTER USER tuxuser WITH PASSWORD 'your_password';`
 
 ### Verify Database Connection
 
