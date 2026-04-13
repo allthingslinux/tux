@@ -78,7 +78,7 @@ services:
   # Init container: ensure bind-mount directories have correct ownership.
   # Docker creates host dirs as root:root; nonroot (1001) cannot write to them.
   tux-init:
-    image: busybox:latest
+    image: busybox:latest@sha256:1487d0af5f52b4ba31c7e465126ee2123fe3f2305d638e7827681e7cf6c83d5e
     profiles: [production, dev]
     volumes:
       - ./data/cache:/app/.cache
@@ -203,7 +203,7 @@ services:
           path: .env
           target: /app/.env
   tux-adminer:
-    image: adminer:latest@sha256:16a72c6140f64d00a3a9edf8d3d3b18a7b0a29ca31b0453378d9eb71f01f9e34
+    image: adminer:latest@sha256:3a1582df310cf49a3c9cad2882496eed4596563f8d33250703f8b26e538cef7d
     container_name: tux-adminer
     hostname: tux-adminer
     profiles: [adminer]
