@@ -155,7 +155,7 @@ jobs:
       # - Build metadata (tags/labels) for image identification
       # - Build-time variables for versioning and traceability
       - name: Build
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294  # v7
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7
         timeout-minutes: 10
         with:
           # Build context directory (current directory)
@@ -215,7 +215,7 @@ jobs:
       # For other events: Run quickview and recommendations for general analysis
       - name: Docker Scout Compare
         if: github.event_name == 'pull_request'
-        uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de  # v1
+        uses: docker/scout-action@bacf462e8d090c09660de30a6ccc718035f961e3  # v1
         continue-on-error: true
         with:
           command: compare
@@ -226,7 +226,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Docker Scout Quickview
         if: github.event_name != 'pull_request'
-        uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de  # v1
+        uses: docker/scout-action@bacf462e8d090c09660de30a6ccc718035f961e3  # v1
         continue-on-error: true
         with:
           command: quickview
@@ -235,7 +235,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Docker Scout Recommendations
         if: github.event_name != 'pull_request'
-        uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de  # v1
+        uses: docker/scout-action@bacf462e8d090c09660de30a6ccc718035f961e3  # v1
         continue-on-error: true
         with:
           command: recommendations
@@ -420,7 +420,7 @@ jobs:
       # - Build-time variables for versioning and traceability
       - name: Build for Validation
         id: build_validate
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294  # v7
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7
         timeout-minutes: 15
         env:
           # Set SOURCE_DATE_EPOCH for reproducible builds
@@ -490,7 +490,7 @@ jobs:
       # Note: continue-on-error allows workflow to proceed if Docker Scout authentication fails
       # Note: image input requires a single image reference, so we construct it from registry, image name, and version
       - name: Docker Scout CVEs Before Push
-        uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de  # v1
+        uses: docker/scout-action@bacf462e8d090c09660de30a6ccc718035f961e3  # v1
         continue-on-error: true
         with:
           command: cves
@@ -508,7 +508,7 @@ jobs:
       # This second build will be fast due to BuildKit cache from validation build
       - name: Push Validated Image with Attestations
         if: success()
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294  # v7
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7
         timeout-minutes: 5
         env:
           # Set SOURCE_DATE_EPOCH for reproducible builds

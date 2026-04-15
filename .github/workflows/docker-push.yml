@@ -101,7 +101,7 @@ jobs:
         id: build_date
         run: echo "date=$(./.github/scripts/docker.sh generate-build-date)" >> "$GITHUB_OUTPUT"
       - name: Build and Push
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294  # v7
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f  # v7
         timeout-minutes: 15
         env:
           SOURCE_DATE_EPOCH: ${{ steps.source_date.outputs.epoch }}
