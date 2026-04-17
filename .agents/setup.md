@@ -48,6 +48,7 @@ tux/
 │   │   ├── models/             # SQLModel models
 │   │   ├── migrations/         # Alembic migrations
 │   │   ├── controllers/        # Database controllers (CRUD)
+│   │   ├── gather_results.py   # asyncio.gather helpers for DB/case results
 │   │   ├── service.py          # DatabaseService
 │   │   └── utils.py            # Database utilities
 │   ├── services/               # Business logic services
@@ -77,7 +78,8 @@ tux/
 │   ├── shared/                 # Shared utilities
 │   │   ├── config/             # Configuration models
 │   │   ├── constants.py        # Constants
-│   │   ├── exceptions.py       # Custom exceptions
+│   │   ├── exceptions/         # Custom exceptions (package)
+│   │   ├── asyncio_gather.py   # asyncio.gather result helpers
 │   │   └── functions.py        # Utility functions
 │   ├── help/                   # Help system
 │   └── main.py                 # Application entry point

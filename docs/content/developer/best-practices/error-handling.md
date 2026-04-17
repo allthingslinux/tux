@@ -648,6 +648,8 @@ When running multiple operations concurrently, handle exceptions in each task in
 
 Process results after gathering completes. Check each result to see if it's an exception or a value. Handle exceptions appropriately—log them, retry operations, or collect them for batch processing. Successful operations shouldn't be affected by failures in other operations.
 
+In Tux, prefer the shared helpers for unpacking `gather` results instead of ad-hoc checks: `tux.shared.asyncio_gather.handle_gather_result` for generic typed results, and `tux.database.gather_results.handle_case_result` for moderation case workflows. See `src/tux/shared/asyncio_gather.py` and `src/tux/database/gather_results.py`.
+
 For batch operations, track successes and failures separately. Log summary information about how many operations succeeded and failed. This helps you understand the overall health of batch operations and identify patterns in failures.
 
 ### Timeout Handling
@@ -1317,7 +1319,8 @@ This allows the global error handler to format and handle your custom exceptions
 
 - **Python Exception Handling**: [Python's official documentation](https://docs.python.org/3/tutorial/errors.html) on exception handling
 - **Python traceback Module**: [traceback documentation](https://docs.python.org/3/library/traceback.html) for detailed error information
-- **Tux Exception Hierarchy**: See `src/tux/shared/exceptions.py` for all Tux-specific exceptions
+- **Tux Exception Hierarchy**: See `src/tux/shared/exceptions/` for all Tux-specific exceptions (import from `tux.shared.exceptions`)
+- **`asyncio.gather` helpers**: `src/tux/shared/asyncio_gather.py` and `src/tux/database/gather_results.py`
 - **Global Error Handler**: See `src/tux/services/handlers/error/cog.py` for error handling implementation
 - **Sentry Integration**: See `sentry/index.md` for error tracking and monitoring details
 - **Security Best Practices**: See our [logging best practices](logging.md) for more on protecting sensitive data
