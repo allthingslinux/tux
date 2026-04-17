@@ -241,3 +241,6 @@ docs/node_modules/.mf/cf.json
 compose.override.yaml
 
 .cursor/plans
+
+# Desloppify local state
+.desloppify/
