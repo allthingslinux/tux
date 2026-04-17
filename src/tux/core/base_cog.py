@@ -400,3 +400,13 @@ class BaseCog(commands.Cog):
             )
         except Exception:
             logger.exception(f"Failed to unload {self.__class__.__name__}")
+
+    async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
+        """Check if a user is currently snippet banned in a guild."""
+        from tux.database.models import CaseType as DBCaseType  # noqa: PLC0415
+
+        latest_case = await self.db.case.get_latest_snippet_ban_or_unban_case(
+            user_id=user_id,
+            guild_id=guild_id,
+        )
+        return bool(latest_case and latest_case.case_type == DBCaseType.SNIPPETBAN)

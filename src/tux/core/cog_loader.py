@@ -294,7 +294,7 @@ class CogLoader(commands.Cog):
             self._handle_configuration_skip(path, config_error)
             return
 
-        except Exception as e:
+        except Exception as e:  # Catch-all: cogs can fail in many ways (import errors, init errors, etc.)
             if self._is_configuration_error(e):
                 self._handle_configuration_skip(path, e)
                 return
@@ -523,7 +523,9 @@ class CogLoader(commands.Cog):
             else:
                 await self._process_directory(path)
 
-        except Exception as e:
+        except (
+            Exception
+        ) as e:  # Catch-all: wrap any cog loading failure into TuxCogLoadError
             path_str = path.as_posix()
             logger.error(f"An error occurred while processing {path_str}: {e}")
             capture_span_exception(e, path=path_str)
@@ -579,7 +581,9 @@ class CogLoader(commands.Cog):
                     f"Slow loading cogs (>{SLOW_COG_LOAD_THRESHOLD * 1000:.0f}ms): {slow_cogs}",
                 )
 
-        except Exception as e:
+        except (
+            Exception
+        ) as e:  # Catch-all: record metrics for any folder loading failure
             load_time = time.perf_counter() - start_time
 
             record_cog_metric(
@@ -640,7 +644,7 @@ class CogLoader(commands.Cog):
 
             logger.info(f"Total cog loading time: {total_time * 1000:.0f}ms")
 
-        except Exception as e:
+        except Exception as e:  # Catch-all: record metrics for any setup failure
             total_time = time.perf_counter() - start_time
 
             record_cog_metric(

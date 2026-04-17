@@ -301,7 +301,8 @@ except DatabaseError as e:
 
 ```python
 # ✅ GOOD: Use utility functions for gather results
-from tux.shared.exceptions import handle_gather_result, handle_case_result
+from tux.database.gather_results import handle_case_result
+from tux.shared.asyncio_gather import handle_gather_result
 
 # Handle gather results with return_exceptions=True
 results = await asyncio.gather(

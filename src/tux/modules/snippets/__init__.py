@@ -13,7 +13,6 @@ from loguru import logger
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.core.permission_system import get_permission_system
-from tux.database.models import CaseType as DBCaseType
 from tux.database.models import Snippet
 from tux.shared.config import CONFIG
 from tux.ui.embeds import EmbedCreator, EmbedType
@@ -31,32 +30,6 @@ class SnippetsBaseCog(BaseCog):
             The bot instance to attach this cog to.
         """
         super().__init__(bot)
-
-    async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
-        """Check if a user is currently snippet banned in a guild.
-
-        Uses the latest SNIPPETBAN or SNIPPETUNBAN case only: if the most
-        recent of those is SNIPPETBAN, the user is banned; if SNIPPETUNBAN or
-        none, they are not. Other case types (e.g. WARN, KICK) are ignored so
-        intervening actions do not incorrectly clear snippet ban status.
-
-        Parameters
-        ----------
-        guild_id : int
-            The ID of the guild to check.
-        user_id : int
-            The ID of the user to check.
-
-        Returns
-        -------
-        bool
-            True if the user is snippet banned, False otherwise.
-        """
-        latest_case = await self.db.case.get_latest_snippet_ban_or_unban_case(
-            user_id=user_id,
-            guild_id=guild_id,
-        )
-        return bool(latest_case and latest_case.case_type == DBCaseType.SNIPPETBAN)
 
     def _create_snippets_list_embed(
         self,

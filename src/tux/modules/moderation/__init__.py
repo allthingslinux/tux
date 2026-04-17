@@ -187,29 +187,10 @@ class ModerationCogBase(BaseCog):
         )
         return bool(latest_case and latest_case.case_type == DBCaseType.POLLBAN)
 
-    async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
-        """Check if a user is snippet banned.
-
-        Uses the latest SNIPPETBAN or SNIPPETUNBAN case only; other case types
-        (e.g. WARN) are ignored so intervening actions do not clear status.
-
-        Parameters
-        ----------
-        guild_id : int
-            Guild ID to check
-        user_id : int
-            User ID to check
-
-        Returns
-        -------
-        bool
-            True if user is snippet banned, False otherwise
-        """
-        latest_case = await self.db.case.get_latest_snippet_ban_or_unban_case(
-            user_id=user_id,
-            guild_id=guild_id,
-        )
-        return bool(latest_case and latest_case.case_type == DBCaseType.SNIPPETBAN)
+    async def get_jail_role(self, guild: discord.Guild) -> discord.Role | None:
+        """Get the jail role for the guild."""
+        jail_role_id = await self.db.guild_config.get_jail_role_id(guild.id)
+        return None if jail_role_id is None else guild.get_role(jail_role_id)
 
     async def _respond(
         self,

@@ -3,6 +3,8 @@
 from collections.abc import Awaitable, Callable
 from typing import Any, TypeVar
 
+from sqlalchemy import Executable
+from sqlalchemy.engine import Result
 from sqlmodel import SQLModel
 
 from tux.database.service import DatabaseService
@@ -270,13 +272,13 @@ class BaseController[ModelT]:
         """
         return await self._query.get_all(filters, order_by)
 
-    async def execute_query(self, query: Any) -> Any:
+    async def execute_query(self, query: Executable) -> Result[Any]:
         """
         Execute a custom query.
 
         Returns
         -------
-        Any
+        Result[Any]
             The query result.
         """
         return await self._query.execute_query(query)
@@ -366,13 +368,13 @@ class BaseController[ModelT]:
         """
         return await self._get_transaction().with_transaction(operation)
 
-    async def execute_transaction(self, callback: Callable[[], Any]) -> Any:
+    async def execute_transaction(self, callback: Callable[[], Awaitable[R]]) -> R:
         """
         Execute a callback within a transaction.
 
         Returns
         -------
-        Any
+        R
             The result of the callback.
         """
         return await self._get_transaction().execute_transaction(callback)

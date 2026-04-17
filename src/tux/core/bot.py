@@ -19,6 +19,7 @@ from loguru import logger
 from rich.console import Console
 
 from tux.cache import CacheService
+from tux.core.prefix_manager import PrefixManager
 from tux.core.setup.orchestrator import BotSetupOrchestrator
 from tux.core.task_monitor import TaskMonitor
 from tux.database.controllers import DatabaseCoordinator
@@ -45,48 +46,9 @@ __all__ = ["Tux"]
 
 
 class Tux(commands.Bot):
-    """
-    Main bot class for Tux, extending discord.py's commands.Bot.
-
-    This class orchestrates the complete bot lifecycle including database
-    connections, cog loading, Sentry telemetry, background task monitoring,
-    and graceful shutdown procedures.
-
-    Attributes
-    ----------
-    is_shutting_down : bool
-        Flag indicating if shutdown is in progress (prevents duplicate shutdown).
-    setup_complete : bool
-        Flag indicating if initial setup has completed successfully.
-    start_time : float | None
-        Unix timestamp when bot became ready, used for uptime calculations.
-    task_monitor : TaskMonitor
-        Manages background tasks and ensures proper cleanup.
-    db_service : DatabaseService
-        Database connection manager and query executor.
-    sentry_manager : SentryManager
-        Error tracking and telemetry manager.
-    prefix_manager : Any | None
-        Cache manager for guild-specific command prefixes.
-    emoji_manager : EmojiManager
-        Custom emoji resolver for the bot.
-    console : Console
-        Rich console for formatted terminal output.
-    uptime : float
-        Unix timestamp when bot instance was created.
-    """
+    """Main bot class orchestrating lifecycle, database, cogs, telemetry, and shutdown."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """
-        Initialize the Tux bot.
-
-        Parameters
-        ----------
-        *args : Any
-            Positional arguments passed to discord.py's Bot.__init__.
-        **kwargs : Any
-            Keyword arguments passed to discord.py's Bot.__init__.
-        """
         super().__init__(*args, **kwargs)
 
         # Core state flags for lifecycle tracking
@@ -113,7 +75,7 @@ class Tux(commands.Bot):
         self.cache_service: CacheService | None = None  # Set by CacheSetupService
         self._db_coordinator: DatabaseCoordinator | None = None  # Cached coordinator
         self.sentry_manager = SentryManager()
-        self.prefix_manager: Any | None = None  # Initialized during setup
+        self.prefix_manager: PrefixManager | None = None  # Initialized during setup
 
         # UI components
         self.emoji_manager = EmojiManager(self)
@@ -127,32 +89,13 @@ class Tux(commands.Bot):
 
     @property
     def maintenance_mode(self) -> bool:
-        """
-        Check if bot is in maintenance mode.
-
-        Returns
-        -------
-        bool
-            True if maintenance mode is enabled, False otherwise.
-        """
+        """Check if bot is in maintenance mode."""
         from tux.shared.config import CONFIG  # noqa: PLC0415
 
         return CONFIG.MAINTENANCE_MODE
 
     async def _maintenance_mode_check(self, ctx: commands.Context[Any]) -> bool:
-        """
-        Global command check that blocks non-owner commands during maintenance mode.
-
-        Parameters
-        ----------
-        ctx : commands.Context[Any]
-            The command context.
-
-        Returns
-        -------
-        bool
-            True if command should proceed, False if blocked.
-        """
+        """Global command check that blocks non-owner commands during maintenance mode."""
         if not self.maintenance_mode:
             return True
 
@@ -176,42 +119,13 @@ class Tux(commands.Bot):
 
     @property
     def db(self) -> DatabaseCoordinator:
-        """
-        Get the database coordinator for accessing database controllers.
-
-        Provides convenient access to database operations via controllers like
-        ``bot.db.guild_config.get_guild_config()``. The coordinator is cached
-        to avoid creating new instances on every access.
-
-        Returns
-        -------
-        DatabaseCoordinator
-            Coordinator providing access to all database controllers.
-        """
+        """Get the database coordinator (cached)."""
         if self._db_coordinator is None:
             self._db_coordinator = DatabaseCoordinator(self.db_service)
         return self._db_coordinator
 
     async def is_jailed(self, guild_id: int, user_id: int) -> bool:
-        """
-        Check if a user is currently jailed.
-
-        Considers only JAIL and UNJAIL cases; the user is jailed if the latest
-        of those is a JAIL. Used by on-join logic (e.g. TTY roles) to avoid
-        adding roles to jailed members.
-
-        Parameters
-        ----------
-        guild_id : int
-            Guild ID to check.
-        user_id : int
-            User ID to check.
-
-        Returns
-        -------
-        bool
-            True if the user is jailed, False otherwise.
-        """
+        """Check if a user is currently jailed (latest JAIL/UNJAIL case is JAIL)."""
         latest = await self.db.case.get_latest_jail_or_unjail_case(
             user_id=user_id,
             guild_id=guild_id,
@@ -265,7 +179,7 @@ class Tux(commands.Bot):
             logger.info("To run migrations manually, run: uv run db push")
             capture_database_error(e, operation="connection")
             raise
-        except Exception as e:
+        except Exception as e:  # Catch-all: setup must report all unexpected failures
             logger.error(f"Setup failed: {type(e).__name__}: {e}")
             capture_exception_safe(e)
             raise
@@ -275,13 +189,7 @@ class Tux(commands.Bot):
             self._startup_task = self.loop.create_task(self._post_ready_startup())
 
     async def _post_ready_startup(self) -> None:
-        """
-        Execute post-ready startup tasks after bot is fully connected.
-
-        Waits for Discord READY, then performs final initialization: records
-        start time, displays startup banner, instruments commands for Sentry tracing,
-        and records initial bot statistics.
-        """
+        """Execute post-ready startup tasks after bot is fully connected."""
         # Wait for Discord connection and READY event
         await self.wait_until_ready()
 
@@ -300,7 +208,7 @@ class Tux(commands.Bot):
                 instrument_bot_commands(self)
                 self._commands_instrumented = True
                 logger.info("Sentry command instrumentation enabled")
-            except Exception as e:
+            except Exception as e:  # Non-critical: Sentry instrumentation failure must not block startup
                 logger.error(f"Failed to instrument commands for Sentry: {e}")
                 capture_exception_safe(e)
 
@@ -308,30 +216,13 @@ class Tux(commands.Bot):
         self._record_bot_stats()
 
     def get_prefix_cache_stats(self) -> dict[str, int]:
-        """
-        Get prefix cache statistics for monitoring.
-
-        Returns zero values if prefix manager is not initialized yet. Used for
-        monitoring cache hit rates and performance.
-
-        Returns
-        -------
-        dict[str, int]
-            Dictionary containing prefix cache metrics (cached_prefixes,
-            cache_loaded, default_prefix).
-        """
+        """Get prefix cache statistics for monitoring."""
         if self.prefix_manager:
             return self.prefix_manager.get_cache_stats()
         return {"cached_prefixes": 0, "cache_loaded": 0, "default_prefix": 0}
 
     def _record_bot_stats(self) -> None:
-        """
-        Record basic bot statistics to Sentry context for monitoring.
-
-        Captures guild count, user count, channel count, and uptime. This data
-        is attached to all Sentry events for debugging context. Only records
-        stats if Sentry is initialized. Safe to call repeatedly.
-        """
+        """Record basic bot statistics to Sentry context."""
         if not self.sentry_manager.is_initialized:
             return
 
@@ -436,7 +327,9 @@ class Tux(commands.Bot):
                 # Boolean is the value being set, not a flag (Sentry API design)
                 span.set_data("connections.discord_closed", True)
 
-            except Exception as e:
+            except (
+                Exception
+            ) as e:  # Catch-all: shutdown must continue even if Discord close fails
                 logger.error(f"Error during Discord shutdown: {e}")
                 # Boolean is the value being set, not a flag (Sentry API design)
                 span.set_data("connections.discord_closed", False)
@@ -452,7 +345,9 @@ class Tux(commands.Bot):
                 # Boolean is the value being set, not a flag (Sentry API design)
                 span.set_data("connections.db_closed", True)
 
-            except Exception as e:
+            except (
+                Exception
+            ) as e:  # Catch-all: shutdown must continue even if DB close fails
                 logger.error(f"Error during database disconnection: {e}")
                 # Boolean is the value being set, not a flag (Sentry API design)
                 span.set_data("connections.db_closed", False)
@@ -467,7 +362,9 @@ class Tux(commands.Bot):
                     await self.cache_service.close()
                     logger.debug("Cache connections closed")
                     span.set_data("connections.cache_closed", True)
-                except Exception as e:
+                except (
+                    Exception
+                ) as e:  # Catch-all: shutdown must continue even if cache close fails
                     logger.error(f"Error during cache disconnection: {e}")
                     span.set_data("connections.cache_closed", False)
                     span.set_data("connections.cache_error", str(e))
@@ -482,7 +379,9 @@ class Tux(commands.Bot):
                 # Boolean is the value being set, not a flag (Sentry API design)
                 span.set_data("connections.http_closed", True)
 
-            except Exception as e:
+            except (
+                Exception
+            ) as e:  # Catch-all: shutdown must continue even if HTTP close fails
                 logger.error(f"Error during HTTP client shutdown: {e}")
                 # Boolean is the value being set, not a flag (Sentry API design)
                 span.set_data("connections.http_closed", False)

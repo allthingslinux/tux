@@ -3,7 +3,8 @@
 from typing import Any, TypeVar
 
 from loguru import logger
-from sqlalchemy import UnaryExpression, func
+from sqlalchemy import Executable, UnaryExpression, func
+from sqlalchemy.engine import Result
 from sqlalchemy.orm import selectinload
 from sqlmodel import SQLModel, select
 
@@ -198,13 +199,13 @@ class QueryController[ModelT]:
         """
         return await self.find_all(filters=filters, order_by=order_by)
 
-    async def execute_query(self, query: Any) -> Any:
+    async def execute_query(self, query: Executable) -> Result[Any]:
         """
         Execute a custom query.
 
         Returns
         -------
-        Any
+        Result[Any]
             The query result.
         """
         async with self.db.session() as session:

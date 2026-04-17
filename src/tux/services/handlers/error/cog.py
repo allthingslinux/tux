@@ -1,6 +1,5 @@
 """Comprehensive error handler for Discord commands and client events."""
 
-import importlib
 import sys
 import traceback
 from typing import Any
@@ -69,25 +68,14 @@ class ErrorHandler(commands.Cog):
         logger.debug("Error handler unloaded")
 
     async def cog_reload(self) -> None:
-        """Handle cog reload - force reload imported modules."""
-        # Force reload the config and extractors modules
-        modules_to_reload = [
-            "tux.services.handlers.error.config",
-            "tux.services.handlers.error.extractors",
-            "tux.services.handlers.error.formatter",
-            "tux.services.handlers.error.suggestions",
-        ]
+        """Handle cog reload — re-import references from sibling modules."""
+        # Re-import from sibling modules to pick up changes without fragile importlib.reload.
+        # The hot-reload service handles actual module reloading; we just refresh our references.
+        from .formatter import ErrorFormatter  # noqa: PLC0415
+        from .suggestions import CommandSuggester  # noqa: PLC0415
 
-        for module_name in modules_to_reload:
-            if module_name in sys.modules:
-                try:
-                    importlib.reload(sys.modules[module_name])
-                    logger.debug(f"Force reloaded {module_name}")
-                except Exception as e:
-                    # Module reloading can fail for various reasons (ImportError, AttributeError, etc.)
-                    # Catching Exception is appropriate here as we want to continue reloading other modules
-                    logger.warning(f"Failed to reload {module_name}: {e}")
-
+        self.formatter = ErrorFormatter()
+        self.suggester = CommandSuggester()
         logger.debug("Error handler reloaded with fresh modules")
 
     async def _on_client_error(

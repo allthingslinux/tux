@@ -7,10 +7,7 @@ from tux.database.controllers import GuildConfigController, GuildController
 
 # Import constants from separate module to avoid assertion rewriting issues
 from tests.constants import (
-    TEST_CHANNEL_ID,
     TEST_GUILD_ID,
-    TEST_MODERATOR_ID,
-    TEST_USER_ID,
 )
 
 

@@ -34,23 +34,6 @@ class Unjail(ModerationCogBase):
         """
         super().__init__(bot)
 
-    async def get_jail_role(self, guild: discord.Guild) -> discord.Role | None:
-        """
-        Get the jail role for the guild.
-
-        Parameters
-        ----------
-        guild : discord.Guild
-            The guild to get the jail role for.
-
-        Returns
-        -------
-        discord.Role | None
-            The jail role, or None if not found.
-        """
-        jail_role_id = await self.db.guild_config.get_jail_role_id(guild.id)
-        return None if jail_role_id is None else guild.get_role(jail_role_id)
-
     async def get_latest_jail_case(self, guild_id: int, user_id: int) -> Case | None:
         """
         Get the latest jail case for a user.

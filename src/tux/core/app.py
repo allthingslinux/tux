@@ -166,7 +166,9 @@ class TuxApp:
             logger.info("Connecting to Discord gateway...")
             await self.bot.connect(reconnect=True)
 
-        except Exception as e:
+        except (
+            Exception
+        ) as e:  # Top-level: must catch all failures during bot execution
             logger.exception("Bot execution failed")
             capture_exception_safe(e)
             return 1

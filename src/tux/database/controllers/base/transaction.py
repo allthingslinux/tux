@@ -58,13 +58,13 @@ class TransactionController[ModelT]:
         async with self.db.session() as session, session.begin():
             return await operation(session)
 
-    async def execute_transaction(self, callback: Callable[[], Any]) -> Any:
+    async def execute_transaction(self, callback: Callable[[], Awaitable[R]]) -> R:
         """
         Execute a callback within a transaction.
 
         Returns
         -------
-        Any
+        R
             The result of the callback.
         """
         async with self.db.session() as session, session.begin():

@@ -15,6 +15,7 @@ import time
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import discord
+import sqlalchemy.exc
 from discord.ext import commands
 from loguru import logger
 from sqlmodel import select
@@ -30,6 +31,7 @@ from tux.database.models.models import (
     PermissionCommand,
     PermissionRank,
 )
+from tux.shared.exceptions import TuxDatabaseError
 
 if TYPE_CHECKING:
     from tux.core.bot import Tux
@@ -163,7 +165,7 @@ class PermissionSystem:
             logger.trace(
                 f"Found {len(existing_ranks)} existing ranks for guild {guild_id}",
             )
-        except Exception as e:
+        except (TuxDatabaseError, sqlalchemy.exc.SQLAlchemyError) as e:
             logger.error(
                 f"Error checking existing ranks for guild {guild_id}: {e}",
                 exc_info=True,
@@ -205,7 +207,7 @@ class PermissionSystem:
             logger.debug(
                 f"Successfully bulk created {len(ranks_to_create)} ranks for guild {guild_id}",
             )
-        except Exception as e:
+        except (TuxDatabaseError, sqlalchemy.exc.SQLAlchemyError) as e:
             logger.error(
                 f"Error bulk creating ranks for guild {guild_id}: {e}",
                 exc_info=True,

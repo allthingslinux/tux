@@ -71,7 +71,7 @@ class TaskMonitor:
 
                 await self._process_finished_tasks(tasks_by_type)
 
-            except Exception as e:
+            except Exception as e:  # Catch-all: monitoring loop must not crash the bot
                 logger.error(f"Task monitoring failed: {e}")
                 capture_exception_safe(e)
                 error_msg = "Critical failure in task monitoring system"
@@ -134,7 +134,9 @@ class TaskMonitor:
 
                 await self._cancel_tasks(tasks_by_type)
 
-            except Exception as e:
+            except (
+                Exception
+            ) as e:  # Catch-all: cleanup must continue even if individual tasks fail
                 logger.error(f"Error during task cleanup: {e}")
                 capture_exception_safe(e)
 
@@ -152,7 +154,9 @@ class TaskMonitor:
                             value.stop()
                             logger.debug(f"Stopped task loop {cog_name}.{name}")
 
-                        except Exception as e:
+                        except (
+                            Exception
+                        ) as e:  # Catch-all: must attempt to stop all loops
                             logger.error(
                                 f"Error stopping task loop {cog_name}.{name}: {e}",
                             )
