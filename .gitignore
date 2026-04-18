@@ -244,3 +244,5 @@ compose.override.yaml
 
 # Desloppify local state
 .desloppify/
+
+GREENFIELD.md
