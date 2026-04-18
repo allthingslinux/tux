@@ -516,6 +516,35 @@ wheels = [
 ]
 
 [[package]]
+name = "davey"
+version = "0.1.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b0/b3/62a9af5f7e1cf3cb99f17dcf26dc53f753facca220721bb0d7daaffcf37e/davey-0.1.5.tar.gz", hash = "sha256:ac7b636edbd760602087176a1973110826ef350a7e0fd263f9affcd3d7dc9575", size = 62968, upload-time = "2026-03-29T02:37:01.844Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/76/cb/fc7466dfc7e3224688544a6943ee5092e7f5baef2a0deebe879ffd4bc1cb/davey-0.1.5-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:ac92251a7b70b522bcb268a17fe53ec4501714140cefed3c0e95f4c40b828a65", size = 845354, upload-time = "2026-03-29T02:35:38.601Z" },
+    { url = "https://files.pythonhosted.org/packages/95/6b/5e1377a84bc3d4797ceaa01d199951947666a609ea42eb9f7182a30f1c7e/davey-0.1.5-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:1fe31e64f3c65a71d257d778b829a727b1e3df7f9e54d7c05bc72a7adc633154", size = 805508, upload-time = "2026-03-29T02:35:28.508Z" },
+    { url = "https://files.pythonhosted.org/packages/a9/cf/dd6a8f2d851020824cb2e0f2963510dc316f6e1172a53faa1ed738608c3a/davey-0.1.5-cp313-cp313-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:7f0aaa35c793e102f806ffa36178036f729ae3b85fd5e4d61e209f444d1cbc24", size = 944882, upload-time = "2026-03-29T02:35:03.986Z" },
+    { url = "https://files.pythonhosted.org/packages/4b/c0/622b88654a96dd968f511e692ed5469501a97a320176b7c7baccc62d1d12/davey-0.1.5-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:868f0add61e7940d79867bc1b71a5c4775ccf7c867d2887273138d13d3ff6e72", size = 896777, upload-time = "2026-03-29T02:33:49.848Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/af/e8dd20eeb974e0080541653bf90f8003c117872ee8faeef742c90d0ac4be/davey-0.1.5-cp313-cp313-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:116cb86cc4ffcb6dc4e2d879538ee2dd9dd16be1a41c581f24a0eeb8215bc8a6", size = 826687, upload-time = "2026-03-29T02:34:08.63Z" },
+    { url = "https://files.pythonhosted.org/packages/f3/7c/4ad34cdd3c53db28c027126c4d01a310e232e94b4ea8ac0ddaaae4413bb6/davey-0.1.5-cp313-cp313-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:809b577ad9d05c66a71f2669555e214ba8f78ec2d20c7d79feeb879c8a1173e1", size = 938751, upload-time = "2026-03-29T02:34:26.66Z" },
+    { url = "https://files.pythonhosted.org/packages/37/25/5b7239eb941d27e3db46f73f0f531d3278f1775f2d6647b8d2810c3527b1/davey-0.1.5-cp313-cp313-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:8a919a5b9494dafc2d95fa716971ea529b0428936575ceda5c878aeaeb3dfcdc", size = 871732, upload-time = "2026-03-29T02:34:45.825Z" },
+    { url = "https://files.pythonhosted.org/packages/31/6c/6f147cd994557d20ab1751b48a0667742cb00b3facbebf697883149de6a6/davey-0.1.5-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0c0dde11e6c1f4b5ef24c34fc0dddf95772fa60b3e05c14e54c07af4a5199e2f", size = 918570, upload-time = "2026-03-29T02:35:15.948Z" },
+    { url = "https://files.pythonhosted.org/packages/73/b5/13e53e752914beb828e2c1d938c331261d2568733d6a98f157e1bf05b9be/davey-0.1.5-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:97dbcc13368470d273338a6052de51d2523da80e3912bc35cd46329081baf9ea", size = 1076874, upload-time = "2026-03-29T02:35:48.264Z" },
+    { url = "https://files.pythonhosted.org/packages/73/81/8f2481b3a1d970f360aab23731f7f5c7caaca321ced88fd7ddf1368f6a43/davey-0.1.5-cp313-cp313-musllinux_1_2_armv7l.whl", hash = "sha256:ba454f0c89c726ad5fc62a0a9198e3ea79fe6481e085a66aa3c36af5b30fec9b", size = 1103669, upload-time = "2026-03-29T02:36:07.659Z" },
+    { url = "https://files.pythonhosted.org/packages/98/f7/4799bf5098c3d0e81c401399fb87977a65983b5d76caf3e84f88cd362ef9/davey-0.1.5-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:b1d3e6d7f1e88e6599dcd0789634336965b16ceb802e1efb88b1cfdb0291923a", size = 1136944, upload-time = "2026-03-29T02:36:27.015Z" },
+    { url = "https://files.pythonhosted.org/packages/86/b3/cbe048fa9da8f98761d73cd902797be4a20d8fbab799ee3e3446324140a2/davey-0.1.5-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:29f3909219fe1c28735797be994231d54fb7aca4a4b23882ee4087aacbabb448", size = 1129237, upload-time = "2026-03-29T02:36:47.036Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/d1/cfa01e87796ae7144e9b7edd34f394f7efb59c24ee6537310c942f560462/davey-0.1.5-cp313-cp313-win_amd64.whl", hash = "sha256:c2e83f40dd658294f8ccfc4db25b9233bef3289e4265549be6305d3c28db52a2", size = 872407, upload-time = "2026-03-29T02:37:07.95Z" },
+    { url = "https://files.pythonhosted.org/packages/67/b1/55cdd91eb713179e9a374c7648b3be5d74a5819b7001c276e4c52851ef4a/davey-0.1.5-cp313-cp313t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6d75c39f5c1b380f17ba12248052260e21d1bf0a37fe2cc7f3499139a99e7791", size = 896627, upload-time = "2026-03-29T02:33:51.327Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/4b/8b9913e1395ead3cd6aa8c47d5e8e82ec125138b363e9415d978f661436e/davey-0.1.5-cp313-cp313t-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:b03055cd01631ae9e92e39aa7e17302d07f436d1e25ce9b064c9349bd7ac7e00", size = 826898, upload-time = "2026-03-29T02:34:09.998Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/35/aa2205a571d6ecf675583c2266180464f86a1d54d67bbe5df3fd150f7b4f/davey-0.1.5-cp313-cp313t-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:a0e72a1d01990dbc3924c3aa8f44456097438ef177353d5eb2f6a061c17b3e50", size = 938950, upload-time = "2026-03-29T02:34:28.278Z" },
+    { url = "https://files.pythonhosted.org/packages/c5/27/812187d4deba99842d0cd10943985738e053ec451a7653e9a526c9c33d9a/davey-0.1.5-cp313-cp313t-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:c8016ca83439bb6431019a1ad66a1561fccf32d46843b0d986cf7a18a773d28b", size = 872062, upload-time = "2026-03-29T02:34:47.223Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/7a/6ba9d27f1bbe71f8880844b98367fd95b52583d8119b851737bc853e03e2/davey-0.1.5-cp313-cp313t-musllinux_1_2_aarch64.whl", hash = "sha256:3feb9132056c8b8d6abfa3e44a67c890b39ba040a282166408f596aa616eda65", size = 1076682, upload-time = "2026-03-29T02:35:50.103Z" },
+    { url = "https://files.pythonhosted.org/packages/43/b4/1ed9eacb60d9f8b1e0fbd5a409e3c1247ec15c80f4157fa1e8e0bd8fb460/davey-0.1.5-cp313-cp313t-musllinux_1_2_armv7l.whl", hash = "sha256:3eb782a5193b7fb03ac4bbce186d50aabbff8fbf3e8755dce98041617ede598d", size = 1103932, upload-time = "2026-03-29T02:36:09.267Z" },
+    { url = "https://files.pythonhosted.org/packages/4d/10/c3907e6816793f58e58f96f835e71996bfc96df157cddcd508e63f425d06/davey-0.1.5-cp313-cp313t-musllinux_1_2_i686.whl", hash = "sha256:51e88e67d591e57ed8055e97d2b6971402b905240a319801edae6191da7435df", size = 1137335, upload-time = "2026-03-29T02:36:28.638Z" },
+    { url = "https://files.pythonhosted.org/packages/99/c6/23f6d8300774ec4780a839f6bde7df5a65d38ece224e958987785cffbaee/davey-0.1.5-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:c7b61be6b7ed29d6ef179b8886b9f7f209104daa4632f4392ea6972f3b5245e2", size = 1129635, upload-time = "2026-03-29T02:36:48.562Z" },
+]
+
+[[package]]
 name = "deepmerge"
 version = "2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -730,6 +759,7 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ac/48/f8b875fa7dea7dd9b33245e37f065af59df6a25af2f9561efa8d822fde51/greenlet-3.3.2-cp313-cp313-macosx_11_0_universal2.whl", hash = "sha256:aa6ac98bdfd716a749b84d4034486863fd81c3abde9aa3cf8eff9127981a4ae4", size = 279120, upload-time = "2026-02-20T20:19:01.9Z" },
     { url = "https://files.pythonhosted.org/packages/49/8d/9771d03e7a8b1ee456511961e1b97a6d77ae1dea4a34a5b98eee706689d3/greenlet-3.3.2-cp313-cp313-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:ab0c7e7901a00bc0a7284907273dc165b32e0d109a6713babd04471327ff7986", size = 603238, upload-time = "2026-02-20T20:47:32.873Z" },
     { url = "https://files.pythonhosted.org/packages/59/0e/4223c2bbb63cd5c97f28ffb2a8aee71bdfb30b323c35d409450f51b91e3e/greenlet-3.3.2-cp313-cp313-manylinux_2_24_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:d248d8c23c67d2291ffd47af766e2a3aa9fa1c6703155c099feb11f526c63a92", size = 614219, upload-time = "2026-02-20T20:55:59.817Z" },
+    { url = "https://files.pythonhosted.org/packages/94/2b/4d012a69759ac9d77210b8bfb128bc621125f5b20fc398bce3940d036b1c/greenlet-3.3.2-cp313-cp313-manylinux_2_24_s390x.manylinux_2_28_s390x.whl", hash = "sha256:ccd21bb86944ca9be6d967cf7691e658e43417782bce90b5d2faeda0ff78a7dd", size = 628268, upload-time = "2026-02-20T21:02:48.024Z" },
     { url = "https://files.pythonhosted.org/packages/7a/34/259b28ea7a2a0c904b11cd36c79b8cef8019b26ee5dbe24e73b469dea347/greenlet-3.3.2-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b6997d360a4e6a4e936c0f9625b1c20416b8a0ea18a8e19cabbefc712e7397ab", size = 616774, upload-time = "2026-02-20T20:21:02.454Z" },
     { url = "https://files.pythonhosted.org/packages/0a/03/996c2d1689d486a6e199cb0f1cf9e4aa940c500e01bdf201299d7d61fa69/greenlet-3.3.2-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:64970c33a50551c7c50491671265d8954046cb6e8e2999aacdd60e439b70418a", size = 1571277, upload-time = "2026-02-20T20:49:34.795Z" },
     { url = "https://files.pythonhosted.org/packages/d9/c4/2570fc07f34a39f2caf0bf9f24b0a1a0a47bc2e8e465b2c2424821389dfc/greenlet-3.3.2-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:1a9172f5bf6bd88e6ba5a84e0a68afeac9dc7b6b412b245dd64f52d83c81e55b", size = 1640455, upload-time = "2026-02-20T20:21:10.261Z" },
@@ -2138,6 +2168,7 @@ dependencies = [
     { name = "arrow" },
     { name = "audioop-lts" },
     { name = "cairosvg" },
+    { name = "davey" },
     { name = "discord-py" },
     { name = "githubkit", extra = ["auth-app"] },
     { name = "h2" },
@@ -2224,6 +2255,7 @@ requires-dist = [
     { name = "arrow", specifier = ">=1.3.0" },
     { name = "audioop-lts", specifier = ">=0.2.2" },
     { name = "cairosvg", specifier = ">=2.7.1" },
+    { name = "davey", specifier = ">=0.1.5" },
     { name = "discord-py", specifier = ">=2.6.0" },
     { name = "githubkit", extras = ["auth-app"], specifier = ">=0.12.0" },
     { name = "h2", specifier = ">=4.1.0" },

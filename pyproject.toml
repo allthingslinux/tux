@@ -50,6 +50,7 @@ dependencies = [
     "tomlkit>=0.13.3",
     "pyyaml>=6.0.3",
     "valkey>=6.1.1",
+    "davey>=0.1.5",
 ]
 
 [project.urls]
