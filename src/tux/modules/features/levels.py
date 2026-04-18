@@ -58,6 +58,10 @@ class LevelsService(BaseCog):
         self.max_level = max(item["level"] for item in CONFIG.XP_CONFIG.XP_ROLES)
         self.enable_xp_cap = CONFIG.XP_CONFIG.ENABLE_XP_CAP
 
+        # In-memory XP cooldown: (member_id, guild_id) -> last grant timestamp
+        # Avoids DB queries for users still on cooldown (majority of messages)
+        self._xp_cooldowns: dict[tuple[int, int], float] = {}
+
     @commands.Cog.listener("on_message")
     async def xp_listener(self, message: discord.Message) -> None:
         """
@@ -80,10 +84,23 @@ class LevelsService(BaseCog):
             ):
                 return
 
-            # Ignore messages that are commands
-            ctx = await self.bot.get_context(message)
-            if ctx.valid:
+            # In-memory cooldown check — avoids DB hit for most messages
+            key = (message.author.id, message.guild.id)
+            now = time.time()
+            last_grant = self._xp_cooldowns.get(key)
+            if last_grant and (now - last_grant) < self.xp_cooldown:
                 return
+
+            # Pre-filter: only call expensive get_context if message might be a command
+            prefix = (
+                await self.bot.prefix_manager.get_prefix(message.guild.id)
+                if self.bot.prefix_manager
+                else CONFIG.get_prefix()
+            )
+            if message.content.startswith(prefix):
+                ctx = await self.bot.get_context(message)
+                if ctx.valid:
+                    return
 
             # Fetch member object
             member = message.guild.get_member(message.author.id)
@@ -100,15 +117,11 @@ class LevelsService(BaseCog):
             if user_level_data and user_level_data.blacklisted:
                 return
 
-            # Check if the user is on cooldown
-            last_message_time = (
-                user_level_data.last_message if user_level_data else None
-            )
-            if last_message_time and self.is_on_cooldown(last_message_time):
-                return
-
             # Process XP gain with the already fetched data
             await self.process_xp_gain(member, message.guild, user_level_data)
+
+            # Update in-memory cooldown after successful XP grant
+            self._xp_cooldowns[key] = now
         except Exception as e:
             logger.exception(f"Error in XP listener for message {message.id}: {e}")
 

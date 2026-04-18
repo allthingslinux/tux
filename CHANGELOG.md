@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+* **Performance**: In-memory XP cooldown to skip database queries for users still on cooldown (eliminates DB hit for ~80-90% of messages); in-memory non-AFK cache to skip DB query for active non-AFK users on every message; pre-filter for `get_context()` in XP listener — only calls expensive command parsing if message starts with the guild prefix
 * **Database**: Performance indexes for cases table (composite indexes for case lookups and expired tempbans); `fix-sequences` command to synchronize PostgreSQL sequences; safety checks for database reset and nuke operations in test mode; configurable connection pool settings (`POOL_SIZE`, `MAX_OVERFLOW`, `POOL_TIMEOUT`) to prevent pool exhaustion during high load
 * **Bot configuration**: BotIntents model for Discord bot gateway intents configuration; HTTP client configuration for high-latency environments; `first_ready` flag for bot readiness tracking
 * **Commands**: Enhanced case viewing with user or case number arguments; FlexibleUserConverter for enhanced user identification; `get_user_safe` utility function for optimized user resolution; `convert_reason` function to clean moderation reasons by removing flag-like prefixes
@@ -29,6 +30,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+* **Performance**: `update_xp_and_level` no longer performs a trailing SELECT after UPDATE (halves DB round-trips on XP writes); all Guild model relationships changed from `lazy="selectin"` to `lazy="noload"` to prevent cascade-loading entire guild graph on any model query; PermissionRank, PermissionAssignment, and PermissionCommand back-references also changed to `lazy="noload"`
+* **Refactoring**: Exceptions split into package with dedicated modules (`base`, `database`, `permissions`, `execution`, `api`, `services`); info module helpers extracted into submodules (`guild_info`, `channel_info`, `role_user_info`, `formatting`, `builders`, `views`); `extract_invite_code` and `chunks` moved from `role_user_info` to `formatting`
 * **Performance**: Batch processing for permission checks, member role checks, and subcommand filtering; optimized command category retrieval; parallel execution of Discord actions and case creation in moderation coordinator; memory efficiency with `__slots__` in dependency trackers
 * **Optimizations**: Optimized placeholder substitution in activity handler and fact module using single-pass substitution; optimized TLDR cache directory resolution with `@lru_cache` decorator for command listings
 * **Interaction handling**: Improved deferral logic across all moderation commands; enhanced response handling in Info, XKCD, and other modules; `send_after_defer` method for improved message handling
@@ -63,6 +66,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+* **TLDR**: `show_both` placeholder output wrapped in brackets per spec
+* **Docker**: Resolved TLDR cache permission denied on fresh systems
 * **Moderation**: Role hierarchy check added to all moderation actions — moderators can no longer act on members with an equal or higher top role; guild owner bypass uses `owner_id` (cache-safe); bot-vs-target role check prevents `discord.Forbidden` errors when the bot's role is insufficient (#1227)
 * **Moderation**: Interaction deferral handling across all moderation modules; improved error handling in slowmode channel conversion; enhanced guild config caching and embed handling in CommunicationService and ExecutionService; added assertions for case and jail role in unjail operation
 * **Event handling**: First ready state marked even on setup failure to prevent unnecessary expensive checks on retries

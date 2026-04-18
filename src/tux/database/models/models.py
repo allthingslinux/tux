@@ -67,13 +67,15 @@ class Guild(BaseModel, table=True):
     )
 
     # Relationships with cascade delete - using sa_relationship to bypass SQLModel parsing issues
+    # lazy="noload" prevents eager loading of collections when Guild is queried.
+    # Cascade deletes are handled at the DB level via passive_deletes + ON DELETE CASCADE.
     snippets = Relationship(
         sa_relationship=relationship(
             "Snippet",
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
-            lazy="selectin",
+            lazy="noload",
         ),
     )
     cases = Relationship(
@@ -82,7 +84,7 @@ class Guild(BaseModel, table=True):
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
-            lazy="selectin",
+            lazy="noload",
         ),
     )
     reminders = Relationship(
@@ -91,7 +93,7 @@ class Guild(BaseModel, table=True):
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
-            lazy="selectin",
+            lazy="noload",
         ),
     )
     afks = Relationship(
@@ -100,7 +102,7 @@ class Guild(BaseModel, table=True):
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
-            lazy="selectin",
+            lazy="noload",
         ),
     )
     levels_entries = Relationship(
@@ -109,7 +111,7 @@ class Guild(BaseModel, table=True):
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
-            lazy="selectin",
+            lazy="noload",
         ),
     )
     starboard_messages = Relationship(
@@ -118,7 +120,7 @@ class Guild(BaseModel, table=True):
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
-            lazy="selectin",
+            lazy="noload",
         ),
     )
 
@@ -129,7 +131,7 @@ class Guild(BaseModel, table=True):
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
-            lazy="joined",
+            lazy="noload",
         ),
     )
     starboard = Relationship(
@@ -138,7 +140,7 @@ class Guild(BaseModel, table=True):
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
-            lazy="joined",
+            lazy="noload",
         ),
     )
     permission_ranks = Relationship(
@@ -147,7 +149,7 @@ class Guild(BaseModel, table=True):
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
-            lazy="selectin",
+            lazy="noload",
         ),
     )
     command_permissions = Relationship(
@@ -156,7 +158,7 @@ class Guild(BaseModel, table=True):
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
-            lazy="selectin",
+            lazy="noload",
         ),
     )
 
@@ -381,7 +383,7 @@ class PermissionRank(BaseModel, table=True):
         sa_relationship=relationship(
             "Guild",
             back_populates="permission_ranks",
-            lazy="selectin",
+            lazy="noload",
         ),
     )
 
@@ -392,7 +394,7 @@ class PermissionRank(BaseModel, table=True):
             back_populates="permission_rank",
             cascade="all, delete-orphan",
             passive_deletes=True,
-            lazy="selectin",
+            lazy="noload",
         ),
     )
 
@@ -458,14 +460,14 @@ class PermissionAssignment(BaseModel, table=True):
     guild: Mapped[Guild] = Relationship(
         sa_relationship=relationship(
             "Guild",
-            lazy="selectin",
+            lazy="noload",
         ),
     )
     permission_rank = Relationship(
         sa_relationship=relationship(
             "PermissionRank",
             back_populates="assignments",
-            lazy="selectin",
+            lazy="noload",
         ),
     )
 
@@ -537,7 +539,7 @@ class PermissionCommand(BaseModel, table=True):
         sa_relationship=relationship(
             "Guild",
             back_populates="command_permissions",
-            lazy="selectin",
+            lazy="noload",
         ),
     )
 

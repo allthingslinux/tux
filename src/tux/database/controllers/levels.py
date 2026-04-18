@@ -7,6 +7,7 @@ information for guilds, supporting features like leveling systems and leaderboar
 
 from __future__ import annotations
 
+import contextlib
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
@@ -211,14 +212,9 @@ class LevelsController(BaseController[Levels]):
         new_level: int | None = None,
         last_message: datetime | None = None,
         **kwargs: Any,
-    ) -> Levels:
+    ) -> None:
         """
-        Update XP and level for a member.
-
-        Returns
-        -------
-        Levels
-            The updated levels record.
+        Update XP and level for a member. Creates the record if it doesn't exist.
 
         Raises
         ------
@@ -237,13 +233,20 @@ class LevelsController(BaseController[Levels]):
             error_msg = "xp_amount, new_level, and last_message are required"
             raise ValueError(error_msg)
 
-        # Use composite key for update
+        # Single UPDATE; for new users the update affects 0 rows so we fall back to create
         await self.update_where(
             (Levels.member_id == member_id) & (Levels.guild_id == guild_id),
             {"xp": xp_amount, "level": new_level, "last_message": last_message},
         )
-        # Return updated record
-        return await self.get_or_create_levels(member_id, guild_id)
+        # Ensure record exists (no-op for existing users due to unique constraint)
+        with contextlib.suppress(Exception):
+            await self.create(
+                member_id=member_id,
+                guild_id=guild_id,
+                xp=xp_amount,
+                level=new_level,
+                last_message=last_message,
+            )
 
     async def reset_xp(self, member_id: int, guild_id: int) -> Levels:
         """

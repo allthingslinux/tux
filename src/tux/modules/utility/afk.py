@@ -43,6 +43,12 @@ class Afk(BaseCog):
         self.handle_afk_expiration.start()
         logger.debug("AFK expiration handler start() called")
 
+        # In-memory set of (member_id, guild_id) known to NOT be AFK.
+        # Avoids a DB query on every message for active non-AFK users.
+        # Entries are added when we confirm a user is not AFK, and removed
+        # when a user sets AFK status.
+        self._non_afk_cache: set[tuple[int, int]] = set()
+
     async def cog_unload(self) -> None:
         """Cancel the background task when the cog is unloaded."""
         self.handle_afk_expiration.cancel()
@@ -143,6 +149,8 @@ class Afk(BaseCog):
         )
 
         await add_afk(self.db, shortened_reason, target, ctx.guild.id, False)
+        # Invalidate non-AFK cache since user is now AFK
+        self._non_afk_cache.discard((target.id, ctx.guild.id))
         logger.info(
             f"AFK status set: {target.name} ({target.id}) in {ctx.guild.name} - Reason: {shortened_reason}",
         )
@@ -204,6 +212,8 @@ class Afk(BaseCog):
             placeholder=TRUNCATION_SUFFIX,
         )
         await add_afk(self.db, shortened_reason, target, ctx.guild.id, True)
+        # Invalidate non-AFK cache since user is now AFK
+        self._non_afk_cache.discard((target.id, ctx.guild.id))
         logger.info(
             f"💤 Permanent AFK set: {target.name} ({target.id}) in {ctx.guild.name} - Reason: {shortened_reason}",
         )
@@ -263,11 +273,18 @@ class Afk(BaseCog):
             if not message.guild or message.author.bot:
                 return
 
+            # Fast path: skip DB query if user is known to not be AFK
+            key = (message.author.id, message.guild.id)
+            if key in self._non_afk_cache:
+                return
+
             assert isinstance(message.author, discord.Member)
 
             entry = await self._get_afk_entry(message.author.id, message.guild.id)
 
             if not entry:
+                # User confirmed not AFK — cache this
+                self._non_afk_cache.add(key)
                 return
 
             if entry.since + timedelta(seconds=10) > datetime.now(UTC).replace(
@@ -299,6 +316,8 @@ class Afk(BaseCog):
             )
             if current_entry is not None:
                 await self.db.afk.remove_afk(message.author.id, message.guild.id)
+                # User is no longer AFK — add to non-AFK cache
+                self._non_afk_cache.add(key)
                 logger.info(
                     f"✅ AFK status removed: {message.author.name} ({message.author.id}) returned to {message.guild.name}",
                 )
