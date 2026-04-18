@@ -1,5 +1,6 @@
 """Formatting utilities for Discord objects in info commands."""
 
+from collections.abc import Generator, Iterator
 from datetime import UTC, datetime
 
 import discord
@@ -110,3 +111,31 @@ def format_invite_max_age(max_age: int | None) -> str:
         hours = (max_age % 86400) // 3600
         return f"{days}d {hours}h" if days > 0 else f"{hours}h"
     return "Never"
+
+
+def extract_invite_code(invite_input: str) -> str:
+    """Extract invite code from URL or return as-is."""
+    invite_input_lower = invite_input.lower()
+    if "discord.gg/" in invite_input_lower:
+        return invite_input.rsplit("discord.gg/", maxsplit=1)[-1].split(
+            "?",
+            maxsplit=1,
+        )[0]
+    if "discord.com/invite/" in invite_input_lower:
+        return invite_input.rsplit("discord.com/invite/", maxsplit=1)[-1].split(
+            "?",
+            maxsplit=1,
+        )[0]
+    return invite_input
+
+
+def chunks[T](it: Iterator[T], size: int) -> Generator[list[T]]:
+    """Split an iterator into chunks of a specified size."""
+    chunk: list[T] = []
+    for item in it:
+        chunk.append(item)
+        if len(chunk) == size:
+            yield chunk
+            chunk = []
+    if chunk:
+        yield chunk

@@ -1,6 +1,5 @@
 """Role and user helper utilities for info commands."""
 
-from collections.abc import Generator, Iterator
 from contextlib import suppress
 
 import discord
@@ -77,31 +76,3 @@ async def get_member_banner(member: discord.Member, bot: Tux) -> str | None:
     except discord.HTTPException as e:
         logger.warning(f"Failed to fetch user {member.id} for banner: {e}")
     return None
-
-
-def extract_invite_code(invite_input: str) -> str:
-    """Extract invite code from URL or return as-is."""
-    invite_input_lower = invite_input.lower()
-    if "discord.gg/" in invite_input_lower:
-        return invite_input.rsplit("discord.gg/", maxsplit=1)[-1].split(
-            "?",
-            maxsplit=1,
-        )[0]
-    if "discord.com/invite/" in invite_input_lower:
-        return invite_input.rsplit("discord.com/invite/", maxsplit=1)[-1].split(
-            "?",
-            maxsplit=1,
-        )[0]
-    return invite_input
-
-
-def chunks[T](it: Iterator[T], size: int) -> Generator[list[T]]:
-    """Split an iterator into chunks of a specified size."""
-    chunk: list[T] = []
-    for item in it:
-        chunk.append(item)
-        if len(chunk) == size:
-            yield chunk
-            chunk = []
-    if chunk:
-        yield chunk
