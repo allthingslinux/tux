@@ -41,11 +41,11 @@ class Config(commands.Cog):
         self.log_manager = LogManager(bot)
         self.jail_manager = JailManager(bot)
 
+    @commands.guild_only()
     @commands.hybrid_group(
         name="config",
         aliases=["settings"],
     )
-    @commands.guild_only()
     @requires_command_permission()
     async def config(self, ctx: commands.Context[Tux]) -> None:
         """Manage the configuration of this guild."""
@@ -53,18 +53,18 @@ class Config(commands.Cog):
             # Open the dashboard overview
             await self.overview.overview_command(ctx)
 
+    @commands.guild_only()
     @config.command(
         name="overview",
         aliases=["dashboard"],
     )
-    @commands.guild_only()
     @requires_command_permission()
     async def config_overview(self, ctx: commands.Context[Tux]) -> None:
         """View complete guild configuration overview."""
         await self.overview.overview_command(ctx)
 
-    @config.group(name="ranks")
     @commands.guild_only()
+    @config.group(name="ranks")
     @requires_command_permission()
     async def ranks_group(self, ctx: commands.Context[Tux]) -> None:
         """Manage permission ranks in this guild."""
@@ -72,15 +72,15 @@ class Config(commands.Cog):
             # Open the dashboard in roles mode (ranks are displayed there)
             await self.ranks.configure_ranks(ctx)
 
-    @ranks_group.command(name="init")
     @commands.guild_only()
+    @ranks_group.command(name="init")
     @requires_command_permission()
     async def ranks_init(self, ctx: commands.Context[Tux]) -> None:
         """Initialize default permission ranks (0-7)."""
         await self.ranks.initialize_ranks(ctx)
 
-    @config.group(name="roles", aliases=["role"])
     @commands.guild_only()
+    @config.group(name="roles", aliases=["role"])
     @requires_command_permission()
     async def roles_group(self, ctx: commands.Context[Tux]) -> None:
         """Manage role-to-rank assignments."""
@@ -88,8 +88,8 @@ class Config(commands.Cog):
             # Open the dashboard in roles mode
             await self.roles.configure_roles(ctx)
 
-    @config.group(name="commands")
     @commands.guild_only()
+    @config.group(name="commands")
     @requires_command_permission()
     async def commands_group(self, ctx: commands.Context[Tux]) -> None:
         """Manage command permission requirements."""
@@ -97,15 +97,15 @@ class Config(commands.Cog):
             # Open the dashboard in commands mode
             await self.commands.configure_commands(ctx)
 
-    @config.command(name="logs")
     @commands.guild_only()
+    @config.command(name="logs")
     @requires_command_permission()
     async def logs(self, ctx: commands.Context[Tux]) -> None:
         """Configure log channel assignments."""
         await self.log_manager.configure_logs(ctx)
 
-    @config.command(name="jail")
     @commands.guild_only()
+    @config.command(name="jail")
     @requires_command_permission()
     async def jail(self, ctx: commands.Context[Tux]) -> None:
         """Configure the jail channel and jail role for the /jail and /unjail commands."""

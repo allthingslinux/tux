@@ -49,11 +49,11 @@ class Levels(BaseCog):
 
         self.levels_service = LevelsService(bot)
 
+    @commands.guild_only()
     @commands.hybrid_group(
         name="levels",
         aliases=["lvls"],
     )
-    @commands.guild_only()
     @requires_command_permission()
     async def levels(
         self,
@@ -64,8 +64,8 @@ class Levels(BaseCog):
             await ctx.send_help("levels")
 
     @commands.guild_only()
-    @requires_command_permission()
     @levels.command(name="set", aliases=["s"])
+    @requires_command_permission()
     async def set(
         self,
         ctx: commands.Context[Tux],
@@ -130,9 +130,9 @@ class Levels(BaseCog):
         else:
             await ctx.send(embed=embed)
 
-    @requires_command_permission()
     @commands.guild_only()
     @levels.command(name="setxp", aliases=["sxp"])
+    @requires_command_permission()
     async def set_xp(
         self,
         ctx: commands.Context[Tux],
@@ -197,9 +197,9 @@ class Levels(BaseCog):
         else:
             await ctx.send(embed=embed)
 
-    @requires_command_permission()
     @commands.guild_only()
     @levels.command(name="reset", aliases=["r"])
+    @requires_command_permission()
     async def reset(self, ctx: commands.Context[Tux], member: discord.Member) -> None:
         """
         Reset the xp and level of a member.
@@ -237,9 +237,9 @@ class Levels(BaseCog):
         else:
             await ctx.send(embed=embed)
 
-    @requires_command_permission()
     @commands.guild_only()
     @levels.command(name="blacklist", aliases=["bl"])
+    @requires_command_permission()
     async def blacklist(
         self,
         ctx: commands.Context[Tux],
