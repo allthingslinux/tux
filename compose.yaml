@@ -25,7 +25,7 @@ services:
   tux-postgres:
     container_name: tux-postgres
     hostname: tux-postgres
-    image: postgres:17-alpine@sha256:6f30057d31f5861b66f3545d4821f987aacf1dd920765f0acadea0c58ff975b1
+    image: postgres:17-alpine@sha256:778d0b486d6daa02b77434d0358ec57a1b21fd8b6d22ac2eef56a33e816928f6
     restart: ${RESTART_POLICY:-no}
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
@@ -203,7 +203,7 @@ services:
           path: .env
           target: /app/.env
   tux-adminer:
-    image: adminer:latest@sha256:3a1582df310cf49a3c9cad2882496eed4596563f8d33250703f8b26e538cef7d
+    image: adminer:latest@sha256:41898b976011fd87f2d3037366ad97f7d89fddfebc8aa8b3a7d77d0c465aa37b
     container_name: tux-adminer
     hostname: tux-adminer
     profiles: [adminer]
