@@ -176,11 +176,10 @@ class EventHandler(BaseCog):
                 member.guild.id,
             )
 
-    # TODO: Define data expiration policy for guilds
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild) -> None:
         """On guild remove event handler."""
-        await self.db.guild.delete_guild_by_id(guild.id)
+        logger.info(f"Bot removed from guild: {guild.name} ({guild.id})")
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
